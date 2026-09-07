@@ -39,7 +39,7 @@ export function ManagementSection({ symbol }: Props) {
         updatesTitle="Recent management updates"
       />
 
-      <SubWidget number="6.1" title="CEO Compensation Analysis" description="Total compensation, salary, and company earnings over time — needs an executive-compensation disclosure feed Continua doesn't have yet.">
+      <SubWidget number="7.1" title="CEO Compensation Analysis" description="Total compensation, salary, and company earnings over time — needs an executive-compensation disclosure feed Continua doesn't have yet.">
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={[]}>
