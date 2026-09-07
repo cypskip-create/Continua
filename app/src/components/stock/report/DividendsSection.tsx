@@ -54,7 +54,7 @@ export function DividendsSection({ symbol, currency, divYield, annualDividend }:
   ];
 
   return (
-    <ReportSection number={5} title="Dividend">
+    <ReportSection number={6} title="Dividend">
       <CriteriaChecklist
         checks={checks}
         narrative={sorted.length === 0 ? `${symbol} doesn't currently pay a dividend, or none is on file yet.` : `${symbol} has paid dividends in ${sorted.length} of the years on file. ${payout != null ? `${payout.toFixed(0)}% of earnings are paid out.` : ""}`}
