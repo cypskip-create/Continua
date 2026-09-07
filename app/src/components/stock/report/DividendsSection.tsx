@@ -71,7 +71,7 @@ export function DividendsSection({ symbol, currency, divYield, annualDividend }:
         updatesTitle="Recent dividend updates"
       />
 
-      <SubWidget number="5.1" title="Stability and Growth of Payments" description="Real dividend-per-share history — no forecast is shown since Continua has no analyst dividend estimates.">
+      <SubWidget number="6.1" title="Stability and Growth of Payments" description="Real dividend-per-share history — no forecast is shown since Continua has no analyst dividend estimates.">
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={sorted.map((d) => ({ year: d.year, dps: d.dps }))}>
@@ -85,7 +85,7 @@ export function DividendsSection({ symbol, currency, divYield, annualDividend }:
         <p className="text-[10px] text-muted-foreground mt-1">{divLoading ? "Loading…" : sorted.length === 0 ? `No dividend history on file for ${symbol} yet.` : !stable ? "Insufficient years on file to determine long-term stability." : "Real, confirmed payout history."}</p>
       </SubWidget>
 
-      <SubWidget number="5.2" title="Dividend Yield vs Market" description="Company yield against the same NSE market-cap sample used across Continua's benchmarks.">
+      <SubWidget number="6.2" title="Dividend Yield vs Market" description="Company yield against the same NSE market-cap sample used across Continua's benchmarks.">
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={[{ name: "Yield", Company: parseFloat(divYield) || 0, "Market Avg": benchmark.dividendYield ?? 0 }]}>
@@ -100,11 +100,11 @@ export function DividendsSection({ symbol, currency, divYield, annualDividend }:
       </SubWidget>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <SubWidget number="5.3" title="Earnings Payout to Shareholders">
+        <SubWidget number="6.3" title="Earnings Payout to Shareholders">
           <Donut pct={payout} label="Paid as dividend" color={payout != null && payout > 90 ? "hsl(var(--bear))" : "hsl(var(--bull))"} />
           {payout == null && <p className="text-[10px] text-muted-foreground text-center mt-2">No payout ratio on file.</p>}
         </SubWidget>
-        <SubWidget number="5.4" title="Cash Payout to Shareholders">
+        <SubWidget number="6.4" title="Cash Payout to Shareholders">
           <Donut pct={cashPayout} label="Of free cash flow" color={cashPayout != null && cashPayout > 90 ? "hsl(var(--bear))" : "hsl(var(--bull))"} />
           {cashPayout == null && <p className="text-[10px] text-muted-foreground text-center mt-2">{sorted.length === 0 ? "Does not pay a dividend." : "Not enough cash flow data on file to compute this."}</p>}
         </SubWidget>
