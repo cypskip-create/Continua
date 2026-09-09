@@ -43,6 +43,19 @@ export const securitiesRepository = {
     return res.rows[0] ?? null;
   },
 
+  /** Batch symbol->security lookup, for endpoints that take a list of
+   *  symbols (e.g. sparkline batches) and need ids without one query per
+   *  symbol. Unknown symbols are simply absent from the result. */
+  async getBySymbols(exchange: string, symbols: string[]): Promise<Security[]> {
+    if (symbols.length === 0) return [];
+    const res = await query<any>(
+      `SELECT id, symbol, exchange, company_id as "companyId", currency, status, isin, listed_at as "listedAt"
+       FROM market.securities WHERE exchange = $1 AND symbol = ANY($2)`,
+      [exchange, symbols.map((s) => s.toUpperCase())]
+    );
+    return res.rows;
+  },
+
   async listByExchange(exchange: string): Promise<Security[]> {
     const res = await query<any>(
       `SELECT id, symbol, exchange, company_id as "companyId", currency, status, isin, listed_at as "listedAt"

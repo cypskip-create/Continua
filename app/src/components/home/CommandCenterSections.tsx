@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { TrendingUp, Sparkles, Calendar, Coins, ArrowUpRight, ChevronRight } from "lucide-react";
 import { AIThesisCard } from "@/components/stock/AIThesisCard";
-import { getPrice, getDivYield, getStockName } from "@/lib/stockPrices";
+import { getDivYield, getStockName } from "@/lib/stockPrices";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { useExchange } from "@/hooks/useExchange";
 import { getFundamentals } from "@/data/stockFundamentals";
@@ -34,22 +34,33 @@ export function CommandCenterSections() {
   // here is hand-picked, so a section simply won't show a stock that the
   // underlying data doesn't actually support (e.g. no fake "upside" on a
   // stock trading above its analyst target).
-  const undervalued = STOCK_POOL.map((symbol) => {
-    const price = quotes[symbol]?.lastPrice ?? getPrice(symbol);
-    const targetAvg = getFundamentals(symbol, price).analystTargets.avg;
-    const upside = price > 0 ? ((targetAvg - price) / price) * 100 : 0;
-    return { symbol, name: getStockName(symbol), price, upside };
-  })
-    .filter(s => s.upside > 0)
+  // "Undervalued" upside is computed against a synthetic analyst target
+  // price (data/stockFundamentals.ts — the Data Layer has no real analyst-
+  // target source yet, flagged as a separate follow-up from the price fix
+  // below). The CURRENT price used in that comparison is real and live
+  // only — a symbol with no live quote yet is excluded, never priced at a
+  // fabricated fallback.
+  const undervalued = STOCK_POOL
+    .map((symbol) => {
+      const price = quotes[symbol]?.lastPrice;
+      if (price == null) return null;
+      const targetAvg = getFundamentals(symbol, price).analystTargets.avg;
+      const upside = price > 0 ? ((targetAvg - price) / price) * 100 : 0;
+      return { symbol, name: getStockName(symbol), price, upside };
+    })
+    .filter((s): s is { symbol: string; name: string; price: number; upside: number } => s !== null && s.upside > 0)
     .sort((a, b) => b.upside - a.upside)
     .slice(0, 3);
 
-  const highGrowth = STOCK_POOL.map((symbol) => {
-    const price = getPrice(symbol);
-    const growth = getFundamentals(symbol, price)
-      .growthMetrics.find(g => g.label === "Revenue (3yr CAGR)")?.value ?? 0;
-    return { symbol, name: getStockName(symbol), growth };
-  })
+  const highGrowth = STOCK_POOL
+    .map((symbol) => {
+      const price = quotes[symbol]?.lastPrice;
+      if (price == null) return null;
+      const growth = getFundamentals(symbol, price)
+        .growthMetrics.find(g => g.label === "Revenue (3yr CAGR)")?.value ?? 0;
+      return { symbol, name: getStockName(symbol), growth };
+    })
+    .filter((s): s is { symbol: string; name: string; growth: number } => s !== null)
     .sort((a, b) => b.growth - a.growth)
     .slice(0, 3);
 

@@ -19,7 +19,6 @@ import { XPostCard } from "@/components/social/XPostCard";
 import { HubPostCard } from "@/components/social/HubPostCard";
 import { usePosts, Post, Comment, ReactionKind, updateCommentInTree, removeCommentFromTree, countCommentSubtree } from "@/hooks/usePosts";
 import { XCommentSheet } from "@/components/social/XCommentSheet";
-import { getPrice } from "@/lib/stockPrices";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { atHandle } from "@/lib/handle";
 import { EXPERIENCE_LABELS } from "@/lib/tradersHubOnboarding";
@@ -333,11 +332,16 @@ export default function UserProfile() {
     if (!publicPortfolio.length) return null;
     // Same price source & maths as the Portfolio page, so both always agree
     // — including HoldingsList just below, which reads the same live quotes.
-    const holdings = publicPortfolio.map(h => {
-      const cp = publicPortfolioQuotes[h.symbol.toUpperCase()]?.lastPrice ?? getPrice(h.symbol, h.avg_cost);
-      const gain = ((cp - h.avg_cost) / h.avg_cost) * 100;
-      return { ...h, currentPrice: cp, gain };
-    });
+    // A holding with no live quote yet is excluded from the total rather
+    // than priced from a fabricated fallback.
+    const holdings = publicPortfolio
+      .map(h => {
+        const cp = publicPortfolioQuotes[h.symbol.toUpperCase()]?.lastPrice;
+        if (cp == null) return null;
+        const gain = ((cp - h.avg_cost) / h.avg_cost) * 100;
+        return { ...h, currentPrice: cp, gain };
+      })
+      .filter((h): h is NonNullable<typeof h> => h !== null);
     const totalValue = holdings.reduce((s, h) => s + h.currentPrice * h.shares, 0);
     const totalCost = holdings.reduce((s, h) => s + h.avg_cost * h.shares, 0);
     return { totalValue, totalGain: totalValue - totalCost, gainPercent: totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0, holdings };

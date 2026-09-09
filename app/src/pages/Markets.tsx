@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { TopBar } from "@/components/shared/TopBar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { SparklineChart } from "@/components/shared/SparklineChart";
 import { MarketStatusIndicator } from "@/components/shared/MarketStatusIndicator";
 import { AfricaMap } from "@/components/shared/AfricaMap";
 import { AllStocksList } from "@/components/markets/AllStocksList";
 import { StockHeatmap } from "@/components/home/StockHeatmap";
-import { CANONICAL_SYMBOLS, STOCK_META, getPrice, getDayChange, getDivYield, relativeDate } from "@/lib/stockPrices";
+import { CANONICAL_SYMBOLS, STOCK_META, getDivYield, relativeDate } from "@/lib/stockPrices";
 import { useMovers } from "@/hooks/useMovers";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { useIndices } from "@/hooks/useIndices";
@@ -47,18 +48,16 @@ const commodities = [
   { name: "Avocado (export)", value: "KES 95/kg", change: 0.9, isUp: true },
 ];
 
-// Static fallback (used only while live data is loading, or if the
-// Continua Data API is unreachable) — Overview normally renders live
-// topGainers/topLosers/sectors computed inside the component below from
-// useMovers()/useLiveQuotes(), which come straight from the Data Layer.
-const nseUniverse = CANONICAL_SYMBOLS.map(symbol => {
-  const { pct } = getDayChange(symbol);
-  return { symbol, name: STOCK_META[symbol].name, sector: STOCK_META[symbol].sector, price: getPrice(symbol), change: pct };
-});
-const staticTopGainers = [...nseUniverse].sort((a, b) => b.change - a.change).slice(0, 5);
-const staticTopLosers = [...nseUniverse].sort((a, b) => a.change - b.change).slice(0, 5);
+// Reference universe (name/sector only — no price/change here anymore).
+// Sector rollups, gainers/losers, and every price shown below are computed
+// live inside the component from useLiveQuotes/useMovers; a symbol with no
+// live quote yet is simply excluded from these rollups rather than priced
+// from a fabricated fallback number.
+const nseReferenceUniverse = CANONICAL_SYMBOLS.map(symbol => ({
+  symbol, name: STOCK_META[symbol].name, sector: STOCK_META[symbol].sector,
+}));
 
-function computeSectors(universe: typeof nseUniverse) {
+function computeSectors(universe: { symbol: string; sector: string; change: number }[]) {
   const map = new Map<string, { sum: number; count: number; topSymbol: string; topChange: number }>();
   universe.forEach(s => {
     const cur = map.get(s.sector) || { sum: 0, count: 0, topSymbol: s.symbol, topChange: -Infinity };
@@ -102,11 +101,13 @@ const dividendCalendar = [
   { symbol: "KCB", name: "KCB Group", exDate: fmtDate(38), payDate: fmtDate(63), amount: 2.50, yield: 3.9, type: "Final" },
 ];
 
+// Dividend yield is real (curated, hand-verified — see DIV_YIELD), but
+// price is now attached live inside the component (see sortedDividendStocks),
+// not fabricated at module scope.
 const highDividendStocks = ["EABL", "SCBK", "SCOM", "ABSA", "COOP"].map((symbol) => ({
   symbol,
   name: STOCK_META[symbol]?.name ?? symbol,
   yield: getDivYield(symbol),
-  price: getPrice(symbol),
   frequency: symbol === "EABL" ? "Semi-annual" : "Annual",
   amount: symbol === "EABL" ? 11.00 : symbol === "SCBK" ? 17.00 : symbol === "SCOM" ? 0.64 : symbol === "ABSA" ? 1.50 : 2.00,
 }));
@@ -120,14 +121,8 @@ const FEATURED_LIST_ICONS: Record<string, typeof Star> = {
   "undervalued": Award,
 };
 
-// Theme change % is computed live from its member stocks below (via themesWithChange),
-// instead of a hardcoded number that would drift from real prices.
-const priceMap = new Map(nseUniverse.map(s => [s.symbol, s]));
-const themesWithChange = investmentThemes.map(theme => {
-  const memberChanges = theme.stocks.map(s => priceMap.get(s)?.change ?? 0);
-  const change = memberChanges.length > 0 ? memberChanges.reduce((a, b) => a + b, 0) / memberChanges.length : 0;
-  return { ...theme, change };
-});
+// Theme change % is computed live inside the component (via themesWithChange
+// below), from real quotes — never a hardcoded number that could drift.
 
 const earningsCalendar = [
   { symbol: "EABL", name: "EABL", date: fmtDate(5), time: "2:00 PM EAT", expected: "KES 9.80", impact: "high" as const },
@@ -136,19 +131,26 @@ const earningsCalendar = [
   { symbol: "PORT", name: "East African Portland Cement", date: fmtDate(30), time: "3:00 PM EAT", expected: "KES 2.30", impact: "low" as const },
 ];
 
-const volumeLeaders = [
-  { symbol: "KPLC", name: "Kenya Power", volume: "15.2M", avgVolume: "8.5M", ratio: 1.79, price: getPrice("KPLC"), change: getDayChange("KPLC").pct },
-  { symbol: "SCOM", name: "Safaricom", volume: "8.1M", avgVolume: "6.2M", ratio: 1.31, price: getPrice("SCOM"), change: getDayChange("SCOM").pct },
-  { symbol: "EQTY", name: "Equity Group", volume: "2.4M", avgVolume: "1.8M", ratio: 1.33, price: getPrice("EQTY"), change: getDayChange("EQTY").pct },
-  { symbol: "BRIT", name: "Britam", volume: "1.8M", avgVolume: "950K", ratio: 1.89, price: getPrice("BRIT"), change: getDayChange("BRIT").pct },
+// Volume/avgVolume/ratio below are still illustrative (no real avgVolume
+// source exists yet — flagged as a follow-up); price/change are attached
+// live inside the component instead of fabricated here.
+const volumeLeaderSymbols = [
+  { symbol: "KPLC", name: "Kenya Power", volume: "15.2M", avgVolume: "8.5M", ratio: 1.79 },
+  { symbol: "SCOM", name: "Safaricom", volume: "8.1M", avgVolume: "6.2M", ratio: 1.31 },
+  { symbol: "EQTY", name: "Equity Group", volume: "2.4M", avgVolume: "1.8M", ratio: 1.33 },
+  { symbol: "BRIT", name: "Britam", volume: "1.8M", avgVolume: "950K", ratio: 1.89 },
 ];
 
-const analystRatings = [
-  { symbol: "SCOM", rating: "Buy", target: 40.50, current: getPrice("SCOM"), firm: "Genghis Capital" },
-  { symbol: "EQTY", rating: "Strong Buy", target: 108.00, current: getPrice("EQTY"), firm: "SBG Securities" },
-  { symbol: "KCB", rating: "Hold", target: 98.00, current: getPrice("KCB"), firm: "Dyer & Blair" },
-  { symbol: "SCBK", rating: "Sell", target: 320.00, current: getPrice("SCBK"), firm: "Standard Investment" },
-].map(r => ({ ...r, upside: +(((r.target - r.current) / r.current) * 100).toFixed(1) }));
+// Ratings/targets/firms below are illustrative placeholders, NOT real
+// analyst research — labelled "Illustrative" in the UI (see the Analyst
+// Ratings card) so they can never be mistaken for real coverage attributed
+// to these firms. `current` price is live, never fabricated.
+const analystRatingSymbols = [
+  { symbol: "SCOM", rating: "Buy", target: 40.50, firm: "Genghis Capital" },
+  { symbol: "EQTY", rating: "Strong Buy", target: 108.00, firm: "SBG Securities" },
+  { symbol: "KCB", rating: "Hold", target: 98.00, firm: "Dyer & Blair" },
+  { symbol: "SCBK", rating: "Sell", target: 320.00, firm: "Standard Investment" },
+];
 
 function StockRow({ stock, onTap }: { stock: { symbol: string; name: string; price: number; change: number }; onTap: () => void }) {
   return (
@@ -204,23 +206,35 @@ export default function Markets() {
       }))
     : (exchange === "NSE" && !indicesLoading ? staticNseIndicesFallback : []);
 
-  const topGainers = liveGainers.length > 0
-    ? liveGainers.map(q => ({ symbol: q.symbol, name: STOCK_META[q.symbol]?.name ?? q.symbol, sector: STOCK_META[q.symbol]?.sector ?? "Other", price: q.lastPrice, change: q.changePercent }))
-    : staticTopGainers;
-  const topLosers = liveLosers.length > 0
-    ? liveLosers.map(q => ({ symbol: q.symbol, name: STOCK_META[q.symbol]?.name ?? q.symbol, sector: STOCK_META[q.symbol]?.sector ?? "Other", price: q.lastPrice, change: q.changePercent }))
-    : staticTopLosers;
+  const topGainers = liveGainers.map(q => ({ symbol: q.symbol, name: STOCK_META[q.symbol]?.name ?? q.symbol, sector: STOCK_META[q.symbol]?.sector ?? "Other", price: q.lastPrice, change: q.changePercent }));
+  const topLosers = liveLosers.map(q => ({ symbol: q.symbol, name: STOCK_META[q.symbol]?.name ?? q.symbol, sector: STOCK_META[q.symbol]?.sector ?? "Other", price: q.lastPrice, change: q.changePercent }));
 
-  // Sector rollup, overlaying live quotes onto the static universe wherever the
-  // Data Layer has coverage for a symbol (see docs/api/API.md /instruments).
+  // Sector rollup — only symbols with a real live quote contribute; a
+  // symbol with no quote yet is excluded rather than priced at 0/fabricated.
   const liveUniverse = useMemo(
-    () => nseUniverse.map(s => {
-      const q = liveQuotes[s.symbol];
-      return q ? { ...s, price: q.lastPrice, change: q.changePercent } : s;
-    }),
+    () => nseReferenceUniverse
+      .map(s => {
+        const q = liveQuotes[s.symbol];
+        return q ? { ...s, change: q.changePercent } : null;
+      })
+      .filter((s): s is { symbol: string; name: string; sector: string; change: number } => s !== null),
     [liveQuotes]
   );
   const sectors = useMemo(() => computeSectors(liveUniverse), [liveUniverse]);
+
+  const themesWithChange = useMemo(() => investmentThemes.map(theme => {
+    const memberChanges = theme.stocks
+      .map(s => liveQuotes[s]?.changePercent)
+      .filter((c): c is number => c != null);
+    const change = memberChanges.length > 0 ? memberChanges.reduce((a, b) => a + b, 0) / memberChanges.length : 0;
+    return { ...theme, change, isLive: memberChanges.length > 0 };
+  }), [liveQuotes]);
+
+  const volumeLeaders = volumeLeaderSymbols.map(v => ({ ...v, quote: liveQuotes[v.symbol] }));
+  const analystRatings = analystRatingSymbols.map(r => {
+    const current = liveQuotes[r.symbol]?.lastPrice ?? null;
+    return { ...r, current, upside: current != null ? +(((r.target - current) / current) * 100).toFixed(1) : null };
+  });
 
   const sortedDividendStocks = [...highDividendStocks].sort((a, b) => {
     if (divSortBy === "amount") return b.amount - a.amount;
@@ -345,9 +359,13 @@ export default function Markets() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-2xl">{theme.icon}</span>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${theme.change >= 0 ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
-                        {theme.change >= 0 ? '+' : ''}{theme.change.toFixed(1)}%
-                      </span>
+                      {theme.isLive ? (
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${theme.change >= 0 ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
+                          {theme.change >= 0 ? '+' : ''}{theme.change.toFixed(1)}%
+                        </span>
+                      ) : (
+                        <Skeleton className="h-4 w-12 rounded-full" />
+                      )}
                     </div>
                     <p className="text-sm font-bold">{theme.title}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{theme.desc}</p>
@@ -450,9 +468,13 @@ export default function Markets() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold">{v.ratio.toFixed(1)}x</p>
-                      <p className={`text-xs font-semibold ${v.change >= 0 ? 'text-bull' : 'text-bear'}`}>
-                        {v.change >= 0 ? '+' : ''}{v.change.toFixed(1)}%
-                      </p>
+                      {v.quote ? (
+                        <p className={`text-xs font-semibold ${v.quote.changePercent >= 0 ? 'text-bull' : 'text-bear'}`}>
+                          {v.quote.changePercent >= 0 ? '+' : ''}{v.quote.changePercent.toFixed(1)}%
+                        </p>
+                      ) : (
+                        <Skeleton className="h-3.5 w-10 ml-auto" />
+                      )}
                     </div>
                   </div>
                 ))}
@@ -491,11 +513,12 @@ export default function Markets() {
               </Card>
             </div>
 
-            {/* Analyst Ratings */}
+            {/* Analyst Ratings — illustrative only, not real analyst coverage */}
             <div>
               <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
                 <Award className="h-4 w-4 text-accent" />
                 Analyst Ratings
+                <span className="text-[10px] font-normal text-muted-foreground normal-case">(Illustrative)</span>
               </h2>
               <Card className="soft-card overflow-hidden">
                 {analystRatings.map(r => (
@@ -513,9 +536,13 @@ export default function Markets() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold">KES {r.target.toFixed(2)}</p>
-                      <p className={`text-xs font-semibold ${r.upside >= 0 ? 'text-bull' : 'text-bear'}`}>
-                        {r.upside >= 0 ? '+' : ''}{r.upside}% upside
-                      </p>
+                      {r.upside != null ? (
+                        <p className={`text-xs font-semibold ${r.upside >= 0 ? 'text-bull' : 'text-bear'}`}>
+                          {r.upside >= 0 ? '+' : ''}{r.upside}% upside
+                        </p>
+                      ) : (
+                        <Skeleton className="h-3.5 w-16 ml-auto" />
+                      )}
                     </div>
                   </div>
                 ))}

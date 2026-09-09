@@ -13,7 +13,7 @@ import { useWatchlist } from "@/hooks/useWatchlist";
 import { usePosts } from "@/hooks/usePosts";
 import { getTimeBasedGreeting } from "@/utils/timeGreeting";
 import { MarketStatusIndicator } from "@/components/shared/MarketStatusIndicator";
-import { computePortfolioStats, getPrice, getDayChange } from "@/lib/stockPrices";
+import { computePortfolioStats } from "@/lib/stockPrices";
 import { useLivePortfolioQuotes, useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { formatPostDate } from "@/lib/formatTimestamp";
 
@@ -44,16 +44,18 @@ export default function Home() {
   const { liveQuotes: livePortfolioQuotes } = useLivePortfolioQuotes(portfolio.map(h => h.symbol));
   const { totalValue: portfolioValue, totalGain: portfolioGain, gainPct: portfolioGainPct } = computePortfolioStats(portfolio, livePortfolioQuotes);
 
-  // Real watchlist, ranked by today's biggest movers — no more standing in
-  // for a fixed demo list regardless of what the person actually watches.
-  // Overlaid with live Continua Data Layer quotes wherever available.
+  // Real watchlist, ranked by today's biggest movers. Overlaid with live
+  // Continua Data Layer quotes; a symbol with no live quote yet is
+  // excluded from the movers list rather than shown with a fabricated
+  // price/change.
   const { quotes: watchlistQuotes } = useLiveQuotes(watchlist.map(w => w.symbol));
-  const watchlistMovers = [...watchlist]
+  const watchlistMovers = watchlist
     .map(w => {
       const q = watchlistQuotes[w.symbol.toUpperCase()];
-      const day = getDayChange(w.symbol);
-      return { symbol: w.symbol, name: w.name, price: q?.lastPrice ?? getPrice(w.symbol), changePct: q?.changePercent ?? day.pct };
+      if (!q) return null;
+      return { symbol: w.symbol, name: w.name, price: q.lastPrice, changePct: q.changePercent };
     })
+    .filter((w): w is { symbol: string; name: string; price: number; changePct: number } => w !== null)
     .sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct))
     .slice(0, 5);
 

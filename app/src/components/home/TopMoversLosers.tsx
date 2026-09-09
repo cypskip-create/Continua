@@ -2,57 +2,70 @@ import { ArrowUp, ArrowDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
-import { CANONICAL_SYMBOLS, getStockName, getPrice, getDayChange } from "@/lib/stockPrices";
+import { useMovers } from "@/hooks/useMovers";
+import { STOCK_META } from "@/lib/stockPrices";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MoverRow { symbol: string; name: string; price: number; change: number; isUp: boolean; }
 
-/** Real gainers/losers, computed from the canonical price data (data/nseSecurities.ts)
- *  instead of two hand-picked lists that would otherwise go stale the moment prices move. */
-function computeMovers(): { gainers: MoverRow[]; losers: MoverRow[] } {
-  const rows: MoverRow[] = CANONICAL_SYMBOLS.map((symbol) => {
-    const price = getPrice(symbol);
-    const { pct } = getDayChange(symbol);
-    return { symbol, name: getStockName(symbol), price, change: +pct.toFixed(1), isUp: pct >= 0 };
-  });
-  const sorted = [...rows].sort((a, b) => b.change - a.change);
-  return { gainers: sorted.slice(0, 5), losers: sorted.slice(-5).reverse() };
-}
-
 export function TopMoversLosers() {
   const navigate = useNavigate();
-  const { gainers, losers } = useMemo(computeMovers, []);
+  const { gainers: liveGainers, losers: liveLosers, isLoading } = useMovers();
 
-  const StockList = ({ stocks }: { stocks: MoverRow[] }) => (
-    <div className="space-y-3">
-      {stocks.map((stock) => (
-        <div
-          key={stock.symbol}
-          onClick={() => navigate(`/stock/${stock.symbol}`)}
-          className="flex items-center justify-between p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors cursor-pointer"
-        >
-          <div className="flex-1">
-            <div className="flex items-center space-x-2">
-              <span className="font-medium text-foreground">{stock.symbol}</span>
-              <span className="text-xs text-muted-foreground">{stock.name}</span>
+  const toRow = (q: { symbol: string; lastPrice: number; changePercent: number }): MoverRow => ({
+    symbol: q.symbol, name: STOCK_META[q.symbol]?.name ?? q.symbol,
+    price: q.lastPrice, change: q.changePercent, isUp: q.changePercent >= 0,
+  });
+  const gainers = liveGainers.slice(0, 5).map(toRow);
+  const losers = liveLosers.slice(0, 5).map(toRow);
+
+  const StockList = ({ stocks }: { stocks: MoverRow[] }) => {
+    if (isLoading && stocks.length === 0) {
+      return (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/20">
+              <div className="space-y-1.5"><Skeleton className="h-4 w-24" /><Skeleton className="h-3.5 w-16" /></div>
+              <Skeleton className="h-4 w-12" />
             </div>
-            <div className="text-sm font-medium">KES {stock.price.toFixed(2)}</div>
-          </div>
-          
-          <div className={`flex items-center space-x-1 ${stock.isUp ? 'text-bull' : 'text-bear'}`}>
-            {stock.isUp ? (
-              <ArrowUp className="h-4 w-4" />
-            ) : (
-              <ArrowDown className="h-4 w-4" />
-            )}
-            <span className="font-medium text-sm">
-              {stock.isUp ? '+' : ''}{stock.change}%
-            </span>
-          </div>
+          ))}
         </div>
-      ))}
-    </div>
-  );
+      );
+    }
+    if (stocks.length === 0) {
+      return <p className="text-sm text-muted-foreground text-center py-6">No movers data yet</p>;
+    }
+    return (
+      <div className="space-y-3">
+        {stocks.map((stock) => (
+          <div
+            key={stock.symbol}
+            onClick={() => navigate(`/stock/${stock.symbol}`)}
+            className="flex items-center justify-between p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors cursor-pointer"
+          >
+            <div className="flex-1">
+              <div className="flex items-center space-x-2">
+                <span className="font-medium text-foreground">{stock.symbol}</span>
+                <span className="text-xs text-muted-foreground">{stock.name}</span>
+              </div>
+              <div className="text-sm font-medium">KES {stock.price.toFixed(2)}</div>
+            </div>
+
+            <div className={`flex items-center space-x-1 ${stock.isUp ? 'text-bull' : 'text-bear'}`}>
+              {stock.isUp ? (
+                <ArrowUp className="h-4 w-4" />
+              ) : (
+                <ArrowDown className="h-4 w-4" />
+              )}
+              <span className="font-medium text-sm">
+                {stock.isUp ? '+' : ''}{stock.change}%
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <Card className="card-gradient">

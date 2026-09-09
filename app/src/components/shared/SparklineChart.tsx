@@ -1,37 +1,48 @@
-import { useMemo } from "react";
-
 interface SparklineChartProps {
+  /** Real recent closes, oldest first. Pass `undefined` (not a fabricated
+   *  series) when real data isn't available yet — this component renders
+   *  an honest empty placeholder in that case rather than inventing a
+   *  trend line. See useSparklines for the batch fetch that supplies this. */
   data?: number[];
   width?: number;
   height?: number;
   isPositive?: boolean;
+  isLoading?: boolean;
 }
 
-export const SparklineChart = ({ 
-  data, 
-  width = 60, 
-  height = 24, 
-  isPositive = true 
+export const SparklineChart = ({
+  data,
+  width = 60,
+  height = 24,
+  isPositive = true,
+  isLoading = false,
 }: SparklineChartProps) => {
-  const chartData = useMemo(() => {
-    if (data && data.length > 0) return data;
-    // Generate random sparkline data if none provided
-    const points = [];
-    let value = 50;
-    for (let i = 0; i < 20; i++) {
-      value = value + (Math.random() - 0.48) * 8;
-      value = Math.max(20, Math.min(80, value));
-      points.push(value);
-    }
-    return points;
-  }, [data]);
+  if (!data || data.length < 2) {
+    // Honest empty state — a flat dashed line, never a randomly generated
+    // trend. No fabricated data, ever, per project policy.
+    return (
+      <svg width={width} height={height} className="overflow-visible" aria-hidden="true">
+        <line
+          x1={0}
+          y1={height / 2}
+          x2={width}
+          y2={height / 2}
+          stroke="currentColor"
+          strokeOpacity={isLoading ? 0.25 : 0.15}
+          strokeWidth="1.5"
+          strokeDasharray="2 3"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
 
-  const min = Math.min(...chartData);
-  const max = Math.max(...chartData);
+  const min = Math.min(...data);
+  const max = Math.max(...data);
   const range = max - min || 1;
 
-  const points = chartData.map((value, index) => {
-    const x = (index / (chartData.length - 1)) * width;
+  const points = data.map((value, index) => {
+    const x = (index / (data.length - 1)) * width;
     const y = height - ((value - min) / range) * height;
     return `${x},${y}`;
   }).join(" ");

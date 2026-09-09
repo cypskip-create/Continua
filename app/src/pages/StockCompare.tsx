@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, GitCompare, Plus, X, TrendingUp, TrendingDown, Search, BarChart3, PieChart, Activity, DollarSign, Percent, Scale, ChevronRight } from "lucide-react";
 import { SparklineChart } from "@/components/shared/SparklineChart";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { CANONICAL_SYMBOLS, STOCK_META, getPrice, getDayChange, DIV_YIELD, getStockFundamentals, parseMagnitude, tickerSeed } from "@/lib/stockPrices";
+import { CANONICAL_SYMBOLS, STOCK_META, DIV_YIELD, getStockFundamentals, tickerSeed } from "@/lib/stockPrices";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useSparklines } from "@/hooks/useSparklines";
 
 interface Stock {
   symbol: string;
@@ -26,35 +27,44 @@ interface Stock {
   sector: string;
 }
 
-// Market cap, P/E, beta and volume come from the same shared fundamentals table used by
-// StockDetail and the Screener, so a stock's stats here can never disagree with its own
-// detail page. ROE and debt/equity aren't tracked elsewhere, so they're derived here
-// deterministically per symbol (stable across reloads, but compare-only). Price/change are
-// overlaid live below (useLiveQuotes) wherever the Data Layer covers a symbol.
-function buildStaticStocks(): Stock[] {
-  return CANONICAL_SYMBOLS.map(symbol => {
-    const price = getPrice(symbol);
-    const { pct } = getDayChange(symbol);
-    const seed = tickerSeed(symbol);
-    const meta = getStockFundamentals(symbol);
-    return {
-      symbol,
-      name: STOCK_META[symbol].name,
-      sector: STOCK_META[symbol].sector,
-      price,
-      change: +pct.toFixed(2),
-      marketCap: meta.marketCap,
-      pe: meta.pe,
-      eps: meta.pe > 0 ? +(price / meta.pe).toFixed(2) : 0,
-      dividendYield: DIV_YIELD[symbol] ?? 0,
-      roe: +(10 + (seed % 20)).toFixed(1),
-      debtToEquity: +(0.3 + (seed % 70) / 100).toFixed(2),
-      beta: meta.beta,
-      high52: +(price * 1.12).toFixed(2),
-      low52: +(price * 0.85).toFixed(2),
-      volume: meta.volume,
-    };
-  });
+// Formats a raw KES figure as "692.9B" / "8.1M" for market cap and volume
+// display — the inverse of stockPrices.ts's old parseMagnitude, now local
+// since it's only needed here for real (live-quote) numbers.
+function formatMagnitude(n: number): string {
+  if (n >= 1e12) return `${(n / 1e12).toFixed(1)}T`;
+  if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  return String(n);
+}
+
+// Inverse of the above, for comparing magnitude-formatted strings ("692.9B" vs "8.1M").
+function parseMagnitude(s: string): number {
+  const m = s.match(/^([\d.]+)([KMBT]?)$/i);
+  if (!m) return 0;
+  const n = parseFloat(m[1]);
+  const mult = { K: 1e3, M: 1e6, B: 1e9, T: 1e12 }[m[2].toUpperCase()] ?? 1;
+  return n * mult;
+}
+
+// Real fields: price/change/marketCap/volume — live quotes only (see
+// stocksDatabase below). P/E and beta are illustrative placeholders (no
+// real source yet — see getStockFundamentals). ROE and debt/equity aren't
+// tracked anywhere real either, so they're derived deterministically per
+// symbol (stable across reloads, compare-only, clearly a placeholder).
+function buildStaticStock(symbol: string, price: number): Omit<Stock, "symbol" | "name" | "sector" | "price" | "change" | "marketCap" | "volume"> {
+  const seed = tickerSeed(symbol);
+  const meta = getStockFundamentals(symbol);
+  return {
+    pe: meta.pe,
+    eps: meta.pe > 0 ? +(price / meta.pe).toFixed(2) : 0,
+    dividendYield: DIV_YIELD[symbol] ?? 0,
+    roe: +(10 + (seed % 20)).toFixed(1),
+    debtToEquity: +(0.3 + (seed % 70) / 100).toFixed(2),
+    beta: meta.beta,
+    high52: +(price * 1.12).toFixed(2),
+    low52: +(price * 0.85).toFixed(2),
+  };
 }
 
 const comparisonMetrics = [
@@ -78,23 +88,37 @@ export default function StockCompare() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
 
-  // Live Continua Data Layer quotes overlaid onto the static comparison table — same
-  // pattern as Screener/SectorDetail/AllStocksList. Keeping selection as symbols (not
-  // snapshotted Stock objects) means an already-added stock's price/change keeps updating
-  // live instead of freezing at whatever it was when it was added to the comparison.
+  // Live Continua Data Layer quotes — the ONLY source for price/change/
+  // marketCap/volume. A symbol with no live quote yet is excluded from
+  // stocksDatabase entirely (so it can't be searched/added while unpriced,
+  // and the comparison table never has to show a fabricated cell).
   const { quotes } = useLiveQuotes(CANONICAL_SYMBOLS);
   const stocksDatabase = useMemo(() => {
-    const base = buildStaticStocks();
-    return base.map(s => {
-      const q = quotes[s.symbol];
-      return q ? { ...s, price: q.lastPrice, change: +q.changePercent.toFixed(2) } : s;
-    });
+    return CANONICAL_SYMBOLS
+      .map(symbol => {
+        const q = quotes[symbol];
+        if (!q) return null;
+        const price = q.lastPrice;
+        return {
+          symbol,
+          name: STOCK_META[symbol].name,
+          sector: STOCK_META[symbol].sector,
+          price,
+          change: +q.changePercent.toFixed(2),
+          marketCap: q.marketCap != null ? formatMagnitude(q.marketCap) : "—",
+          volume: formatMagnitude(q.volume),
+          ...buildStaticStock(symbol, price),
+        } satisfies Stock;
+      })
+      .filter((s): s is Stock => s !== null);
   }, [quotes]);
 
   const selectedStocks = useMemo(
     () => selectedSymbols.map(sym => stocksDatabase.find(s => s.symbol === sym)).filter((s): s is Stock => !!s),
     [selectedSymbols, stocksDatabase]
   );
+
+  const { getSparkline } = useSparklines(selectedSymbols);
 
   const filteredStocks = stocksDatabase.filter(
     stock =>
@@ -231,7 +255,7 @@ export default function StockCompare() {
                     {stock.change >= 0 ? '+' : ''}{stock.change}%
                   </div>
                   <div className="mt-2">
-                    <SparklineChart isPositive={stock.change >= 0} width={130} height={26} />
+                    <SparklineChart isPositive={stock.change >= 0} width={130} height={26} data={getSparkline(stock.symbol)} />
                   </div>
                 </div>
               ))}

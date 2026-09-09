@@ -7,7 +7,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Filter, TrendingUp, TrendingDown, ChevronRight, RotateCcw, Sparkles } from "lucide-react";
 import { SparklineChart } from "@/components/shared/SparklineChart";
-import { CANONICAL_SYMBOLS, getStockName, getStockSector, getPrice, getDayChange, getStockFundamentals, parseMagnitude } from "@/lib/stockPrices";
+import { CANONICAL_SYMBOLS, getStockName, getStockSector, getStockFundamentals } from "@/lib/stockPrices";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useSparklines } from "@/hooks/useSparklines";
+import { Skeleton } from "@/components/ui/skeleton";
+
+function formatMagnitude(n: number): string {
+  if (n >= 1e12) return `${(n / 1e12).toFixed(1)}T`;
+  if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  return String(n);
+}
 
 interface ScreenerFilters {
   sector: string;
@@ -39,25 +50,30 @@ export function StockScreener() {
     sortOrder: "desc",
   });
 
-  // Every NSE security, computed live from the canonical price data
-  // (data/nseSecurities.ts) — no separate hardcoded stock list to drift
-  // out of sync with it.
+  // Every NSE security with a real live quote — no fallback to a
+  // fabricated price/volume/market-cap. A symbol with no live quote yet
+  // is simply excluded from the screener (it'll appear once its price
+  // arrives, since useLiveQuotes re-renders on each update).
+  const { quotes } = useLiveQuotes(CANONICAL_SYMBOLS);
   const allStocks = useMemo(
     () =>
-      CANONICAL_SYMBOLS.map((symbol) => {
-        const fundamentals = getStockFundamentals(symbol);
-        return {
-          symbol,
-          name: getStockName(symbol),
-          price: getPrice(symbol),
-          change: +getDayChange(symbol).pct.toFixed(2),
-          volume: fundamentals.volume,
-          marketCap: fundamentals.marketCap,
-          pe: fundamentals.pe,
-          sector: getStockSector(symbol),
-        };
-      }),
-    []
+      CANONICAL_SYMBOLS
+        .map((symbol) => {
+          const q = quotes[symbol];
+          if (!q) return null;
+          return {
+            symbol,
+            name: getStockName(symbol),
+            price: q.lastPrice,
+            change: +q.changePercent.toFixed(2),
+            volume: q.volume,
+            marketCap: q.marketCap ?? 0,
+            pe: getStockFundamentals(symbol).pe,
+            sector: getStockSector(symbol),
+          };
+        })
+        .filter((s): s is NonNullable<typeof s> => s !== null),
+    [quotes]
   );
 
   // Sector filter list derived from whatever sectors actually exist in the
@@ -94,12 +110,14 @@ export function StockScreener() {
     .sort((a, b) => {
       const aVal = filters.sortBy === 'change' ? a.change :
                    filters.sortBy === 'price' ? a.price :
-                   filters.sortBy === 'volume' ? parseMagnitude(a.volume) : parseMagnitude(a.marketCap);
+                   filters.sortBy === 'volume' ? a.volume : a.marketCap;
       const bVal = filters.sortBy === 'change' ? b.change :
                    filters.sortBy === 'price' ? b.price :
-                   filters.sortBy === 'volume' ? parseMagnitude(b.volume) : parseMagnitude(b.marketCap);
+                   filters.sortBy === 'volume' ? b.volume : b.marketCap;
       return filters.sortOrder === 'desc' ? bVal - aVal : aVal - bVal;
     });
+
+  const { getSparkline } = useSparklines(filteredStocks.slice(0, 10).map(s => s.symbol));
 
   return (
     <Card className="card-gradient">
@@ -220,13 +238,13 @@ export function StockScreener() {
                 </div>
                 <div className="text-xs text-muted-foreground truncate">{stock.name}</div>
                 <div className="flex gap-3 mt-1">
-                  <span className="text-[10px] text-muted-foreground">Vol: {stock.volume}</span>
+                  <span className="text-[10px] text-muted-foreground">Vol: {formatMagnitude(stock.volume)}</span>
                   <span className="text-[10px] text-muted-foreground">P/E: {stock.pe}</span>
                 </div>
               </div>
               
               <div className="flex items-center gap-2">
-                <SparklineChart isPositive={stock.change >= 0} width={40} height={18} />
+                <SparklineChart isPositive={stock.change >= 0} width={40} height={18} data={getSparkline(stock.symbol)} />
                 <div className="text-right min-w-[65px]">
                   <div className="font-semibold text-sm">KES {stock.price.toFixed(2)}</div>
                   <div className={`text-xs flex items-center justify-end gap-0.5 ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>

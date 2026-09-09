@@ -33,6 +33,11 @@ export const PerformanceQuerySchema = ExchangeQuery.extend({
   to: isoDateString.optional(),
 });
 
+export const SparklinesQuerySchema = ExchangeQuery.extend({
+  symbols: z.string().min(1, "symbols is required, e.g. ?symbols=SAFCOM,EQTY"),
+  points: z.coerce.number().int().min(2).max(90).default(20),
+});
+
 export const FinancialsQuerySchema = ExchangeQuery.extend({
   periodType: z.enum(["annual", "quarterly"]).default("annual"),
 });

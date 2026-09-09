@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
-import { getPrice, getDayChange } from "@/lib/stockPrices";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function WatchlistSummary() {
   const navigate = useNavigate();
@@ -23,16 +23,24 @@ export function WatchlistSummary() {
     () =>
       folderItems.map((item) => {
         const quote = quotes[item.symbol.toUpperCase()];
-        const price = quote?.lastPrice ?? getPrice(item.symbol);
-        const pct = quote?.changePercent ?? getDayChange(item.symbol).pct;
-        return { symbol: item.symbol, price, change: +pct.toFixed(2), isUp: pct >= 0 };
+        // No fallback: null price/change render a skeleton, never a
+        // fabricated number.
+        return {
+          symbol: item.symbol,
+          price: quote?.lastPrice ?? null,
+          change: quote?.changePercent ?? null,
+          isUp: (quote?.changePercent ?? 0) >= 0,
+          isLive: !!quote,
+        };
       }),
     [folderItems, quotes]
   );
 
-  // Aggregate "today" move across the watchlist itself — a plain average of
-  // %-change across whatever's actually in the folder, not a fabricated figure.
-  const avgChangePct = rows.length ? rows.reduce((s, r) => s + r.change, 0) / rows.length : 0;
+  // Aggregate "today" move across the watchlist itself — averaged only over
+  // rows with a real live quote, so it can't be dragged toward 0 by rows
+  // still loading.
+  const liveRows = rows.filter((r) => r.isLive);
+  const avgChangePct = liveRows.length ? liveRows.reduce((s, r) => s + r.change!, 0) / liveRows.length : null;
 
   return (
     <Card className="card-gradient">
@@ -61,13 +69,22 @@ export function WatchlistSummary() {
         ) : (
           <>
             <div className="text-center p-3 rounded-lg bg-primary/10 border border-primary/20">
-              <div className="flex items-center justify-center space-x-1 text-primary mb-1">
-                {avgChangePct >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                <span className="text-sm font-medium">Watchlist avg. today</span>
-              </div>
-              <div className={`text-lg font-bold ${avgChangePct >= 0 ? "text-bull" : "text-bear"}`}>
-                {avgChangePct >= 0 ? "+" : ""}{avgChangePct.toFixed(2)}%
-              </div>
+              {avgChangePct != null ? (
+                <>
+                  <div className="flex items-center justify-center space-x-1 text-primary mb-1">
+                    {avgChangePct >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                    <span className="text-sm font-medium">Watchlist avg. today</span>
+                  </div>
+                  <div className={`text-lg font-bold ${avgChangePct >= 0 ? "text-bull" : "text-bear"}`}>
+                    {avgChangePct >= 0 ? "+" : ""}{avgChangePct.toFixed(2)}%
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center gap-1.5">
+                  <span className="text-sm font-medium text-muted-foreground">Watchlist avg. today</span>
+                  <Skeleton className="h-6 w-20" />
+                </div>
+              )}
             </div>
 
             <div className="mt-4 space-y-2">
@@ -78,12 +95,19 @@ export function WatchlistSummary() {
                   className="flex items-center justify-between p-2 rounded-lg bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors"
                 >
                   <span className="text-xs font-medium">{stock.symbol}</span>
-                  <div className="text-right">
-                    <div className="text-xs font-medium">KES {stock.price.toFixed(2)}</div>
-                    <div className={`text-xs ${stock.isUp ? 'text-bull' : 'text-bear'}`}>
-                      {stock.isUp ? '+' : ''}{stock.change}%
+                  {stock.isLive ? (
+                    <div className="text-right">
+                      <div className="text-xs font-medium">KES {stock.price!.toFixed(2)}</div>
+                      <div className={`text-xs ${stock.isUp ? 'text-bull' : 'text-bear'}`}>
+                        {stock.isUp ? '+' : ''}{stock.change!.toFixed(2)}%
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex flex-col items-end gap-1">
+                      <Skeleton className="h-3.5 w-12" />
+                      <Skeleton className="h-3 w-9" />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

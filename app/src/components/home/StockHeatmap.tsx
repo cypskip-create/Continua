@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import { CANONICAL_SYMBOLS, STOCK_META, getDayChange, getStockFundamentals, parseMagnitude } from "@/lib/stockPrices";
+import { CANONICAL_SYMBOLS, STOCK_META } from "@/lib/stockPrices";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface HeatmapStock {
   symbol: string;
@@ -15,40 +16,35 @@ interface StockHeatmapProps {
   stocks?: HeatmapStock[];
 }
 
-// Derived from the shared price/fundamentals source (same one Markets, the Screener, and
-// Compare use) so the heatmap can't show a change% or list a ticker that disagrees with the
-// rest of the app. Limited to the dozen largest-cap names so the treemap stays legible.
-// Change% is overlaid with live Continua Data Layer quotes inside the component below
-// (useLiveQuotes) when no explicit `stocks` prop is supplied.
-function buildDefaultStocks(): HeatmapStock[] {
-  return CANONICAL_SYMBOLS
-    .map(symbol => {
-      const { pct } = getDayChange(symbol);
-      const f = getStockFundamentals(symbol);
-      return {
-        symbol,
-        name: STOCK_META[symbol].name,
-        change: +pct.toFixed(1),
-        marketCap: parseMagnitude(f.marketCap) / 1e9, // billions, for relative sizing only
-        sector: STOCK_META[symbol].sector,
-      };
-    })
-    .sort((a, b) => b.marketCap - a.marketCap)
-    .slice(0, 12);
-}
+// Just the reference universe (name/sector) + which dozen large-cap symbols
+// to feature — change% and market cap (used only for relative tile sizing,
+// never displayed as text) come from live quotes inside the component. A
+// symbol with no live quote yet is excluded from the grid rather than
+// tiled with a fabricated change.
+const DEFAULT_HEATMAP_SYMBOLS = CANONICAL_SYMBOLS.slice(0, 20); // widened pool so 12 tiles can still fill in once quotes arrive
 
 export function StockHeatmap({ stocks }: StockHeatmapProps) {
   const navigate = useNavigate();
 
-  const staticDefaults = buildDefaultStocks();
-  const { quotes } = useLiveQuotes(stocks ? [] : staticDefaults.map(s => s.symbol));
-  const liveDefaults = staticDefaults.map(s => {
-    const q = quotes[s.symbol];
-    return q ? { ...s, change: +q.changePercent.toFixed(1) } : s;
-  });
+  const { quotes } = useLiveQuotes(stocks ? [] : DEFAULT_HEATMAP_SYMBOLS);
+  const liveDefaults: HeatmapStock[] = DEFAULT_HEATMAP_SYMBOLS
+    .map(symbol => {
+      const q = quotes[symbol];
+      if (!q) return null;
+      return {
+        symbol,
+        name: STOCK_META[symbol].name,
+        change: +q.changePercent.toFixed(1),
+        marketCap: (q.marketCap ?? 0) / 1e9, // billions, for relative tile sizing only
+        sector: STOCK_META[symbol].sector,
+      };
+    })
+    .filter((s): s is HeatmapStock => s !== null)
+    .sort((a, b) => b.marketCap - a.marketCap)
+    .slice(0, 12);
 
   const stockData = stocks || liveDefaults;
-  
+  const isLoadingDefaults = !stocks && stockData.length === 0;
   // Calculate total market cap for sizing
   const totalMarketCap = stockData.reduce((sum, s) => sum + s.marketCap, 0);
 
@@ -67,7 +63,17 @@ export function StockHeatmap({ stocks }: StockHeatmapProps) {
 
   // Create a treemap-style layout
   const sortedStocks = [...stockData].sort((a, b) => b.marketCap - a.marketCap);
-  
+
+  if (isLoadingDefaults) {
+    return (
+      <div className="grid grid-cols-4 gap-1.5 auto-rows-fr">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <Skeleton key={i} className={`rounded-lg ${i < 3 ? 'col-span-2 row-span-2 min-h-[100px]' : i < 6 ? 'col-span-1 row-span-2 min-h-[80px]' : 'min-h-[60px]'}`} />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-4 gap-1.5 auto-rows-fr">
       {sortedStocks.map((stock, index) => {

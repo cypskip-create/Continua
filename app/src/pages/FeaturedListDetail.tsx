@@ -6,8 +6,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SparklineChart } from "@/components/shared/SparklineChart";
 import { getFeaturedListBySlug } from "@/data/featuredLists";
-import { getStockName, getStockSector, getPrice, getDayChange } from "@/lib/stockPrices";
+import { getStockName, getStockSector } from "@/lib/stockPrices";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useSparklines } from "@/hooks/useSparklines";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ICONS: Record<string, typeof Star> = {
   "blue-chip-nse": Star,
@@ -22,23 +24,25 @@ export default function FeaturedListDetail() {
   const Icon = list ? (ICONS[list.slug] || Star) : Star;
 
   const { quotes } = useLiveQuotes(list?.symbols ?? []);
+  const { getSparkline } = useSparklines(list?.symbols ?? []);
   const stocks = useMemo(() => {
     if (!list) return [];
     return list.symbols.map(symbol => {
       const q = quotes[symbol];
-      const { pct } = getDayChange(symbol);
       return {
         symbol,
         name: getStockName(symbol),
         sector: getStockSector(symbol),
-        price: q?.lastPrice ?? getPrice(symbol),
-        change: q?.changePercent ?? pct,
+        price: q?.lastPrice ?? null,
+        change: q?.changePercent ?? null,
+        isLive: !!q,
       };
     });
   }, [list, quotes]);
 
-  const avgChange = stocks.length > 0 ? stocks.reduce((sum, s) => sum + s.change, 0) / stocks.length : 0;
-  const isUp = avgChange >= 0;
+  const liveStocks = stocks.filter(s => s.isLive);
+  const avgChange = liveStocks.length > 0 ? liveStocks.reduce((sum, s) => sum + s.change!, 0) / liveStocks.length : null;
+  const isUp = (avgChange ?? 0) >= 0;
 
   if (!list) {
     return (
@@ -74,9 +78,13 @@ export default function FeaturedListDetail() {
               </div>
               <p className="text-sm font-bold truncate">{list.desc}</p>
             </div>
-            <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${isUp ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
-              {isUp ? '+' : ''}{avgChange.toFixed(1)}%
-            </span>
+            {avgChange != null ? (
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${isUp ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
+                {isUp ? '+' : ''}{avgChange.toFixed(1)}%
+              </span>
+            ) : (
+              <Skeleton className="h-5 w-12 rounded-full shrink-0" />
+            )}
           </div>
           <div className="flex gap-1.5 mt-3 flex-wrap">
             {list.symbols.map(s => (
@@ -105,14 +113,21 @@ export default function FeaturedListDetail() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <SparklineChart isPositive={stock.change >= 0} width={44} height={18} />
-                  <div className="text-right min-w-[72px]">
-                    <p className="text-sm font-bold">KES {stock.price.toFixed(2)}</p>
-                    <p className={`text-xs font-semibold flex items-center justify-end gap-0.5 ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>
-                      {stock.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                      {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(1)}%
-                    </p>
-                  </div>
+                  <SparklineChart isPositive={(stock.change ?? 0) >= 0} width={44} height={18} data={getSparkline(stock.symbol)} isLoading={!stock.isLive} />
+                  {stock.isLive ? (
+                    <div className="text-right min-w-[72px]">
+                      <p className="text-sm font-bold">KES {stock.price!.toFixed(2)}</p>
+                      <p className={`text-xs font-semibold flex items-center justify-end gap-0.5 ${stock.change! >= 0 ? 'text-bull' : 'text-bear'}`}>
+                        {stock.change! >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                        {stock.change! >= 0 ? '+' : ''}{stock.change!.toFixed(1)}%
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="min-w-[72px] flex flex-col items-end gap-1">
+                      <Skeleton className="h-4 w-14" />
+                      <Skeleton className="h-3 w-10" />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

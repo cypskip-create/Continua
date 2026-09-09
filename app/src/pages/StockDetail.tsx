@@ -19,7 +19,8 @@ import { AddInvestmentDialog } from "@/components/portfolio/AddInvestmentDialog"
 import { ContinuaScoreCard, computeScores } from "@/components/stock/ContinuaScore";
 import { AIThesisCard } from "@/components/stock/AIThesisCard";
 import { getFundamentals } from "@/data/stockFundamentals";
-import { STOCK_META, getPrice, getDayChange, DIV_YIELD, getStockFundamentals } from "@/lib/stockPrices";
+import { STOCK_META, DIV_YIELD, getStockFundamentals } from "@/lib/stockPrices";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ValuationSection } from "@/components/stock/report/ValuationSection";
 import { FutureGrowthSection } from "@/components/stock/report/FutureGrowthSection";
 import { PastPerformanceSection } from "@/components/stock/report/PastPerformanceSection";
@@ -145,25 +146,29 @@ export default function StockDetail() {
   const [indicatorsSheetOpen, setIndicatorsSheetOpen] = useState(false);
 
   const stock = stockMeta ? (() => {
-    const price = liveQuote?.lastPrice ?? getPrice(upperSymbol);
-    const change = liveQuote?.change ?? getDayChange(upperSymbol).abs;
-    const pct = liveQuote?.changePercent ?? getDayChange(upperSymbol).pct;
     const f = getStockFundamentals(upperSymbol);
+    // price/change/pct come ONLY from the live quote — 0 here is a neutral
+    // loading placeholder for internal math (chart scrubbing etc.), never
+    // shown directly: every JSX spot that renders these renders a loading
+    // skeleton instead while isLive is false. No fabricated fallback.
+    const price = liveQuote?.lastPrice ?? 0;
+    const change = liveQuote?.change ?? 0;
+    const pct = liveQuote?.changePercent ?? 0;
     const dividend = +(price * ((DIV_YIELD[upperSymbol] ?? 0) / 100)).toFixed(2);
     const eps = f.pe > 0 ? +(price / f.pe).toFixed(2) : 0;
     return {
       name: stockMeta.name, price, change, changePercent: pct.toFixed(2), isUp: change >= 0,
-      marketCap: liveQuote?.marketCap ? String(liveQuote.marketCap) : f.marketCap,
+      marketCap: liveQuote?.marketCap ? String(liveQuote.marketCap) : null,
       pe: f.pe.toFixed(1), eps: eps.toFixed(2), dividend: dividend.toFixed(2),
       high52: (price * 1.12).toFixed(2), low52: (price * 0.85).toFixed(2),
       exchange: "NSE", sector: stockMeta.sector,
-      volume: liveQuote?.volume ?? f.volume, beta: f.beta.toFixed(2), avgVolume: f.avgVolume,
+      volume: liveQuote?.volume ?? null, beta: f.beta.toFixed(2), avgVolume: f.avgVolume,
       isLive: !!liveQuote,
     };
   })() : {
     name: symbol || "Unknown Stock", price: 0, change: 0, changePercent: "0.00", isUp: true,
-    marketCap: "N/A", pe: "N/A", eps: "N/A", dividend: "N/A", high52: "N/A", low52: "N/A",
-    exchange: "NSE", sector: "Unknown", volume: "N/A", beta: "N/A", avgVolume: "N/A", isLive: false
+    marketCap: null, pe: "N/A", eps: "N/A", dividend: "N/A", high52: "N/A", low52: "N/A",
+    exchange: "NSE", sector: "Unknown", volume: null, beta: "N/A", avgVolume: "N/A", isLive: false
   };
 
   const company = liveProfile
@@ -445,17 +450,23 @@ export default function StockDetail() {
                     {stock.name}
                   </p>
                   <span className={`absolute inset-0 text-sm font-bold tabular leading-tight transition-opacity duration-200 ${priceVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                    {stock.price.toFixed(2)}
+                    {stock.isLive ? stock.price.toFixed(2) : <Skeleton className="h-4 w-14 inline-block align-middle" />}
                   </span>
                 </div>
               </div>
               <div className={`flex flex-col leading-tight shrink-0 transition-opacity duration-200 ${priceVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 <span className={`text-xs font-semibold tabular ${dayChangeIsUp ? 'text-bull' : 'text-bear'}`}>
-                  {dayChangeIsUp ? '+' : ''}{stock.change.toFixed(2)}
+                  {stock.isLive ? <>{dayChangeIsUp ? '+' : ''}{stock.change.toFixed(2)}</> : <Skeleton className="h-3 w-10" />}
                 </span>
                 <span className={`text-[11px] font-medium tabular flex items-center gap-0.5 ${dayChangeIsUp ? 'text-bull' : 'text-bear'}`}>
-                  {dayChangeIsUp ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
-                  {dayChangeIsUp ? '+' : ''}{stock.changePercent}%
+                  {stock.isLive ? (
+                    <>
+                      {dayChangeIsUp ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+                      {dayChangeIsUp ? '+' : ''}{stock.changePercent}%
+                    </>
+                  ) : (
+                    <Skeleton className="h-3 w-10" />
+                  )}
                 </span>
               </div>
             </div>
@@ -475,7 +486,11 @@ export default function StockDetail() {
       <div className="px-4 pt-4 pb-2 animate-fade-in">
         <h1 className="text-[15px] font-medium text-muted-foreground tracking-tight leading-tight">{stock.name}</h1>
         <div ref={heroPriceRef} className="mt-1 flex items-end justify-between gap-3">
-          <span className="text-4xl font-bold tabular tracking-tight">KES {displayPrice.toFixed(2)}</span>
+          {stock.isLive ? (
+            <span className="text-4xl font-bold tabular tracking-tight">KES {displayPrice.toFixed(2)}</span>
+          ) : (
+            <Skeleton className="h-9 w-40" />
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -488,9 +503,15 @@ export default function StockDetail() {
           </Button>
         </div>
         <div className={`text-sm font-semibold flex items-center gap-1 mt-1 tabular ${displayIsUp ? 'text-bull' : 'text-bear'}`}>
-          {displayIsUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-          <span>{priceChange >= 0 ? '+' : ''}KES {Math.abs(priceChange).toFixed(2)} · {priceChange >= 0 ? '+' : ''}{priceChangePercent}%</span>
-          <span className="text-muted-foreground font-normal text-xs ml-1">{hoverDate || timeframeLabels[selectedTimeframe] || selectedTimeframe}</span>
+          {stock.isLive ? (
+            <>
+              {displayIsUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+              <span>{priceChange >= 0 ? '+' : ''}KES {Math.abs(priceChange).toFixed(2)} · {priceChange >= 0 ? '+' : ''}{priceChangePercent}%</span>
+              <span className="text-muted-foreground font-normal text-xs ml-1">{hoverDate || timeframeLabels[selectedTimeframe] || selectedTimeframe}</span>
+            </>
+          ) : (
+            <Skeleton className="h-4 w-32" />
+          )}
         </div>
       </div>
 
@@ -737,19 +758,23 @@ export default function StockDetail() {
           <div>
             <Eyebrow>Key Statistics</Eyebrow>
             <div className="border-t border-border/60">
-              {[
+              {([
                 ["Market Cap", stock.marketCap],
                 ["P/E Ratio", stock.pe],
-                ["EPS", `KES ${stock.eps}`],
-                ["Dividend Yield", `${divYield}%`],
-                ["52W High", `KES ${stock.high52}`],
-                ["52W Low", `KES ${stock.low52}`],
-                ["Volume", stock.volume || "—"],
+                ["EPS", stock.isLive ? `KES ${stock.eps}` : null],
+                ["Dividend Yield", stock.isLive ? `${divYield}%` : null],
+                ["52W High", stock.isLive ? `KES ${stock.high52}` : null],
+                ["52W Low", stock.isLive ? `KES ${stock.low52}` : null],
+                ["Volume", stock.volume != null ? stock.volume.toLocaleString() : null],
                 ["Beta", stock.beta || "—"],
-              ].map(([k, v]) => (
-                <div key={k as string} className="flex items-center justify-between py-2.5 border-b border-border/40">
+              ] as [string, string | number | null][]).map(([k, v]) => (
+                <div key={k} className="flex items-center justify-between py-2.5 border-b border-border/40">
                   <span className="text-xs text-muted-foreground">{k}</span>
-                  <span className="text-xs font-semibold tabular">{v}</span>
+                  {v != null ? (
+                    <span className="text-xs font-semibold tabular">{v}</span>
+                  ) : (
+                    <Skeleton className="h-3.5 w-14" />
+                  )}
                 </div>
               ))}
             </div>
@@ -759,7 +784,7 @@ export default function StockDetail() {
             symbol={symbol || ""} name={stock.name} sector={stock.sector}
             price={stock.price} changePercent={stock.changePercent}
             pe={stock.pe} eps={stock.eps} dividend={stock.dividend}
-            marketCap={stock.marketCap} scores={scores as any}
+            marketCap={stock.marketCap ?? "—"} scores={scores as any}
           />
 
           <div>
@@ -832,7 +857,7 @@ export default function StockDetail() {
             <div id="rpt-6" className="scroll-mt-40"><DividendsSection symbol={symbol || ""} currency={exchangeMeta.currency} divYield={divYield} annualDividend={stock.dividend} /></div>
             <div id="rpt-7" className="scroll-mt-40"><ManagementSection symbol={symbol || ""} /></div>
             <div id="rpt-8" className="scroll-mt-40"><OwnershipSection ownership={liveOwnership} topShareholders={liveTopShareholders} isLoading={ownershipLoading} /></div>
-            <div id="rpt-9" className="scroll-mt-40"><CompanyInfoSection symbol={symbol || ""} exchange={exchangeMeta.code} marketCap={stock.marketCap} /></div>
+            <div id="rpt-9" className="scroll-mt-40"><CompanyInfoSection symbol={symbol || ""} exchange={exchangeMeta.code} marketCap={stock.marketCap ?? "—"} /></div>
             <div id="rpt-technicals" className="scroll-mt-40 space-y-2">
               <p className="text-[11px] text-muted-foreground">
                 Technicals and the Institutional Scorecard below aren't part of Simply Wall St's report —

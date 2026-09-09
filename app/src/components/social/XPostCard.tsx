@@ -13,7 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { CommunityReactionButton, CommunityReaction } from "./CommunityReactionButton";
 import { atHandle, getHandle } from "@/lib/handle";
-import { getPrice, getDayChange, NSE_TICKER_SET, ALIAS_OF } from "@/lib/stockPrices";
+import { NSE_TICKER_SET, ALIAS_OF } from "@/lib/stockPrices";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 
 
 
@@ -38,6 +39,16 @@ interface XPostCardProps {
 
 export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare, onDelete, onEdit, onReact, isFollowing, onFollow, expanded }: XPostCardProps) {
   const navigate = useNavigate();
+
+  // Every $TICKER mentioned in this post's text or stock_mentions gets one
+  // batched live-quote lookup — no per-render fabricated price.
+  const mentionedSymbols = (() => {
+    const fromText = Array.from(post.content.matchAll(/\$([A-Z]+)\b/g)).map((m) => m[1]);
+    const fromField = post.stock_mentions ?? [];
+    return Array.from(new Set([...fromText, ...fromField].map((s) => s.toUpperCase())));
+  })();
+  const { quotes: mentionQuotes } = useLiveQuotes(mentionedSymbols);
+
   const { toast } = useToast();
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -87,7 +98,8 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
         const symbol = part.slice(1);
         const upper = symbol.toUpperCase();
         const isRealTicker = NSE_TICKER_SET.has(upper) || !!ALIAS_OF[upper];
-        const priceData = isRealTicker ? { price: getPrice(symbol), change: getDayChange(symbol).pct } : null;
+        const q = isRealTicker ? mentionQuotes[upper] : undefined;
+        const priceData = q ? { price: q.lastPrice, change: q.changePercent } : null;
         return (
           <span key={i} className="inline-flex items-center">
             <span className="text-primary font-semibold cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); navigate(`/stock/${symbol}`); }}>
@@ -184,7 +196,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
                 {post.stock_mentions.map(stock => {
                   const upper = stock.toUpperCase();
                   const isRealTicker = NSE_TICKER_SET.has(upper) || !!ALIAS_OF[upper];
-                  const change = isRealTicker ? getDayChange(stock).pct : null;
+                  const change = isRealTicker ? mentionQuotes[upper]?.changePercent ?? null : null;
                   return (
                     <Badge key={stock} variant="secondary" className="text-[11px] px-2 py-0.5 cursor-pointer hover:bg-primary/10 rounded-full gap-1 border-0" onClick={(e) => { e.stopPropagation(); navigate(`/stock/${stock}`); }}>
                       ${stock}

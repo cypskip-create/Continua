@@ -22,7 +22,6 @@ import { MediaFeed } from "@/components/social/MediaFeed";
 import { supabase } from "@/integrations/supabase/client";
 import { atHandle, getInitials } from "@/lib/handle";
 import { CommunityReaction } from "@/components/social/CommunityReactionButton";
-import { getPrice, getDayChange } from "@/lib/stockPrices";
 import { useLivePortfolioQuotes } from "@/hooks/useLiveQuotes";
 import { shareLink } from "@/lib/share";
 
@@ -156,21 +155,29 @@ export default function TradersHub() {
 
   const portfolioSnapshot = useMemo(() => {
     if (!portfolio.length) return null;
-    const holdings = portfolio.map(h => {
-      const quote = livePortfolioQuotes[h.symbol.toUpperCase()];
-      const currentPrice = quote?.price ?? getPrice(h.symbol, h.avg_cost);
-      const dayChangeAbs = quote?.dayChangeAbs ?? getDayChange(h.symbol).abs;
-      return {
-        symbol: h.symbol,
-        name: h.name,
-        shares: h.shares,
-        avgCost: h.avg_cost,
-        currentPrice,
-        gain: ((currentPrice - h.avg_cost) / h.avg_cost) * 100,
-        dayChangeAbs,
-        dayChangePct: currentPrice - dayChangeAbs > 0 ? (dayChangeAbs / (currentPrice - dayChangeAbs)) * 100 : 0,
-      };
-    });
+    // Only holdings with a real live quote are included — an unpriced
+    // holding is left out of the snapshot (and its totals) rather than
+    // priced from a fabricated fallback, since this snapshot is what
+    // people actually attach to a public post.
+    const holdings = portfolio
+      .map(h => {
+        const quote = livePortfolioQuotes[h.symbol.toUpperCase()];
+        if (!quote) return null;
+        const currentPrice = quote.price;
+        const dayChangeAbs = quote.dayChangeAbs;
+        return {
+          symbol: h.symbol,
+          name: h.name,
+          shares: h.shares,
+          avgCost: h.avg_cost,
+          currentPrice,
+          gain: ((currentPrice - h.avg_cost) / h.avg_cost) * 100,
+          dayChangeAbs,
+          dayChangePct: currentPrice - dayChangeAbs > 0 ? (dayChangeAbs / (currentPrice - dayChangeAbs)) * 100 : 0,
+        };
+      })
+      .filter((h): h is NonNullable<typeof h> => h !== null);
+    if (holdings.length === 0) return null;
     // Same maths as computePortfolioStats (lib/stockPrices.ts) — kept inline
     // here since we also need the per-holding breakdown above for the
     // compose card's "top holdings" list, which that helper doesn't return.

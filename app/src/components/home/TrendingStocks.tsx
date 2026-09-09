@@ -4,12 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Flame, Eye, ArrowUpRight, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SparklineChart } from "@/components/shared/SparklineChart";
-import { getStockName, getPrice, getDayChange, getStockFundamentals } from "@/lib/stockPrices";
+import { getStockName } from "@/lib/stockPrices";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useSparklines } from "@/hooks/useSparklines";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Only the editorial part — which stocks are "trending" and why — is curated
-// here. Price, change, and volume all come from the canonical data in
-// data/nseSecurities.ts (via stockPrices.ts) at render time, not hardcoded,
-// so this widget can never show a stale/wrong number for a real ticker.
+// Only the editorial part — which stocks are "trending" and why — is
+// curated here. Price, change, and sparkline all come from live quotes /
+// real candle history at render time, never hardcoded.
 const TRENDING_PICKS: { symbol: string; reason: string; mentions: number }[] = [
   { symbol: "SCOM", reason: "M-Pesa expansion news", mentions: 1250 },
   { symbol: "EQTY", reason: "Strong Q4 earnings", mentions: 890 },
@@ -20,42 +22,38 @@ const TRENDING_PICKS: { symbol: string; reason: string; mentions: number }[] = [
 interface TrendingStock {
   symbol: string;
   name: string;
-  price: number;
-  change: number;
-  volume: string;
+  price: number | null;
+  change: number | null;
+  volume: number | null;
   mentions: number;
-  sparkline: number[];
+  sparkline: number[] | undefined;
   reason: string;
-}
-
-/** A short illustrative sparkline that actually ends at the real current price —
- *  there's no real intraday history in the data layer yet, so this is a stand-in
- *  shape, not real historical data, but at least it's honest about where it ends up. */
-function buildSparkline(price: number, changePct: number): number[] {
-  const start = changePct !== 0 ? price / (1 + changePct / 100) : price;
-  return Array.from({ length: 8 }, (_, i) => +(start + ((price - start) * i) / 7).toFixed(2));
+  isLive: boolean;
 }
 
 export function TrendingStocks() {
   const navigate = useNavigate();
+  const symbols = TRENDING_PICKS.map((p) => p.symbol);
+  const { quotes } = useLiveQuotes(symbols);
+  const { getSparkline } = useSparklines(symbols);
 
   const stocks: TrendingStock[] = useMemo(
     () =>
       TRENDING_PICKS.map((pick) => {
-        const price = getPrice(pick.symbol);
-        const { pct } = getDayChange(pick.symbol);
+        const q = quotes[pick.symbol];
         return {
           symbol: pick.symbol,
           name: getStockName(pick.symbol),
-          price,
-          change: +pct.toFixed(2),
-          volume: getStockFundamentals(pick.symbol).volume,
+          price: q?.lastPrice ?? null,
+          change: q?.changePercent ?? null,
+          volume: q?.volume ?? null,
           mentions: pick.mentions,
-          sparkline: buildSparkline(price, pct),
+          sparkline: getSparkline(pick.symbol),
           reason: pick.reason,
+          isLive: !!q,
         };
       }),
-    []
+    [quotes, getSparkline]
   );
 
   return (
@@ -104,10 +102,19 @@ export function TrendingStocks() {
 
               {/* Price & Change */}
               <div className="text-right">
-                <p className="text-sm font-semibold">KES {stock.price.toFixed(2)}</p>
-                <p className={`text-xs font-medium ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>
-                  {stock.change >= 0 ? '+' : ''}{stock.change}%
-                </p>
+                {stock.isLive ? (
+                  <>
+                    <p className="text-sm font-semibold">KES {stock.price!.toFixed(2)}</p>
+                    <p className={`text-xs font-medium ${stock.change! >= 0 ? 'text-bull' : 'text-bear'}`}>
+                      {stock.change! >= 0 ? '+' : ''}{stock.change!.toFixed(2)}%
+                    </p>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-end gap-1">
+                    <Skeleton className="h-4 w-14" />
+                    <Skeleton className="h-3 w-10" />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -121,10 +128,12 @@ export function TrendingStocks() {
                   <Eye className="h-3 w-3" />
                   {stock.mentions}
                 </span>
-                <span className="flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  {stock.volume}
-                </span>
+                {stock.volume != null && (
+                  <span className="flex items-center gap-1">
+                    <TrendingUp className="h-3 w-3" />
+                    {stock.volume.toLocaleString()}
+                  </span>
+                )}
               </div>
             </div>
           </div>

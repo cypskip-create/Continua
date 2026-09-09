@@ -12,7 +12,8 @@ import {
 } from "recharts";
 import { ContinuaMark } from "@/components/shared/ContinuaMark";
 import { AfricaMap } from "@/components/shared/AfricaMap";
-import { getPrice, getStockName, getDayChange } from "@/lib/stockPrices";
+import { getStockName } from "@/lib/stockPrices";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 
 // ============================================================
 // 1. REUSABLE ANIMATION COMPONENTS
@@ -489,20 +490,9 @@ const ReactionTrayDemo = () => {
 
 const TICKER_WATCHLIST = ["SCOM", "EQTY", "KCB", "SCBK", "COOP", "EABL", "ABSA", "NCBA", "PORT", "BRIT", "KPLC", "BAT", "JUB", "DTK", "SBIC"] as const;
 
-const tickerSymbols = TICKER_WATCHLIST.map(
-  (symbol) => [symbol, getPrice(symbol), +getDayChange(symbol).pct.toFixed(1)] as const
-);
-
-const tickerItems = [
-  ...tickerSymbols.map(([symbol, price, change]) => ({ symbol, price, change })),
-  ...tickerSymbols.map(([symbol, price, change]) => ({ symbol, price, change })),
-];
+const tickerSymbols = TICKER_WATCHLIST;
 
 const BOARD_WATCHLIST = ["SCOM", "EQTY", "KCB", "EABL", "COOP"] as const;
-
-const boardRows = BOARD_WATCHLIST.map(
-  (symbol) => [symbol, getStockName(symbol), getPrice(symbol), +getDayChange(symbol).pct.toFixed(1)] as const
-);
 
 const researchModules = [
   { code: "R.01", title: "Valuation & performance", body: "Fair value estimates, valuation multiples against the sector, analyst price targets and how the stock has actually performed against a benchmark." },
@@ -644,14 +634,34 @@ const Check = () => (
 const ContinuaLandingPage = () => {
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Real live quotes for the marketing ticker tape / exchange board — a
+  // symbol with no live quote yet is simply omitted rather than shown with
+  // a fabricated price, even on the public marketing page.
+  const { quotes: tickerQuotes } = useLiveQuotes([...tickerSymbols]);
+  type TickerRow = { symbol: string; price: number; change: number };
+  const tickerRows: TickerRow[] = [];
+  for (const symbol of tickerSymbols) {
+    const q = tickerQuotes[symbol];
+    if (q) tickerRows.push({ symbol, price: q.lastPrice, change: +q.changePercent.toFixed(1) });
+  }
+  const tickerItems = [...tickerRows, ...tickerRows];
+
+  type BoardRow = readonly [string, string, number, number];
+  const boardRows: BoardRow[] = [];
+  for (const symbol of BOARD_WATCHLIST) {
+    const q = tickerQuotes[symbol];
+    if (q) boardRows.push([symbol, getStockName(symbol), q.lastPrice, +q.changePercent.toFixed(1)]);
+  }
+
   // Cycles a soft highlight through the hero exchange board, one row every
   // couple of seconds — a lightweight stand-in for "a tick just landed"
   // without needing an actual live feed on the marketing page.
   const [flashRow, setFlashRow] = useState(0);
   useEffect(() => {
+    if (boardRows.length === 0) return;
     const id = window.setInterval(() => setFlashRow(i => (i + 1) % boardRows.length), 2200);
     return () => window.clearInterval(id);
-  }, []);
+  }, [boardRows.length]);
 
   // ----- Recharts data -----
   const portfolioLineData = [

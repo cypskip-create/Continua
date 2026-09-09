@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Search, TrendingUp, TrendingDown, Filter, ChevronDown, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SparklineChart } from "@/components/shared/SparklineChart";
-import { CANONICAL_SYMBOLS, STOCK_META, getPrice, getDayChange } from "@/lib/stockPrices";
+import { CANONICAL_SYMBOLS, STOCK_META } from "@/lib/stockPrices";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useSparklines } from "@/hooks/useSparklines";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useToast } from "@/hooks/use-toast";
 import { AddToWatchlistDialog } from "@/components/markets/AddToWatchlistDialog";
@@ -39,23 +41,22 @@ export function AllStocksList({ initialSector, onlySymbols }: AllStocksListProps
 
   useEffect(() => { if (initialSector) setSelectedSector(initialSector); }, [initialSector]);
 
-  // Live Continua Data Layer quotes overlaid on top of the static
-  // reference list below — symbols the Data Layer's current NSE universe
-  // doesn't have yet (see docs/api/API.md / instruments endpoint) simply
-  // keep showing the static reference price instead of breaking.
+  // Live Continua Data Layer quotes — a symbol the Data Layer's current NSE
+  // universe doesn't have yet (see docs/api/API.md / instruments endpoint)
+  // shows a loading skeleton in the list rather than a fabricated price.
   const { quotes } = useLiveQuotes(CANONICAL_SYMBOLS);
+  const { getSparkline } = useSparklines(CANONICAL_SYMBOLS);
 
   const allStocks = useMemo(
     () => CANONICAL_SYMBOLS.map(symbol => {
       const quote = quotes[symbol];
-      const { abs, pct } = getDayChange(symbol);
       return {
         symbol,
         name: STOCK_META[symbol].name,
         sector: STOCK_META[symbol].sector,
-        price: quote?.lastPrice ?? getPrice(symbol),
-        change: quote?.changePercent ?? pct,
-        isUp: (quote?.change ?? abs) >= 0,
+        price: quote?.lastPrice ?? null,
+        change: quote?.changePercent ?? null,
+        isUp: (quote?.change ?? 0) >= 0,
         isLive: !!quote,
       };
     }),
@@ -78,9 +79,9 @@ export function AllStocksList({ initialSector, onlySymbols }: AllStocksListProps
     return stocks.sort((a, b) => {
       switch(sortBy) {
         case "change":
-          return b.change - a.change;
+          return (b.change ?? -Infinity) - (a.change ?? -Infinity);
         case "price":
-          return b.price - a.price;
+          return (b.price ?? -Infinity) - (a.price ?? -Infinity);
         default:
           return a.symbol.localeCompare(b.symbol);
       }
@@ -195,14 +196,23 @@ export function AllStocksList({ initialSector, onlySymbols }: AllStocksListProps
               <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">{stock.name} · {stock.sector}</p>
             </div>
 
-            <SparklineChart isPositive={stock.isUp} width={48} height={20} />
+            <SparklineChart isPositive={stock.isUp} width={48} height={20} data={getSparkline(stock.symbol)} isLoading={!stock.isLive} />
 
             <div className="text-right shrink-0 w-[84px]">
-              <p className="text-[13.5px] font-bold tabular-nums leading-tight">KES {stock.price.toFixed(2)}</p>
-              <div className={`flex items-center justify-end gap-0.5 mt-0.5 ${stock.isUp ? 'text-bull' : 'text-bear'}`}>
-                {stock.isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                <span className="text-[11px] font-semibold tabular-nums">{stock.isUp ? '+' : ''}{stock.change.toFixed(2)}%</span>
-              </div>
+              {stock.isLive ? (
+                <>
+                  <p className="text-[13.5px] font-bold tabular-nums leading-tight">KES {stock.price!.toFixed(2)}</p>
+                  <div className={`flex items-center justify-end gap-0.5 mt-0.5 ${stock.isUp ? 'text-bull' : 'text-bear'}`}>
+                    {stock.isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                    <span className="text-[11px] font-semibold tabular-nums">{stock.isUp ? '+' : ''}{stock.change!.toFixed(2)}%</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-end gap-1">
+                  <Skeleton className="h-4 w-14" />
+                  <Skeleton className="h-3 w-10" />
+                </div>
+              )}
             </div>
           </div>
         ))}

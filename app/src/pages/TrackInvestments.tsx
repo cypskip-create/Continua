@@ -12,7 +12,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
-import { getPrice as getSharedPrice, getDayChange, computePortfolioStats } from "@/lib/stockPrices";
+import { computePortfolioStats } from "@/lib/stockPrices";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ReturnsBreakdown } from "@/components/portfolio/ReturnsBreakdown";
 import { ReturnsContributors } from "@/components/portfolio/ReturnsContributors";
@@ -69,25 +69,31 @@ export default function TrackInvestments() {
 
   // Live Continua Data Layer quotes — the SAME quotes HoldingsList (rendered further
   // down) uses internally, so this page's total balance / allocation chart can't disagree
-  // with what the individual holding rows show.
+  // with what the individual holding rows show. A position with no live quote yet is
+  // excluded from `holdings` (and every derived chart/widget below) rather than priced
+  // from a fabricated fallback — see `pricingCount` for a "pricing N more…" note.
   const { liveQuotes } = useLivePortfolioQuotes(portfolio.map(h => h.symbol));
-  const getLivePrice = (symbol: string) => liveQuotes[symbol.toUpperCase()]?.price ?? getSharedPrice(symbol);
+  const getLivePrice = (symbol: string): number | undefined => liveQuotes[symbol.toUpperCase()]?.price;
 
   const stats = useMemo(() => computePortfolioStats(portfolio, liveQuotes), [portfolio, liveQuotes]);
+  const pricingCount = portfolio.length - stats.pricedCount;
 
   const holdings = useMemo(() => {
-    const items = portfolio.map(h => {
-      const quote = liveQuotes[h.symbol.toUpperCase()];
-      const price = quote?.price ?? getSharedPrice(h.symbol);
-      const value = price * h.shares;
-      const cost = h.avg_cost * h.shares;
-      const gain = value - cost;
-      const gainPct = cost > 0 ? (gain / cost) * 100 : 0;
-      const weight = stats.totalValue > 0 ? (value / stats.totalValue) * 100 : 0;
-      const dayChangeAbs = quote?.dayChangeAbs ?? getDayChange(h.symbol).abs;
-      const dayChangePct = price - dayChangeAbs > 0 ? (dayChangeAbs / (price - dayChangeAbs)) * 100 : 0;
-      return { ...h, price, value, cost, gain, gainPct, weight, dayChangePct };
-    });
+    const items = portfolio
+      .map(h => {
+        const quote = liveQuotes[h.symbol.toUpperCase()];
+        if (!quote) return null;
+        const price = quote.price;
+        const value = price * h.shares;
+        const cost = h.avg_cost * h.shares;
+        const gain = value - cost;
+        const gainPct = cost > 0 ? (gain / cost) * 100 : 0;
+        const weight = stats.totalValue > 0 ? (value / stats.totalValue) * 100 : 0;
+        const dayChangeAbs = quote.dayChangeAbs;
+        const dayChangePct = price - dayChangeAbs > 0 ? (dayChangeAbs / (price - dayChangeAbs)) * 100 : 0;
+        return { ...h, price, value, cost, gain, gainPct, weight, dayChangePct };
+      })
+      .filter((h): h is NonNullable<typeof h> => h !== null);
     items.sort((a, b) => {
       if (sortBy === "value") return sortAsc ? a.value - b.value : b.value - a.value;
       if (sortBy === "gain") return sortAsc ? a.gainPct - b.gainPct : b.gainPct - a.gainPct;
@@ -241,6 +247,11 @@ export default function TrackInvestments() {
               <p className="text-[10px] text-muted-foreground">{sectorAlloc.length} sectors</p>
             </div>
           </div>
+          {pricingCount > 0 && (
+            <p className="mt-3 text-[10px] text-muted-foreground text-center">
+              Pricing {pricingCount} more position{pricingCount === 1 ? "" : "s"}…
+            </p>
+          )}
         </div>
 
         {/* ── PERFORMANCE CHART — Robinhood-clean, no side prices ── */}
@@ -287,7 +298,7 @@ export default function TrackInvestments() {
           dividendData={dividendData}
         />
 
-        <PortfolioInsights holdings={portfolio} prices={Object.fromEntries(portfolio.map(h => [h.symbol, getLivePrice(h.symbol)]))} />
+        <PortfolioInsights holdings={portfolio} prices={Object.fromEntries(portfolio.map(h => [h.symbol, getLivePrice(h.symbol)]).filter(([, p]) => p != null) as [string, number][])} />
 
         {/* ── HOLDINGS / RETURNS ── */}
         <Tabs defaultValue="holdings">
@@ -573,7 +584,7 @@ export default function TrackInvestments() {
             </div>
           ) : (
             <>
-              <HoldingsList holdings={holdings} showValues={showBalance} onRemove={handleDelete} />
+              <HoldingsList holdings={portfolio} showValues={showBalance} onRemove={handleDelete} />
 
               {/* ── SHARING & PRIVACY ── same settings Settings → Privacy & safety
                   writes to, kept right here too since this is where holdings live. */}

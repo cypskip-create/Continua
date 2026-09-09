@@ -12,10 +12,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useToast } from "@/hooks/use-toast";
-import { getPrice, getDayChange } from "@/lib/stockPrices";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { useInstruments } from "@/hooks/useInstruments";
+import { useSparklines } from "@/hooks/useSparklines";
 import { SparklineChart } from "@/components/shared/SparklineChart";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 export default function Watchlist() {
@@ -55,14 +56,21 @@ export default function Watchlist() {
   const watchlistSymbols = useMemo(() => folderItems.map((item) => item.symbol), [folderItems]);
   const { quotes } = useLiveQuotes(watchlistSymbols);
   const { instruments } = useInstruments();
+  const { getSparkline } = useSparklines(watchlistSymbols);
 
   const rows = useMemo(() => {
     return folderItems.map(item => {
       const quote = quotes[item.symbol.toUpperCase()];
-      const price = quote?.lastPrice ?? getPrice(item.symbol);
-      const abs = quote?.change ?? getDayChange(item.symbol).abs;
-      const pct = quote?.changePercent ?? getDayChange(item.symbol).pct;
-      return { ...item, price, change: abs, changePercent: pct, isUp: abs >= 0, isLive: !!quote };
+      // No fallback: an honest empty/loading state renders when quote is
+      // undefined, never a fabricated price. See useLiveQuotes.
+      return {
+        ...item,
+        price: quote?.lastPrice ?? null,
+        change: quote?.change ?? null,
+        changePercent: quote?.changePercent ?? null,
+        isUp: (quote?.change ?? 0) >= 0,
+        isLive: !!quote,
+      };
     });
   }, [folderItems, quotes]);
 
@@ -237,14 +245,23 @@ export default function Watchlist() {
                 <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">{stock.name}</p>
               </div>
 
-              <SparklineChart width={52} height={22} isPositive={stock.isUp} />
+              <SparklineChart width={52} height={22} isPositive={stock.isUp} data={getSparkline(stock.symbol)} isLoading={!stock.isLive} />
 
               <div className="text-right shrink-0 w-[92px]">
-                <p className="text-[13.5px] font-bold tabular-nums leading-tight">KES {stock.price.toFixed(2)}</p>
-                <div className={`flex items-center justify-end gap-0.5 mt-0.5 ${stock.isUp ? "text-bull" : "text-bear"}`}>
-                  {stock.isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                  <span className="text-[11px] font-semibold tabular-nums">{stock.isUp ? "+" : ""}{stock.changePercent.toFixed(2)}%</span>
-                </div>
+                {stock.isLive ? (
+                  <>
+                    <p className="text-[13.5px] font-bold tabular-nums leading-tight">KES {stock.price!.toFixed(2)}</p>
+                    <div className={`flex items-center justify-end gap-0.5 mt-0.5 ${stock.isUp ? "text-bull" : "text-bear"}`}>
+                      {stock.isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      <span className="text-[11px] font-semibold tabular-nums">{stock.isUp ? "+" : ""}{stock.changePercent!.toFixed(2)}%</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-end gap-1">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-3 w-12" />
+                  </div>
+                )}
               </div>
 
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={e => handleRemove(stock.symbol, e)}>

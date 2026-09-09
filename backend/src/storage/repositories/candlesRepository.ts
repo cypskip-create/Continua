@@ -69,6 +69,36 @@ export const candlesRepository = {
     return { high: Number(row.high), low: Number(row.low) };
   },
 
+  /** Last `limit` daily closes for each of several securities in one
+   *  query — the batch equivalent of getCandles(), built specifically for
+   *  list-view sparklines (Watchlist, Markets, Screener, etc.) so those
+   *  views don't fire one request per row. Returns real closes only; a
+   *  securityId with no candle history is simply absent from the map —
+   *  callers must render an honest empty state for it, never fabricate
+   *  a line. Chronological order (oldest first) per security. */
+  async getRecentClosesBatch(securityIds: string[], limit = 20): Promise<Map<string, { timestamp: string; close: number }[]>> {
+    const result = new Map<string, { timestamp: string; close: number }[]>();
+    if (securityIds.length === 0) return result;
+    const res = await query<any>(
+      `SELECT security_id as "securityId", bar_time as "timestamp", close
+       FROM (
+         SELECT security_id, bar_time, close,
+                row_number() OVER (PARTITION BY security_id ORDER BY bar_time DESC) as rn
+         FROM market.candles
+         WHERE security_id = ANY($1) AND interval = '1d'
+       ) ranked
+       WHERE rn <= $2
+       ORDER BY security_id, bar_time ASC`,
+      [securityIds, limit]
+    );
+    for (const row of res.rows) {
+      const list = result.get(row.securityId) ?? [];
+      list.push({ timestamp: row.timestamp, close: Number(row.close) });
+      result.set(row.securityId, list);
+    }
+    return result;
+  },
+
   async getAverageVolume(securityId: string, from: string, to: string): Promise<number | null> {
     const res = await query<any>(
       `SELECT AVG(volume) as avg_volume FROM market.candles

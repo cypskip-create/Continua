@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SparklineChart } from "@/components/shared/SparklineChart";
 import { StockHeatmap } from "@/components/home/StockHeatmap";
 import { usePortfolio } from "@/hooks/usePortfolio";
-import { STOCK_META, getPrice, getDayChange, computePortfolioStats } from "@/lib/stockPrices";
+import { STOCK_META, computePortfolioStats } from "@/lib/stockPrices";
 import { useLivePortfolioQuotes, useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { shareLink } from "@/lib/share";
 
@@ -42,25 +42,26 @@ export default function Discover() {
   const { portfolio, loading: portfolioLoading } = usePortfolio();
   const { liveQuotes } = useLivePortfolioQuotes(portfolio.map(h => h.symbol));
   const portfolioStats = computePortfolioStats(portfolio, liveQuotes);
-  const portfolioWithLive = portfolio.map(h => {
-    const live = liveQuotes[h.symbol.toUpperCase()];
-    const price = live?.price ?? getPrice(h.symbol, h.avg_cost);
-    return { ...h, gainPct: h.avg_cost > 0 ? ((price - h.avg_cost) / h.avg_cost) * 100 : 0 };
-  });
+  const portfolioWithLive = portfolio
+    .map(h => {
+      const live = liveQuotes[h.symbol.toUpperCase()];
+      if (!live) return null; // no live price yet — excluded rather than defaulted to a fabricated/zero gain
+      return { ...h, gainPct: h.avg_cost > 0 ? ((live.price - h.avg_cost) / h.avg_cost) * 100 : 0 };
+    })
+    .filter((h): h is NonNullable<typeof h> => h !== null);
   const topGainerHolding = portfolioWithLive.length > 0 ? [...portfolioWithLive].sort((a, b) => b.gainPct - a.gainPct)[0] : null;
 
-  // Trending = today's biggest movers, computed from the shared price source (and, when
-  // available, live Continua Data Layer quotes) — never a separate hand-typed list that
-  // can disagree with what every other page shows.
+  // Trending = today's biggest movers, from live Continua Data Layer quotes
+  // only — a symbol with no live quote yet is excluded, never fabricated.
   const { quotes: trendingQuotes } = useLiveQuotes(TRENDING_SYMBOLS);
   const trendingStocks = useMemo(() => {
     return TRENDING_SYMBOLS
       .map(symbol => {
         const q = trendingQuotes[symbol];
-        const { pct } = getDayChange(symbol);
-        const changePct = q?.changePercent ?? pct;
-        return { symbol, price: q?.lastPrice ?? getPrice(symbol), pct: changePct, isUp: changePct >= 0 };
+        if (!q) return null;
+        return { symbol, price: q.lastPrice, pct: q.changePercent, isUp: q.changePercent >= 0 };
       })
+      .filter((s): s is { symbol: string; price: number; pct: number; isUp: boolean } => s !== null)
       .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
       .slice(0, 10)
       .map(s => ({ symbol: s.symbol, price: s.price, change: `${s.isUp ? '+' : ''}${s.pct.toFixed(2)}%`, isUp: s.isUp }));

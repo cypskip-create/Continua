@@ -100,9 +100,9 @@ export const NSE_SECURITIES: NseSecurityRecord[] = [
 
 /**
  * Legacy/colloquial spellings still used in some UI copy, mapped to their
- * real Mansa ticker. getPrice/getStockName/etc. in stockPrices.ts resolve
- * through this automatically — most call sites using the old spelling don't
- * need to be individually rewritten, they just keep working.
+ * real Mansa ticker. getStockName/getStockSector/etc. in stockPrices.ts
+ * resolve through this automatically — most call sites using the old
+ * spelling don't need to be individually rewritten, they just keep working.
  */
 export const LEGACY_TICKER_ALIASES: Record<string, string> = {
   SAFCOM: "SCOM",

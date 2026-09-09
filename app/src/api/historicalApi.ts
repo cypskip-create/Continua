@@ -18,4 +18,15 @@ export const historicalApi = {
       params: { exchange, from, to },
     });
   },
+
+  /** Batch recent closes for list-view sparklines — one request for every
+   *  symbol on a page. Symbols with no candle history yet are simply
+   *  absent from the response; callers must render that as an honest
+   *  empty state, never a fabricated line. */
+  getSparklines(symbols: string[], opts: { points?: number; exchange?: string } = {}) {
+    const { points, exchange = "NSE" } = opts;
+    return continuaFetch<Record<string, number[]>>("/historical/sparklines", {
+      params: { exchange, symbols: symbols.join(","), points },
+    });
+  },
 };

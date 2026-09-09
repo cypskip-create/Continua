@@ -4,7 +4,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TrendingUp, TrendingDown, Verified } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
-import { getStockName, getPrice, getDayChange } from "@/lib/stockPrices";
+import { getStockName } from "@/lib/stockPrices";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Only the selection of which symbols to feature is curated here — their
 // price/name/change all come from the canonical data at render time.
@@ -27,15 +29,19 @@ const SUGGESTED_USERS = [
 export function TrendingSidebar() {
   const navigate = useNavigate();
 
+  const { quotes } = useLiveQuotes(TRENDING_SYMBOLS);
   const trendingStocks = useMemo(
     () =>
-      TRENDING_SYMBOLS.map((symbol) => ({
-        symbol,
-        name: getStockName(symbol),
-        price: getPrice(symbol),
-        change: +getDayChange(symbol).pct.toFixed(1),
-      })),
-    []
+      TRENDING_SYMBOLS.map((symbol) => {
+        const q = quotes[symbol];
+        return {
+          symbol,
+          name: getStockName(symbol),
+          price: q?.lastPrice ?? null,
+          change: q?.changePercent ?? null,
+        };
+      }),
+    [quotes]
   );
 
   return (
@@ -55,11 +61,20 @@ export function TrendingSidebar() {
                 <div className="text-xs text-muted-foreground">{stock.name}</div>
               </div>
               <div className="text-right">
-                <div className="text-sm font-medium">KES {stock.price.toFixed(2)}</div>
-                <div className={`text-xs font-medium flex items-center gap-0.5 justify-end ${stock.change >= 0 ? "text-bull" : "text-bear"}`}>
-                  {stock.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                  {stock.change >= 0 ? "+" : ""}{stock.change.toFixed(1)}%
-                </div>
+                {stock.price != null && stock.change != null ? (
+                  <>
+                    <div className="text-sm font-medium">KES {stock.price.toFixed(2)}</div>
+                    <div className={`text-xs font-medium flex items-center gap-0.5 justify-end ${stock.change >= 0 ? "text-bull" : "text-bear"}`}>
+                      {stock.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      {stock.change >= 0 ? "+" : ""}{stock.change.toFixed(1)}%
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-end gap-1">
+                    <Skeleton className="h-4 w-14" />
+                    <Skeleton className="h-3 w-10" />
+                  </div>
+                )}
               </div>
             </div>
           ))}
