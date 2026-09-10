@@ -30,7 +30,7 @@ const EnvSchema = z.object({
   CACHE_DRIVER: z.enum(["memory", "redis"]).default("memory"),
   REDIS_URL: z.string().optional(),
 
-  NSE_CLIENT_MODE: z.enum(["mock", "live", "afx"]).default("mock"),
+  NSE_CLIENT_MODE: z.enum(["mock", "live", "afx", "mystocks"]).default("mock"),
   NSE_API_BASE_URL: z.string().optional(),
   NSE_API_KEY: z.string().optional(),
 
