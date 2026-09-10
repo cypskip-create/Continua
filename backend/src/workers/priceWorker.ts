@@ -91,6 +91,12 @@ export async function runPriceIngestionOnce(options: RunOnceOptions = {}): Promi
 export function startPriceWorker(): () => void {
   const adapters = getAllAdapters();
   logger.info({ exchanges: adapters.map((a) => a.exchange), intervalMs: env.PRICE_POLL_INTERVAL_MS }, "Starting price worker");
+  for (const adapter of adapters) {
+    logger.info(
+      { exchange: adapter.exchange, hasListingSeeding: typeof adapter.listSecuritiesWithCompanies === "function" },
+      "Adapter listing-seeding capability"
+    );
+  }
 
   intervalHandle = setInterval(() => { void runPriceIngestionOnce(); }, env.PRICE_POLL_INTERVAL_MS);
 
