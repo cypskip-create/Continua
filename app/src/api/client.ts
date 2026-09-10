@@ -6,10 +6,14 @@
 // See docs/api/API.md for the full contract this is built against.
 
 export const AFRIFINANCE_API_URL =
-  (import.meta.env.VITE_AFRIFINANCE_API_URL as string | undefined) ?? "http://localhost:4000/api/v1";
+  (import.meta.env.VITE_CONTINUA_API_URL as string | undefined) ??
+  (import.meta.env.VITE_AFRIFINANCE_API_URL as string | undefined) ??
+  "http://localhost:4000/api/v1";
 
 export const AFRIFINANCE_WS_URL =
-  (import.meta.env.VITE_AFRIFINANCE_WS_URL as string | undefined) ?? "ws://localhost:4001";
+  (import.meta.env.VITE_CONTINUA_WS_URL as string | undefined) ??
+  (import.meta.env.VITE_AFRIFINANCE_WS_URL as string | undefined) ??
+  "ws://localhost:4001";
 
 // DEV-ONLY key, read from Vite env (see app/.env). This is a first-party key
 // for Continua's OWN backend, not an upstream NSE credential — but it is
@@ -22,7 +26,11 @@ export const AFRIFINANCE_WS_URL =
 // per-user, expiring token). Nothing else in this file or its callers needs
 // to change — swap what `getApiKey()` returns.
 function getApiKey(): string {
-  return (import.meta.env.VITE_AFRIFINANCE_API_KEY as string | undefined) ?? "dev-local-only-key";
+  return (
+    (import.meta.env.VITE_CONTINUA_API_KEY as string | undefined) ??
+    (import.meta.env.VITE_AFRIFINANCE_API_KEY as string | undefined) ??
+    "dev-local-only-key"
+  );
 }
 
 export class ContinuaApiError extends Error {
