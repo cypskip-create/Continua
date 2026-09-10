@@ -79,7 +79,7 @@ d("pipeline integration (requires DATABASE_URL)", () => {
   it("produces plausible, correctly-scaled ratios for a spot-checked symbol", async () => {
     const { researchService } = await import("../../src/services/research/researchService.js");
     const { securitiesRepository } = await import("../../src/storage/repositories/securitiesRepository.js");
-    const safcom = await securitiesRepository.getBySymbol("NSE", "SAFCOM");
+    const safcom = await securitiesRepository.getBySymbol("NSE", "SCOM");
     const ratios = await researchService.getRatios(safcom!.id);
     // Regression guard for the numeric-as-string bug: if pg ever stops
     // parsing NUMERIC columns as real numbers, this comparison silently
@@ -113,7 +113,7 @@ d("pipeline integration (requires DATABASE_URL)", () => {
   it("aggregates monthly candles by calendar month, not fixed 30-day windows", async () => {
     const { candlesRepository } = await import("../../src/storage/repositories/candlesRepository.js");
     const { securitiesRepository } = await import("../../src/storage/repositories/securitiesRepository.js");
-    const safcom = await securitiesRepository.getBySymbol("NSE", "SAFCOM");
+    const safcom = await securitiesRepository.getBySymbol("NSE", "SCOM");
     const to = new Date().toISOString();
     const from = new Date(Date.now() - 100 * 86_400_000).toISOString();
     const monthly = await candlesRepository.getCandles(safcom!.id, "1M", from, to);

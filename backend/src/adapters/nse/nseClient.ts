@@ -51,7 +51,7 @@ interface SeedRow {
 }
 
 const SEED: SeedRow[] = [
-  { symbol: "SAFCOM", company: "Safaricom PLC", sector: "Telecommunications", industry: "Wireless Telecom", isin: "KE1000001917", basePrice: 12.85, currency: "KES", sharesOutM: 40093 },
+  { symbol: "SCOM", company: "Safaricom PLC", sector: "Telecommunications", industry: "Wireless Telecom", isin: "KE1000001917", basePrice: 12.85, currency: "KES", sharesOutM: 40093 },
   { symbol: "EQTY", company: "Equity Group Holdings PLC", sector: "Banking", industry: "Diversified Banks", isin: "KE0000000315", basePrice: 62.50, currency: "KES", sharesOutM: 3797 },
   { symbol: "KCB", company: "KCB Group PLC", sector: "Banking", industry: "Diversified Banks", isin: "KE0000000067", basePrice: 45.75, currency: "KES", sharesOutM: 3218 },
   { symbol: "COOP", company: "Co-operative Bank of Kenya", sector: "Banking", industry: "Diversified Banks", isin: "KE0000000596", basePrice: 17.25, currency: "KES", sharesOutM: 5884 },

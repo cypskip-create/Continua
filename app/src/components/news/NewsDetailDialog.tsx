@@ -52,10 +52,10 @@ const mockComments: Record<number, NewsComment[]> = {
   1: [
     { id: "1", user: "TraderKE", avatar: "TK", content: "This is great news for the banking sector! EQTY is looking strong.", time: "2h ago" },
     { id: "2", user: "MarketWatch", avatar: "MW", content: "The foreign investors seem bullish on Kenyan equities.", time: "3h ago" },
-    { id: "3", user: "FinanceGuru", avatar: "FG", content: "I've been holding SAFCOM for months. Finally seeing some movement!", time: "4h ago" },
+    { id: "3", user: "FinanceGuru", avatar: "FG", content: "I've been holding SCOM for months. Finally seeing some movement!", time: "4h ago" },
   ],
   2: [
-    { id: "1", user: "BankingFan", avatar: "BF", content: "Mobile banking disruption is real. $SAFCOM leading the way.", time: "1h ago" },
+    { id: "1", user: "BankingFan", avatar: "BF", content: "Mobile banking disruption is real. $SCOM leading the way.", time: "1h ago" },
   ],
   3: [
     { id: "1", user: "InvestorJane", avatar: "IJ", content: "Agricultural sector needs more attention from investors.", time: "5h ago" },

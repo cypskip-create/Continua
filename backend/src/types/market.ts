@@ -54,7 +54,7 @@ export interface Company {
 
 export interface Security {
   id: string;                // Continua-internal UUID, stable across renames
-  symbol: string;             // exchange ticker, e.g. "SAFCOM"
+  symbol: string;             // exchange ticker, e.g. "SCOM"
   exchange: ExchangeCode;
   companyId: string;
   currency: Currency;

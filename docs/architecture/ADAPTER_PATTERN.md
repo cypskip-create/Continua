@@ -85,8 +85,8 @@ automatically on the next scheduled run.
 ## A note on natural IDs
 
 Every entity in the standard schema uses a stable, human-debuggable string
-ID rather than a random UUID: `NSE:SAFCOM` for a security,
-`NSE:company:SAFCOM` for a company, `NSE:period:SAFCOM:2026` for a fiscal
+ID rather than a random UUID: `NSE:SCOM` for a security,
+`NSE:company:SCOM` for a company, `NSE:period:SCOM:2026` for a fiscal
 period. This is deliberate — it means IDs are deterministic across
 re-ingestion (no duplicate-detection logic needed for upserts), and a log
 line or a `curl` response is immediately legible without a join. Keep this

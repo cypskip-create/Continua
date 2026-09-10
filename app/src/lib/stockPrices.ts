@@ -31,7 +31,7 @@ export const STOCK_META: Record<string, { name: string; sector: string }> = Obje
   NSE_SECURITIES.map((s) => [s.ticker, { name: s.name, sector: s.sector }])
 );
 
-// Legacy/colloquial spellings (SAFCOM, DTB, STANBIC, KAKZ, UMEME, CARBACID,
+// Legacy/colloquial spellings (SCOM, DTB, STANBIC, KAKZ, UMEME, CARBACID,
 // SAMR) still used in some UI copy — resolved transparently by
 // getPrice/getStockName/getStockSector/getStockFundamentals below, so
 // existing call sites using the old spelling keep working without needing
@@ -46,7 +46,7 @@ export const STOCK_NAMES: Record<string, string> = Object.fromEntries(
   Object.entries(STOCK_META).map(([symbol, meta]) => [symbol, meta.name])
 );
 
-/** Resolves a legacy/colloquial spelling (SAFCOM, DTB, STANBIC...) to its real
+/** Resolves a legacy/colloquial spelling (SCOM, DTB, STANBIC...) to its real
  *  Mansa ticker, or returns the input unchanged if it's already canonical (or
  *  unrecognized). Every getter below normalizes through this first — this is
  *  the ONE place that needs to know about legacy spellings, instead of every

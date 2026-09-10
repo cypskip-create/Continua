@@ -7,7 +7,7 @@
  * (same keys issued via `npm run apikey:create`, or DEV_API_KEY locally).
  *
  * Client protocol (JSON messages over the WS connection):
- *   → { "action": "subscribe",   "symbols": ["SAFCOM", "EQTY"] }
+ *   → { "action": "subscribe",   "symbols": ["SCOM", "EQTY"] }
  *   → { "action": "unsubscribe", "symbols": ["EQTY"] }
  *   ← { "type": "quote", "payload": Quote }
  *   ← { "type": "corporate_action", "payload": CorporateAction }

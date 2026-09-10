@@ -38,7 +38,7 @@ Returns database + cache connectivity status. `200` if healthy/degraded,
 ### `GET /quotes/:symbol`
 Latest quote for one symbol. `404` if unknown.
 
-### `GET /quotes?symbols=SAFCOM,EQTY,KCB`
+### `GET /quotes?symbols=SCOM,EQTY,KCB`
 Batch quotes. `symbols` is required, comma-separated.
 
 ## Historical
@@ -123,7 +123,7 @@ gets the connection rejected with a 401 before the upgrade completes.
 
 **Subscribe:**
 ```json
-{ "action": "subscribe", "symbols": ["SAFCOM", "EQTY"] }
+{ "action": "subscribe", "symbols": ["SCOM", "EQTY"] }
 ```
 **Unsubscribe:**
 ```json
@@ -131,7 +131,7 @@ gets the connection rejected with a 401 before the upgrade completes.
 ```
 **Received events:**
 ```json
-{ "type": "quote", "payload": { "symbol": "SAFCOM", "lastPrice": 12.91, "...": "..." } }
+{ "type": "quote", "payload": { "symbol": "SCOM", "lastPrice": 12.91, "...": "..." } }
 { "type": "corporate_action", "payload": { "securityId": "NSE:KCB", "type": "dividend", "...": "..." } }
 ```
 A client with no active subscriptions receives nothing — subscribe to at

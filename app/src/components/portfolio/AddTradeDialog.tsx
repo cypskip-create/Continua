@@ -79,7 +79,7 @@ export function AddTradeDialog({ onTradeAdded }: AddTradeDialogProps) {
             <Label htmlFor="symbol" className="text-sm font-medium">Stock Symbol *</Label>
             <Input
               id="symbol"
-              placeholder="e.g., SAFCOM"
+              placeholder="e.g., SCOM"
               value={symbol}
               onChange={(e) => setSymbol(e.target.value.toUpperCase())}
               className="h-10"

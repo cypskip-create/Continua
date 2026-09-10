@@ -105,7 +105,7 @@ export const NSE_SECURITIES: NseSecurityRecord[] = [
  * spelling don't need to be individually rewritten, they just keep working.
  */
 export const LEGACY_TICKER_ALIASES: Record<string, string> = {
-  SAFCOM: "SCOM",
+  SCOM: "SCOM",
   DTB: "DTK",
   STANBIC: "SBIC",
   KAKZ: "KUKZ",

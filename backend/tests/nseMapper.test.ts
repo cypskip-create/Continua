@@ -5,12 +5,12 @@ import type { NseRawQuote, NseRawSecurity, NseRawCorporateAction } from "../src/
 describe("nseMapper", () => {
   it("maps a raw NSE quote into the standard schema", () => {
     const raw: NseRawQuote = {
-      Symbol: "SAFCOM", LastTradedPrice: 12.85, Open: 12.70, High: 12.95, Low: 12.65, PrevClose: 12.70,
+      Symbol: "SCOM", LastTradedPrice: 12.85, Open: 12.70, High: 12.95, Low: 12.65, PrevClose: 12.70,
       Change: 0.15, ChangePct: 1.18, Volume: 8_100_000, Currency: "KES", TradingStatus: "ACTIVE",
       EventTimestamp: "2026-08-11T12:00:00", // no offset — EAT local
     };
     const quote = mapQuote(raw);
-    expect(quote.securityId).toBe("NSE:SAFCOM");
+    expect(quote.securityId).toBe("NSE:SCOM");
     expect(quote.lastPrice).toBe(12.85);
     expect(quote.status).toBe("active");
     // EAT is UTC+3, so 12:00 local → 09:00 UTC

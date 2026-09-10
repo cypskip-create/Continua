@@ -31,7 +31,7 @@ already called for:
 | `client.ts` | Base fetch wrapper — API key header, base URL, typed `ContinuaApiError` |
 | `types.ts` | TS types mirroring the backend's standard schema (`backend/src/types/market.ts`) |
 | `quotesApi.ts`, `historicalApi.ts`, `companiesApi.ts`, `financialsApi.ts`, `corporateActionsApi.ts`, `moversApi.ts`, `sectorsApi.ts`, `researchApi.ts`, `screenerApi.ts`, `instrumentsApi.ts` | One thin module per backend resource |
-| `websocketClient.ts` | Single shared WebSocket connection with per-symbol ref-counted subscriptions — N components watching SAFCOM share one server subscription, matching `docs/architecture/DATA_FLOW.md`'s "shared real-time data layer" |
+| `websocketClient.ts` | Single shared WebSocket connection with per-symbol ref-counted subscriptions — N components watching SCOM share one server subscription, matching `docs/architecture/DATA_FLOW.md`'s "shared real-time data layer" |
 
 ### Frontend hooks (`app/src/hooks/`, new)
 - `useLiveQuotes` / `useLiveQuote` — the core hook: React Query for the REST
@@ -219,8 +219,8 @@ precisely so the gap is visible rather than assumed away.
 - Headless-browser (Playwright) runs against the live dev server + live
   backend across every round, confirming the actual network calls fire and
   return `200`: `GET /instruments`, `GET /movers`, `GET /quotes` (batch, all
-  30 canonical symbols), `GET /companies/SAFCOM`, `GET /research/SAFCOM`,
-  `GET /dividends/SAFCOM`, `GET /ownership/SAFCOM`, `GET /historical/SAFCOM`
+  30 canonical symbols), `GET /companies/SCOM`, `GET /research/SCOM`,
+  `GET /dividends/SCOM`, `GET /ownership/SCOM`, `GET /historical/SCOM`
   (on switching the chart's "1Y" pill), and `GET /screener` (Screener page).
 - (Those Playwright runs temporarily bypassed the Supabase auth guard
   in-memory to reach routes without a login flow; the real

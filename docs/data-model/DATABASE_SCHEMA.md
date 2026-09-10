@@ -9,7 +9,7 @@ columns/types/constraints.
 ## Design principles
 
 - **Exchange-agnostic keys.** Every table keys off `exchange` (text, e.g.
-  `'NSE'`) and natural IDs like `security_id` (text, e.g. `'NSE:SAFCOM'`) —
+  `'NSE'`) and natural IDs like `security_id` (text, e.g. `'NSE:SCOM'`) —
   never an NSE-specific field. Adding NGX later is new rows, not new
   columns or new tables.
 - **Live vs. historical are separate tables.** `live_quotes` holds exactly

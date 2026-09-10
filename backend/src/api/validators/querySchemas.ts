@@ -19,7 +19,7 @@ const ExchangeQuery = z.object({
 });
 
 export const QuotesBatchQuerySchema = ExchangeQuery.extend({
-  symbols: z.string().min(1, "symbols is required, e.g. ?symbols=SAFCOM,EQTY"),
+  symbols: z.string().min(1, "symbols is required, e.g. ?symbols=SCOM,EQTY"),
 });
 
 export const HistoricalQuerySchema = ExchangeQuery.extend({
@@ -34,7 +34,7 @@ export const PerformanceQuerySchema = ExchangeQuery.extend({
 });
 
 export const SparklinesQuerySchema = ExchangeQuery.extend({
-  symbols: z.string().min(1, "symbols is required, e.g. ?symbols=SAFCOM,EQTY"),
+  symbols: z.string().min(1, "symbols is required, e.g. ?symbols=SCOM,EQTY"),
   points: z.coerce.number().int().min(2).max(90).default(20),
 });
 

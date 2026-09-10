@@ -7,7 +7,7 @@
 -- this backend's tables never migrate through the app's migrations.
 --
 -- Exchange-agnostic by design: every table keys off `exchange` (text, e.g.
--- 'NSE') and `security_id` (text, e.g. 'NSE:SAFCOM'), never off anything
+-- 'NSE') and `security_id` (text, e.g. 'NSE:SCOM'), never off anything
 -- NSE-specific. Adding NGX/JSE/etc. later is new rows, not new columns.
 -- ═══════════════════════════════════════════════════════════════════════
 
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS market.industries (
 );
 
 CREATE TABLE IF NOT EXISTS market.companies (
-  id            text PRIMARY KEY,        -- 'NSE:company:SAFCOM'
+  id            text PRIMARY KEY,        -- 'NSE:company:SCOM'
   name          text NOT NULL,
   description   text,
   sector_id     text REFERENCES market.sectors(id),
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS market.companies (
 );
 
 CREATE TABLE IF NOT EXISTS market.securities (
-  id           text PRIMARY KEY,         -- 'NSE:SAFCOM'
+  id           text PRIMARY KEY,         -- 'NSE:SCOM'
   symbol       text NOT NULL,
   exchange     text NOT NULL,
   company_id   text NOT NULL REFERENCES market.companies(id),

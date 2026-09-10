@@ -4,7 +4,7 @@
 // through this same manager instead of each opening its own connection.
 //
 // Protocol (docs/api/API.md):
-//   → { action: "subscribe",   symbols: ["SAFCOM", "EQTY"] }
+//   → { action: "subscribe",   symbols: ["SCOM", "EQTY"] }
 //   → { action: "unsubscribe", symbols: ["EQTY"] }
 //   ← { type: "quote", payload: Quote }
 //   ← { type: "corporate_action", payload: CorporateAction }
@@ -122,7 +122,7 @@ class ContinuaRealtimeClient {
   /** Subscribe to live quote ticks for one symbol. Multiple callers can
    *  subscribe to the same symbol — only the FIRST subscriber triggers a
    *  `subscribe` message to the server, and only the LAST unsubscribe
-   *  triggers `unsubscribe`, so N components watching SAFCOM still share
+   *  triggers `unsubscribe`, so N components watching SCOM still share
    *  one server-side subscription. */
   subscribeQuote(symbol: string, listener: QuoteListener): () => void {
     const key = symbol.toUpperCase();

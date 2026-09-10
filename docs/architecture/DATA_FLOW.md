@@ -111,11 +111,11 @@ price AND fundamentals to compute anything:
    corporate-actions cron, candles cron
 ```
 
-## Read path (API request, e.g. `GET /api/v1/research/SAFCOM`)
+## Read path (API request, e.g. `GET /api/v1/research/SCOM`)
 
 ```
 researchController.getResearch
-  -> securitiesRepository.getBySymbol("NSE", "SAFCOM")
+  -> securitiesRepository.getBySymbol("NSE", "SCOM")
   -> cache.getOrSet(ratios key, 60s, () => researchService.getRatios(id))
   -> cache.getOrSet(afriScore key, 60s, () => researchService.getAfriScore(id))
   -> IF either is missing (cache AND DB both empty — shouldn't happen post-
