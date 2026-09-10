@@ -85,6 +85,10 @@ const USER_AGENT = "Mozilla/5.0 (compatible; ContinuaBot/1.0; +https://github.co
 const SYMBOL_TO_MYSTOCKS_SLUG: Record<string, string> = {
   DTB: "DTK",       // Diamond Trust Bank Kenya
   STANBIC: "SBIC",  // Stanbic Holdings
+  SAFCOM: "SCOM",   // Safaricom — this codebase's DB uses SAFCOM as the
+                    // canonical ticker (confirmed via a live 404 in
+                    // production logs, 2026-09-10); mystocks.co.ke's own
+                    // URL slug for the same company is SCOM.
 };
 
 function toSlug(symbol: string): string {
