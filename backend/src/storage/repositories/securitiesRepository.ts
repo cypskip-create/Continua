@@ -10,6 +10,21 @@ export const securitiesRepository = {
     );
   },
 
+  /** Sector names are meant to be a shared taxonomy across every exchange
+   *  (e.g. "Banking" should be the same row whether it came from NSE or
+   *  NGX), but each adapter's own mapper computes its own id from the raw
+   *  sector string it received — which can genuinely differ between
+   *  adapters even for an identical name (confirmed in production: NSE's
+   *  own slug for "Unknown" collided with a differently-id'd "Unknown"
+   *  row some other exchange's adapter had already created, tripping the
+   *  UNIQUE constraint on `name`). Callers seeding a NEW sector should
+   *  check this first and reuse the existing id rather than assume their
+   *  own computed id is authoritative. */
+  async getSectorByName(name: string): Promise<Sector | null> {
+    const res = await query<Sector>(`SELECT id, name FROM market.sectors WHERE name = $1`, [name]);
+    return res.rows[0] ?? null;
+  },
+
   async upsertCompany(company: Company): Promise<void> {
     await query(
       `INSERT INTO market.companies (id, name, description, sector_id, industry_id, headquarters, ceo, employees, founded, website)

@@ -46,8 +46,13 @@ async function ensureListingsSeeded(adapter: IExchangeAdapter): Promise<void> {
     const existing = await securitiesRepository.getBySymbol(adapter.exchange, security.symbol).catch(() => null);
     if (existing) continue;
     try {
-      await securitiesRepository.upsertSector(sector);
-      await securitiesRepository.upsertCompany(company);
+      // Reuse an existing sector row by NAME if one already exists (see
+      // getSectorByName's doc comment) — only create a new sector row
+      // when the name is genuinely not present yet.
+      const existingSector = await securitiesRepository.getSectorByName(sector.name);
+      const resolvedSectorId = existingSector?.id ?? sector.id;
+      if (!existingSector) await securitiesRepository.upsertSector(sector);
+      await securitiesRepository.upsertCompany({ ...company, sectorId: resolvedSectorId });
       await securitiesRepository.upsertSecurity(security);
       logger.info({ exchange: adapter.exchange, symbol: security.symbol }, "Seeded bare-bones security listing (no fundamentals yet)");
     } catch (err) {
