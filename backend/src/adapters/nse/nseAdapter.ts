@@ -5,11 +5,11 @@
  * are implementation details of the NSE adapter.
  */
 import type { IExchangeAdapter, FundamentalsBundle } from "../types.js";
-import type { Quote, Candle, Security, CorporateAction, EarningsEvent, OwnershipRecord, MarketIndex } from "../../types/market.js";
+import type { Quote, Candle, Security, Company, Sector, CorporateAction, EarningsEvent, OwnershipRecord, MarketIndex } from "../../types/market.js";
 import { createNseClient, type INseClient } from "./nseClient.js";
 import {
   mapSecurity, mapQuote, mapCandle, mapFundamentalsBundle,
-  mapCorporateAction, mapEarningsEvent, mapOwnership,
+  mapCorporateAction, mapEarningsEvent, mapOwnership, mapCompany, mapSector,
 } from "./nseMapper.js";
 import type { NseRawCandle } from "./nseRawTypes.js";
 
@@ -35,6 +35,21 @@ export class NseAdapter implements IExchangeAdapter {
   async listSecurities(): Promise<Security[]> {
     const raw = await this.client.fetchSecurities();
     return raw.map(mapSecurity);
+  }
+
+  /** See IExchangeAdapter.listSecuritiesWithCompanies — pairs each raw
+   *  listing with a company/sector derived WITHOUT a profile or
+   *  financials, since callers of this only need enough to create a
+   *  bare-bones row, and sources like MyStocksClient never have a real
+   *  profile to offer anyway (mapCompany(raw, null) already handles a
+   *  null profile gracefully — see nseMapper.ts). */
+  async listSecuritiesWithCompanies(): Promise<{ security: Security; company: Company; sector: Sector }[]> {
+    const raw = await this.client.fetchSecurities();
+    return raw.map((r) => ({
+      security: mapSecurity(r),
+      company: mapCompany(r, null),
+      sector: mapSector(r),
+    }));
   }
 
   async getQuotes(symbols: string[]): Promise<Quote[]> {

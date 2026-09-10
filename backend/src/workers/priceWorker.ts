@@ -18,6 +18,43 @@ import { runPriceIngestion } from "../ingestion/pipelines/priceIngestionPipeline
 import { isMarketOpen } from "../config/tradingCalendar.js";
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
+import type { IExchangeAdapter } from "../adapters/types.js";
+
+/** For adapters that can enumerate their own listing independent of
+ *  financials (see IExchangeAdapter.listSecuritiesWithCompanies), create a
+ *  bare-bones market.securities row for anything the adapter knows about
+ *  that isn't in the database yet — otherwise a symbol with no financials
+ *  feed (like everything MyStocksClient covers beyond the original
+ *  fundamentals-seeded set) would NEVER get a row to attach a price to,
+ *  regardless of how well its price data source works.
+ *
+ * Deliberately additive-only: every symbol is checked against the
+ * database first and skipped if it already exists, so this can never
+ * clobber a real company name/sector the fundamentals pipeline already
+ * populated with this adapter's placeholder (symbol-as-name, "Unknown"
+ * sector) version. */
+async function ensureListingsSeeded(adapter: IExchangeAdapter): Promise<void> {
+  if (!adapter.listSecuritiesWithCompanies) return;
+  let entries: Awaited<ReturnType<NonNullable<IExchangeAdapter["listSecuritiesWithCompanies"]>>>;
+  try {
+    entries = await adapter.listSecuritiesWithCompanies();
+  } catch (err) {
+    logger.warn({ exchange: adapter.exchange, err }, "Failed to enumerate listings for seeding — skipping this pass");
+    return;
+  }
+  for (const { security, company, sector } of entries) {
+    const existing = await securitiesRepository.getBySymbol(adapter.exchange, security.symbol).catch(() => null);
+    if (existing) continue;
+    try {
+      await securitiesRepository.upsertSector(sector);
+      await securitiesRepository.upsertCompany(company);
+      await securitiesRepository.upsertSecurity(security);
+      logger.info({ exchange: adapter.exchange, symbol: security.symbol }, "Seeded bare-bones security listing (no fundamentals yet)");
+    } catch (err) {
+      logger.warn({ exchange: adapter.exchange, symbol: security.symbol, err }, "Failed to seed security listing");
+    }
+  }
+}
 
 let intervalHandle: NodeJS.Timeout | null = null;
 
@@ -41,6 +78,7 @@ export async function runPriceIngestionOnce(options: RunOnceOptions = {}): Promi
         logger.debug({ exchange: adapter.exchange }, "Market closed — skipping price ingestion tick");
         continue;
       }
+      await ensureListingsSeeded(adapter);
       const securities = await securitiesRepository.listByExchange(adapter.exchange);
       if (securities.length === 0) continue; // not bootstrapped yet
       await runPriceIngestion(adapter, securities.map((s) => s.symbol));

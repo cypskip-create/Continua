@@ -27,6 +27,20 @@ export interface IExchangeAdapter {
   /** Full list of currently listed securities on this exchange. */
   listSecurities(): Promise<Security[]>;
 
+  /** Security + company + sector for every symbol this adapter knows
+   *  about, WITHOUT requiring financials to exist yet. Optional — only
+   *  adapters that can enumerate a listing independent of fundamentals
+   *  (e.g. a source with no financials feed at all, like MyStocksClient)
+   *  implement this. Used solely to seed a bare-bones market.securities
+   *  row (symbol + placeholder name + sector) so a security can start
+   *  getting real prices immediately, rather than waiting on the slower,
+   *  separate fundamentals pipeline to ever successfully collect a full
+   *  bundle for it — which, for a source with no financials data, would
+   *  never happen. NEVER used to overwrite an existing security's real
+   *  company name/sector once the fundamentals pipeline has populated
+   *  one — callers must check for an existing row first. */
+  listSecuritiesWithCompanies?(): Promise<{ security: Security; company: Company; sector: Sector }[]>;
+
   /** Latest quote for one or more symbols. */
   getQuotes(symbols: string[]): Promise<Quote[]>;
 
