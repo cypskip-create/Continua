@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Crown, MessageCircle, ChevronRight, Wallet, Eye, EyeOff, ArrowUpRight, ArrowDownRight, LogIn, TrendingUp, Search, Sparkles, Coins, Shield, BarChart3, Bell, Binoculars } from "lucide-react";
+import { Crown, MessageCircle, ChevronRight, Wallet, Eye, EyeOff, ArrowUpRight, ArrowDownRight, LogIn, TrendingUp, Search, Sparkles, Coins, Shield, BarChart3, Bell, Binoculars, Newspaper } from "lucide-react";
 import { QuickTradeWidget } from "@/components/home/QuickTradeWidget";
 import { CommandCenterSections } from "@/components/home/CommandCenterSections";
 import { TopBar } from "@/components/shared/TopBar";
@@ -16,7 +16,8 @@ import { MarketStatusIndicator } from "@/components/shared/MarketStatusIndicator
 import { computePortfolioStats } from "@/lib/stockPrices";
 import { useLivePortfolioQuotes, useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { useIndices } from "@/hooks/useIndices";
-import { formatPostDate } from "@/lib/formatTimestamp";
+import { formatPostDate, formatTimestamp } from "@/lib/formatTimestamp";
+import { getMediaItemsForSymbols, getMediaFeed } from "@/data/mediaItems";
 
 
 const Eyebrow = ({ children, action, onAction }: { children: React.ReactNode; action?: string; onAction?: () => void }) => (
@@ -83,6 +84,13 @@ export default function Home() {
     { title: "Kenya CPI Inflation", when: "Thu · 9:00 AM" },
     { title: "US FOMC Minutes", when: "Fri · 9:00 PM" },
   ];
+
+  // Latest Updates — Simply Wall St-style news strip. Prioritizes real
+  // headlines that actually mention something the person holds or watches;
+  // falls back to top market stories for a signed-out visitor or an empty
+  // portfolio/watchlist, so the section is never empty by default.
+  const followedSymbols = [...new Set([...portfolio.map(h => h.symbol), ...watchlist.map(w => w.symbol)])];
+  const latestNews = (followedSymbols.length > 0 ? getMediaItemsForSymbols(followedSymbols) : getMediaFeed("all", "")).slice(0, 5);
 
   return (
     <div className="page-canvas min-h-screen bg-background pb-24">
@@ -222,6 +230,43 @@ export default function Home() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* LATEST UPDATES — real headlines that mention a holding/watchlist
+            symbol, ranked most-recent-first; top market stories otherwise. */}
+        {latestNews.length > 0 && (
+          <div>
+            <Eyebrow action="All news" onAction={() => navigate('/traders-hub?tab=media')}>Latest Updates</Eyebrow>
+            <div className="border-t border-border/60">
+              {latestNews.map(n => (
+                <button
+                  key={n.id}
+                  data-small-target
+                  onClick={() => navigate(`/traders-hub?tab=media&article=${n.id}`)}
+                  className="w-full flex items-start gap-3 py-3 border-b border-border/40 text-left hover:bg-muted/30 -mx-4 px-4 transition-colors"
+                >
+                  <div className="h-14 w-14 rounded-lg overflow-hidden shrink-0 bg-muted">
+                    {n.imageUrl ? (
+                      <img src={n.imageUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center"><Newspaper className="h-4 w-4 text-muted-foreground" /></div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold line-clamp-2 leading-snug">{n.title}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">{n.source} · {formatTimestamp(n.publishedAt)}</p>
+                    {n.stockMentions && n.stockMentions.length > 0 && (
+                      <div className="flex gap-1 mt-1">
+                        {n.stockMentions.slice(0, 3).map(s => (
+                          <span key={s} className="text-[9.5px] font-semibold text-primary bg-primary/10 rounded-full px-1.5 py-0.5">${s}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

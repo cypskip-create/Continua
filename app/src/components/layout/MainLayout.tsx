@@ -5,6 +5,7 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { SplashScreen } from "@/components/shared/SplashScreen";
 import { RouteSeo } from "@/components/shared/RouteSeo";
 import { AppLockGate } from "@/components/security/AppLockGate";
+import { useAlertsWatcher } from "@/hooks/useAlertsWatcher";
 
 
 // Session-scoped: splash only shows once per app open, not on every re-mount.
@@ -17,6 +18,11 @@ export function MainLayout() {
   const [showSplash, setShowSplash] = useState(!splashShown);
   const startY = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // App-wide: checks the person's own active price alerts against live
+  // quotes so they fire the moment they're met while the app is open,
+  // not just whenever the background cron sweep next runs.
+  useAlertsWatcher();
 
   useEffect(() => { splashShown = true; }, []);
 

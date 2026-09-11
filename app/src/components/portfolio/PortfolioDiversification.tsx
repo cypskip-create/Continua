@@ -131,15 +131,15 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
           <InfoTip>Each holding's share of your total portfolio value — a concentration check, not a performance measure. Tap a slice to see its detail.</InfoTip>
         </h3>
         <p className="text-[11px] text-muted-foreground mb-3">How much of your portfolio each holding represents.</p>
-        <div className="h-[360px] relative">
+        <div className="h-[440px] relative">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 28, right: 56, bottom: 28, left: 56 }}>
+            <PieChart margin={{ top: 40, right: 48, bottom: 40, left: 48 }}>
               <Pie
                 data={donutData}
                 dataKey="value"
                 nameKey="name"
-                innerRadius="52%"
-                outerRadius="68%"
+                innerRadius="46%"
+                outerRadius="72%"
                 paddingAngle={hasHoldings ? 1.5 : 0}
                 stroke="none"
                 label={hasHoldings ? renderOuterLabel : undefined}
@@ -185,6 +185,30 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
             </div>
           )}
         </div>
+
+        {/* Every holding, not just the top 5 that get a leader-line label on
+            the ring itself — tap any to load its detail into the chart's
+            center, same as tapping its slice. */}
+        {hasHoldings && (
+          <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-border/50">
+            {donutData.map((d) => {
+              const isSelected = selected?.name === d.name;
+              return (
+                <button
+                  key={d.name}
+                  type="button"
+                  onClick={() => setSelectedTicker(d.name)}
+                  className={`flex items-center gap-1.5 h-7 pl-1.5 pr-2.5 rounded-full text-[11px] font-semibold transition-colors ${isSelected ? "bg-muted" : "hover:bg-muted/50"}`}
+                  style={isSelected ? { boxShadow: `inset 0 0 0 1.5px ${colorFor(d.name)}` } : undefined}
+                >
+                  <span className="h-2 w-2 rounded-full shrink-0" style={{ background: colorFor(d.name) }} />
+                  {d.name}
+                  <span className="text-muted-foreground font-medium">{d.pct.toFixed(1)}%</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="card-gradient rounded-2xl p-4">
@@ -224,8 +248,14 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
 // past the ring with a short elbow line back to the slice, same layout as
 // Simply Wall St's "Diversification Across Holdings" chart.
 const RADIAN = Math.PI / 180;
+const OUTER_LABEL_COUNT = 5;
 function renderOuterLabel(props: any) {
   const { cx, cy, midAngle, outerRadius, index, payload } = props;
+  // Only the top 5 holdings by weight get a leader-line label out past the
+  // ring — donutData is pre-sorted by value descending, so `index` doubles
+  // as rank. Every other slice still renders (with its own color/tap
+  // target), just without a label crowding the chart.
+  if (index >= OUTER_LABEL_COUNT) return null;
   const color = payload.isOther ? "hsl(var(--muted-foreground))" : colorFor(payload.name);
   const sin = Math.sin(-RADIAN * midAngle);
   const cos = Math.cos(-RADIAN * midAngle);

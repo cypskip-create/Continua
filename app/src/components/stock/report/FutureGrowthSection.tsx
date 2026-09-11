@@ -15,6 +15,18 @@ function pctChange(latest: number, prior: number): number | null {
   return ((latest - prior) / Math.abs(prior)) * 100;
 }
 
+// Pure — module-scope so it isn't a fresh function identity on every
+// render (which would otherwise make the useMemo calls below re-run every
+// time regardless of their dependency array).
+function toRow(r: { fiscalYear: number; fiscalQuarter?: number | null; revenue: number; netIncome: number; eps: number }) {
+  return {
+    year: r.fiscalQuarter ? `Q${r.fiscalQuarter} '${String(r.fiscalYear).slice(2)}` : String(r.fiscalYear),
+    Revenue: +(r.revenue / 1e9).toFixed(2),
+    Earnings: +(r.netIncome / 1e9).toFixed(2),
+    EPS: r.eps,
+  };
+}
+
 /** Continua has no analyst forward-estimates feed, so — same as Simply
  *  Wall St shows for thinly-covered NSE stocks — this section is
  *  honestly mostly "n/a" rather than guessed. The one real thing shown
@@ -26,18 +38,20 @@ function pctChange(latest: number, prior: number): number | null {
 export function FutureGrowthSection({ symbol }: Props) {
   const [metric, setMetric] = useState<Metric>("revenue");
   const { history, isLoading } = useStockFinancials(symbol);
+  // Real quarterly periods (not a synthetic split of the annual figure) —
+  // feeds BarChartBlock's built-in Annual/Quarterly dropdown, which only
+  // shows the toggle once this actually has rows.
+  const { history: quarterlyHistory } = useStockFinancials(symbol, { periodType: "quarterly", limit: 5 });
   const [latest, prior] = [...history].sort((a, b) => b.fiscalYear - a.fiscalYear);
   const earningsGrowth = latest && prior ? pctChange(latest.netIncome, prior.netIncome) : null;
   const epsGrowth = latest && prior ? pctChange(latest.eps, prior.eps) : null;
   const revenueGrowth = latest && prior ? pctChange(latest.revenue, prior.revenue) : null;
 
-  const chronological = useMemo(() => [...history].sort((a, b) => a.fiscalYear - b.fiscalYear), [history]);
-  const chartData = chronological.map((r) => ({
-    year: String(r.fiscalYear),
-    Revenue: +(r.revenue / 1e9).toFixed(2),
-    Earnings: +(r.netIncome / 1e9).toFixed(2),
-    EPS: r.eps,
-  }));
+  const chartData = useMemo(() => [...history].sort((a, b) => a.fiscalYear - b.fiscalYear).map(toRow), [history]);
+  const quarterlyChartData = useMemo(
+    () => [...quarterlyHistory].sort((a, b) => a.fiscalYear - b.fiscalYear || (a.fiscalQuarter ?? 0) - (b.fiscalQuarter ?? 0)).map(toRow),
+    [quarterlyHistory],
+  );
   const key = metric === "revenue" ? "Revenue" : metric === "earnings" ? "Earnings" : "EPS";
   const color = metric === "revenue" ? fx.revenue : metric === "earnings" ? fx.earnings : fx.eps;
   const yFmt = (v: number) => (metric === "eps" ? v.toFixed(1) : `${v}B`);
@@ -67,13 +81,15 @@ export function FutureGrowthSection({ symbol }: Props) {
         />
       )}
 
-      <SubWidget number="2.1" title="Trailing Growth History" description="Real, already-reported revenue, earnings, and EPS by fiscal year — not a projection.">
+      <SubWidget number="2.1" title="Trailing Growth History" description="Real, already-reported revenue, earnings, and EPS — annual (last 3 years) or quarterly (last 5 quarters), not a projection.">
         {/* Chart frame renders unconditionally — BarChartBlock draws empty axes
             fine with an empty array, so a symbol with no history on file yet
             still shows the tool (an empty chart), not a text box in its place. */}
         <BarChartBlock
           title=""
           annual={chartData}
+          allowQuarterly
+          quarterly={quarterlyChartData}
           xKey="year"
           series={[{ key, label: metric === "eps" ? "EPS" : key, color }]}
           yFmt={yFmt}

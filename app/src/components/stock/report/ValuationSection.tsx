@@ -132,20 +132,41 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
         <p className="text-[10px] text-muted-foreground mt-1">Only the current ratio is plotted — Continua doesn't have a historical P/E time series yet.</p>
       </SubWidget>
 
-      <SubWidget number="1.5" title="Price to Earnings Ratio vs Industry" description={`How does ${symbol}'s P/E compare across its NSE sector?`}>
-        <div style={{ height: CHART_H_MEDIUM }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={peerChartData}>
-              <XAxis dataKey="symbol" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
-              <Tooltip formatter={(v: number) => [`${v.toFixed(1)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11, color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
-              <Bar dataKey="pe" radius={[4, 4, 0, 0]}>
-                {peerChartData.map((p) => <Cell key={p.symbol} fill={p.isSelf ? "hsl(217 91% 60%)" : "hsl(var(--bull) / 0.6)"} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        {!peersLoading && peerChartData.length === 0 && <p className="text-[10px] text-muted-foreground mt-1">No sector peers on file yet.</p>}
+      <SubWidget number="1.5" title="Price to Earnings Ratio vs Industry Average" description={`How does ${symbol}'s P/E compare to its NSE sector's average? (Peer-by-peer detail is in 1.3 above.)`}>
+        {ratios?.pe != null && peerAvg != null ? (
+          <>
+            <div className="flex items-center justify-center gap-8 mb-2">
+              <div className="text-center">
+                <p className="text-2xl font-bold tabular" style={{ color: "hsl(217 91% 60%)" }}>{ratios.pe.toFixed(1)}x</p>
+                <p className="text-[10.5px] text-muted-foreground mt-0.5">{symbol}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold tabular text-muted-foreground">{peerAvg.toFixed(1)}x</p>
+                <p className="text-[10.5px] text-muted-foreground mt-0.5">Industry Average</p>
+              </div>
+            </div>
+            <div style={{ height: 90 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={[{ name: symbol, pe: ratios.pe }, { name: "Industry Avg", pe: peerAvg }]} layout="vertical" margin={{ left: 4, right: 16 }}>
+                  <XAxis type="number" hide />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={78} />
+                  <Tooltip formatter={(v: number) => [`${v.toFixed(1)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11, color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
+                  <Bar dataKey="pe" radius={[0, 4, 4, 0]} maxBarSize={28}>
+                    <Cell fill="hsl(217 91% 60%)" />
+                    <Cell fill="hsl(var(--muted-foreground) / 0.5)" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1 text-center">
+              {symbol} trades at {Math.abs(((ratios.pe - peerAvg) / peerAvg) * 100).toFixed(0)}% {ratios.pe <= peerAvg ? "below" : "above"} its sector's average P/E of {peerAvg.toFixed(1)}x.
+            </p>
+          </>
+        ) : (
+          <p className="text-xs text-muted-foreground py-6 text-center">
+            {ratios?.pe == null ? `No P/E on file for ${symbol} yet.` : "No sector peers with a P/E on file yet, so an industry average can't be computed."}
+          </p>
+        )}
       </SubWidget>
 
       <SubWidget number="1.6" title="Price to Earnings Ratio vs Fair Ratio" description="The expected P/E given forecast growth, margins and risk — needs analyst estimates Continua doesn't have.">

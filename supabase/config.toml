@@ -49,6 +49,13 @@ verify_jwt = true
 [functions.check-indicator-alerts]
 verify_jwt = true
 
+[functions.run-price-alerts]
+# Invoked on a schedule by pg_cron/pg_net (see migration
+# …_schedule_alert_sweeps.sql), not by a signed-in browser session — there
+# is no user JWT to verify. It's gated on its own shared secret
+# (ALERTS_CRON_SECRET) instead; see the function for details.
+verify_jwt = false
+
 [functions.delete-account]
 verify_jwt = true
 

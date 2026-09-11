@@ -1,9 +1,10 @@
 import { useMemo } from "react";
-import { Sankey, ResponsiveContainer, Layer, Rectangle, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, Legend, Cell } from "recharts";
+import { Sankey, ResponsiveContainer, Layer, Rectangle, XAxis, YAxis, Tooltip, BarChart, Bar, Legend, Cell } from "recharts";
 import { ReportSection, SubWidget } from "./ReportSection";
 import { CriteriaChecklist } from "./CriteriaChecklist";
 import { KeyInfoUpdates } from "./KeyInfoUpdates";
 import { SemiGauge } from "./SemiGauge";
+import { BarChartBlock } from "@/components/charts/BarChartBlock";
 import { useStockFinancials } from "@/hooks/useStockFinancials";
 import { useResearch } from "@/hooks/useResearch";
 import { useMarketBenchmark } from "@/hooks/useMarketBenchmark";
@@ -16,14 +17,32 @@ function pctChange(latest: number, prior: number): number | null {
   return ((latest - prior) / Math.abs(prior)) * 100;
 }
 
+// Pure — module-scope so it isn't a fresh function identity on every
+// render (which would otherwise make the useMemo calls below re-run every
+// time regardless of their dependency array).
+function toRow(r: { fiscalYear: number; fiscalQuarter?: number | null; revenue: number; netIncome: number }) {
+  return {
+    year: r.fiscalQuarter ? `Q${r.fiscalQuarter} '${String(r.fiscalYear).slice(2)}` : String(r.fiscalYear),
+    Revenue: +(r.revenue / 1e9).toFixed(2),
+    Earnings: +(r.netIncome / 1e9).toFixed(2),
+  };
+}
+
 export function PastPerformanceSection({ symbol, currency }: Props) {
   const { latest, history, isLoading } = useStockFinancials(symbol);
+  // Real quarterly periods for the Revenue/Earnings chart's Annual/Quarterly
+  // toggle — annual trims to the last 3 years, quarterly to the last 5
+  // quarters (BarChartBlock's own defaults), never a synthetic split.
+  const { history: quarterlyHistory } = useStockFinancials(symbol, { periodType: "quarterly", limit: 5 });
   const { research } = useResearch(symbol);
   const { averages: benchmark } = useMarketBenchmark();
   const ratios = research?.ratios;
 
-  const chronological = useMemo(() => [...history].sort((a, b) => a.fiscalYear - b.fiscalYear), [history]);
-  const areaData = chronological.map((r) => ({ year: String(r.fiscalYear), Revenue: +(r.revenue / 1e9).toFixed(2), Earnings: +(r.netIncome / 1e9).toFixed(2) }));
+  const areaData = useMemo(() => [...history].sort((a, b) => a.fiscalYear - b.fiscalYear).map(toRow), [history]);
+  const quarterlyAreaData = useMemo(
+    () => [...quarterlyHistory].sort((a, b) => a.fiscalYear - b.fiscalYear || (a.fiscalQuarter ?? 0) - (b.fiscalQuarter ?? 0)).map(toRow),
+    [quarterlyHistory],
+  );
 
   const [mostRecent, prior] = [...history].sort((a, b) => b.fiscalYear - a.fiscalYear);
   const earningsGrowth1y = mostRecent && prior ? pctChange(mostRecent.netIncome, prior.netIncome) : null;
@@ -86,19 +105,18 @@ export function PastPerformanceSection({ symbol, currency }: Props) {
         {!latest && <p className="text-[10px] text-muted-foreground mt-1">No income statement on file yet — shown with placeholder proportions until one arrives.</p>}
       </SubWidget>
 
-      <SubWidget number="3.2" title="Earnings and Revenue History" description="Real revenue and earnings from Continua's financial statements, up to the last 5 reported years.">
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={areaData}>
-              <XAxis dataKey="year" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={32} />
-              <Tooltip formatter={(v: number) => [`${currency} ${v}B`, ""]} contentStyle={tooltipStyle} />
-              <Area type="monotone" dataKey="Revenue" stroke={fx.revenue} fill={fx.revenue} fillOpacity={0.25} />
-              <Area type="monotone" dataKey="Earnings" stroke={fx.earnings} fill={fx.earnings} fillOpacity={0.4} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-        {areaData.length === 0 && <p className="text-[10px] text-muted-foreground mt-1">No history on file yet.</p>}
+      <SubWidget number="3.2" title="Earnings and Revenue History" description="Real revenue and earnings from Continua's financial statements — annual (last 3 years) or quarterly (last 5 quarters).">
+        <BarChartBlock
+          title=""
+          annual={areaData}
+          allowQuarterly
+          quarterly={quarterlyAreaData}
+          xKey="year"
+          series={[{ key: "Revenue", label: "Revenue", color: fx.revenue }, { key: "Earnings", label: "Earnings", color: fx.earnings }]}
+          yFmt={(v) => `${v}B`}
+          valueFmt={(v) => `${currency} ${v}B`}
+          note={areaData.length === 0 ? "No history on file yet." : undefined}
+        />
       </SubWidget>
 
       <SubWidget number="3.3" title="Free Cash Flow vs Earnings Analysis" description="Real current-period figures — Continua doesn't have a multi-year cash-flow time series yet, so this is one period's bridge, not a bridge with D&A/stock-comp add-backs Continua doesn't ingest.">
