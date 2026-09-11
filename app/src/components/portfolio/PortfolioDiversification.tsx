@@ -133,13 +133,13 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
         <p className="text-[11px] text-muted-foreground mb-3">How much of your portfolio each holding represents.</p>
         <div className="h-[360px] relative">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+            <PieChart margin={{ top: 28, right: 56, bottom: 28, left: 56 }}>
               <Pie
                 data={donutData}
                 dataKey="value"
                 nameKey="name"
                 innerRadius="52%"
-                outerRadius="76%"
+                outerRadius="68%"
                 paddingAngle={hasHoldings ? 1.5 : 0}
                 stroke="none"
                 label={hasHoldings ? renderOuterLabel : undefined}

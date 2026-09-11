@@ -49,5 +49,11 @@ verify_jwt = true
 [functions.check-indicator-alerts]
 verify_jwt = true
 
+[functions.delete-account]
+verify_jwt = true
+
+[functions.upgrade-subscription]
+verify_jwt = true
+
 [auth]
 enable_signup = true

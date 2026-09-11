@@ -107,7 +107,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
             <BarChart data={peerChartData} layout="vertical" margin={{ left: 8, right: 16 }}>
               <XAxis type="number" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="symbol" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={48} />
-              <Tooltip formatter={(v: number) => [`${v.toFixed(1)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11 }} />
+              <Tooltip formatter={(v: number) => [`${v.toFixed(1)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11, color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
               {peerAvg != null && <ReferenceLine x={peerAvg} stroke="hsl(38 92% 50%)" strokeDasharray="4 3" />}
               <Bar dataKey="pe" radius={[0, 4, 4, 0]} maxBarSize={18}>
                 {peerChartData.map((p) => <Cell key={p.symbol} fill={p.isSelf ? "hsl(217 91% 60%)" : "hsl(var(--bull))"} />)}
@@ -124,7 +124,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
             <LineChart data={ratios?.pe != null ? [{ x: "Current", pe: ratios.pe }] : []}>
               <XAxis dataKey="x" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
-              <Tooltip formatter={(v: number) => [`${v.toFixed(1)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11 }} />
+              <Tooltip formatter={(v: number) => [`${v.toFixed(1)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11, color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
               <Line type="monotone" dataKey="pe" stroke={fx.revenue} strokeWidth={2} dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
@@ -138,7 +138,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
             <BarChart data={peerChartData}>
               <XAxis dataKey="symbol" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
-              <Tooltip formatter={(v: number) => [`${v.toFixed(1)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11 }} />
+              <Tooltip formatter={(v: number) => [`${v.toFixed(1)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11, color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
               <Bar dataKey="pe" radius={[4, 4, 0, 0]}>
                 {peerChartData.map((p) => <Cell key={p.symbol} fill={p.isSelf ? "hsl(217 91% 60%)" : "hsl(var(--bull) / 0.6)"} />)}
               </Bar>
@@ -167,7 +167,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
             <AreaChart data={priceSeries}>
               <XAxis dataKey="date" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} interval={Math.max(0, Math.floor(priceSeries.length / 5) - 1)} />
               <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={36} domain={["auto", "auto"]} />
-              <Tooltip formatter={(v: number) => [`${currency}${v.toFixed(2)}`, "Price"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11 }} />
+              <Tooltip formatter={(v: number) => [`${currency}${v.toFixed(2)}`, "Price"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11, color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
               <Area type="monotone" dataKey="price" stroke={fx.revenue} fill={fx.revenue} fillOpacity={0.15} />
             </AreaChart>
           </ResponsiveContainer>

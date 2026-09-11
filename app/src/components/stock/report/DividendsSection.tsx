@@ -77,7 +77,7 @@ export function DividendsSection({ symbol, currency, divYield, annualDividend }:
             <BarChart data={sorted.map((d) => ({ year: d.year, dps: d.dps }))}>
               <XAxis dataKey="year" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={32} />
-              <Tooltip formatter={(v: number) => [`${currency}${v}`, "DPS"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11 }} />
+              <Tooltip formatter={(v: number) => [`${currency}${v}`, "DPS"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11, color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
               <Bar dataKey="dps" fill="hsl(var(--bull))" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -91,7 +91,7 @@ export function DividendsSection({ symbol, currency, divYield, annualDividend }:
             <BarChart data={[{ name: "Yield", Company: parseFloat(divYield) || 0, "Market Avg": benchmark.dividendYield ?? 0 }]}>
               <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={32} unit="%" />
-              <Tooltip formatter={(v: number) => [`${v.toFixed(1)}%`, ""]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11 }} />
+              <Tooltip formatter={(v: number) => [`${v.toFixed(1)}%`, ""]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11, color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
               <Bar dataKey="Company" fill="hsl(217 91% 60%)" radius={[4, 4, 0, 0]} barSize={40} />
               <Bar dataKey="Market Avg" fill="hsl(330 81% 60%)" radius={[4, 4, 0, 0]} barSize={40} />
             </BarChart>

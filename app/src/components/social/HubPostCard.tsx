@@ -86,8 +86,7 @@ export function HubPostCard({
 
   return (
     <article
-      className="px-4 pt-3.5 pb-2.5 border-b border-border/50 active:bg-muted/20 transition-colors cursor-pointer"
-      onClick={() => onOpen(post)}
+      className="px-4 pt-3.5 pb-2.5 border-b border-border/50 transition-colors"
     >
       {/* Identity row */}
       <div className="flex items-start gap-2.5">

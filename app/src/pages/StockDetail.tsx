@@ -254,8 +254,16 @@ export default function StockDetail() {
   const periodData = liveCandlePoints.length > 1 ? liveCandlePoints : mockPeriodData;
   const periodFirstPrice = periodData[0]?.price || stock.price;
   const periodLastPrice = periodData[periodData.length - 1]?.price || stock.price;
-  const periodChangePercent = periodFirstPrice ? ((periodLastPrice - periodFirstPrice) / periodFirstPrice) * 100 : 0;
-  const periodIsUp = periodLastPrice >= periodFirstPrice;
+  // "1D" isn't backed by real intraday candles yet (see useHistoricalCandles),
+  // so its chart line is a generated mock shape — it must never be the source
+  // of the day's % change, or this header disagrees with the real day change
+  // shown everywhere else (sticky header, portfolio rows, etc). Use the live
+  // quote's actual change for 1D; every other timeframe still derives its
+  // change from that timeframe's own (real) first/last price.
+  const periodChangePercent = selectedTimeframe === "1D"
+    ? Number(stock.changePercent)
+    : (periodFirstPrice ? ((periodLastPrice - periodFirstPrice) / periodFirstPrice) * 100 : 0);
+  const periodIsUp = selectedTimeframe === "1D" ? stock.isUp : periodLastPrice >= periodFirstPrice;
 
   // While scrubbing the chart, show change vs. the start of the selected period instead;
   // otherwise show the full period's change. Percent is scaled onto the real quoted price

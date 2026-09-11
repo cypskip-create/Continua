@@ -128,7 +128,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
 
   return (
     <>
-      <article className="px-4 py-3 border-b border-border/40 hover:bg-muted/20 transition-colors cursor-pointer" onClick={() => onComment(post)}>
+      <article className="px-4 py-3 border-b border-border/40 hover:bg-muted/20 transition-colors">
         <div className="flex gap-3">
           <Avatar className="h-10 w-10 shrink-0 cursor-pointer ring-2 ring-primary/10" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${post.user_id}`); }}>
             <AvatarImage src={post.author?.avatar_url || ""} className="object-cover" />

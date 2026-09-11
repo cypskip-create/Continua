@@ -64,7 +64,7 @@ export function FinancialHealthSection({ symbol, currency }: Props) {
             ]}>
               <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={32} />
-              <Tooltip formatter={(v: number) => [`${currency}${v.toFixed(2)}B`, ""]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11 }} />
+              <Tooltip formatter={(v: number) => [`${currency}${v.toFixed(2)}B`, ""]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11, color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
               <Legend wrapperStyle={{ fontSize: 10 }} />
               <Bar dataKey="Assets" fill="hsl(217 91% 60%)" radius={[4, 4, 0, 0]} />
               <Bar dataKey="Liabilities" fill="hsl(160 84% 58%)" radius={[4, 4, 0, 0]} />
@@ -82,7 +82,7 @@ export function FinancialHealthSection({ symbol, currency }: Props) {
             <AreaChart data={latest ? [{ period: `FY${latest.fiscalYear}`, Debt: (latest.totalDebt ?? 0) / 1e9, Equity: latest.totalEquity / 1e9, Cash: (latest.cash ?? 0) / 1e9 }] : []}>
               <XAxis dataKey="period" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={32} />
-              <Tooltip formatter={(v: number) => [`${currency}${v.toFixed(2)}B`, ""]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11 }} />
+              <Tooltip formatter={(v: number) => [`${currency}${v.toFixed(2)}B`, ""]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11, color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
               <Legend wrapperStyle={{ fontSize: 10 }} />
               <Area type="monotone" dataKey="Equity" stroke={fx.revenue} fill={fx.revenue} fillOpacity={0.25} />
               <Area type="monotone" dataKey="Debt" stroke={fx.negative} fill={fx.negative} fillOpacity={0.25} />

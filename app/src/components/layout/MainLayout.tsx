@@ -2,7 +2,6 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { BottomNavigation } from "./BottomNavigation";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { LogoRefresh } from "@/components/shared/LogoRefresh";
 import { SplashScreen } from "@/components/shared/SplashScreen";
 import { RouteSeo } from "@/components/shared/RouteSeo";
 import { AppLockGate } from "@/components/security/AppLockGate";
@@ -60,12 +59,20 @@ export function MainLayout() {
       <AppLockGate>
         <div className="min-h-screen bg-background">
 
-          {/* Branded pull indicator */}
+          {/* Plain pull-to-refresh indicator — a normal loading spinner, not
+              the branded logo mark. Scales in with pull distance, then just
+              spins continuously (no glow/scale animation) once committed. */}
           <div
             className="flex items-center justify-center overflow-hidden transition-all duration-200 ease-out"
             style={{ height: pullDistance > 0 ? pullDistance : 0 }}
           >
-            <LogoRefresh progress={pullDistance / 78} refreshing={refreshing} />
+            <div
+              style={{
+                opacity: refreshing ? 1 : Math.max(0.35, Math.min(1, pullDistance / 78)),
+                transform: refreshing ? undefined : `scale(${0.75 + Math.min(1, pullDistance / 78) * 0.3})`,
+              }}
+              className={`h-7 w-7 rounded-full border-2 border-muted-foreground/25 border-t-primary ${refreshing ? "animate-spin" : ""}`}
+            />
           </div>
 
           <div

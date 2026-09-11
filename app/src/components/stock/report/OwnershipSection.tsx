@@ -75,7 +75,10 @@ export function OwnershipSection({ ownership, topShareholders, isLoading }: Prop
                   border: "1px solid hsl(var(--border))",
                   borderRadius: 8,
                   fontSize: 11,
+                  color: "hsl(var(--popover-foreground))",
                 }}
+                labelStyle={{ color: "hsl(var(--popover-foreground))" }}
+                itemStyle={{ color: "hsl(var(--popover-foreground))" }}
               />
             </PieChart>
           </ResponsiveContainer>

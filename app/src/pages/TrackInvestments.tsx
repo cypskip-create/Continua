@@ -584,7 +584,7 @@ export default function TrackInvestments() {
             </div>
           ) : (
             <>
-              <HoldingsList holdings={portfolio} showValues={showBalance} onRemove={handleDelete} />
+              <HoldingsList holdings={holdings} showValues={showBalance} onRemove={handleDelete} />
 
               {/* ── SHARING & PRIVACY ── same settings Settings → Privacy & safety
                   writes to, kept right here too since this is where holdings live. */}

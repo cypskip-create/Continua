@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 interface DotPoint { symbol: string; value: number; weight?: number; good?: boolean }
 
 interface MetricDotPlotProps {
@@ -16,6 +18,10 @@ interface MetricDotPlotProps {
  *  their own reference line with a pill label, same convention across
  *  every Key Metrics & Benchmarks panel. */
 export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel = "Market", fmt, unavailableCount }: MetricDotPlotProps) {
+  // Which holding's dot is expanded into a small detail popup — tap a dot
+  // to open it, tap it again (or anywhere else on the plot) to close it.
+  const [openSymbol, setOpenSymbol] = useState<string | null>(null);
+
   if (points.length === 0 && portfolioValue == null) {
     return <p className="text-[11px] text-muted-foreground py-8 text-center">No data on file for this metric yet.</p>;
   }
@@ -42,7 +48,7 @@ export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel
         )}
       </div>
 
-      <div className="relative h-40 rounded-xl bg-muted/20 mx-1">
+      <div className="relative h-40 rounded-xl bg-muted/20 mx-1" onClick={() => setOpenSymbol(null)}>
         {tickVals.map((t, i) => (
           <div key={i} className="absolute top-0 bottom-0 border-l border-border/30" style={{ left: `${(i / (ticks - 1)) * 100}%` }} />
         ))}
@@ -58,19 +64,37 @@ export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel
 
         {points.map((p) => {
           const size = 22 + ((p.weight ?? 1) / maxWeight) * 24;
+          const isOpen = openSymbol === p.symbol;
           return (
             <div
               key={p.symbol}
-              className={`absolute rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow ${p.good === false ? "bg-bear" : p.good === true ? "bg-bull" : "bg-muted-foreground"}`}
+              className="absolute"
               style={{
                 left: `${pctOf(p.value)}%`,
                 top: "50%",
                 width: size, height: size,
                 transform: "translate(-50%, -50%)",
               }}
-              title={`${p.symbol}: ${fmt(p.value)}`}
             >
-              {size >= 30 ? p.symbol : ""}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setOpenSymbol(isOpen ? null : p.symbol); }}
+                className={`w-full h-full rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow transition-transform ${isOpen ? "ring-2 ring-offset-1 ring-foreground scale-110" : ""} ${p.good === false ? "bg-bear" : p.good === true ? "bg-bull" : "bg-muted-foreground"}`}
+                aria-label={`${p.symbol}: ${fmt(p.value)}`}
+              >
+                {size >= 30 ? p.symbol : ""}
+              </button>
+
+              {isOpen && (
+                <div
+                  className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20 whitespace-nowrap rounded-lg bg-foreground text-background shadow-lg px-2.5 py-1.5 text-center"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className="text-[10px] font-bold leading-tight">{p.symbol}</p>
+                  <p className="text-[11.5px] font-bold tabular leading-tight">{fmt(p.value)}</p>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-foreground" />
+                </div>
+              )}
             </div>
           );
         })}

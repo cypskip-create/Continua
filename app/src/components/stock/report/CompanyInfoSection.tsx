@@ -44,7 +44,7 @@ export function CompanyInfoSection({ symbol, exchange, marketCap }: Props) {
             <AreaChart data={company?.employees ? [{ period: "Current", employees: parseFloat(company.employees.replace(/[^0-9.]/g, "")) || 0 }] : []}>
               <XAxis dataKey="period" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={32} />
-              <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11 }} />
+              <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11, color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
               <Area type="monotone" dataKey="employees" stroke="hsl(160 84% 58%)" fill="hsl(160 84% 58%)" fillOpacity={0.3} />
             </AreaChart>
           </ResponsiveContainer>

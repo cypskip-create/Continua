@@ -15,6 +15,7 @@ import { getTimeBasedGreeting } from "@/utils/timeGreeting";
 import { MarketStatusIndicator } from "@/components/shared/MarketStatusIndicator";
 import { computePortfolioStats } from "@/lib/stockPrices";
 import { useLivePortfolioQuotes, useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useIndices } from "@/hooks/useIndices";
 import { formatPostDate } from "@/lib/formatTimestamp";
 
 
@@ -59,11 +60,16 @@ export default function Home() {
     .sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct))
     .slice(0, 5);
 
-  const nseIndices = [
-    { name: "NSE 20",  value: "1,847.23",  change: 1.2, isUp: true  },
-    { name: "NSE 25",  value: "3,542.87",  change: 0.8, isUp: true  },
-    { name: "NASI",    value: "112.45",  change: -0.3, isUp: false },
-  ];
+  // Live from the Continua Data Layer (same source Markets uses) — no
+  // hardcoded fallback here, since a stale/static index value on the home
+  // page would silently disagree with the real Markets tab.
+  const { indices: liveIndices } = useIndices();
+  const nseIndices = liveIndices.map(idx => ({
+    name: idx.code,
+    value: idx.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    change: idx.changePercent,
+    isUp: idx.change >= 0,
+  }));
 
   const opportunities = [
     { label: "Undervalued",     icon: Coins,      route: "/screener?filter=undervalued" },
