@@ -1,5 +1,5 @@
 import "../deno.d.ts";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 // Permanently deletes a Continua account. This is the ONLY real deletion
 // path in the app — the client can never do this itself, since it needs to

@@ -34,8 +34,10 @@ port = 54324
 smtp_port = 54325
 pop3_port = 54326
 
-[functions.hello]
-verify_jwt = false
+# NOTE: no [functions.hello] entry — that was leftover config referencing
+# the dashboard's "Simple Hello World" starter template, which was never
+# actually created as a real function under supabase/functions/. Deploying
+# it failed with "Entrypoint path does not exist" until this was removed.
 
 [functions.ai-stock-analysis]
 # false, not true: this function already validates the caller's JWT itself

@@ -1,5 +1,5 @@
 import "../deno.d.ts";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 // Upgrades a user to Premium. profiles.subscription_plan can only be written
 // by the service role (see supabase/migrations/20260813..._security_audit_fixes.sql

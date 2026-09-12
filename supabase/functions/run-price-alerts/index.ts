@@ -17,7 +17,7 @@
 // migration for how pg_cron supplies it via Supabase Vault. Registered in
 // config.toml with verify_jwt = false for exactly this reason.
 import "../deno.d.ts";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

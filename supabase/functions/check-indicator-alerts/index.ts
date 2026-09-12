@@ -14,7 +14,7 @@
 // (CONTINUA_DATA_API_KEY / CONTINUA_DATA_BASE_URL secrets), never exposed
 // to the client.
 import "../deno.d.ts";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
