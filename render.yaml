@@ -50,6 +50,38 @@ services:
         value: memory
       - key: API_KEY_AUTH_ENABLED
         value: "true"
+      # ── Live NSE data (carried over from Railway) ──────────────────────
+      # All three of these default to mock/safe values in code if omitted
+      # — they're listed explicitly here (not just in .env.example) because
+      # Railway had them overridden and omitting them on Render would
+      # silently revert the backend to mock data. See adapters/registry.ts
+      # for how ADAPTER_MODE + NSE_ADAPTER_SOURCE + NSE_CLIENT_MODE combine.
+      - key: ADAPTER_MODE
+        value: live
+      - key: NSE_ADAPTER_SOURCE
+        value: nse_client
+      - key: NSE_CLIENT_MODE
+        value: mystocks
+      # How often the price/index workers poll (ms). Non-default on
+      # Railway — same values carried over here.
+      - key: PRICE_POLL_INTERVAL_MS
+        value: "30000"
+      - key: INDEX_POLL_INTERVAL_MS
+        value: "1800000"
+      # ── Mansa pan-African feed (non-NSE exchanges) ─────────────────────
+      # NSE itself is routed via NSE_ADAPTER_SOURCE=nse_client above, so
+      # these only affect ACTIVE_EXCHANGES entries other than NSE. Real
+      # values from Railway — treated as secrets, fill in on Render.
+      - key: MANSA_API_BASE_URL
+        sync: false
+      - key: MANSA_API_KEY
+        sync: false
+      - key: MANSA_API_IP
+        sync: false
+      # Deliberately NOT included: DEV_API_KEY. The code (config/env.ts)
+      # explicitly warns against setting this in production — issue a real
+      # DB-backed key instead via `npm run apikey:create` (see the runbook,
+      # step 3). Railway had DEV_API_KEY set; don't carry that habit over.
 
   - type: web
     name: continua-scraper
