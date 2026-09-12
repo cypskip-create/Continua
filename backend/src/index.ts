@@ -19,7 +19,7 @@ async function main() {
     logger.info({ port: env.PORT }, "Continua Data API listening");
   });
 
-  startWebSocketServer();
+  startWebSocketServer(httpServer);
 
   const stopWorkers = await startAllWorkers();
 

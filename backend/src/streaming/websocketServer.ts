@@ -36,9 +36,15 @@ async function isAuthorized(presentedKey: string | null): Promise<boolean> {
   return record !== null;
 }
 
-export function startWebSocketServer(): WebSocketServer {
+export function startWebSocketServer(httpServer: import("http").Server): WebSocketServer {
+  // Attached to the same HTTP server/port as the REST API (rather than
+  // opening its own TCP listener on WS_PORT) so this works on hosts that
+  // only route a single public port per service — e.g. Render Web
+  // Services. Railway happened to expose a second port as its own
+  // subdomain, which masked this constraint; that's not a general
+  // assumption we can keep making about every host.
   const wss = new WebSocketServer({
-    port: env.WS_PORT,
+    server: httpServer,
     verifyClient: (info, callback) => {
       const url = new URL(info.req.url ?? "", "http://localhost");
       const presented = url.searchParams.get("apiKey");
@@ -88,6 +94,6 @@ export function startWebSocketServer(): WebSocketServer {
   });
 
   wss.on("close", unsubscribe);
-  logger.info({ port: env.WS_PORT }, "WebSocket server listening");
+  logger.info("WebSocket server attached to HTTP server");
   return wss;
 }

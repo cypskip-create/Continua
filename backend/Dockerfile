@@ -16,5 +16,5 @@ RUN npm install --omit=dev
 COPY --from=build /app/dist ./dist
 COPY scripts ./scripts
 
-EXPOSE 4000 4001
+EXPOSE 4000
 CMD ["node", "dist/index.js"]
