@@ -16,14 +16,13 @@ import { cache, CacheKeys } from "../../storage/cache.js";
 import { ingestionLogRepository } from "../../storage/repositories/ingestionLogRepository.js";
 import { deadLetterRepository } from "../../storage/repositories/deadLetterRepository.js";
 import { marketEventBus } from "../../streaming/pubsub.js";
-import { checkPricePlausibility } from "../../monitoring/dataQuality.js";
 import { logger } from "../../monitoring/logger.js";
 import type { Quote } from "../../types/market.js";
 
 export async function runPriceIngestion(adapter: IExchangeAdapter, symbols: string[] = []): Promise<void> {
   const startedAt = new Date().toISOString();
   const errors: string[] = [];
-  let plausible: Quote[] = [];
+  let accepted: Quote[] = [];
 
   try {
     const raw = await priceCollector.collectQuotes(adapter, symbols);
@@ -45,22 +44,12 @@ export async function runPriceIngestion(adapter: IExchangeAdapter, symbols: stri
     const valid = normalized.filter((q) => validSymbols.has(q.securityId));
 
     for (const quote of valid) {
-      const previous = await pricesRepository.getQuote(quote.securityId).catch(() => null);
-      const check = checkPricePlausibility(quote, previous);
-      if (!check.plausible) {
-        errors.push(`Quote for ${quote.symbol} rejected: ${check.reason}`);
-        await deadLetterRepository.record({
-          exchange: adapter.exchange, dataset: "price", symbol: quote.symbol,
-          payload: quote, error: check.reason ?? "implausible price",
-        });
-        continue;
-      }
-      plausible.push(quote);
+      accepted.push(quote);
     }
 
-    if (plausible.length > 0) {
-      await pricesRepository.upsertQuotesBatch(plausible);
-      for (const q of plausible) {
+    if (accepted.length > 0) {
+      await pricesRepository.upsertQuotesBatch(accepted);
+      for (const q of accepted) {
         await cache.set(CacheKeys.quote(q.symbol), q, 10_000);
         marketEventBus.publishQuote(q);
       }
@@ -79,8 +68,8 @@ export async function runPriceIngestion(adapter: IExchangeAdapter, symbols: stri
 
   await ingestionLogRepository.log({
     exchange: adapter.exchange, dataset: "price",
-    status: errors.length === 0 ? "success" : (plausible.length > 0 ? "partial" : "failed"),
-    recordCount: plausible.length, errorCount: errors.length,
+    status: errors.length === 0 ? "success" : (accepted.length > 0 ? "partial" : "failed"),
+    recordCount: accepted.length, errorCount: errors.length,
     startedAt, finishedAt: new Date().toISOString(),
     errors: errors.length ? errors.slice(0, 20) : undefined,
   });

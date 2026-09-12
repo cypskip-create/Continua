@@ -16,18 +16,6 @@ export function checkQuoteFreshness(quote: Quote): { stale: boolean; ageMs: numb
   return { stale, ageMs };
 }
 
-export function checkPricePlausibility(quote: Quote, previousQuote: Quote | null): { plausible: boolean; reason?: string } {
-  if (!previousQuote) return { plausible: true };
-  const jump = Math.abs(quote.lastPrice - previousQuote.lastPrice) / Math.max(previousQuote.lastPrice, 0.01);
-  // NSE has ±10% circuit breakers on most boards; a single-tick jump far
-  // beyond that almost always means a bad print rather than a real move.
-  if (jump > 0.25) {
-    logger.warn({ symbol: quote.symbol, jump, from: previousQuote.lastPrice, to: quote.lastPrice }, "Implausible price jump detected");
-    return { plausible: false, reason: `price moved ${(jump * 100).toFixed(1)}% in one tick` };
-  }
-  return { plausible: true };
-}
-
 export function checkDuplicateCandle(seen: Set<string>, key: string): boolean {
   if (seen.has(key)) {
     logger.warn({ key }, "Duplicate candle detected in batch");
