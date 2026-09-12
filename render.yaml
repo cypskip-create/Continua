@@ -1,0 +1,69 @@
+# Render Blueprint — deploys continua-data (backend/) and continua-scraper
+# (scraper/) as two Docker-based Web Services. The frontend (app/) stays on
+# Vercel and isn't part of this file.
+#
+# Both services are single-process apps that run their own HTTP server AND
+# their own internal cron-scheduled workers (see backend/src/index.ts and
+# scraper/src/index.ts) — there is nothing here for a separate Background
+# Worker or Cron Job service to do. "Web Service" is the correct — and only
+# needed — Render service type for each.
+#
+# One-time setup:
+#   1. Push this repo to GitHub (if it isn't already).
+#   2. Render dashboard → New → Blueprint → pick this repo/branch.
+#   3. Render reads this file and shows both services below — click Apply.
+#   4. Fill in each `sync: false` variable in the Render dashboard for both
+#      services (Render won't have real values for these — it just
+#      reserves the slot). See the deployment runbook for exactly what
+#      goes in each one: docs/deployment/RENDER_DEPLOY.md
+#   5. Once both services are live, update the Vercel frontend's env vars
+#      to point at the new *.onrender.com URLs (also covered in that doc).
+#
+# Both are on the free plan, per the reason this migration is happening —
+# see the runbook for the tradeoffs that come with that (cold starts after
+# 15 min idle, ephemeral disk, 512MB RAM).
+
+services:
+  - type: web
+    name: continua-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Same Supabase Postgres instance the app already uses (backend
+      # writes into its `market` schema — see backend/src/storage/db.ts).
+      # Use the Session pooler connection string from Supabase's Project
+      # Settings → Database, not the Transaction pooler — see the runbook.
+      - key: DATABASE_URL
+        sync: false
+      # Comma-separated, no spaces — must include the Vercel production
+      # domain(s) or the browser app's requests will be blocked by CORS.
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: CACHE_DRIVER
+        value: memory
+      - key: API_KEY_AUTH_ENABLED
+        value: "true"
+
+  - type: web
+    name: continua-scraper
+    runtime: docker
+    rootDir: scraper
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Same value as continua-backend's DATABASE_URL above — this service
+      # only ever touches the `scraping` schema of that same database.
+      - key: DATABASE_URL
+        sync: false

@@ -15,7 +15,7 @@ export function booleanEnv(defaultValue: boolean) {
 /**
  * Every environment variable this service needs, validated once at boot.
  * This is a SEPARATE service from continua-data (backend/) — it has its
- * own Railway deployment and its own env vars, even though it talks to
+ * own Render deployment and its own env vars, even though it talks to
  * the same Postgres instance.
  */
 const EnvSchema = z.object({
@@ -29,9 +29,15 @@ const EnvSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
 
   // Where raw artifacts (PDFs, HTML, images, ...) are written. Local disk
-  // is fine for single-instance running; point this at a Supabase Storage
-  // bucket or S3-compatible target once artifact volume outgrows local
-  // disk on the Railway instance.
+  // is fine for single-instance running, but is EPHEMERAL on most hosts'
+  // free/starter web service tiers (Render included) — it's wiped on
+  // every deploy and every restart. That's an accepted tradeoff for now:
+  // these are re-fetchable staging artifacts, not the system of record
+  // (extraction writes structured data into Postgres). RAW_STORAGE_DRIVER=
+  // supabase is declared here for a future swap but NOT implemented yet
+  // (see storage/rawStorage.ts) — setting it currently just makes every
+  // storeRawArtifact() call throw, so leave this on "local" until that
+  // driver actually exists.
   RAW_STORAGE_DRIVER: z.enum(["local", "supabase"]).default("local"),
   RAW_STORAGE_LOCAL_PATH: z.string().default("./data/raw"),
   SUPABASE_URL: z.string().optional(),

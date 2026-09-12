@@ -15,14 +15,12 @@
  * puzzle to route around.
  *
  * OPERATIONAL NOTE: Playwright needs browser binaries + OS-level shared
- * libraries that a plain `npm install` does not provide — run
- * `npx playwright install --with-deps chromium` as part of the build/
- * deploy step. A default Railway Node buildpack will NOT have these
- * preinstalled; this may need a custom Dockerfile (Playwright publishes
- * ones with everything preinstalled — mcr.microsoft.com/playwright).
- * Untested in this project's actual Railway deployment — verify the
- * container actually launches Chromium before relying on this in
- * production.
+ * libraries that a plain `npm install` does not provide. scraper/Dockerfile
+ * builds on Microsoft's official Playwright image (mcr.microsoft.com/
+ * playwright), which ships both — verify the image tag's version still
+ * matches package.json's "playwright" version whenever that dependency is
+ * bumped, since a mismatch is exactly the failure mode this note used to
+ * warn about.
  */
 import { chromium, type Browser } from "playwright";
 import { logger } from "../monitoring/logger.js";

@@ -4,7 +4,10 @@
  * they can be reprocessed later without re-downloading). This is the
  * ONLY storage driver implemented right now; RAW_STORAGE_DRIVER=supabase
  * is validated by env.ts but not wired up yet — swap this module out
- * when artifact volume outgrows a single Railway instance's disk.
+ * when artifact volume outgrows a single instance's disk, or once the
+ * host's disk stops being persistent across deploys (true today on
+ * Render's free web service tier — see the RAW_STORAGE_DRIVER comment
+ * in config/env.ts).
  */
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
