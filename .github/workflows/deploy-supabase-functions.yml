@@ -1,0 +1,36 @@
+name: Deploy Supabase Edge Functions
+
+# Mirrors how Vercel already auto-deploys app/ on push — this does the same
+# for supabase/functions/*, which otherwise has no deploy mechanism at all
+# (there was none before this workflow; committing function code or
+# config.toml alone does nothing on Supabase without this).
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "supabase/functions/**"
+      - "supabase/config.toml"
+  workflow_dispatch: {} # lets you trigger a redeploy manually from the Actions tab, no push needed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # --use-api skips the Docker-based bundler entirely — GitHub's hosted
+      # runners don't need Docker set up for this, and it also avoids a
+      # known race condition when deploying several functions in one run.
+      # Deploying with no function name (just --project-ref) deploys every
+      # function under supabase/functions/, each with whatever verify_jwt /
+      # import_map settings are already in config.toml — nothing to pass
+      # per-function here.
+      - run: supabase functions deploy --use-api --project-ref "$PROJECT_ID"
