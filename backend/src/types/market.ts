@@ -320,12 +320,32 @@ export interface FinancialStatementCandidate {
   createdAt: string;
 }
 
+/** ── News (scraper bridge, general market/business news via RSS) ───────
+ *  See "news bridge.sql" for why this is a separate table from
+ *  company_announcements rather than a shared shape. */
+
+export interface NewsItem {
+  id: string;
+  headline: string;
+  excerpt: string | null;
+  articleUrl: string;
+  source: string;
+  sourceName: string;
+  category: "markets" | "earnings" | "companies" | "economy" | "top";
+  securityIds: string[];
+  scrapedArtifactId: number | null;
+  scrapedExtractionId: number | null;
+  extractionConfidence: number | null;
+  needsReview: boolean;
+  publishedAt: string | null;
+}
+
 /** ── Ingestion metadata (audit trail) ────────────────────────────────── */
 
 export interface IngestionRecord {
   id: string;
   exchange: ExchangeCode;
-  dataset: "price" | "candle" | "company" | "financials" | "corporate_action" | "earnings" | "ownership" | "index" | "announcement" | "financial_statement_candidate";
+  dataset: "price" | "candle" | "company" | "financials" | "corporate_action" | "earnings" | "ownership" | "index" | "announcement" | "financial_statement_candidate" | "news";
   status: "success" | "partial" | "failed";
   recordCount: number;
   errorCount: number;

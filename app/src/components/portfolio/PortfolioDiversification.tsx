@@ -131,15 +131,15 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
           <InfoTip>Each holding's share of your total portfolio value — a concentration check, not a performance measure. Tap a slice to see its detail.</InfoTip>
         </h3>
         <p className="text-[11px] text-muted-foreground mb-3">How much of your portfolio each holding represents.</p>
-        <div className="h-[440px] relative">
+        <div className="h-[480px] relative">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 40, right: 48, bottom: 40, left: 48 }}>
+            <PieChart margin={{ top: 36, right: 44, bottom: 36, left: 44 }}>
               <Pie
                 data={donutData}
                 dataKey="value"
                 nameKey="name"
-                innerRadius="46%"
-                outerRadius="72%"
+                innerRadius="50%"
+                outerRadius="76%"
                 paddingAngle={hasHoldings ? 1.5 : 0}
                 stroke="none"
                 label={hasHoldings ? renderOuterLabel : undefined}
@@ -159,25 +159,25 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
             </PieChart>
           </ResponsiveContainer>
           {selected && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-2 text-center">
-              <p className="text-[13px] font-bold leading-tight" style={{ color: hasHoldings ? (selected.isOther ? "hsl(var(--muted-foreground))" : colorFor(selected.name)) : "hsl(var(--muted-foreground))" }}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-1 text-center">
+              <p className="text-[12.5px] font-bold leading-tight" style={{ color: hasHoldings ? (selected.isOther ? "hsl(var(--muted-foreground))" : colorFor(selected.name)) : "hsl(var(--muted-foreground))" }}>
                 {selected.name}
               </p>
-              {hasHoldings && <p className="text-base font-bold tabular leading-tight">{selected.pct.toFixed(1)}%</p>}
+              {hasHoldings && <p className="text-[15px] font-bold tabular leading-tight">{selected.pct.toFixed(1)}%</p>}
               {hasHoldings && !selected.isOther && (
-                <div className="mt-1 w-24 space-y-px">
-                  <div className="flex items-center justify-between text-[9.5px] leading-tight">
+                <div className="mt-1 w-[88px] space-y-px">
+                  <div className="flex items-center justify-between text-[9px] leading-tight">
                     <span className="text-muted-foreground">Value</span>
                     <span className="font-semibold tabular">{showValues ? `${currencyLabel}${selected.value.toLocaleString("en-US", { maximumFractionDigits: 0 })}` : "••••"}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[9.5px] leading-tight">
+                  <div className="flex items-center justify-between text-[9px] leading-tight">
                     <span className="text-muted-foreground">1Y</span>
-                    <span className="font-semibold tabular">{oneYear.isLoading ? "…" : yearPct === null ? "n/a" : `${yearPct >= 0 ? "+" : ""}${yearPct.toFixed(1)}%`}</span>
+                    <span className="font-semibold tabular">{oneYear.isLoading ? "···" : yearPct === null ? "n/a" : `${yearPct >= 0 ? "+" : ""}${yearPct.toFixed(1)}%`}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[9.5px] leading-tight">
+                  <div className="flex items-center justify-between text-[9px] leading-tight">
                     <span className="text-muted-foreground">7D</span>
                     <span className={`font-semibold tabular ${weekPct !== null ? (weekPct >= 0 ? "text-bull" : "text-bear") : ""}`}>
-                      {oneWeek.isLoading ? "…" : weekPct === null ? "n/a" : `${weekPct >= 0 ? "+" : ""}${weekPct.toFixed(1)}%`}
+                      {oneWeek.isLoading ? "···" : weekPct === null ? "n/a" : `${weekPct >= 0 ? "+" : ""}${weekPct.toFixed(1)}%`}
                     </span>
                   </div>
                 </div>

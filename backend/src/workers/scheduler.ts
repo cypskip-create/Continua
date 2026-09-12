@@ -17,6 +17,7 @@ import { runPriceIngestionOnce, startPriceWorker } from "./priceWorker.js";
 import { runIndexIngestionOnce, startIndexWorker } from "./indexWorker.js";
 import { runAnnouncementsBridgeOnce, startAnnouncementsWorker } from "./announcementsWorker.js";
 import { runFinancialCandidatesBridgeOnce, startFinancialCandidatesWorker } from "./financialStatementCandidatesWorker.js";
+import { runNewsBridgeOnce, startNewsWorker } from "./newsWorker.js";
 import { researchService } from "../services/research/researchService.js";
 import { ACTIVE_EXCHANGES } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
@@ -32,9 +33,10 @@ export async function startAllWorkers(): Promise<() => void> {
   // recurring cron" shape as the rest of bootstrap. Placed after
   // runFinancialsSyncOnce/runCorporateActionsSyncOnce since entity
   // resolution needs market.companies/securities to already exist.
-  logger.info("Running first scraper-bridge pass (announcements + financial statement candidates)…");
+  logger.info("Running first scraper-bridge pass (announcements + financial statement candidates + news)…");
   await runAnnouncementsBridgeOnce();
   await runFinancialCandidatesBridgeOnce();
+  await runNewsBridgeOnce();
 
   logger.info("Running first price pass so every symbol has a live quote…");
   // respectTradingCalendar: false — bootstrap needs at least one quote to
@@ -59,6 +61,7 @@ export async function startAllWorkers(): Promise<() => void> {
   const candlesTask = startCandlesWorker();
   const announcementsTask = startAnnouncementsWorker();
   const financialCandidatesTask = startFinancialCandidatesWorker();
+  const newsTask = startNewsWorker();
 
   logger.info("All workers started");
   return () => {
@@ -69,5 +72,6 @@ export async function startAllWorkers(): Promise<() => void> {
     candlesTask.stop();
     announcementsTask.stop();
     financialCandidatesTask.stop();
+    newsTask.stop();
   };
 }

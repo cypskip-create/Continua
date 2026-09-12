@@ -35,7 +35,7 @@ import { NewsEventsTab } from "@/components/stock/tabs/NewsEventsTab";
 import { CommunityTab } from "@/components/stock/tabs/CommunityTab";
 import { ScoresTab } from "@/components/stock/tabs/ScoresTab";
 import { StockSnowflake } from "@/components/stock/tabs/StockSnowflake";
-import { getMediaItemsForSymbol, MediaItem } from "../data/mediaItems";
+import { useSecurityNews } from "@/hooks/useSecurityNews";
 import { formatTimestamp } from "@/lib/formatTimestamp";
 import { useLiveQuote } from "@/hooks/useLiveQuotes";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
@@ -331,13 +331,10 @@ export default function StockDetail() {
     // mismatch as dividendYield above.
     payoutRatio: liveResearch?.ratios.payoutRatio != null ? liveResearch.ratios.payoutRatio * 100 : fundamentals.payoutRatio,
   };
-  const stockNews = getMediaItemsForSymbol(symbol || "");
-  // Opens the full story on the TradersHub Media tab. Passes where we came from
-  // explicitly (rather than relying on browser history for the way back) so the
-  // article's close button returns here reliably regardless of what else has
-  // touched the history stack in between (e.g. the URL cleanup once the deep
-  // link is read).
-  const openNewsItem = (item: MediaItem) => navigate(`/traders-hub?tab=media&article=${item.id}`, { state: { returnTo: `/stock/${symbol}` } });
+  // "Recent News" preview + NewsEventsTab both use real scraped news for
+  // this symbol now — see useSecurityNews.ts. Opens externally since only
+  // an excerpt is stored, not the full article body (see NewsItem type).
+  const { news: stockNews } = useSecurityNews(upperSymbol || undefined);
 
   // Section refs — sticky sub-nav scrolls to them
   const refs = {
@@ -808,22 +805,19 @@ export default function StockDetail() {
               </div>
               <div className="border-t border-border/60">
                 {stockNews.slice(0, 3).map(n => (
-                  <button
+                  <a
                     key={n.id}
+                    href={n.articleUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     data-small-target
-                    onClick={() => openNewsItem(n)}
                     className="w-full flex items-start justify-between py-3 border-b border-border/40 gap-3 text-left active:opacity-70 transition-opacity"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium leading-snug">{n.title}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{n.source} · {formatTimestamp(n.publishedAt)}</p>
+                      <p className="text-xs font-medium leading-snug">{n.headline}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{n.sourceName} · {n.publishedAt ? formatTimestamp(n.publishedAt) : "Date unknown"}</p>
                     </div>
-                    {n.sentiment && n.sentiment !== "neutral" && (
-                      <Badge variant="outline" className={`text-[9px] shrink-0 ${n.sentiment === 'bullish' ? 'text-bull border-bull/40' : 'text-bear border-bear/40'}`}>
-                        {n.sentiment}
-                      </Badge>
-                    )}
-                  </button>
+                  </a>
                 ))}
               </div>
             </div>
@@ -884,8 +878,6 @@ export default function StockDetail() {
             symbol={symbol || ""} name={stock.name} sector={stock.sector}
             price={stock.price} changePercent={stock.changePercent}
             pe={stock.pe} eps={stock.eps} dividend={stock.dividend}
-            news={stockNews}
-            onSelectNews={openNewsItem}
           />
         </section>
 

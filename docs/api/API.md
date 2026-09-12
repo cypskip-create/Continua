@@ -78,6 +78,30 @@ Dividend-type corporate actions only, ordered by ex-date.
 ### `GET /ownership/:symbol`
 Holder breakdown (institution/insider/government/public), by % held.
 
+## Announcements & news
+
+### `GET /announcements/:symbol?exchange=NSE&limit=50`
+Company filings/announcements, scraped from NSE announcement PDFs by continua-scraper and
+bridged into `market.company_announcements` (see `announcementsIngestionPipeline.ts`).
+Newest first. `companyId`/`securityId` are `null` when entity resolution couldn't confidently
+match the filing to a listed company — `rawCompanyName` and `needsReview: true` in that case.
+Returns `{ "data": [] }`, not a 404, for a symbol with no filings scraped yet.
+
+### `GET /news?category=markets|earnings|companies|economy|top&limit=50`
+Site-wide recent news feed, scraped from configured RSS sources (e.g. Capital FM Business) by
+continua-scraper's generic RSS adapter and bridged into `market.news_items`
+(see `newsIngestionPipeline.ts`). `category` is optional; omitting it returns all categories.
+Ordered by `published_at` (falls back to when it was scraped, for feeds that don't reliably
+expose a publish date).
+
+### `GET /news/:symbol?exchange=NSE&limit=20`
+News mentioning one specific security. `securityIds` on each item is a best-effort keyword
+match against ticker/company name (see `resolveStockMentions.ts`) — an article can legitimately
+mention several companies, or none (general market/economy news), so an empty `securityIds` list
+elsewhere in the feed isn't itself an error; `needsReview: true` is the explicit "the bridge
+wasn't confident about this one" signal. Only an excerpt is stored, never the full article body —
+`articleUrl` links to the original publisher for the full story.
+
 ## Market movers
 
 ### `GET /movers?limit=10`

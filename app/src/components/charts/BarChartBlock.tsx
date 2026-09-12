@@ -64,10 +64,14 @@ export function BarChartBlock({
   const [active, setActive] = useState<number | null>(null);
 
   const hasQuarterly = !!quarterly && quarterly.length > 0;
+  // Falling back to annual bars while the dropdown reads "Quarterly" would
+  // misrepresent what's on screen, so an empty quarterly result shows its
+  // own explicit empty state instead of silently substituting annual data.
+  const showingEmptyQuarterly = period === "quarterly" && !hasQuarterly;
 
   const data = useMemo(() => {
-    if (period === "quarterly" && hasQuarterly) {
-      return lastQuarterly(quarterly!, QUARTERLY_PERIODS);
+    if (period === "quarterly") {
+      return hasQuarterly ? lastQuarterly(quarterly!, QUARTERLY_PERIODS) : [];
     }
     return lastAnnual(annual, annualCount ?? ANNUAL_PERIODS);
   }, [period, annual, quarterly, hasQuarterly, annualCount]);
@@ -84,7 +88,12 @@ export function BarChartBlock({
         <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{title}</p>
         <div className="flex items-center gap-1.5">
           {right}
-          {allowQuarterly && hasQuarterly && (
+          {/* Shown whenever the caller opts in, not just once quarterly
+              rows happen to exist — otherwise the control disappears for
+              any stock the quarterly pipeline hasn't reached yet, which
+              reads as the feature being broken rather than as "no data
+              yet" for this one stock. */}
+          {allowQuarterly && (
             <Select value={period} onValueChange={(v) => { setPeriod(v as ChartPeriod); setActive(null); }}>
               <SelectTrigger className="h-6 w-[92px] text-[10px] px-2 rounded-md border-border/70" aria-label="Reporting period">
                 <SelectValue />
@@ -99,6 +108,11 @@ export function BarChartBlock({
       </div>
 
       <div className="border-t border-border/60 pt-3" style={{ height }}>
+        {showingEmptyQuarterly ? (
+          <div className="h-full flex items-center justify-center">
+            <p className="text-[11px] text-muted-foreground text-center px-6">No quarterly figures on file for this stock yet — try Annual.</p>
+          </div>
+        ) : (
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
@@ -135,10 +149,11 @@ export function BarChartBlock({
             ))}
           </BarChart>
         </ResponsiveContainer>
+        )}
       </div>
 
       {/* Value readout — below the chart, above the key (Moomoo pattern) */}
-      {row && (
+      {row && !showingEmptyQuarterly && (
         <div className="mt-2 pt-2 border-t border-border/40">
           <p className="text-[10px] font-semibold text-muted-foreground mb-1">{String(row[xKey])}</p>
           <div className="space-y-0.5">

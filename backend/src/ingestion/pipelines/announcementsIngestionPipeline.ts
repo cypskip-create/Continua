@@ -11,6 +11,11 @@
  * Idempotent: re-running finds nothing new to do once everything's caught
  * up, matching the "running the same job twice must not duplicate
  * records" requirement (§44 of the scraper spec).
+ *
+ * Excludes adapter='rss' extractions — those are general news articles,
+ * not company filings, and belong in market.news_items via
+ * newsIngestionPipeline.ts instead (which also allows an article to
+ * resolve to SEVERAL companies, unlike this single-company shape).
  */
 import { query } from "../../storage/db.js";
 import { companyAnnouncementsRepository } from "../../storage/repositories/companyAnnouncementsRepository.js";
@@ -39,7 +44,8 @@ async function fetchPendingExtractions(limit: number): Promise<PendingExtraction
             a.id as "artifactId", a.document_url as "documentUrl", a.title, a.source_id as "sourceId"
      FROM scraping.extractions e
      JOIN scraping.raw_artifacts a ON a.id = e.artifact_id
-     WHERE NOT EXISTS (
+     WHERE a.adapter != 'rss'
+       AND NOT EXISTS (
        SELECT 1 FROM market.company_announcements ca WHERE ca.scraped_extraction_id = e.id
      )
      ORDER BY e.extracted_at ASC

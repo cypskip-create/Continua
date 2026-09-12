@@ -18,6 +18,7 @@
     "worker:announcements": "tsx scripts/runAnnouncementsBridgeOnce.ts",
     "worker:candles": "tsx src/workers/candlesWorker.ts",
     "worker:financial-candidates": "tsx scripts/runFinancialCandidatesBridgeOnce.ts",
+    "worker:news": "tsx scripts/runNewsBridgeOnce.ts",
     "financials:review": "tsx scripts/listFinancialStatementCandidates.ts",
     "financials:draft": "tsx scripts/draftFinancialStatementCandidate.ts",
     "financials:confirm": "tsx scripts/confirmFinancialStatementCandidate.ts",

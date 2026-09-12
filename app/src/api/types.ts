@@ -173,6 +173,32 @@ export interface CompanyAnnouncement {
   publishedAt: string | null;
 }
 
+/** General market/business news (not company filings — see
+ *  CompanyAnnouncement for those), scraped via continua-scraper's RSS
+ *  adapter and bridged into market.news_items. `securityIds` is a
+ *  best-effort keyword match against article text and can be empty for
+ *  genuine market/economy-wide stories, not just a missed match — see
+ *  `needsReview` for whether the bridge itself flagged this one as
+ *  uncertain. There is no in-app "full article" body: only an excerpt is
+ *  stored, and the full story lives at `articleUrl` on the original
+ *  publisher's site (reproducing full articles isn't something Continua
+ *  is licensed to do). */
+export interface NewsItem {
+  id: string;
+  headline: string;
+  excerpt: string | null;
+  articleUrl: string;
+  source: string;
+  sourceName: string;
+  category: "markets" | "earnings" | "companies" | "economy" | "top";
+  securityIds: string[];
+  scrapedArtifactId: number | null;
+  scrapedExtractionId: number | null;
+  extractionConfidence: number | null;
+  needsReview: boolean;
+  publishedAt: string | null;
+}
+
 export interface OwnershipRecord {
   securityId: string;
   holderName: string;

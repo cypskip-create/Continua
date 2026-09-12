@@ -54,6 +54,15 @@ export const AnnouncementsQuerySchema = ExchangeQuery.extend({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 
+export const NewsQuerySchema = z.object({
+  category: z.enum(["markets", "earnings", "companies", "economy", "top"]).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
+export const SecurityNewsQuerySchema = ExchangeQuery.extend({
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
 export const ScreenerQuerySchema = ExchangeQuery.extend({
   sector: z.string().min(1).optional(),
   minMarketCap: z.coerce.number().nonnegative().optional(),

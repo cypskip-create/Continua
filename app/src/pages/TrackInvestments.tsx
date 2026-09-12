@@ -468,15 +468,15 @@ export default function TrackInvestments() {
               </DropdownMenu>
             </div>
 
-            <div className="h-52 mt-2 relative">
+            <div className="h-64 mt-2 relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={activeAlloc}
                     dataKey="value"
                     nameKey="name"
-                    innerRadius="55%"
-                    outerRadius="82%"
+                    innerRadius="58%"
+                    outerRadius="88%"
                     paddingAngle={2}
                     stroke="none"
                     onClick={(_, i) => setSelectedSlice(prev => prev === activeAlloc[i].name ? null : activeAlloc[i].name)}
@@ -507,14 +507,14 @@ export default function TrackInvestments() {
                   same thing here. No reliance on Recharts' hover-only Tooltip,
                   which is why list taps used to show nothing. */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center px-6">
+                <div className="text-center px-3">
                   {(() => {
                     const sel = selectedSlice ? activeAlloc.find(s => s.name === selectedSlice) : null;
                     if (sel) {
                       return (
                         <>
-                          <p className="text-[11px] font-medium text-muted-foreground truncate max-w-[130px] mx-auto">{sel.name}</p>
-                          <p className="mt-0.5 text-lg font-bold tabular">
+                          <p className="text-[11px] font-medium text-muted-foreground truncate max-w-[104px] mx-auto">{sel.name}</p>
+                          <p className="mt-0.5 text-base font-bold tabular">
                             {showBalance ? `KES ${sel.value.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '••••'}
                           </p>
                           <p className="text-[11px] text-muted-foreground tabular">{sel.pct.toFixed(1)}%</p>
@@ -524,7 +524,7 @@ export default function TrackInvestments() {
                     return (
                       <>
                         <p className="text-[11px] font-medium text-muted-foreground">Total</p>
-                        <p className="mt-0.5 text-lg font-bold tabular">
+                        <p className="mt-0.5 text-base font-bold tabular">
                           {showBalance ? `KES ${stats.totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '••••'}
                         </p>
                       </>
