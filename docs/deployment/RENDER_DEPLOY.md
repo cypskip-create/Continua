@@ -60,18 +60,23 @@ A `render.yaml` at the repo root already defines both services.
    |---|---|
    | `DATABASE_URL` | The Session-pooler string from step 1 |
    | `ALLOWED_ORIGINS` | Your Vercel production domain(s), comma-separated, e.g. `https://your-app.vercel.app` — no trailing slash, no spaces after commas |
+   | `MANSA_API_BASE_URL` | Same value as on Railway (pan-African feed; NSE itself doesn't go through this — see the comment above it in `render.yaml`) |
+   | `MANSA_API_KEY` | Same value as on Railway |
+   | `MANSA_API_IP` | Same value as on Railway (DNS edge override) |
 
    **continua-scraper**
    | Variable | Value |
    |---|---|
    | `DATABASE_URL` | The *same* string as above |
 
-5. Optional, only if you were running these on Railway: if you had
-   `ADAPTER_MODE=live` + `MANSA_API_KEY` set for real (non-mock) market
-   data, add those two as additional env vars on `continua-backend` now —
-   they're not in `render.yaml` because they have safe defaults
-   (`ADAPTER_MODE=mock`) and there's no reason to force you to fill them
-   in blank if you don't use them.
+5. `render.yaml` already bakes in the rest of the live-data config that
+   was set by hand on Railway — `ADAPTER_MODE=live`,
+   `NSE_ADAPTER_SOURCE=nse_client`, `NSE_CLIENT_MODE=mystocks`,
+   `PRICE_POLL_INTERVAL_MS=30000`, `INDEX_POLL_INTERVAL_MS=1800000` — so
+   there's nothing to redo for those; they ship as part of the Blueprint
+   apply in step 3. **Not** carried over: `DEV_API_KEY`. It was set on
+   Railway, but `config/env.ts` explicitly warns against a dev key in
+   production — issue a real one instead in step 3 below.
 6. Save — each service will build its Dockerfile and deploy. First build
    will take a few minutes, longer for the scraper (Playwright's browser
    image is large).
