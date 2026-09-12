@@ -38,16 +38,28 @@ pop3_port = 54326
 verify_jwt = false
 
 [functions.ai-stock-analysis]
-verify_jwt = true
+# false, not true: this function already validates the caller's JWT itself
+# (see index.ts — Authorization header -> supabase-js getClaims/auth check)
+# and returns its own CORS headers for OPTIONS. With verify_jwt=true, the
+# Supabase gateway checks the JWT BEFORE the function code runs at all —
+# and a browser's CORS preflight (OPTIONS) never carries an Authorization
+# header, so the gateway rejected the preflight itself with a non-2xx
+# status, before this function's own corsHeaders/OPTIONS handling ever ran.
+# That's a plain CORS failure in the browser, not an auth downgrade here:
+# the manual check inside the function still enforces the same auth.
+verify_jwt = false
 
 [functions.stock-thesis]
-verify_jwt = true
+# Same reasoning as ai-stock-analysis above.
+verify_jwt = false
 
 [functions.check-price-alerts]
-verify_jwt = true
+# Same reasoning as ai-stock-analysis above.
+verify_jwt = false
 
 [functions.check-indicator-alerts]
-verify_jwt = true
+# Same reasoning as ai-stock-analysis above.
+verify_jwt = false
 
 [functions.run-price-alerts]
 # Invoked on a schedule by pg_cron/pg_net (see migration
@@ -57,10 +69,12 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.delete-account]
-verify_jwt = true
+# Same reasoning as ai-stock-analysis above.
+verify_jwt = false
 
 [functions.upgrade-subscription]
-verify_jwt = true
+# Same reasoning as ai-stock-analysis above.
+verify_jwt = false
 
 [auth]
 enable_signup = true
