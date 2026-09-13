@@ -152,7 +152,14 @@ export default function UserProfile() {
 
   const fetchPublicPortfolio = async () => {
     if (!userId) return;
-    const { data } = await supabase.from("portfolios").select("symbol, name, shares, avg_cost, sector").eq("user_id", userId).limit(10);
+    // No .limit() here — this feeds portfolioSummary's TOTAL VALUE below,
+    // which must include every holding or the total silently undercounts
+    // (this used to cap at 10 rows, so an actual 12-holding portfolio like
+    // this one showed a total ~KES 7,400 short of the real Portfolio tab).
+    // The separate "top holdings only" privacy toggle already limits what's
+    // DISPLAYED (visibleHoldings below, sliced to 5) — that's the right
+    // place to cap rows, not the fetch the total is computed from.
+    const { data } = await supabase.from("portfolios").select("symbol, name, shares, avg_cost, sector").eq("user_id", userId);
     if (data) setPublicPortfolio(data);
   };
 

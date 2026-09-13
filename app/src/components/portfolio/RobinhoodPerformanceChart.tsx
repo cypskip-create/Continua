@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useRef } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown } from "lucide-react";
+import { usePortfolioHistory } from "@/hooks/usePortfolioHistory";
 
 interface PerformancePoint {
   date: string;
@@ -21,6 +22,12 @@ interface RobinhoodPerformanceChartProps {
   hideValue?: boolean;
   /** Optional seed so the simulated curve stays stable per portfolio. */
   seed?: string;
+  /** Current holdings (symbol + share count) — when provided, every
+   *  timeframe except "1D" plots the portfolio's REAL historical value
+   *  (real daily closes × today's share count) instead of a generated
+   *  shape. Omit to keep the old fully-generated behavior (e.g. for a
+   *  context with no real holdings to look up, like a demo/preview). */
+  holdings?: { symbol: string; shares: number }[];
 }
 
 const timeframes = [
@@ -52,6 +59,7 @@ export function RobinhoodPerformanceChart({
   mode = "value",
   hideValue = false,
   seed = "",
+  holdings,
 }: RobinhoodPerformanceChartProps) {
   const [activeTimeframe, setActiveTimeframe] = useState("1M");
   const [hoverValue, setHoverValue] = useState<number | null>(null);
@@ -60,6 +68,14 @@ export function RobinhoodPerformanceChart({
   const plotRef = useRef<HTMLDivElement | null>(null);
   const PLOT_MARGIN_TOP = 5;
   const PLOT_MARGIN_BOTTOM = 5;
+
+  // Real closes for the selected window — "1D" is deliberately excluded
+  // (see usePortfolioHistory's own note: no intraday candle source yet).
+  const { points: realPoints, isLoading: realLoading, hasRealData } = usePortfolioHistory(
+    holdings ?? [],
+    activeTimeframe
+  );
+  const useRealData = activeTimeframe !== "1D" && !!holdings && hasRealData && !realLoading;
 
   const rng = (s: string) => {
     let h = 2166136261;
@@ -80,6 +96,13 @@ export function RobinhoodPerformanceChart({
     if (days <= 1) return dayStartValue;
     const t = Math.min(1, Math.pow(days / 730, 0.55));
     return dayStartValue + (totalCost - dayStartValue) * t;
+  };
+
+  const formatDateLabel = (date: Date, days: number): string => {
+    if (days <= 1) return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    if (days <= 7) return date.toLocaleDateString("en-US", { weekday: "short", hour: "numeric" });
+    if (days <= 30) return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
   };
 
   const generateData = (days: number): PerformancePoint[] => {
@@ -108,24 +131,36 @@ export function RobinhoodPerformanceChart({
 
       const timestamp = now - (points - 1 - i) * (days * msPerDay / points);
       const date = new Date(timestamp);
-      let dateStr: string;
-      if (days <= 1) dateStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-      else if (days <= 7) dateStr = date.toLocaleDateString('en-US', { weekday: 'short', hour: 'numeric' });
-      else if (days <= 30) dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      else dateStr = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-
-      data.push({ date: dateStr, value, timestamp });
+      data.push({ date: formatDateLabel(date, days), value, timestamp });
     }
     // Force both endpoints to the exact real anchors — no drift from the numbers shown elsewhere on the page.
     if (data.length > 0) { data[0].value = startValue; data[data.length - 1].value = endValue; }
     return data;
   };
 
+  // Real daily closes × today's share count, formatted the same way the
+  // generated series is, with one synthetic point appended for "right
+  // now" (using the live totalValue) — real daily candles only go up to
+  // the last close, so without this the line would visibly stop a day
+  // short of the live total shown in the hero number above it.
+  const realData = useMemo((): PerformancePoint[] => {
+    if (!useRealData) return [];
+    const windowDays = timeframes.find((t) => t.label === activeTimeframe)?.days ?? 30;
+    const formatted: PerformancePoint[] = realPoints.map((p) => ({
+      date: formatDateLabel(new Date(p.timestamp), windowDays),
+      value: p.value,
+      timestamp: p.timestamp,
+    }));
+    formatted.push({ date: "Now", value: totalValue, timestamp: Date.now() });
+    return formatted;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [useRealData, realPoints, activeTimeframe, totalValue]);
+
   const selectedTimeframe = timeframes.find(t => t.label === activeTimeframe)!;
   const rawData = useMemo(
-    () => generateData(selectedTimeframe.days),
+    () => (useRealData ? realData : generateData(selectedTimeframe.days)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeTimeframe, totalValue, totalCost, dayStartValue, seed]
+    [useRealData, realData, activeTimeframe, totalValue, totalCost, dayStartValue, seed]
   );
 
   // In "performance" mode every point is shown as % vs cost basis, so the chart's

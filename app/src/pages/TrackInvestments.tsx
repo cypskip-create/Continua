@@ -19,6 +19,7 @@ import { ReturnsContributors } from "@/components/portfolio/ReturnsContributors"
 import { PortfolioValuations } from "@/components/portfolio/PortfolioValuations";
 import { usePortfolioValuations } from "@/hooks/usePortfolioValuations";
 import { DividendQuality } from "@/components/portfolio/DividendQuality";
+import { FullLock } from "@/components/portfolio/FullLock";
 import { DividendCalendar } from "@/components/portfolio/DividendCalendar";
 import { DividendForecast } from "@/components/portfolio/DividendForecast";
 import { DividendHistory } from "@/components/portfolio/DividendHistory";
@@ -278,6 +279,7 @@ export default function TrackInvestments() {
               mode={chartMode}
               hideValue={!showBalance}
               seed={holdings.map(h => h.symbol).join(',')}
+              holdings={holdings.map(h => ({ symbol: h.symbol, shares: h.shares }))}
             />
           </div>
         </div>
@@ -306,8 +308,8 @@ export default function TrackInvestments() {
             <TabsList className="w-full flex overflow-x-auto scrollbar-hide gap-5 h-10 bg-transparent p-0 justify-start border-b border-border rounded-none">
               <TabsTrigger value="holdings" className="shrink-0 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 text-[12.5px] font-semibold text-muted-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors">Holdings</TabsTrigger>
               <TabsTrigger value="returns" className="shrink-0 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 text-[12.5px] font-semibold text-muted-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors">Returns</TabsTrigger>
-              <TabsTrigger value="valuations" className="shrink-0 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 text-[12.5px] font-semibold text-muted-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors">Valuations</TabsTrigger>
               <TabsTrigger value="updates" className="shrink-0 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 text-[12.5px] font-semibold text-muted-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors">Updates</TabsTrigger>
+              <TabsTrigger value="valuations" className="shrink-0 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 text-[12.5px] font-semibold text-muted-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors">Valuations</TabsTrigger>
               <TabsTrigger value="dividends" className="shrink-0 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 text-[12.5px] font-semibold text-muted-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors">Dividends</TabsTrigger>
               <TabsTrigger value="analysis" className="shrink-0 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 text-[12.5px] font-semibold text-muted-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors">Analysis</TabsTrigger>
             </TabsList>
@@ -330,6 +332,11 @@ export default function TrackInvestments() {
                 <p className="text-sm font-semibold">No positions yet</p>
                 <p className="text-xs text-muted-foreground mt-1">Add an investment to see benchmarks and diversification.</p>
               </div>
+            ) : !isPremium ? (
+              <FullLock
+                title="Portfolio Analysis is a Premium feature"
+                description="Benchmarks vs. the NSE index, sector diversification, holding correlation, concentration risk, and share dilution tracking across your whole portfolio."
+              />
             ) : (
               <>
                 <PortfolioScorecard
@@ -392,6 +399,7 @@ export default function TrackInvestments() {
                 <DividendQuality
                   holdings={holdings.map(h => ({ id: h.id, symbol: h.symbol, name: (h as any).name, shares: h.shares, price: h.price, avgCost: h.avg_cost }))}
                   dividendData={dividendData}
+                  isPremium={isPremium}
                   showValues={showBalance}
                 />
                 <DividendForecast
@@ -420,6 +428,7 @@ export default function TrackInvestments() {
                 holdings={holdings.map(h => ({ id: h.id, symbol: h.symbol, name: (h as any).name, shares: h.shares, price: h.price, value: h.value }))}
                 valuations={valuations}
                 isLoading={valuationsLoading}
+                isPremium={isPremium}
                 showValues={showBalance}
               />
             )}

@@ -651,6 +651,30 @@ export type Database = {
         }
         Relationships: []
       }
+      research_usage: {
+        Row: {
+          first_viewed_at: string
+          id: string
+          month_key: string
+          symbol: string
+          user_id: string
+        }
+        Insert: {
+          first_viewed_at?: string
+          id?: string
+          month_key: string
+          symbol: string
+          user_id: string
+        }
+        Update: {
+          first_viewed_at?: string
+          id?: string
+          month_key?: string
+          symbol?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       room_members: {
         Row: {
           id: string
@@ -958,6 +982,10 @@ export type Database = {
       }
     }
     Functions: {
+      get_research_quota: {
+        Args: { p_symbol: string }
+        Returns: Json
+      }
       is_room_member: {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
@@ -965,6 +993,10 @@ export type Database = {
       is_room_visible: {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
+      }
+      record_research_view: {
+        Args: { p_symbol: string }
+        Returns: Json
       }
     }
     Enums: {

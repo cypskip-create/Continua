@@ -45,6 +45,9 @@ import { useDividendHistory } from "@/hooks/useDividendHistory";
 import { useOwnership } from "@/hooks/useOwnership";
 import { useCorporateActions } from "@/hooks/useCorporateActions";
 import { useExchange } from "@/hooks/useExchange";
+import { useProfile } from "@/hooks/useProfile";
+import { useResearchQuota, type ResearchQuotaResult } from "@/hooks/useResearchQuota";
+import { FullLock } from "@/components/portfolio/FullLock";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { ContinuaScores } from "@/components/stock/ContinuaScore";
 
@@ -382,6 +385,49 @@ export default function StockDetail() {
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Free-tier research quota — Simply Wall St-style 5 distinct stocks'
+  // full report per month. Snowflake is the free summary and never counts;
+  // reaching "1. Valuation" (rpt-1) is what spends one of the 5, and only
+  // the first time for THIS stock this month — see useResearchQuota.
+  const { profile } = useProfile();
+  const isPremium = profile?.subscription_plan === "premium" || profile?.subscription_plan === "premium_plus";
+  const { peek, recordView } = useResearchQuota();
+  const [quota, setQuota] = useState<ResearchQuotaResult | null>(null);
+  const [reportLocked, setReportLocked] = useState(false);
+  const spentSlotRef = useRef(false);
+
+  // On a fresh stock page, peek at quota (no slot spent) so a stock that's
+  // already exhausted the month's quota shows locked immediately, without
+  // waiting for the person to scroll down first.
+  useEffect(() => {
+    spentSlotRef.current = false;
+    setReportLocked(false);
+    setQuota(null);
+    if (!symbol || isPremium) return;
+    peek(symbol).then((res) => {
+      if (res) { setQuota(res); if (!res.allowed) setReportLocked(true); }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, isPremium]);
+
+  // The actual spend: fires once, the first time ANY numbered report
+  // section (Valuation onward — everything past the free Snowflake
+  // summary) is scrolled into view for this stock this page load. In the
+  // normal top-to-bottom scroll this is "1. Valuation" first, matching
+  // "reaching the valuation part" — but it also has to catch someone
+  // jumping straight to a later section via the jump-nav, since that's
+  // just as much "using this stock's research" as scrolling normally.
+  useEffect(() => {
+    if (isPremium || !symbol || spentSlotRef.current) return;
+    const isNumberedReportSection = reportSection !== "rpt-snowflake" && REPORT_JUMP_NAV.some((n) => n.id === reportSection);
+    if (!isNumberedReportSection) return;
+    spentSlotRef.current = true;
+    recordView(symbol).then((res) => {
+      if (res) { setQuota(res); if (!res.allowed) setReportLocked(true); }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportSection, symbol, isPremium]);
 
   // Whether the hero price (above the chart) is still on screen. The sticky
   // header's price/change block only appears once this goes false — i.e.
@@ -827,6 +873,11 @@ export default function StockDetail() {
         {/* RESEARCH */}
         <section ref={refs.research} data-section="research" className="space-y-4 scroll-mt-32">
           <Eyebrow>Research</Eyebrow>
+          {!isPremium && quota && quota.limit != null && (
+            <p className="text-[10.5px] text-muted-foreground -mt-2">
+              {quota.remaining ?? 0} of {quota.limit} free stock research{quota.limit === 1 ? "" : "es"} left this month
+            </p>
+          )}
           {/* Jump nav — scrolls to a section rather than switching a tab,
               since the report below is one continuous scroll now. Tracks
               which report section is in view and rings it, same idea as
@@ -851,23 +902,32 @@ export default function StockDetail() {
 
           <div className="space-y-10 pt-2">
             <div id="rpt-snowflake" className="scroll-mt-40"><StockSnowflake symbol={symbol || ""} /></div>
-            <div id="rpt-1" className="scroll-mt-40"><ValuationSection symbol={symbol || ""} name={stock.name} sector={stock.sector} price={stock.price} currency={exchangeMeta.currency} /></div>
-            <div id="rpt-2" className="scroll-mt-40"><FutureGrowthSection symbol={symbol || ""} /></div>
-            <div id="rpt-3" className="scroll-mt-40"><PastPerformanceSection symbol={symbol || ""} currency={exchangeMeta.currency} /></div>
-            <div id="rpt-4" className="scroll-mt-40"><FinancialHealthSection symbol={symbol || ""} currency={exchangeMeta.currency} /></div>
-            <div id="rpt-5" className="scroll-mt-40"><RiskSection symbol={symbol || ""} /></div>
-            <div id="rpt-6" className="scroll-mt-40"><DividendsSection symbol={symbol || ""} currency={exchangeMeta.currency} divYield={divYield} annualDividend={stock.dividend} /></div>
-            <div id="rpt-7" className="scroll-mt-40"><ManagementSection symbol={symbol || ""} /></div>
-            <div id="rpt-8" className="scroll-mt-40"><OwnershipSection ownership={liveOwnership} topShareholders={liveTopShareholders} isLoading={ownershipLoading} /></div>
-            <div id="rpt-9" className="scroll-mt-40"><CompanyInfoSection symbol={symbol || ""} exchange={exchangeMeta.code} marketCap={stock.marketCap ?? "—"} /></div>
-            <div id="rpt-technicals" className="scroll-mt-40 space-y-2">
-              <p className="text-[11px] text-muted-foreground">
-                Technicals and the Institutional Scorecard below aren't part of Simply Wall St's report —
-                they're Continua-original tools kept from the existing research suite.
-              </p>
-              <TechnicalsTab symbol={symbol || ""} currency={exchangeMeta.currency} />
-              <ScoresTab fundamentals={liveFundamentals} />
-            </div>
+            {reportLocked ? (
+              <FullLock
+                title="You've used this month's free research"
+                description={`Free accounts get full research (Valuation through Company Info) on 5 different stocks a month. You've used all ${quota?.limit ?? 5} — upgrade for unlimited, or come back next month.`}
+              />
+            ) : (
+              <>
+                <div id="rpt-1" className="scroll-mt-40"><ValuationSection symbol={symbol || ""} name={stock.name} sector={stock.sector} price={stock.price} currency={exchangeMeta.currency} /></div>
+                <div id="rpt-2" className="scroll-mt-40"><FutureGrowthSection symbol={symbol || ""} /></div>
+                <div id="rpt-3" className="scroll-mt-40"><PastPerformanceSection symbol={symbol || ""} currency={exchangeMeta.currency} /></div>
+                <div id="rpt-4" className="scroll-mt-40"><FinancialHealthSection symbol={symbol || ""} currency={exchangeMeta.currency} /></div>
+                <div id="rpt-5" className="scroll-mt-40"><RiskSection symbol={symbol || ""} /></div>
+                <div id="rpt-6" className="scroll-mt-40"><DividendsSection symbol={symbol || ""} currency={exchangeMeta.currency} divYield={divYield} annualDividend={stock.dividend} /></div>
+                <div id="rpt-7" className="scroll-mt-40"><ManagementSection symbol={symbol || ""} /></div>
+                <div id="rpt-8" className="scroll-mt-40"><OwnershipSection ownership={liveOwnership} topShareholders={liveTopShareholders} isLoading={ownershipLoading} /></div>
+                <div id="rpt-9" className="scroll-mt-40"><CompanyInfoSection symbol={symbol || ""} exchange={exchangeMeta.code} marketCap={stock.marketCap ?? "—"} /></div>
+                <div id="rpt-technicals" className="scroll-mt-40 space-y-2">
+                  <p className="text-[11px] text-muted-foreground">
+                    Technicals and the Institutional Scorecard below aren't part of Simply Wall St's report —
+                    they're Continua-original tools kept from the existing research suite.
+                  </p>
+                  <TechnicalsTab symbol={symbol || ""} currency={exchangeMeta.currency} />
+                  <ScoresTab fundamentals={liveFundamentals} />
+                </div>
+              </>
+            )}
           </div>
         </section>
 

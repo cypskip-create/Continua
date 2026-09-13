@@ -19,14 +19,19 @@ const FREE_FEATURES = [
   "TradersHub — read & post (up to 500 characters)",
   "Basic charts (line, area, candlestick)",
   "3 AI theses / month",
+  "Full stock research on 5 different stocks / month",
+  "Basic portfolio valuation (pick one model per holding)",
 ];
 
 const PREMIUM_FEATURES = [
   { icon: LineChart, label: "Real-time NSE prices", detail: "No delay — prices update the moment they move" },
   { icon: Sparkles, label: "Unlimited AI investment theses", detail: "Free is capped at 3/month" },
+  { icon: FileText, label: "Unlimited stock research", detail: "Free is capped at 5 different stocks/month" },
   { icon: ShieldCheck, label: "Investment Health Score on every stock", detail: "AfriScore breakdown, not just the headline number" },
   { icon: BarChart3, label: "Advanced screener & compare", detail: "Dividend yield, beta, RSI, and market-cap filters" },
-  { icon: LineChart, label: "Portfolio insights + benchmarking", detail: "See how your holdings stack up against the NSE index" },
+  { icon: LineChart, label: "Portfolio Analysis", detail: "Benchmarks vs. the NSE index, diversification, correlation, and risk — the whole Analysis tab" },
+  { icon: BarChart3, label: "Consensus Portfolio Valuation", detail: "Averages all 3 real valuation models per holding, instead of picking just one" },
+  { icon: ShieldCheck, label: "Dividend Quality breakdown", detail: "Per-holding reliability scores and income-by-tier, not just the summary" },
   { icon: Bell, label: "Priority price / earnings alerts", detail: "Delivered first, before free-tier alerts" },
   { icon: FileText, label: "Long-form TradersHub posts", detail: "Write up to 5,000 characters — full articles, not just quick takes" },
   { icon: Zap, label: "Ad-free", detail: "" },

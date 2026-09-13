@@ -1,5 +1,6 @@
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { InfoTip } from "./InfoTip";
+import { LockedPreview } from "./LockedPreview";
 import type { HoldingDividendData } from "@/hooks/usePortfolioDividends";
 
 interface HoldingLike {
@@ -14,6 +15,7 @@ interface HoldingLike {
 interface DividendQualityProps {
   holdings: HoldingLike[];
   dividendData: Record<string, HoldingDividendData>;
+  isPremium?: boolean;
   showValues?: boolean;
   currencyLabel?: string;
 }
@@ -56,7 +58,7 @@ const TIERS = [
 const fmtMoney = (v: number, currencyLabel: string, showValues: boolean) =>
   showValues ? `${currencyLabel}${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••";
 
-export function DividendQuality({ holdings, dividendData, showValues = true, currencyLabel = "KSh" }: DividendQualityProps) {
+export function DividendQuality({ holdings, dividendData, isPremium = false, showValues = true, currencyLabel = "KSh" }: DividendQualityProps) {
   const rows = holdings.map((h) => {
     const d = dividendData[h.symbol.toUpperCase()];
     const score = d ? dividendQualityScore(d) : 0;
@@ -103,74 +105,92 @@ export function DividendQuality({ holdings, dividendData, showValues = true, cur
           <p className="text-xl font-bold tabular mt-0.5">{fmtMoney(totalIncome, currencyLabel, showValues)}</p>
         </div>
 
-        <div className="space-y-3">
-          {tierBreakdown.filter((t) => t.count > 0).map((t) => (
-            <div key={t.key} className="flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${t.dot}`} />
-                <div className="min-w-0">
-                  <p className="text-[12.5px] font-semibold">{t.label}</p>
-                  <p className="text-[10.5px] text-muted-foreground">{t.count} holding{t.count === 1 ? "" : "s"}</p>
-                </div>
+        <LockedPreview
+          unlocked={isPremium}
+          label="Unlock quality breakdown"
+          locked={
+            <div>
+              <div className="space-y-3">
+                {tierBreakdown.filter((t) => t.count > 0).map((t) => (
+                  <div key={t.key} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${t.dot}`} />
+                      <div className="min-w-0">
+                        <p className="text-[12.5px] font-semibold">{t.label}</p>
+                        <p className="text-[10.5px] text-muted-foreground">{t.count} holding{t.count === 1 ? "" : "s"}</p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[13px] font-bold tabular">{fmtMoney(t.income, currencyLabel, showValues)}</p>
+                      <p className="text-[10.5px] text-muted-foreground">{t.pct.toFixed(1)}%</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="text-right shrink-0">
-                <p className="text-[13px] font-bold tabular">{fmtMoney(t.income, currencyLabel, showValues)}</p>
-                <p className="text-[10.5px] text-muted-foreground">{t.pct.toFixed(1)}%</p>
+
+              <p className="section-eyebrow mt-4 mb-2">Income share by quality tier</p>
+              <div className="h-2.5 rounded-full overflow-hidden flex bg-muted">
+                {tierBreakdown.map((t) => (
+                  t.pct > 0 && <div key={t.key} className={t.dot} style={{ width: `${t.pct}%` }} />
+                ))}
+              </div>
+              <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                <span>0%</span><span>50%</span><span>100%</span>
               </div>
             </div>
-          ))}
-        </div>
-
-        <p className="section-eyebrow mt-4 mb-2">Income share by quality tier</p>
-        <div className="h-2.5 rounded-full overflow-hidden flex bg-muted">
-          {tierBreakdown.map((t) => (
-            t.pct > 0 && <div key={t.key} className={t.dot} style={{ width: `${t.pct}%` }} />
-          ))}
-        </div>
-        <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-          <span>0%</span><span>50%</span><span>100%</span>
-        </div>
+          }
+        >
+          <></>
+        </LockedPreview>
       </div>
 
-      <div className="card-gradient rounded-2xl p-4 overflow-x-auto">
-        <p className="section-eyebrow mb-3">Yield &amp; growth by holding</p>
-        <div className="min-w-[420px]">
-          <div className="grid grid-cols-[1fr_1fr_0.8fr_0.9fr] gap-2 text-[10px] text-muted-foreground uppercase tracking-wide pb-2 border-b border-border/50">
-            <span>Symbol</span>
-            <span className="text-right">12m Payment</span>
-            <span className="text-right">Yield / Cost</span>
-            <span className="text-right">Score</span>
-          </div>
-          <div className="divide-y divide-border/40">
-            {rows.sort((a, b) => b.annualIncome - a.annualIncome).map((r) => (
-              <div key={r.holding.id} className="grid grid-cols-[1fr_1fr_0.8fr_0.9fr] gap-2 py-2.5 items-center">
-                <div className="min-w-0">
-                  <p className="text-[12.5px] font-bold">{r.holding.symbol}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{r.holding.name || r.holding.symbol}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[12px] font-semibold tabular">{fmtMoney(r.annualIncome, currencyLabel, showValues)}<span className="text-[10px] text-muted-foreground">/yr</span></p>
-                  <p className="text-[10px] text-muted-foreground">{totalIncome > 0 ? ((r.annualIncome / totalIncome) * 100).toFixed(1) : "0.0"}%</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[12px] font-semibold tabular">{r.yieldOnPrice.toFixed(1)}%</p>
-                  <p className="text-[10px] text-muted-foreground">{r.yieldOnCost.toFixed(1)}% on cost</p>
-                </div>
-                <div className="flex items-center justify-end gap-1">
-                  {r.score >= 5 ? (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-bull" />
-                  ) : r.score <= 2 ? (
-                    <AlertCircle className="h-3.5 w-3.5 text-bear" />
-                  ) : (
-                    <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
-                  )}
-                  <span className="text-[11px] font-semibold tabular">{r.score}/6</span>
-                </div>
+      <LockedPreview
+        unlocked={isPremium}
+        label="Unlock per-holding scores"
+        locked={
+          <div className="card-gradient rounded-2xl p-4 overflow-x-auto">
+            <p className="section-eyebrow mb-3">Yield &amp; growth by holding</p>
+            <div className="min-w-[420px]">
+              <div className="grid grid-cols-[1fr_1fr_0.8fr_0.9fr] gap-2 text-[10px] text-muted-foreground uppercase tracking-wide pb-2 border-b border-border/50">
+                <span>Symbol</span>
+                <span className="text-right">12m Payment</span>
+                <span className="text-right">Yield / Cost</span>
+                <span className="text-right">Score</span>
               </div>
-            ))}
+              <div className="divide-y divide-border/40">
+                {rows.sort((a, b) => b.annualIncome - a.annualIncome).map((r) => (
+                  <div key={r.holding.id} className="grid grid-cols-[1fr_1fr_0.8fr_0.9fr] gap-2 py-2.5 items-center">
+                    <div className="min-w-0">
+                      <p className="text-[12.5px] font-bold">{r.holding.symbol}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{r.holding.name || r.holding.symbol}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[12px] font-semibold tabular">{fmtMoney(r.annualIncome, currencyLabel, showValues)}<span className="text-[10px] text-muted-foreground">/yr</span></p>
+                      <p className="text-[10px] text-muted-foreground">{totalIncome > 0 ? ((r.annualIncome / totalIncome) * 100).toFixed(1) : "0.0"}%</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[12px] font-semibold tabular">{r.yieldOnPrice.toFixed(1)}%</p>
+                      <p className="text-[10px] text-muted-foreground">{r.yieldOnCost.toFixed(1)}% on cost</p>
+                    </div>
+                    <div className="flex items-center justify-end gap-1">
+                      {r.score >= 5 ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-bull" />
+                      ) : r.score <= 2 ? (
+                        <AlertCircle className="h-3.5 w-3.5 text-bear" />
+                      ) : (
+                        <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                      )}
+                      <span className="text-[11px] font-semibold tabular">{r.score}/6</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        }
+      >
+        <></>
+      </LockedPreview>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
-import { Info, Loader2, ChevronDown } from "lucide-react";
+import { Info, Loader2, ChevronDown, Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { InfoTip } from "./InfoTip";
+import { LockedPreview } from "./LockedPreview";
 import type { ValuationResult } from "@/api/valuationApi";
 
 interface HoldingLike {
@@ -16,6 +18,7 @@ interface PortfolioValuationsProps {
   holdings: HoldingLike[];
   valuations: Record<string, ValuationResult | undefined>;
   isLoading: boolean;
+  isPremium?: boolean;
   showValues?: boolean;
   currencyLabel?: string;
 }
@@ -54,6 +57,7 @@ export function PortfolioValuations({
   holdings,
   valuations,
   isLoading,
+  isPremium = false,
   showValues = true,
   currencyLabel = "KSh",
 }: PortfolioValuationsProps) {
@@ -100,6 +104,30 @@ export function PortfolioValuations({
   const totalValue = holdings.reduce((s, h) => s + h.value, 0);
   const totalFairValue = assignedRows.reduce((s, r) => s + (r.fairValue as number) * r.holding.shares, 0);
   const coverage = holdings.length > 0 ? `${assignedRows.length}/${holdings.length}` : "0/0";
+
+  // ── Advanced (Premium): every holding's fair value averaged across ALL
+  // THREE real models it has data for — not just the one manually
+  // assigned. Basic mode only ever surfaces the single assigned model.
+  const consensusRows = useMemo(() => {
+    return holdings.map((h) => {
+      const val = valuations[h.symbol.toUpperCase()];
+      const perModel = MODEL_OPTIONS.map((m) => {
+        const model = val?.models.find((mm) => mm.model === m.modelName);
+        return { ...m, fairValue: model?.fairValue ?? null, upsidePercent: model?.upsidePercent ?? null };
+      });
+      const available = perModel.filter((m) => m.fairValue != null);
+      const consensusFairValue = available.length > 0
+        ? available.reduce((s, m) => s + (m.fairValue as number), 0) / available.length
+        : null;
+      const spread = available.length > 1
+        ? Math.max(...available.map((m) => m.fairValue as number)) - Math.min(...available.map((m) => m.fairValue as number))
+        : 0;
+      return { holding: h, perModel, available, consensusFairValue, spread };
+    });
+  }, [holdings, valuations]);
+  const consensusAssigned = consensusRows.filter((r) => r.consensusFairValue != null);
+  const consensusTotalFairValue = consensusAssigned.reduce((s, r) => s + (r.consensusFairValue as number) * r.holding.shares, 0);
+  const consensusCoverage = holdings.length > 0 ? `${consensusAssigned.length}/${holdings.length}` : "0/0";
 
   if (isLoading) {
     return (
@@ -149,6 +177,62 @@ export function PortfolioValuations({
           })()
         )}
       </div>
+
+      {/* ── ADVANCED: MULTI-MODEL CONSENSUS (Premium) ── */}
+      <LockedPreview
+        unlocked={isPremium}
+        label="Unlock Consensus Valuation"
+        locked={
+          <div className="card-gradient rounded-2xl p-4 mt-3">
+            <p className="text-[11px] text-muted-foreground mb-3">Value &amp; Consensus reflect {consensusCoverage} holdings so far.</p>
+            <div className="flex gap-6">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Portfolio Value</p>
+                <p className="text-xl font-bold tabular mt-0.5">{fmtMoney(totalValue, currencyLabel, showValues)}</p>
+              </div>
+              <div className="w-px bg-border/60" />
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Consensus Fair Value</p>
+                <p className="text-xl font-bold tabular mt-0.5">
+                  {consensusAssigned.length > 0 ? fmtMoney(consensusTotalFairValue, currencyLabel, showValues) : "—"}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 divide-y divide-border/40">
+              {consensusRows.filter((r) => r.available.length > 0).map((r) => (
+                <div key={r.holding.id} className="py-2.5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[12.5px] font-bold">{r.holding.symbol}</p>
+                    <p className="text-[12.5px] font-bold tabular">
+                      {r.consensusFairValue != null ? fmtMoney(r.consensusFairValue, currencyLabel, showValues) : "—"}
+                    </p>
+                  </div>
+                  <div className="flex gap-3 mt-1">
+                    {r.perModel.map((m) => (
+                      <span key={m.key} className="text-[10px] text-muted-foreground">
+                        {m.label}: {m.fairValue != null ? fmtMoney(m.fairValue, currencyLabel, showValues) : "—"}
+                      </span>
+                    ))}
+                  </div>
+                  {r.available.length > 1 && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      Model agreement: {r.spread === 0 ? "exact" : `±${fmtMoney(r.spread / 2, currencyLabel, showValues)} spread`}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        }
+      >
+        <div className="card-gradient rounded-2xl p-4">
+          <h3 className="font-serif text-lg flex items-center gap-1.5">
+            Consensus Fair Value
+            <InfoTip>Premium: averages every holding's fair value across all three real models it has data for (Sector P/E, Graham Number, Dividend Model), instead of the single model you manually assign below.</InfoTip>
+          </h3>
+          <p className="text-[11px] text-muted-foreground mt-1">Multi-model average — no single model picked by hand.</p>
+        </div>
+      </LockedPreview>
 
       {/* ── QUICK-ASSIGN ── */}
       <div className="card-gradient rounded-2xl p-4">
