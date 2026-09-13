@@ -16,6 +16,17 @@
  * "Kenya" stripped) appearing as a whole phrase. No fuzzy/partial/edit-
  * distance matching — a miss (article not tagged to a company it actually
  * mentions) is far preferable to a false tag on a financial news feed.
+ *
+ * GENERIC_CORE_NAME_BLOCKLIST exists because that conservatism isn't
+ * enough on its own: a handful of real NSE core names ARE ordinary
+ * English/finance words once suffixes are stripped — Equity Group
+ * Holdings (EQTY) -> "equity", Total Kenya (TOTL) -> "total", Express
+ * Kenya (XPRS) -> "express", Standard Group (SGL) -> "standard", Jubilee
+ * Holdings (JUB) -> "jubilee". Confirmed in production: articles about
+ * unrelated tech/startup topics ("equity" as in stock options) were
+ * getting tagged as Equity Group mentions purely on that word. Ticker
+ * matching alone (EQTY, TOTL, XPRS, SGL, JUB as standalone tokens) stays
+ * enabled for these — tickers essentially never collide with prose.
  */
 import { query } from "../../storage/db.js";
 
@@ -29,18 +40,19 @@ const SUFFIX_WORDS = new Set([
   "plc", "ltd", "limited", "group", "kenya", "holdings", "co", "company", "incorporated", "inc", "bank",
 ]);
 
+/** Core names that collapse to ordinary English/finance vocabulary once
+ *  suffixes are stripped — too collision-prone for text matching (see
+ *  header comment). Add to this list as new false positives surface;
+ *  don't try to out-guess it in advance with an exhaustive dictionary —
+ *  needs_review exists precisely to surface the ones this list misses. */
+const GENERIC_CORE_NAME_BLOCKLIST = new Set([
+  "equity", "total", "express", "standard", "jubilee",
+  "liberty", "national", "home", "car", "crown", "capital", "mobile", "image", "gold", "bond",
+]);
+
 /** Minimum length for a company's stripped core name to be used for
  *  matching — short leftovers ("I&M" -> "i m", or a name that's almost
- *  entirely suffix words) are too collision-prone to match on safely.
- *
- * KNOWN LIMITATION, documented rather than "solved": this is keyword
- * matching, not NLP. A handful of core names ARE ordinary finance
- * vocabulary too ("Equity" for Equity Group, "Total" for Total Kenya) —
- * an article using that word in its generic sense ("shareholders'
- * equity") will false-positive as a mention. Precision/recall tradeoff
- * inherent to this approach; needs_review exists partly to make
- * under- and over-tagged articles visible for a human to correct rather
- * than silently trusted either way. */
+ *  entirely suffix words) are too collision-prone to match on safely. */
 const MIN_CORE_NAME_LENGTH = 4;
 
 function stripToCoreName(name: string): string {
@@ -96,6 +108,7 @@ export async function resolveStockMentions(text: string, exchange: string): Prom
 
     const core = stripToCoreName(entry.companyName);
     if (core.length < MIN_CORE_NAME_LENGTH) continue;
+    if (GENERIC_CORE_NAME_BLOCKLIST.has(core)) continue;
     const namePattern = new RegExp(`\\b${escapeRegExp(core)}\\b`, "i");
     if (namePattern.test(text)) {
       matched.add(entry.securityId);
