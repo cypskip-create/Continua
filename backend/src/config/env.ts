@@ -22,6 +22,7 @@ export function booleanEnv(defaultValue: boolean) {
 const EnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(4000),
+  WS_PORT: z.coerce.number().default(4001),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
@@ -105,6 +106,13 @@ const EnvSchema = z.object({
   // real callers should get a DB-issued key (revocable, rate-limited,
   // attributable) instead.
   DEV_API_KEY: z.string().optional(),
+  /** Gates the /api/v1/admin/* surface (financial-statement candidate
+   *  review). Deliberately separate from DEV_API_KEY/the public API key
+   *  system — those grant read access to market data; this grants the
+   *  ability to write confirmed financial statements. Unset = admin
+   *  routes refuse everything (fail closed, not fail open). Set via the
+   *  Render dashboard's Environment tab — no shell needed. */
+  ADMIN_API_KEY: z.string().optional(),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60_000),
   RATE_LIMIT_MAX_DEFAULT: z.coerce.number().default(120),
 

@@ -35,6 +35,7 @@ import Settings from "./pages/Settings";
 import PostDetail from "./pages/PostDetail";
 import ThemeDetail from "./pages/ThemeDetail";
 import FeaturedListDetail from "./pages/FeaturedListDetail";
+import AdminFinancialsReview from "./pages/AdminFinancialsReview";
 import { AppLockGate } from "./components/security/AppLockGate";
 import { useScrollRestoration } from "./hooks/useScrollRestoration";
 
@@ -65,6 +66,7 @@ const App = () => (
                   <Route path="/" element={<Landing />} />
                   <Route path="/landing" element={<Landing />} />
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/admin/financials-review" element={<AdminFinancialsReview />} />
                   <Route path="/*" element={<MainLayout />}>
                     <Route index element={<Home />} />
                     <Route path="markets" element={<Markets />} />

@@ -199,6 +199,45 @@ export interface NewsItem {
   publishedAt: string | null;
 }
 
+/** Minimal shape for the admin securities picker — GET /admin/securities.
+ *  Not the full Security type the backend has internally, just what's
+ *  needed to populate a dropdown. */
+export interface Security {
+  id: string;
+  symbol: string;
+  exchange: string;
+  companyId: string;
+}
+
+/** A scraped financial table awaiting human review before it's trusted
+ *  into market.income_statements/balance_sheets/cash_flow_statements —
+ *  see the admin financials review page. Mirrors
+ *  backend/src/types/market.ts's FinancialStatementCandidate exactly. */
+export interface FinancialStatementCandidate {
+  id: string;
+  companyId: string | null;
+  securityId: string | null;
+  rawCompanyName: string | null;
+  source: string;
+  exchange: string;
+  documentUrl: string;
+  documentTitle: string | null;
+  tableIndex: number;
+  detectedTable: {
+    title: string | null;
+    headerLine: string | null;
+    rows: { label: string; values: string[] }[];
+  };
+  detectionConfidence: number | null;
+  scrapedArtifactId: number | null;
+  scrapedExtractionId: number | null;
+  status: "pending" | "confirmed" | "rejected";
+  reviewedAt: string | null;
+  reviewedNote: string | null;
+  resultingPeriodId: string | null;
+  createdAt: string;
+}
+
 export interface OwnershipRecord {
   securityId: string;
   holderName: string;

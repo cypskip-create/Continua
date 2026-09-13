@@ -6,6 +6,8 @@ import { healthRoutes } from "./routes/health.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { apiKeyAuth } from "./middleware/apiKeyAuth.js";
+import { requireAdminKey } from "./middleware/requireAdminKey.js";
+import { adminFinancialsRoutes } from "./routes/admin.routes.js";
 import { apiRateLimit } from "./middleware/rateLimit.js";
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
@@ -48,6 +50,12 @@ export function createServer() {
   // Health stays open and unmetered — infra probes shouldn't need a key or
   // count against anyone's rate limit.
   app.use("/api/v1", healthRoutes);
+
+  // Own auth (a single shared admin secret, not a public API key) and no
+  // rate limit — this is you reviewing financial statements, not a public
+  // consumer. Registered before the general apiKeyAuth+apiRouter mount so
+  // a matched admin route never falls through to public-key auth.
+  app.use("/api/v1/admin", requireAdminKey(), adminFinancialsRoutes);
 
   app.use("/api/v1", apiKeyAuth(), apiRateLimit(), apiRouter);
 
