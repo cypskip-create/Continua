@@ -333,6 +333,9 @@ export interface NewsItem {
   sourceName: string;
   category: "markets" | "earnings" | "companies" | "economy" | "top";
   securityIds: string[];
+  /** Ticker symbols for securityIds, resolved at read time — see
+   *  newsRepository.ts's SELECT_WITH_SECURITIES for why this isn't stored. */
+  symbols: string[];
   scrapedArtifactId: number | null;
   scrapedExtractionId: number | null;
   extractionConfidence: number | null;

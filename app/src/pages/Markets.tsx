@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -16,13 +16,13 @@ import { useMovers } from "@/hooks/useMovers";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { useIndices } from "@/hooks/useIndices";
 import { useExchange } from "@/hooks/useExchange";
-import { EconomicCalendar } from "@/components/home/EconomicCalendar";
+import { useUpcomingDividends, useRecentEarnings } from "@/hooks/useMarketCalendars";
 import { investmentThemes } from "@/data/investmentThemes";
 import { featuredLists } from "@/data/featuredLists";
 import {
   TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Search, Clock,
-  BarChart3, Globe, Calendar, Star, ChevronRight, Flame, Filter,
-  Building2, Zap, Award, DollarSign, Percent, Activity, Bell, Landmark,
+  BarChart3, Globe, Calendar, Star, ChevronRight, Filter,
+  Building2, Award, DollarSign, Percent, Activity, Bell, Landmark,
   Lightbulb, Volume2, BarChart2, Layers
 } from "lucide-react";
 
@@ -39,13 +39,6 @@ const staticNseIndicesFallback = [
   { name: "NSE 25", value: "3,542.87", change: 0.8, isUp: true, points: "+28.3" },
   { name: "NASI", value: "112.45", change: -0.3, isUp: false, points: "-0.34" },
   { name: "FTSE Kenya", value: "1,234.56", change: 2.1, isUp: true, points: "+25.9" },
-];
-
-const commodities = [
-  { name: "Tea (Mombasa)", value: "KES 312/kg", change: 2.1, isUp: true },
-  { name: "Coffee (Nairobi)", value: "KES 580/kg", change: 1.4, isUp: true },
-  { name: "Maize (90kg)", value: "KES 4,800", change: -0.6, isUp: false },
-  { name: "Avocado (export)", value: "KES 95/kg", change: 0.9, isUp: true },
 ];
 
 // Reference universe (name/sector only — no price/change here anymore).
@@ -76,30 +69,16 @@ function computeSectors(universe: { symbol: string; sector: string; change: numb
 // allNseStocks removed — the "All Stocks" tab now renders <AllStocksList/>, which derives
 // its data from the shared stockPrices.ts source instead of a separate hardcoded array.
 
-// Calendar/IPO dates below are all expressed as offsets from "today" via fmtDate() rather
-// than fixed calendar strings, so Upcoming Earnings/Dividends/IPOs always read as genuinely
-// upcoming (and Recently Listed as genuinely recent) no matter when the app is opened.
+// Calendar dates below are all expressed as offsets from "today" via fmtDate() rather
+// than fixed calendar strings, so Recently Listed reads as genuinely recent no matter
+// when the app is opened. (IPO tracking itself was removed — no real source exists;
+// nothing in this system scrapes NSE IPO prospectuses/subscription data.)
 const fmtDate = (daysOffset: number) =>
   relativeDate(daysOffset).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
-const ipos = [
-  { name: "TechPay Africa", sector: "Fintech", issuePrice: 20.00, status: "Open", closeDate: fmtDate(10), subscriptionRate: "340%", minShares: 100 },
-  { name: "SafeInsure Ltd", sector: "Insurance", issuePrice: 15.50, status: "Upcoming", closeDate: fmtDate(25), subscriptionRate: "-", minShares: 200 },
-  { name: "AgroTech Kenya", sector: "Agriculture", issuePrice: 8.00, status: "Upcoming", closeDate: fmtDate(35), subscriptionRate: "-", minShares: 500 },
-];
-
-const recentIPOs = [
-  { name: "DigitalPay PLC", symbol: "DPAY", listingPrice: 12.00, currentPrice: 18.50, change: 54.2, listDate: fmtDate(-20) },
-  { name: "GreenEnergy Co", symbol: "GREN", listingPrice: 25.00, currentPrice: 22.30, change: -10.8, listDate: fmtDate(-45) },
-];
-
-const dividendCalendar = [
-  { symbol: "SCOM", name: "Safaricom", exDate: fmtDate(15), payDate: fmtDate(40), amount: 0.64, yield: 5.8, type: "Final" },
-  { symbol: "EQTY", name: "Equity Group", exDate: fmtDate(20), payDate: fmtDate(45), amount: 4.00, yield: 4.2, type: "Final" },
-  { symbol: "SCBK", name: "Std Chartered", exDate: fmtDate(25), payDate: fmtDate(50), amount: 17.00, yield: 6.2, type: "Final" },
-  { symbol: "EABL", name: "EABL", exDate: fmtDate(32), payDate: fmtDate(57), amount: 11.00, yield: 7.1, type: "Interim" },
-  { symbol: "KCB", name: "KCB Group", exDate: fmtDate(38), payDate: fmtDate(63), amount: 2.50, yield: 3.9, type: "Final" },
-];
+// Dividend/earnings calendars now come from real backend data — see
+// useUpcomingDividends/useRecentEarnings (useMarketCalendars.ts) — not
+// fabricated module-level arrays.
 
 // Dividend yield is real (curated, hand-verified — see DIV_YIELD), but
 // price is now attached live inside the component (see sortedDividendStocks),
@@ -123,13 +102,6 @@ const FEATURED_LIST_ICONS: Record<string, typeof Star> = {
 
 // Theme change % is computed live inside the component (via themesWithChange
 // below), from real quotes — never a hardcoded number that could drift.
-
-const earningsCalendar = [
-  { symbol: "EABL", name: "EABL", date: fmtDate(5), time: "2:00 PM EAT", expected: "KES 9.80", impact: "high" as const },
-  { symbol: "SCOM", name: "Safaricom", date: fmtDate(12), time: "10:00 AM EAT", expected: "KES 1.08", impact: "high" as const },
-  { symbol: "KCB", name: "KCB Group", date: fmtDate(19), time: "11:00 AM EAT", expected: "KES 7.20", impact: "medium" as const },
-  { symbol: "PORT", name: "East African Portland Cement", date: fmtDate(30), time: "3:00 PM EAT", expected: "KES 2.30", impact: "low" as const },
-];
 
 // Volume/avgVolume/ratio below are still illustrative (no real avgVolume
 // source exists yet — flagged as a follow-up); price/change are attached
@@ -190,6 +162,8 @@ export default function Markets() {
   const { quotes: liveQuotes } = useLiveQuotes(CANONICAL_SYMBOLS);
   const { exchange, exchangeMeta } = useExchange();
   const { indices: liveIndices, isLoading: indicesLoading } = useIndices();
+  const { dividends: upcomingDividends, isLoading: dividendsLoading } = useUpcomingDividends();
+  const { earnings: recentEarnings, isLoading: earningsLoading } = useRecentEarnings();
 
   // Live from market.indices (backend/src/services/marketData/indexService.ts,
   // populated by workers/indexWorker.ts) — falls back to the static Kenya
@@ -380,25 +354,6 @@ export default function Markets() {
               </div>
             </div>
 
-            {/* Local Commodities */}
-            <div>
-              <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-                <Zap className="h-4 w-4 text-accent" />
-                Local Commodities
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {commodities.map(c => (
-                  <Card key={c.name} className="soft-card p-3">
-                    <p className="text-xs text-muted-foreground font-medium">{c.name}</p>
-                    <p className="text-sm font-bold mt-0.5">{c.value}</p>
-                    <p className={`text-xs font-semibold mt-0.5 ${c.isUp ? 'text-bull' : 'text-bear'}`}>
-                      {c.isUp ? '+' : ''}{c.change.toFixed(1)}%
-                    </p>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
             {/* Featured Lists */}
             <div>
               <h2 className="text-sm font-bold mb-3">Featured Lists</h2>
@@ -423,26 +378,30 @@ export default function Markets() {
               </div>
             </div>
 
-            {/* Earnings Calendar */}
+            {/* Recent Earnings — real reported results only, never a
+                forward "expected" calendar (see useRecentEarnings). */}
             <div>
               <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-primary" />
-                Upcoming Earnings
+                Recent Earnings
               </h2>
               <Card className="soft-card overflow-hidden">
-                {earningsCalendar.map(e => (
-                  <div key={e.symbol} onClick={() => navigate(`/stock/${e.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${e.impact === 'high' ? 'bg-bear' : e.impact === 'medium' ? 'bg-accent' : 'bg-muted-foreground'}`} />
-                      <div>
-                        <p className="text-sm font-semibold">{e.symbol} · {e.name}</p>
-                        <p className="text-xs text-muted-foreground">{e.date} · {e.time}</p>
+                {earningsLoading ? (
+                  <div className="p-4 text-center text-xs text-muted-foreground">Loading…</div>
+                ) : recentEarnings.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-muted-foreground">No reported earnings on file yet.</div>
+                ) : recentEarnings.map(e => (
+                  <div key={e.id} onClick={() => navigate(`/stock/${e.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30 transition-colors">
+                    <div>
+                      <p className="text-sm font-semibold">{e.symbol} · {e.companyName}</p>
+                      <p className="text-xs text-muted-foreground">Reported {new Date(e.reportedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                    </div>
+                    {e.epsActual != null && (
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">EPS</p>
+                        <p className="text-sm font-bold">KES {e.epsActual.toFixed(2)}</p>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">Est. EPS</p>
-                      <p className="text-sm font-bold">{e.expected}</p>
-                    </div>
+                    )}
                   </div>
                 ))}
               </Card>
@@ -480,9 +439,6 @@ export default function Markets() {
                 ))}
               </Card>
             </div>
-
-            {/* Economic Calendar */}
-            <EconomicCalendar />
 
             {/* Top Gainers & Losers */}
             <div>
@@ -608,98 +564,55 @@ export default function Markets() {
               </Button>
             </div>
 
-            <h2 className="text-sm font-bold flex items-center gap-2">
-              <Flame className="h-4 w-4 text-accent" />
-              Listing Soon
-            </h2>
-            <div className="space-y-3">
-              {ipos.map(ipo => (
-                <Card key={ipo.name} className="soft-card overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="text-sm font-bold">{ipo.name}</p>
-                        <p className="text-xs text-muted-foreground">{ipo.sector}</p>
-                      </div>
-                      <Badge className={`text-xs ${ipo.status === "Open" ? 'bg-bull/10 text-bull border-bull/20' : 'bg-accent/10 text-accent border-accent/20'}`}>
-                        {ipo.status}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3 mb-3">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Issue Price</p>
-                        <p className="text-sm font-bold">KES {ipo.issuePrice.toFixed(2)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Close Date</p>
-                        <p className="text-sm font-semibold">{ipo.closeDate}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Subscription</p>
-                        <p className="text-sm font-bold text-bull">{ipo.subscriptionRate}</p>
-                      </div>
-                    </div>
-                    {ipo.status === "Open" && (
-                      <Button className="w-full h-10 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm active:scale-[0.98] transition-transform">
-                        Subscribe Now
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <h2 className="text-sm font-bold flex items-center gap-2 mt-2">
-              <Activity className="h-4 w-4 text-primary" />
-              Recently Listed
-            </h2>
-            <Card className="soft-card overflow-hidden">
-              {recentIPOs.map(ipo => (
-                <div key={ipo.symbol} onClick={() => navigate(`/stock/${ipo.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30">
-                  <div>
-                    <p className="text-sm font-bold">{ipo.name}</p>
-                    <p className="text-xs text-muted-foreground">${ipo.symbol} · Listed {ipo.listDate}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold">KES {ipo.currentPrice.toFixed(2)}</p>
-                    <p className={`text-xs font-semibold ${ipo.change >= 0 ? 'text-bull' : 'text-bear'}`}>
-                      {ipo.change >= 0 ? '+' : ''}{ipo.change.toFixed(1)}% from IPO
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </Card>
+            {/* IPO tracking removed — no real source exists (nothing in
+                this system scrapes NSE IPO prospectuses or subscription
+                data), so fabricating listings/prices here would be
+                exactly the kind of invented data this app shouldn't show. */}
           </>
         )}
 
         {/* ─── DIVIDENDS TAB ─── */}
         {activeTab === "Calendars" && (
           <>
+            {/* Real, forward-looking — an ex-date is a fact stated in the
+                company's own dividend announcement, not a prediction (see
+                useUpcomingDividends / API.md). No yield shown here: that
+                would need a real live price to divide against, and until
+                ADAPTER_MODE/NSE_CLIENT_MODE are confirmed live, showing a
+                yield here risks mixing a real amount with a mock price. */}
             <h2 className="text-sm font-bold flex items-center gap-2">
               <Calendar className="h-4 w-4 text-primary" />
               Upcoming Dividends
             </h2>
             <Card className="soft-card overflow-hidden">
-              {dividendCalendar.map(d => (
-                <div key={d.symbol} onClick={() => navigate(`/stock/${d.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-bull/8 flex items-center justify-center text-xs font-bold text-bull">
-                      {d.symbol.slice(0, 2)}
+              {dividendsLoading ? (
+                <div className="p-4 text-center text-xs text-muted-foreground">Loading…</div>
+              ) : upcomingDividends.length === 0 ? (
+                <div className="p-4 text-center text-xs text-muted-foreground">No upcoming dividends on file yet.</div>
+              ) : upcomingDividends.map(d => {
+                const details = d.details as { amountPerShare?: number; dividendType?: string };
+                return (
+                  <div key={d.id} onClick={() => navigate(`/stock/${d.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-bull/8 flex items-center justify-center text-xs font-bold text-bull">
+                        {d.symbol.slice(0, 2)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold">{d.symbol}</p>
+                        <p className="text-xs text-muted-foreground">Ex: {d.exDate ? new Date(d.exDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "TBD"}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-bold">{d.symbol}</p>
-                      <p className="text-xs text-muted-foreground">Ex: {d.exDate}</p>
+                    <div className="text-right">
+                      {details.amountPerShare != null && (
+                        <p className="text-sm font-bold text-bull">KES {details.amountPerShare.toFixed(2)}</p>
+                      )}
+                      {details.dividendType && (
+                        <Badge variant="secondary" className="text-[10px] py-0 px-1.5 capitalize">{details.dividendType}</Badge>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-bull">KES {d.amount.toFixed(2)}</p>
-                    <div className="flex items-center gap-1.5 justify-end">
-                      <Badge variant="secondary" className="text-[10px] py-0 px-1.5">{d.type}</Badge>
-                      <span className="text-xs text-muted-foreground">{d.yield}% yield</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </Card>
 
             <div className="flex items-center justify-between mt-2">

@@ -15,6 +15,7 @@ interface NewsItemRow {
   needsReview: boolean;
   publishedAt: string | null;
   securityIds: string[] | null;
+  symbols: string[] | null;
 }
 
 function mapRow(row: NewsItemRow): NewsItem {
@@ -27,6 +28,7 @@ function mapRow(row: NewsItemRow): NewsItem {
     sourceName: row.sourceName,
     category: row.category as NewsItem["category"],
     securityIds: row.securityIds ?? [],
+    symbols: row.symbols ?? [],
     scrapedArtifactId: row.scrapedArtifactId,
     scrapedExtractionId: row.scrapedExtractionId,
     extractionConfidence: row.extractionConfidence !== null ? Number(row.extractionConfidence) : null,
@@ -35,13 +37,20 @@ function mapRow(row: NewsItemRow): NewsItem {
   };
 }
 
+// symbols is a second aggregate off the same join, not a stored column —
+// the frontend needs tickers ("SCOM"), not internal security UUIDs, to
+// render mention chips and to group followed-symbol news (see
+// useFollowedNews.ts), so this resolves it at read time rather than
+// storing it denormalized and risking it drifting from securities.symbol.
 const SELECT_WITH_SECURITIES = `
   SELECT n.id::text, n.headline, n.excerpt, n.article_url as "articleUrl", n.source, n.source_name as "sourceName",
          n.category, n.scraped_artifact_id as "scrapedArtifactId", n.scraped_extraction_id as "scrapedExtractionId",
          n.extraction_confidence as "extractionConfidence", n.needs_review as "needsReview", n.published_at as "publishedAt",
-         COALESCE(array_agg(nis.security_id) FILTER (WHERE nis.security_id IS NOT NULL), '{}') as "securityIds"
+         COALESCE(array_agg(DISTINCT nis.security_id) FILTER (WHERE nis.security_id IS NOT NULL), '{}') as "securityIds",
+         COALESCE(array_agg(DISTINCT sec.symbol) FILTER (WHERE sec.symbol IS NOT NULL), '{}') as "symbols"
   FROM market.news_items n
   LEFT JOIN market.news_item_securities nis ON nis.news_item_id = n.id
+  LEFT JOIN market.securities sec ON sec.id = nis.security_id
 `;
 
 export const newsRepository = {

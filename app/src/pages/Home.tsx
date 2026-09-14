@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Crown, MessageCircle, ChevronRight, Wallet, Eye, EyeOff, ArrowUpRight, ArrowDownRight, LogIn, TrendingUp, Search, Sparkles, Coins, Shield, BarChart3, Bell, Binoculars, Newspaper } from "lucide-react";
+import { Crown, MessageCircle, ChevronRight, Wallet, Eye, EyeOff, ArrowUpRight, ArrowDownRight, LogIn, TrendingUp, Search, Sparkles, Coins, Shield, BarChart3, Bell, Binoculars } from "lucide-react";
 import { QuickTradeWidget } from "@/components/home/QuickTradeWidget";
 import { CommandCenterSections } from "@/components/home/CommandCenterSections";
 import { TopBar } from "@/components/shared/TopBar";
@@ -17,7 +17,7 @@ import { computePortfolioStats } from "@/lib/stockPrices";
 import { useLivePortfolioQuotes, useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { useIndices } from "@/hooks/useIndices";
 import { formatPostDate, formatTimestamp } from "@/lib/formatTimestamp";
-import { getMediaItemsForSymbols, getMediaFeed } from "@/data/mediaItems";
+import { useFollowedNews } from "@/hooks/useFollowedNews";
 
 
 const Eyebrow = ({ children, action, onAction }: { children: React.ReactNode; action?: string; onAction?: () => void }) => (
@@ -79,18 +79,11 @@ export default function Home() {
     { label: "Financial Health",icon: Shield,     route: "/screener?filter=health" },
   ];
 
-  const economicEvents = [
-    { title: "CBK Rate Decision", when: "Tomorrow · 2:00 PM" },
-    { title: "Kenya CPI Inflation", when: "Thu · 9:00 AM" },
-    { title: "US FOMC Minutes", when: "Fri · 9:00 PM" },
-  ];
-
-  // Latest Updates — Simply Wall St-style news strip. Prioritizes real
-  // headlines that actually mention something the person holds or watches;
-  // falls back to top market stories for a signed-out visitor or an empty
-  // portfolio/watchlist, so the section is never empty by default.
+  // Latest Updates — real scraped news (see useFollowedNews.ts), for
+  // whatever the person holds or watches; falls back to the general
+  // market feed for a signed-out visitor or an empty portfolio/watchlist.
   const followedSymbols = [...new Set([...portfolio.map(h => h.symbol), ...watchlist.map(w => w.symbol)])];
-  const latestNews = (followedSymbols.length > 0 ? getMediaItemsForSymbols(followedSymbols) : getMediaFeed("all", "")).slice(0, 5);
+  const { news: latestNews } = useFollowedNews(followedSymbols, 5);
 
   return (
     <div className="page-canvas min-h-screen bg-background pb-24">
@@ -233,55 +226,39 @@ export default function Home() {
           </div>
         )}
 
-        {/* LATEST UPDATES — real headlines that mention a holding/watchlist
-            symbol, ranked most-recent-first; top market stories otherwise. */}
+        {/* LATEST UPDATES — real scraped headlines mentioning a holding/watchlist
+            symbol, ranked most-recent-first; top market stories otherwise.
+            No thumbnails/sentiment — scraped articles carry neither, and
+            fabricating either would misrepresent them. Opens the original
+            source externally rather than an in-app reader: only an excerpt
+            is ever stored, never the full article body. */}
         {latestNews.length > 0 && (
           <div>
             <Eyebrow action="All news" onAction={() => navigate('/traders-hub?tab=media')}>Latest Updates</Eyebrow>
             <div className="border-t border-border/60">
               {latestNews.map(n => (
-                <button
+                <a
                   key={n.id}
+                  href={n.articleUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   data-small-target
-                  onClick={() => navigate(`/traders-hub?tab=media&article=${n.id}`)}
-                  className="w-full flex items-start gap-3 py-3 border-b border-border/40 text-left hover:bg-muted/30 -mx-4 px-4 transition-colors"
+                  className="block py-3 border-b border-border/40 hover:bg-muted/30 -mx-4 px-4 transition-colors"
                 >
-                  <div className="h-14 w-14 rounded-lg overflow-hidden shrink-0 bg-muted">
-                    {n.imageUrl ? (
-                      <img src={n.imageUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center"><Newspaper className="h-4 w-4 text-muted-foreground" /></div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold line-clamp-2 leading-snug">{n.title}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">{n.source} · {formatTimestamp(n.publishedAt)}</p>
-                    {n.stockMentions && n.stockMentions.length > 0 && (
-                      <div className="flex gap-1 mt-1">
-                        {n.stockMentions.slice(0, 3).map(s => (
-                          <span key={s} className="text-[9.5px] font-semibold text-primary bg-primary/10 rounded-full px-1.5 py-0.5">${s}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </button>
+                  <p className="text-xs font-semibold leading-snug">{n.headline}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{n.sourceName} · {formatTimestamp(n.publishedAt)}</p>
+                  {n.symbols.length > 0 && (
+                    <div className="flex gap-1 mt-1.5">
+                      {n.symbols.slice(0, 3).map(s => (
+                        <span key={s} className="text-[9.5px] font-semibold text-primary bg-primary/10 rounded-full px-1.5 py-0.5">${s}</span>
+                      ))}
+                    </div>
+                  )}
+                </a>
               ))}
             </div>
           </div>
         )}
-
-        {/* ECONOMIC EVENTS */}
-        <div>
-          <Eyebrow>Economic Events</Eyebrow>
-          <div className="border-t border-border/60">
-            {economicEvents.map(e => (
-              <div key={e.title} className="flex items-center justify-between py-2.5 border-b border-border/40">
-                <p className="text-xs font-medium">{e.title}</p>
-                <p className="text-[10px] text-muted-foreground tabular">{e.when}</p>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* TRENDING TRADERSHUB */}
         {posts.length > 0 && (

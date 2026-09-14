@@ -25,6 +25,25 @@ export const corporateActionsController = {
     res.json({ data: dividends });
   },
 
+  /** GET /dividends/upcoming — market-wide, for the Markets page's
+   *  dividend calendar. See getUpcomingDividends for why this is safe to
+   *  present as forward-looking. */
+  async getUpcomingDividends(req: Request, res: Response) {
+    const exchange = (req.query.exchange as string) || "NSE";
+    const limit = req.query.limit ? Number(req.query.limit) : 20;
+    const dividends = await corporateActionsRepository.getUpcomingDividends(exchange, limit);
+    res.json({ data: dividends });
+  },
+
+  /** GET /earnings/recent — market-wide, real reported earnings only,
+   *  never predicted ones. See getRecentEarnings. */
+  async getRecentEarnings(req: Request, res: Response) {
+    const exchange = (req.query.exchange as string) || "NSE";
+    const limit = req.query.limit ? Number(req.query.limit) : 20;
+    const earnings = await corporateActionsRepository.getRecentEarnings(exchange, limit);
+    res.json({ data: earnings });
+  },
+
   async getOwnership(req: Request, res: Response) {
     const { symbol } = req.params;
     const { exchange } = getQuery<z.infer<typeof ExchangeQuery>>(req);

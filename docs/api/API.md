@@ -75,6 +75,17 @@ All corporate actions for a security, newest first.
 ### `GET /dividends/:symbol`
 Dividend-type corporate actions only, ordered by ex-date.
 
+### `GET /dividends/upcoming?exchange=NSE&limit=20`
+Market-wide, for a dividend calendar view. Only returns dividends with `exDate >= today`. Real,
+forward-looking data — an ex-date is a fact stated in the company's own dividend announcement,
+not a prediction, so this is safe to surface as "upcoming" (contrast with earnings below).
+
+### `GET /earnings/recent?exchange=NSE&limit=20`
+Market-wide, already-reported earnings only (`reportedDate`/`epsActual`/`revenueActual`) —
+deliberately NOT an "upcoming earnings" calendar. The schema has `expectedDate`/`epsEstimate`
+columns, but nothing in this system has a real analyst-estimates source to populate them
+honestly, so this endpoint only ever returns facts, never predictions.
+
 ### `GET /ownership/:symbol`
 Holder breakdown (institution/insider/government/public), by % held.
 

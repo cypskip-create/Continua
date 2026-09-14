@@ -150,6 +150,28 @@ export interface CorporateAction {
   status: "announced" | "confirmed" | "completed" | "cancelled";
 }
 
+/** GET /dividends/upcoming — market-wide, real ex-dates only (a fact from
+ *  the company's own announcement, not a prediction). */
+export interface UpcomingDividend extends CorporateAction {
+  symbol: string;
+  companyName: string;
+}
+
+/** GET /earnings/recent — deliberately only ever carries reportedDate/
+ *  epsActual/revenueActual (facts). There is no forward "upcoming
+ *  earnings" endpoint — see API.md for why. */
+export interface RecentEarnings {
+  id: string;
+  securityId: string;
+  fiscalYear: number;
+  fiscalQuarter: number | null;
+  reportedDate: string;
+  epsActual: number | null;
+  revenueActual: number | null;
+  symbol: string;
+  companyName: string;
+}
+
 /** Regulatory/company announcement, sourced by continua-scraper from NSE
  *  filings (PDFs) and other configured feeds — not editorial content.
  *  `publishedAt` is frequently null: the scraper doesn't yet reliably
@@ -192,6 +214,8 @@ export interface NewsItem {
   sourceName: string;
   category: "markets" | "earnings" | "companies" | "economy" | "top";
   securityIds: string[];
+  /** Ticker symbols for securityIds, resolved server-side. */
+  symbols: string[];
   scrapedArtifactId: number | null;
   scrapedExtractionId: number | null;
   extractionConfidence: number | null;
