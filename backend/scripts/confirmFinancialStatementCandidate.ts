@@ -14,7 +14,7 @@
  * {
  *   "candidateId": "42",
  *   "securityId": "NSE:SCOM",              // required if the candidate's own entity resolution came back unresolved
- *   "statementType": "income",              // "income" | "balance" | "cashflow"
+ *   "statementType": "income",              
  *   "period": {
  *     "periodType": "annual",               // "annual" | "quarterly"
  *     "fiscalYear": 2025,
