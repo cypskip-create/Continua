@@ -16,8 +16,8 @@ import { MarketStatusIndicator } from "@/components/shared/MarketStatusIndicator
 import { computePortfolioStats } from "@/lib/stockPrices";
 import { useLivePortfolioQuotes, useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { useIndices } from "@/hooks/useIndices";
-import { formatPostDate, formatTimestamp } from "@/lib/formatTimestamp";
-import { useFollowedNews } from "@/hooks/useFollowedNews";
+import { formatPostDate } from "@/lib/formatTimestamp";
+import { UpdatesFeed } from "@/components/home/UpdatesFeed";
 
 
 const Eyebrow = ({ children, action, onAction }: { children: React.ReactNode; action?: string; onAction?: () => void }) => (
@@ -79,11 +79,10 @@ export default function Home() {
     { label: "Financial Health",icon: Shield,     route: "/screener?filter=health" },
   ];
 
-  // Latest Updates — real scraped news (see useFollowedNews.ts), for
-  // whatever the person holds or watches; falls back to the general
+  // Followed symbols feed the Updates section below — whatever the
+  // person holds or watches; UpdatesFeed falls back to the general
   // market feed for a signed-out visitor or an empty portfolio/watchlist.
   const followedSymbols = [...new Set([...portfolio.map(h => h.symbol), ...watchlist.map(w => w.symbol)])];
-  const { news: latestNews } = useFollowedNews(followedSymbols, 5);
 
   return (
     <div className="page-canvas min-h-screen bg-background pb-24">
@@ -143,6 +142,11 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {/* UPDATES — the home page centerpiece: real scraped news, real
+            upcoming dividends, real reported earnings, merged into one
+            chronological feed. See UpdatesFeed.tsx. */}
+        <UpdatesFeed followedSymbols={followedSymbols} />
 
         {/* MARKET SNAPSHOT — inline stat row */}
         <div>
@@ -223,40 +227,6 @@ export default function Home() {
                 ))}
               </div>
             )}
-          </div>
-        )}
-
-        {/* LATEST UPDATES — real scraped headlines mentioning a holding/watchlist
-            symbol, ranked most-recent-first; top market stories otherwise.
-            No thumbnails/sentiment — scraped articles carry neither, and
-            fabricating either would misrepresent them. Opens the original
-            source externally rather than an in-app reader: only an excerpt
-            is ever stored, never the full article body. */}
-        {latestNews.length > 0 && (
-          <div>
-            <Eyebrow action="All news" onAction={() => navigate('/traders-hub?tab=media')}>Latest Updates</Eyebrow>
-            <div className="border-t border-border/60">
-              {latestNews.map(n => (
-                <a
-                  key={n.id}
-                  href={n.articleUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-small-target
-                  className="block py-3 border-b border-border/40 hover:bg-muted/30 -mx-4 px-4 transition-colors"
-                >
-                  <p className="text-xs font-semibold leading-snug">{n.headline}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">{n.sourceName} · {formatTimestamp(n.publishedAt)}</p>
-                  {n.symbols.length > 0 && (
-                    <div className="flex gap-1 mt-1.5">
-                      {n.symbols.slice(0, 3).map(s => (
-                        <span key={s} className="text-[9.5px] font-semibold text-primary bg-primary/10 rounded-full px-1.5 py-0.5">${s}</span>
-                      ))}
-                    </div>
-                  )}
-                </a>
-              ))}
-            </div>
           </div>
         )}
 
