@@ -5,6 +5,7 @@ import { CommandCenterSections } from "@/components/home/CommandCenterSections";
 import { TopBar } from "@/components/shared/TopBar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -44,7 +45,14 @@ export default function Home() {
   const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : 'Investor';
   const hasPortfolio = user && portfolio.length > 0;
   const { liveQuotes: livePortfolioQuotes } = useLivePortfolioQuotes(portfolio.map(h => h.symbol));
-  const { totalValue: portfolioValue, totalGain: portfolioGain, gainPct: portfolioGainPct } = computePortfolioStats(portfolio, livePortfolioQuotes);
+  const { totalValue: portfolioValue, totalGain: portfolioGain, gainPct: portfolioGainPct, pricedCount: portfolioPricedCount } = computePortfolioStats(portfolio, livePortfolioQuotes);
+  // Nothing priced yet on first render (before the initial quotes fetch
+  // resolves) is a real, temporary "don't know yet" state — computed
+  // totalValue is legitimately 0 at that point, not wrong, just not
+  // ready to show. Distinguishing it from "genuinely worth zero" avoids
+  // the balance flashing KES 0 before quotes land (see useLiveQuotes.tsx
+  // — quotes starts as {} until the REST snapshot resolves).
+  const portfolioPricesLoading = hasPortfolio && portfolioPricedCount === 0;
 
   // Real watchlist, ranked by today's biggest movers. Overlaid with live
   // Continua Data Layer quotes; a symbol with no live quote yet is
@@ -123,18 +131,27 @@ export default function Home() {
             <Eyebrow action="Details" onAction={() => navigate('/track-investments')}>Portfolio</Eyebrow>
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-3xl font-bold tabular tracking-tight">
-                  {showBalance ? `KES ${portfolioValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '••••••'}
-                </p>
-                <div className={`text-xs font-semibold flex items-center gap-1 mt-0.5 tabular ${portfolioGain >= 0 ? 'text-bull' : 'text-bear'}`}>
-                  {portfolioGain >= 0 ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
-                  {showBalance && (
-                    <>
-                      {portfolioGain >= 0 ? '+' : ''}KES {Math.abs(portfolioGain).toLocaleString('en-US', { maximumFractionDigits: 0 })} ·{' '}
-                    </>
-                  )}
-                  <span>{portfolioGainPct >= 0 ? '+' : ''}{portfolioGainPct.toFixed(2)}%</span>
-                </div>
+                {portfolioPricesLoading ? (
+                  <div className="py-1">
+                    <Skeleton className="h-8 w-40 mb-1.5" />
+                    <Skeleton className="h-3.5 w-24" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-3xl font-bold tabular tracking-tight">
+                      {showBalance ? `KES ${portfolioValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '••••••'}
+                    </p>
+                    <div className={`text-xs font-semibold flex items-center gap-1 mt-0.5 tabular ${portfolioGain >= 0 ? 'text-bull' : 'text-bear'}`}>
+                      {portfolioGain >= 0 ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
+                      {showBalance && (
+                        <>
+                          {portfolioGain >= 0 ? '+' : ''}KES {Math.abs(portfolioGain).toLocaleString('en-US', { maximumFractionDigits: 0 })} ·{' '}
+                        </>
+                      )}
+                      <span>{portfolioGainPct >= 0 ? '+' : ''}{portfolioGainPct.toFixed(2)}%</span>
+                    </div>
+                  </>
+                )}
               </div>
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => { e.stopPropagation(); setShowBalance(!showBalance); }}>
                 {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
