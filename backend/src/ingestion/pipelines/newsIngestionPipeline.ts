@@ -27,6 +27,7 @@ interface PendingNewsRow {
   confidence: string | null;
   needsReview: boolean;
   text: string | null;
+  entity: { imageUrl?: string | null } | null;
   artifactId: number;
   documentUrl: string;
   title: string | null;
@@ -36,7 +37,7 @@ interface PendingNewsRow {
 
 async function fetchPendingExtractions(limit: number): Promise<PendingNewsRow[]> {
   const res = await query<PendingNewsRow>(
-    `SELECT e.id as "extractionId", e.confidence, e.needs_review as "needsReview", e.text,
+    `SELECT e.id as "extractionId", e.confidence, e.needs_review as "needsReview", e.text, e.entity,
             a.id as "artifactId", a.document_url as "documentUrl", a.title, a.published_at as "publishedAt",
             a.source_id as "sourceId"
      FROM scraping.extractions e
@@ -105,6 +106,10 @@ export async function runNewsBridge(exchange = "NSE", batchSize = 100): Promise<
         sourceName,
         category,
         securityIds,
+        // Straight passthrough of whatever the RSS adapter's parse() found
+        // on the article page (see createRssFeedAdapter.ts) — never
+        // generated or guessed here, same rule as companyName/ticker.
+        imageUrl: row.entity?.imageUrl ?? null,
         scrapedArtifactId: row.artifactId,
         scrapedExtractionId: row.extractionId,
         extractionConfidence: row.confidence !== null ? Number(row.confidence) : null,

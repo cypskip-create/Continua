@@ -45,7 +45,17 @@ export interface ParsedExtraction {
    * source. Never inferred (§12): if the source doesn't explicitly state
    * a ticker, this must be null, not a guess dressed up as a fact.
    */
-  entity: { companyName: string | null; ticker: string | null; exchange: string };
+  entity: {
+    companyName: string | null;
+    ticker: string | null;
+    exchange: string;
+    /** og:image from the article page, when the publisher sets one. Only
+     *  ever read off the page's own metadata — never inferred/generated —
+     *  so it's fine to display without the "confidence" caveats that
+     *  apply to entity/ticker fields. Optional since most adapters (NSE
+     *  filings, etc.) have no concept of an article image at all. */
+    imageUrl?: string | null;
+  };
   needsReview: boolean;
 }
 

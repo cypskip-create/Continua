@@ -332,6 +332,9 @@ export interface NewsItem {
   source: string;
   sourceName: string;
   category: "markets" | "earnings" | "companies" | "economy" | "top";
+  /** og:image off the article page, when the publisher set one — see
+   *  newsIngestionPipeline.ts. Null is normal, not an error. */
+  imageUrl: string | null;
   securityIds: string[];
   /** Ticker symbols for securityIds, resolved at read time — see
    *  newsRepository.ts's SELECT_WITH_SECURITIES for why this isn't stored. */

@@ -9,6 +9,7 @@ interface NewsItemRow {
   source: string;
   sourceName: string;
   category: string;
+  imageUrl: string | null;
   scrapedArtifactId: number | null;
   scrapedExtractionId: number | null;
   extractionConfidence: string | null;
@@ -27,6 +28,7 @@ function mapRow(row: NewsItemRow): NewsItem {
     source: row.source,
     sourceName: row.sourceName,
     category: row.category as NewsItem["category"],
+    imageUrl: row.imageUrl,
     securityIds: row.securityIds ?? [],
     symbols: row.symbols ?? [],
     scrapedArtifactId: row.scrapedArtifactId,
@@ -44,7 +46,7 @@ function mapRow(row: NewsItemRow): NewsItem {
 // storing it denormalized and risking it drifting from securities.symbol.
 const SELECT_WITH_SECURITIES = `
   SELECT n.id::text, n.headline, n.excerpt, n.article_url as "articleUrl", n.source, n.source_name as "sourceName",
-         n.category, n.scraped_artifact_id as "scrapedArtifactId", n.scraped_extraction_id as "scrapedExtractionId",
+         n.category, n.image_url as "imageUrl", n.scraped_artifact_id as "scrapedArtifactId", n.scraped_extraction_id as "scrapedExtractionId",
          n.extraction_confidence as "extractionConfidence", n.needs_review as "needsReview", n.published_at as "publishedAt",
          COALESCE(array_agg(DISTINCT nis.security_id) FILTER (WHERE nis.security_id IS NOT NULL), '{}') as "securityIds",
          COALESCE(array_agg(DISTINCT sec.symbol) FILTER (WHERE sec.symbol IS NOT NULL), '{}') as "symbols"
@@ -68,6 +70,7 @@ export const newsRepository = {
     source: string;
     sourceName: string;
     category: NewsItem["category"];
+    imageUrl: string | null;
     securityIds: string[];
     scrapedArtifactId: number | null;
     scrapedExtractionId: number;
@@ -78,13 +81,14 @@ export const newsRepository = {
     await withTransaction(async (client) => {
       const res = await client.query<{ id: string }>(
         `INSERT INTO market.news_items
-           (headline, excerpt, article_url, source, source_name, category,
+           (headline, excerpt, article_url, source, source_name, category, image_url,
             scraped_artifact_id, scraped_extraction_id, extraction_confidence, needs_review, published_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
          ON CONFLICT (scraped_extraction_id) DO UPDATE SET
            headline = EXCLUDED.headline,
            excerpt = EXCLUDED.excerpt,
            category = EXCLUDED.category,
+           image_url = EXCLUDED.image_url,
            needs_review = EXCLUDED.needs_review,
            extraction_confidence = EXCLUDED.extraction_confidence,
            updated_at = now()
@@ -96,6 +100,7 @@ export const newsRepository = {
           input.source,
           input.sourceName,
           input.category,
+          input.imageUrl,
           input.scrapedArtifactId,
           input.scrapedExtractionId,
           input.extractionConfidence,

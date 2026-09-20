@@ -2,9 +2,10 @@ import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Newspaper, ExternalLink } from "lucide-react";
+import { Newspaper } from "lucide-react";
 import { formatTimestamp } from "@/lib/formatTimestamp";
 import { useMarketNews } from "@/hooks/useMarketNews";
+import { NewsReaderSheet } from "@/components/news/NewsReaderSheet";
 import type { NewsItem } from "@/api/types";
 
 interface MediaFeedProps {
@@ -23,15 +24,19 @@ const CATEGORIES: { id: NewsItem["category"] | "all"; label: string }[] = [
 ];
 
 /**
- * Real scraped news only — see docs/api/API.md's News section. No images
- * (never scraped), no sentiment (never computed — fabricating Bullish/
- * Bearish on real articles would misrepresent them, worse than the old
- * mock badges), no video/breaking flags (no such source exists). Opens
- * the original article externally: only an excerpt is ever stored, not
- * the full body, so there's nothing to show in an in-app reader anyway.
+ * Real scraped news only — see docs/api/API.md's News section. Images
+ * are the article's own og:image when the publisher set one (never
+ * generated); no sentiment (never computed — fabricating Bullish/
+ * Bearish on real articles would misrepresent them). Tapping a card
+ * opens the in-app reader (NewsReaderSheet) with the real excerpt and
+ * a clear link to the full story — only an excerpt is ever stored, not
+ * the full body (reproducing full articles isn't something Continua is
+ * licensed to do), so the reader is honest about that rather than
+ * pretending to show the whole piece.
  */
 export function MediaFeed({ searchQuery }: MediaFeedProps) {
   const [category, setCategory] = useState<NewsItem["category"] | "all">("all");
+  const [readerItem, setReaderItem] = useState<NewsItem | null>(null);
   const { news, isLoading } = useMarketNews(category === "all" ? undefined : category);
 
   const filtered = useMemo(() => {
@@ -76,13 +81,15 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
       ) : (
         <div className="space-y-2">
           {filtered.map((item) => (
-            <a key={item.id} href={item.articleUrl} target="_blank" rel="noopener noreferrer" className="block">
-              <Card className="soft-card cursor-pointer active:opacity-70 transition-opacity">
+            <button key={item.id} data-small-target onClick={() => setReaderItem(item)} className="block w-full text-left">
+              <Card className="soft-card cursor-pointer active:opacity-70 transition-opacity overflow-hidden">
+                {item.imageUrl && (
+                  <img src={item.imageUrl} alt="" className="w-full h-36 object-cover" />
+                )}
                 <CardContent className="p-3">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[11px] font-semibold text-primary">{item.sourceName}</span>
                     <span className="text-[11px] text-muted-foreground">{formatTimestamp(item.publishedAt)}</span>
-                    <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto shrink-0" />
                   </div>
                   <h2 className="font-bold text-[13px] leading-snug line-clamp-3 mb-1.5">{item.headline}</h2>
                   {item.symbols.length > 0 && (
@@ -94,10 +101,12 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
                   )}
                 </CardContent>
               </Card>
-            </a>
+            </button>
           ))}
         </div>
       )}
+
+      <NewsReaderSheet item={readerItem} open={readerItem !== null} onOpenChange={(open) => !open && setReaderItem(null)} />
     </div>
   );
 }

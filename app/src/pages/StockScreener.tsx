@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -120,41 +119,39 @@ export function StockScreener() {
   const { getSparkline } = useSparklines(filteredStocks.slice(0, 10).map(s => s.symbol));
 
   return (
-    <Card className="card-gradient">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-accent" />
-            <span>Stock Screener</span>
-          </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-            className="text-xs"
+    <div>
+      <div className="flex items-center justify-between px-4 pt-1">
+        <h2 className="text-base font-bold flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-accent" />
+          <span>Stock Screener</span>
+        </h2>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowFilters(!showFilters)}
+          className="text-xs"
+        >
+          <Filter className="h-3.5 w-3.5 mr-1" />
+          {showFilters ? 'Hide' : 'Filters'}
+        </Button>
+      </div>
+
+      {/* Quick Presets */}
+      <div className="flex gap-2 mt-3 px-4 overflow-x-auto pb-1 scrollbar-hide">
+        {presetFilters.map((preset) => (
+          <Badge
+            key={preset.name}
+            variant="secondary"
+            className="cursor-pointer hover:bg-primary/20 transition-colors whitespace-nowrap text-xs py-1 px-2"
+            onClick={() => applyPreset(preset)}
           >
-            <Filter className="h-3.5 w-3.5 mr-1" />
-            {showFilters ? 'Hide' : 'Filters'}
-          </Button>
-        </div>
-        
-        {/* Quick Presets */}
-        <div className="flex gap-2 mt-3 overflow-x-auto pb-1 scrollbar-hide">
-          {presetFilters.map((preset) => (
-            <Badge
-              key={preset.name}
-              variant="secondary"
-              className="cursor-pointer hover:bg-primary/20 transition-colors whitespace-nowrap text-xs py-1 px-2"
-              onClick={() => applyPreset(preset)}
-            >
-              {preset.name}
-            </Badge>
-          ))}
-        </div>
-      </CardHeader>
+            {preset.name}
+          </Badge>
+        ))}
+      </div>
 
       {showFilters && (
-        <div className="px-4 pb-4 space-y-4 border-b border-border">
+        <div className="px-4 py-4 space-y-4 border-y border-border/60 mt-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-muted-foreground mb-1.5 block">Sector</label>
@@ -221,49 +218,48 @@ export function StockScreener() {
         </div>
       )}
 
-      <CardContent className="pt-3">
-        <div className="space-y-2 max-h-[400px] overflow-y-auto">
-          {filteredStocks.slice(0, 10).map((stock) => (
-            <div
-              key={stock.symbol}
-              onClick={() => navigate(`/stock/${stock.symbol}`)}
-              className="flex items-center justify-between p-2.5 rounded-lg bg-muted/20 cursor-pointer hover:bg-muted/40 transition-all tap-scale group"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm">{stock.symbol}</span>
-                  <Badge variant="outline" className="text-[9px] py-0 px-1 hidden sm:inline-flex">
-                    {stock.sector}
-                  </Badge>
-                </div>
-                <div className="text-xs text-muted-foreground truncate">{stock.name}</div>
-                <div className="flex gap-3 mt-1">
-                  <span className="text-[10px] text-muted-foreground">Vol: {formatMagnitude(stock.volume)}</span>
-                  <span className="text-[10px] text-muted-foreground">P/E: {stock.pe}</span>
-                </div>
-              </div>
-              
+      <div className="mt-2">
+        {filteredStocks.slice(0, 10).map((stock) => (
+          <div
+            key={stock.symbol}
+            onClick={() => navigate(`/stock/${stock.symbol}`)}
+            className="flex items-center justify-between px-4 py-3 border-b border-border/40 cursor-pointer active:bg-muted/30 transition-colors group"
+          >
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <SparklineChart isPositive={stock.change >= 0} width={40} height={18} data={getSparkline(stock.symbol)} />
-                <div className="text-right min-w-[65px]">
-                  <div className="font-semibold text-sm">KES {stock.price.toFixed(2)}</div>
-                  <div className={`text-xs flex items-center justify-end gap-0.5 ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>
-                    {stock.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {stock.change >= 0 ? '+' : ''}{stock.change}%
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="font-semibold text-sm">{stock.symbol}</span>
+                <Badge variant="outline" className="text-[9px] py-0 px-1 hidden sm:inline-flex">
+                  {stock.sector}
+                </Badge>
+              </div>
+              <div className="text-xs text-muted-foreground truncate">{stock.name}</div>
+              <div className="flex gap-3 mt-1">
+                <span className="text-[10px] text-muted-foreground">Vol: {formatMagnitude(stock.volume)}</span>
+                <span className="text-[10px] text-muted-foreground">P/E: {stock.pe}</span>
               </div>
             </div>
-          ))}
-        </div>
-        
-        {filteredStocks.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            No stocks match your filters
+
+            <div className="flex items-center gap-2">
+              <SparklineChart isPositive={stock.change >= 0} width={40} height={18} data={getSparkline(stock.symbol)} />
+              <div className="text-right min-w-[65px]">
+                <div className="font-semibold text-sm">KES {stock.price.toFixed(2)}</div>
+                <div className={`text-xs flex items-center justify-end gap-0.5 ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>
+                  {stock.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                  {stock.change >= 0 ? '+' : ''}{stock.change}%
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        ))}
+      </div>
+
+      {filteredStocks.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground text-sm">
+          No stocks match your filters
+        </div>
+      )}
+    </div>
   );
+
 }

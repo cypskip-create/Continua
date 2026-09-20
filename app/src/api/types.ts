@@ -213,6 +213,10 @@ export interface NewsItem {
   source: string;
   sourceName: string;
   category: "markets" | "earnings" | "companies" | "economy" | "top";
+  /** og:image off the article page, when the publisher set one. Null is
+   *  normal (not every source has one) — render a placeholder, not an
+   *  error state. */
+  imageUrl: string | null;
   securityIds: string[];
   /** Ticker symbols for securityIds, resolved server-side. */
   symbols: string[];

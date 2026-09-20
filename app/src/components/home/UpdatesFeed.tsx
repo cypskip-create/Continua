@@ -1,21 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
-import { Newspaper, Coins, BarChart3, ExternalLink, ChevronRight } from "lucide-react";
+import { Newspaper, Coins, BarChart3, ChevronRight, ChevronDown } from "lucide-react";
 import { useFollowedNews } from "@/hooks/useFollowedNews";
 import { useUpcomingDividends, useRecentEarnings } from "@/hooks/useMarketCalendars";
 import { formatTimestamp } from "@/lib/formatTimestamp";
 import { useNavigate } from "react-router-dom";
+import { NewsReaderSheet } from "@/components/news/NewsReaderSheet";
+import type { NewsItem } from "@/api/types";
 
 /**
- * The home page's "Updates" feed — Continua's own take on a unified
- * activity stream, not a copy of any other product's layout. Three real
- * data sources only, no fabricated sentiment/risk badges:
+ * The home page's "Updates" feed — merges three real data sources into
+ * one chronological stream, styled as boxed per-event cards (ticker
+ * monogram + event label + headline + expandable description), the
+ * layout language the person asked to match. The data underneath stays
+ * Continua's own real pipeline output, nothing fabricated:
  *   - scraped news (useFollowedNews — per-holding when signed in with a
- *     portfolio/watchlist, general market feed otherwise)
+ *     portfolio/watchlist, general market feed otherwise) — tapping one
+ *     opens the in-app reader (NewsReaderSheet), not an external tab
  *   - upcoming dividends (real ex-dates from corporate actions)
  *   - recently reported earnings (real reported figures, never estimates)
- * Merged into one chronological list so a stock event and the headline
- * about it can sit next to each other, with lightweight type chips to
- * filter down to just one kind.
+ * No like/comment counts here — there's no backend concept of engagement
+ * on a scraped article or a corporate action, and inventing numbers would
+ * misrepresent real data.
  */
 
 type UpdateType = "news" | "dividend" | "earnings";
@@ -24,10 +29,12 @@ interface UpdateEvent {
   id: string;
   type: UpdateType;
   timestamp: string; // ISO — used for sorting + relative display
-  title: string;
-  subtitle: string;
   symbol?: string;
-  url?: string;
+  companyLabel: string; // ticker or company name shown next to the monogram
+  eventLabel: string; // "News", "Upcoming Dividend", "Earnings Report"
+  headline: string;
+  description?: string | null;
+  newsItem?: NewsItem; // present only for type === "news"
 }
 
 const FILTERS: { id: UpdateType | "all"; label: string }[] = [
@@ -37,10 +44,10 @@ const FILTERS: { id: UpdateType | "all"; label: string }[] = [
   { id: "earnings", label: "Earnings" },
 ];
 
-const TYPE_STYLES: Record<UpdateType, { icon: typeof Newspaper; bg: string; fg: string }> = {
-  news: { icon: Newspaper, bg: "bg-primary/10", fg: "text-primary" },
-  dividend: { icon: Coins, bg: "bg-amber-500/10", fg: "text-amber-500" },
-  earnings: { icon: BarChart3, bg: "bg-sky-500/10", fg: "text-sky-500" },
+const TYPE_STYLES: Record<UpdateType, { icon: typeof Newspaper; bg: string; fg: string; label: string }> = {
+  news: { icon: Newspaper, bg: "bg-primary/10", fg: "text-primary", label: "News" },
+  dividend: { icon: Coins, bg: "bg-amber-500/10", fg: "text-amber-500", label: "Upcoming Dividend" },
+  earnings: { icon: BarChart3, bg: "bg-sky-500/10", fg: "text-sky-500", label: "Earnings Report" },
 };
 
 const LAST_SEEN_KEY = "continua:updates:lastSeenAt";
@@ -53,6 +60,8 @@ interface UpdatesFeedProps {
 export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<UpdateType | "all">("all");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [readerItem, setReaderItem] = useState<NewsItem | null>(null);
 
   const { news } = useFollowedNews(followedSymbols, limit);
   const { dividends } = useUpcomingDividends();
@@ -66,34 +75,43 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
       .filter((n) => n.publishedAt)
       .map((n) => ({
         id: `news-${n.id}`,
-        type: "news",
+        type: "news" as const,
         timestamp: n.publishedAt as string,
-        title: n.headline,
-        subtitle: n.sourceName,
         symbol: n.symbols[0],
-        url: n.articleUrl,
+        companyLabel: n.symbols[0] ? `$${n.symbols[0]}` : n.sourceName,
+        eventLabel: n.sourceName,
+        headline: n.headline,
+        description: n.excerpt,
+        newsItem: n,
       }));
 
     const dividendEvents: UpdateEvent[] = dividends
       .filter((d) => relevant(d.symbol))
-      .map((d) => ({
-        id: `dividend-${d.id}`,
-        type: "dividend",
-        timestamp: d.announcedAt,
-        title: `${d.companyName} — upcoming dividend`,
-        subtitle: d.exDate ? `Ex-date ${formatTimestamp(d.exDate)}` : "Ex-date TBC",
-        symbol: d.symbol,
-      }));
+      .map((d) => {
+        const details = d.details as { amountPerShare?: number; currency?: string };
+        return {
+          id: `dividend-${d.id}`,
+          type: "dividend" as const,
+          timestamp: d.announcedAt,
+          symbol: d.symbol,
+          companyLabel: d.companyName,
+          eventLabel: TYPE_STYLES.dividend.label,
+          headline: `Upcoming dividend${details.amountPerShare != null ? ` of ${details.currency ?? "KES"} ${details.amountPerShare}` : ""} per share`,
+          description: d.exDate ? `Ex-date ${formatTimestamp(d.exDate)}` : "Ex-date to be confirmed.",
+        };
+      });
 
     const earningsEvents: UpdateEvent[] = earnings
       .filter((e) => relevant(e.symbol))
       .map((e) => ({
         id: `earnings-${e.id}`,
-        type: "earnings",
+        type: "earnings" as const,
         timestamp: e.reportedDate,
-        title: `${e.companyName} reported FY${e.fiscalYear}${e.fiscalQuarter ? ` Q${e.fiscalQuarter}` : ""}`,
-        subtitle: e.epsActual != null ? `EPS ${e.epsActual.toFixed(2)}` : "Results filed",
         symbol: e.symbol,
+        companyLabel: e.companyName,
+        eventLabel: TYPE_STYLES.earnings.label,
+        headline: `FY${e.fiscalYear}${e.fiscalQuarter ? ` Q${e.fiscalQuarter}` : ""} results reported`,
+        description: e.epsActual != null ? `Reported EPS of ${e.epsActual.toFixed(2)}.` : "Results filed with the exchange.",
       }));
 
     return [...newsEvents, ...dividendEvents, ...earningsEvents]
@@ -108,11 +126,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
   const [newCount, setNewCount] = useState(0);
   useEffect(() => {
     const lastSeen = localStorage.getItem(LAST_SEEN_KEY);
-    if (lastSeen) {
-      setNewCount(events.filter((e) => e.timestamp > lastSeen).length);
-    } else {
-      setNewCount(0);
-    }
+    setNewCount(lastSeen ? events.filter((e) => e.timestamp > lastSeen).length : 0);
     if (events.length > 0) {
       localStorage.setItem(LAST_SEEN_KEY, events[0].timestamp);
     }
@@ -120,9 +134,17 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
 
   if (events.length === 0) return null;
 
+  const handleTap = (e: UpdateEvent) => {
+    if (e.type === "news" && e.newsItem) {
+      setReaderItem(e.newsItem);
+    } else if (e.symbol) {
+      navigate(`/stock/${e.symbol}`);
+    }
+  };
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-2 px-4">
         <div className="flex items-center gap-2">
           <p className="section-eyebrow">Updates</p>
           {newCount > 0 && (
@@ -140,7 +162,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
         </button>
       </div>
 
-      <div className="flex gap-1.5 pb-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
+      <div className="flex gap-1.5 pb-3 px-4 overflow-x-auto scrollbar-hide">
         {FILTERS.map((f) => (
           <button
             key={f.id}
@@ -155,46 +177,62 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
         ))}
       </div>
 
-      <div className="border-t border-border/60">
+      <div className="px-4 space-y-2">
         {filtered.map((e) => {
           const style = TYPE_STYLES[e.type];
           const Icon = style.icon;
-          const content = (
-            <div className="flex items-start gap-2.5 py-3 border-b border-border/40 -mx-4 px-4 transition-colors hover:bg-muted/30">
-              <div className={`h-7 w-7 rounded-full flex items-center justify-center shrink-0 ${style.bg}`}>
-                <Icon className={`h-3.5 w-3.5 ${style.fg}`} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold leading-snug line-clamp-2">{e.title}</p>
-                <p className="text-[10.5px] text-muted-foreground mt-0.5">
-                  {e.symbol && <span className="font-semibold text-foreground/80">${e.symbol} · </span>}
-                  {e.subtitle} · {formatTimestamp(e.timestamp)}
-                </p>
-              </div>
-              {e.url ? (
-                <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0 mt-1" />
-              ) : (
-                <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0 mt-1" />
-              )}
-            </div>
-          );
+          const isExpanded = expandedId === e.id;
+          const hasImage = e.type === "news" && e.newsItem?.imageUrl;
 
-          return e.url ? (
-            <a key={e.id} href={e.url} target="_blank" rel="noopener noreferrer" data-small-target className="block">
-              {content}
-            </a>
-          ) : (
-            <button
+          return (
+            <div
               key={e.id}
               data-small-target
-              onClick={() => e.symbol && navigate(`/stock/${e.symbol}`)}
-              className="block w-full text-left"
+              onClick={() => handleTap(e)}
+              className="rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors cursor-pointer overflow-hidden"
             >
-              {content}
-            </button>
+              {hasImage && (
+                <img src={e.newsItem!.imageUrl!} alt="" className="w-full h-32 object-cover" />
+              )}
+              <div className="p-3">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className={`h-6 w-6 rounded-full flex items-center justify-center shrink-0 ${style.bg}`}>
+                    <Icon className={`h-3 w-3 ${style.fg}`} />
+                  </div>
+                  <span className="text-xs font-bold">{e.companyLabel}</span>
+                  <span className={`text-[10px] font-semibold ${style.fg}`}>· {style.label}</span>
+                  <span className="text-[10px] text-muted-foreground ml-auto shrink-0">{formatTimestamp(e.timestamp)}</span>
+                </div>
+
+                <p className="text-[13px] font-bold leading-snug mb-1">{e.headline}</p>
+
+                {e.description && (
+                  <>
+                    <p className={`text-xs text-muted-foreground leading-relaxed ${isExpanded ? "" : "line-clamp-2"}`}>
+                      {e.description}
+                    </p>
+                    {e.description.length > 80 && e.type !== "news" && (
+                      <button
+                        data-small-target
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          setExpandedId(isExpanded ? null : e.id);
+                        }}
+                        className="text-[11px] font-semibold text-primary flex items-center gap-0.5 mt-1"
+                      >
+                        {isExpanded ? "Show less" : "Show more"}
+                        <ChevronDown className={`h-3 w-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
           );
         })}
       </div>
+
+      <NewsReaderSheet item={readerItem} open={readerItem !== null} onOpenChange={(open) => !open && setReaderItem(null)} />
     </div>
   );
 }

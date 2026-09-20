@@ -25,12 +25,14 @@
  * Not comparable to a real boilerplate-removal library.
  */
 import Parser from "rss-parser";
+import * as cheerio from "cheerio";
 import { fetchWithRetry } from "../../crawler/httpClient.js";
 import { isAllowedByRobots } from "../../crawler/robotsCheck.js";
 import { sha256 } from "../../crawler/hash.js";
 import { storeRawArtifact } from "../../storage/rawStorage.js";
 import { upsertArtifact } from "../../storage/rawArtifactsRepository.js";
 import { extractArticleBodyText } from "../../extraction/articleBodyText.js";
+import { resolveUrl } from "../../crawler/urlNormalize.js";
 import { logger } from "../../monitoring/logger.js";
 import { env } from "../../config/index.js";
 import type { FetchedDocument, ParsedExtraction, SourceAdapter, SourceDocument } from "../types.js";
@@ -40,6 +42,25 @@ const CRAWLER_VERSION = "scraper-phase7-0.1.0";
 const MIN_BODY_TEXT_LENGTH = 100;
 
 const rssParser = new Parser();
+
+/**
+ * Best-effort og:image/twitter:image lookup for a single article page.
+ * Deliberately narrow — this is not htmlExtract.ts's full OpenGraph
+ * sweep (that's for the generic crawler's link-discovery pass); RSS
+ * articles only need the one field, and only when the publisher set it.
+ * Absent, empty, or malformed values all resolve to null rather than
+ * throwing, since a missing thumbnail is normal and shouldn't fail the
+ * whole article.
+ */
+function extractImageUrl(html: string, pageUrl: string): string | null {
+  const $ = cheerio.load(html);
+  const raw =
+    $('meta[property="og:image"]').attr("content") ??
+    $('meta[name="twitter:image"]').attr("content") ??
+    null;
+  if (!raw) return null;
+  return resolveUrl(pageUrl, raw);
+}
 
 export function createRssFeedAdapter(source: Source): SourceAdapter {
   const feedUrl = source.config.feedUrl;
@@ -131,7 +152,7 @@ export function createRssFeedAdapter(source: Source): SourceAdapter {
           confidence: null,
           text: null,
           tables: [],
-          entity: { companyName: null, ticker: null, exchange: "N/A" },
+          entity: { companyName: null, ticker: null, exchange: "N/A", imageUrl: null },
           needsReview: true,
         };
       }
@@ -139,6 +160,7 @@ export function createRssFeedAdapter(source: Source): SourceAdapter {
       const html = fetched.body.toString("utf-8");
       const bodyText = extractArticleBodyText(html);
       const looksUsable = bodyText.length >= MIN_BODY_TEXT_LENGTH;
+      const imageUrl = extractImageUrl(html, fetched.document.url);
 
       return {
         method: "html",
@@ -157,6 +179,7 @@ export function createRssFeedAdapter(source: Source): SourceAdapter {
           companyName: null,
           ticker: null,
           exchange: "N/A",
+          imageUrl,
         },
         needsReview: !looksUsable,
       };
