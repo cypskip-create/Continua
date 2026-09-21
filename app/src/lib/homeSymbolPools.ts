@@ -1,5 +1,4 @@
-/**
- * Single source of truth for the two hardcoded symbol pools the Home page
+/*
  * widgets feature (previously duplicated, near-identically, inside both
  * CommandCenterSections.tsx and QuickTradeWidget.tsx). Centralizing them
  * here is what lets Home.tsx fetch one shared quotes batch covering both,
