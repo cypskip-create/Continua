@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Crown, MessageCircle, ChevronRight, Wallet, Eye, EyeOff, ArrowUpRight, ArrowDownRight, LogIn, TrendingUp, Search, Sparkles, Coins, Shield, BarChart3, Bell, Binoculars } from "lucide-react";
 import { QuickTradeWidget } from "@/components/home/QuickTradeWidget";
 import { CommandCenterSections } from "@/components/home/CommandCenterSections";
@@ -15,7 +15,8 @@ import { usePosts } from "@/hooks/usePosts";
 import { getTimeBasedGreeting } from "@/utils/timeGreeting";
 import { MarketStatusIndicator } from "@/components/shared/MarketStatusIndicator";
 import { computePortfolioStats } from "@/lib/stockPrices";
-import { useLivePortfolioQuotes, useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { STOCK_POOL } from "@/lib/homeSymbolPools";
 import { useIndices } from "@/hooks/useIndices";
 import { formatPostDate } from "@/lib/formatTimestamp";
 import { UpdatesFeed } from "@/components/home/UpdatesFeed";
@@ -44,7 +45,24 @@ export default function Home() {
 
   const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : 'Investor';
   const hasPortfolio = user && portfolio.length > 0;
-  const { liveQuotes: livePortfolioQuotes } = useLivePortfolioQuotes(portfolio.map(h => h.symbol));
+
+  // ONE shared quote fetch for the whole Home page — portfolio holdings,
+  // watchlist, and CommandCenterSections'/QuickTradeWidget's pools, all in
+  // a single request instead of each section firing its own. Previously
+  // 4 separate useLiveQuotes calls hit the backend in parallel on every
+  // Home mount; QUICK_SYMBOLS is a subset of STOCK_POOL, so this one
+  // union covers everything below.
+  const unionSymbols = useMemo(
+    () => [...new Set([...portfolio.map(h => h.symbol), ...watchlist.map(w => w.symbol), ...STOCK_POOL])],
+    [portfolio, watchlist]
+  );
+  const { quotes: homeQuotes } = useLiveQuotes(unionSymbols);
+
+  const livePortfolioQuotes = useMemo(() => {
+    const map: Record<string, { price: number; dayChangeAbs: number }> = {};
+    Object.values(homeQuotes).forEach(q => { map[q.symbol.toUpperCase()] = { price: q.lastPrice, dayChangeAbs: q.change }; });
+    return map;
+  }, [homeQuotes]);
   const { totalValue: portfolioValue, totalGain: portfolioGain, gainPct: portfolioGainPct, pricedCount: portfolioPricedCount } = computePortfolioStats(portfolio, livePortfolioQuotes);
   // Nothing priced yet on first render (before the initial quotes fetch
   // resolves) is a real, temporary "don't know yet" state — computed
@@ -58,10 +76,9 @@ export default function Home() {
   // Continua Data Layer quotes; a symbol with no live quote yet is
   // excluded from the movers list rather than shown with a fabricated
   // price/change.
-  const { quotes: watchlistQuotes } = useLiveQuotes(watchlist.map(w => w.symbol));
   const watchlistMovers = watchlist
     .map(w => {
-      const q = watchlistQuotes[w.symbol.toUpperCase()];
+      const q = homeQuotes[w.symbol.toUpperCase()];
       if (!q) return null;
       return { symbol: w.symbol, name: w.name, price: q.lastPrice, changePct: q.changePercent };
     })
@@ -186,7 +203,7 @@ export default function Home() {
         {user && (
           <div>
             <Eyebrow>Quick Watch</Eyebrow>
-            <QuickTradeWidget />
+            <QuickTradeWidget quotes={homeQuotes} />
           </div>
         )}
 
@@ -285,7 +302,7 @@ export default function Home() {
         )}
 
         {/* AI INSIGHT + opportunities + calendar (already flat) */}
-        <CommandCenterSections />
+        <CommandCenterSections quotes={homeQuotes} />
 
         {/* Upgrade banner (free) */}
         {user && profile?.subscription_plan !== 'premium' && (

@@ -27,8 +27,15 @@ export const quoteService = {
 
   async getQuotesBatch(exchange: ExchangeCode, symbols: string[]): Promise<Quote[]> {
     const quotes = await cache.getOrSet(CacheKeys.quotesBatch(symbols), 5_000, async () => {
-      const securities = await Promise.all(symbols.map((s) => securitiesRepository.getBySymbol(exchange, s)));
-      const ids = securities.filter((s): s is NonNullable<typeof s> => s !== null).map((s) => s.id);
+      // One batched lookup instead of one query per symbol (see
+      // securitiesRepository.getBySymbols's own doc comment — it exists
+      // for exactly this). The old Promise.all(symbols.map(getBySymbol))
+      // turned every quote batch into N individual DB round-trips, and
+      // with several widgets each firing their own quotes request on a
+      // single page load, that added up to dozens of concurrent queries
+      // competing for a small free-tier connection pool.
+      const securities = await securitiesRepository.getBySymbols(exchange, symbols);
+      const ids = securities.map((s) => s.id);
       return pricesRepository.getQuotesBatch(ids);
     });
     quotes.forEach(checkQuoteFreshness);

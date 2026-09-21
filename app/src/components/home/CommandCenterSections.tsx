@@ -3,15 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { TrendingUp, Sparkles, Calendar, Coins, ArrowUpRight, ChevronRight } from "lucide-react";
 import { AIThesisCard } from "@/components/stock/AIThesisCard";
 import { getDivYield, getStockName } from "@/lib/stockPrices";
-import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { STOCK_POOL } from "@/lib/homeSymbolPools";
 import { useExchange } from "@/hooks/useExchange";
 import { getFundamentals } from "@/data/stockFundamentals";
-
-// A canonical pool of tradable symbols (matches StockDetail's own dataset)
-// to rank "picks" from — so each section surfaces whichever stocks the
-// underlying data actually supports today, instead of hand-picked symbols
-// that might not even qualify (e.g. an "undervalued" pick with no upside).
-const STOCK_POOL = ["SCOM", "EQTY", "KCB", "SCBK", "COOP", "EABL", "ABSA", "NCBA", "PORT", "BRIT", "KPLC", "BAT", "JUB", "DTK", "SBIC"];
+import type { Quote } from "@/api/types";
 
 const upcomingEarnings = [
   { symbol: "SCOM", date: "Tomorrow", time: "9:00 AM" },
@@ -19,15 +14,18 @@ const upcomingEarnings = [
   { symbol: "KCB",    date: "Next Mon", time: "Post-market" },
 ];
 
-export function CommandCenterSections() {
+interface CommandCenterSectionsProps {
+  /** Quotes for (at least) STOCK_POOL, fetched once by Home.tsx as part
+   *  of its shared union quote batch — see Home.tsx's `homeQuotes`. This
+   *  component used to fetch STOCK_POOL's quotes itself, which meant
+   *  every Home page load fired this as its own separate request on top
+   *  of Home's own portfolio/watchlist fetches and QuickTradeWidget's. */
+  quotes: Record<string, Quote>;
+}
+
+export function CommandCenterSections({ quotes }: CommandCenterSectionsProps) {
   const navigate = useNavigate();
   const { exchange, exchangeMeta } = useExchange();
-
-  // "Undervalued" upside is computed against a synthetic analyst target
-  // price (the Data Layer has no analyst-target data source yet — see
-  // docs/architecture/FRONTEND_INTEGRATION.md), but the CURRENT price used
-  // in that comparison, and shown on the row, is live where available.
-  const { quotes } = useLiveQuotes(STOCK_POOL);
 
   // Derive every displayed number — and which stocks even qualify — from the
   // shared price/fundamentals data, then rank and take the top few. Nothing

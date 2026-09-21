@@ -3,18 +3,21 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SparklineChart } from "@/components/shared/SparklineChart";
 import { getStockName } from "@/lib/stockPrices";
-import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { QUICK_SYMBOLS } from "@/lib/homeSymbolPools";
 import { useSparklines } from "@/hooks/useSparklines";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Quote } from "@/api/types";
 
-// Just the symbols to feature here — price, day-change, and sparkline come
-// from live quotes / real candle history only. No fallback to a fabricated
-// number: an unloaded symbol shows a loading skeleton in the marquee.
-const QUICK_SYMBOLS = ["SCOM", "EQTY", "KCB", "SCBK", "EABL", "COOP", "ABSA", "NCBA", "PORT", "BRIT", "KPLC"];
+interface QuickTradeWidgetProps {
+  /** Quotes for (at least) QUICK_SYMBOLS, fetched once by Home.tsx as
+   *  part of its shared union quote batch — see Home.tsx's `homeQuotes`.
+   *  This used to call useLiveQuotes itself, its own separate request on
+   *  every Home page load. */
+  quotes: Record<string, Quote>;
+}
 
-export function QuickTradeWidget() {
+export function QuickTradeWidget({ quotes }: QuickTradeWidgetProps) {
   const navigate = useNavigate();
-  const { quotes } = useLiveQuotes(QUICK_SYMBOLS);
   const { getSparkline } = useSparklines(QUICK_SYMBOLS);
 
   const stocks = QUICK_SYMBOLS.map((symbol) => {
