@@ -177,11 +177,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* UPDATES — the home page centerpiece: real scraped news, real
-            upcoming dividends, real reported earnings, merged into one
-            chronological feed. See UpdatesFeed.tsx. */}
-        <UpdatesFeed followedSymbols={followedSymbols} />
-
         {/* MARKET SNAPSHOT — inline stat row */}
         <div>
           <Eyebrow action="Markets" onAction={() => navigate('/markets')}>Market Snapshot</Eyebrow>
@@ -198,6 +193,11 @@ export default function Home() {
             ))}
           </div>
         </div>
+
+        {/* UPDATES — the home page centerpiece: real scraped news, real
+            upcoming dividends, real reported earnings, merged into one
+            chronological feed. See UpdatesFeed.tsx. */}
+        <UpdatesFeed followedSymbols={followedSymbols} />
 
         {/* QUICK WATCH — marquee, no card */}
         {user && (
