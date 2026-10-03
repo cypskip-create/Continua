@@ -512,7 +512,7 @@ export default function UserProfile() {
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="flex-1 min-w-[80px] my-1.5 rounded-full data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-none text-xs sm:text-sm font-semibold text-muted-foreground"
+              className="adaptive-tab flex-1 min-w-[80px] my-1.5 rounded-full data-[state=active]:shadow-none text-xs sm:text-sm font-semibold text-muted-foreground"
             >
               {tab.label}
             </TabsTrigger>

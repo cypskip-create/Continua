@@ -52,7 +52,7 @@ export function PortfolioUpdates({ items, recentCounts, isLoading }: PortfolioUp
               data-small-target
               onClick={() => setFilter(c.key)}
               className={`shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-full text-[11px] font-semibold transition-colors ${
-                filter === c.key ? "bg-foreground text-background" : "bg-muted/60 hover:bg-muted"
+                filter === c.key ? "contrast-active" : "bg-muted/60 hover:bg-muted"
               }`}
             >
               <c.icon className="h-3 w-3" />

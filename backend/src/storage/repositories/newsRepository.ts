@@ -64,6 +64,11 @@ const TRUSTED_NEWS_FILTER = `
   AND lower(n.article_url) NOT LIKE '%news.ycombinator.com%'
   AND lower(n.article_url) NOT LIKE '%hnrss.org%'
   AND lower(n.source) NOT IN ('test-rss', 'real-rss')
+  AND (
+    EXISTS (SELECT 1 FROM market.news_item_securities linked WHERE linked.news_item_id = n.id)
+    OR lower(coalesce(n.headline, '') || ' ' || coalesce(n.excerpt, '')) ~
+      '(market|stock|share|bond|treasury|business|company|bank|insurance|invest|fund|finance|financial|econom|inflation|interest rate|monetary|currency|shilling|forex|exchange rate|gdp|budget|tax|debt|real estate|property|mortgage|rent|housing|construction|commodity|oil|energy|trade|earnings|profit|revenue|dividend|ipo|merger|acquisition)'
+  )
 `;
 
 export const newsRepository = {

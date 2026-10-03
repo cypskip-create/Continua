@@ -387,7 +387,7 @@ function ValuationRow({
                 data-small-target
                 onClick={() => onAssign(m.key)}
                 className={`flex-1 h-7 rounded-full text-[10px] font-semibold transition-colors ${
-                  modelKey === m.key ? "bg-foreground text-background" : "bg-muted/60 hover:bg-muted"
+                  modelKey === m.key ? "contrast-active" : "bg-muted/60 hover:bg-muted"
                 }`}
               >
                 {m.label}

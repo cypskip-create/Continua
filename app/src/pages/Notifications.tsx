@@ -181,7 +181,7 @@ export default function Notifications() {
               onClick={() => setActiveFilter(f.id)}
               data-small-target
               className={`py-1.5 px-3.5 text-xs font-semibold whitespace-nowrap rounded-full transition-all ${
-                activeFilter === f.id ? 'bg-foreground text-background shadow-sm' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                activeFilter === f.id ? 'contrast-active' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
               }`}
             >
               {f.label}

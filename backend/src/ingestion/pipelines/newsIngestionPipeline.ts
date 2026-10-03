@@ -108,7 +108,7 @@ export async function runNewsBridge(exchange = "NSE", batchSize = 100): Promise<
       }
 
       const fullText = `${row.title}\n${row.text}`;
-      const securityIds = await resolveStockMentions(fullText, exchange);
+      const securityIds = await resolveStockMentions(row.title, row.text, exchange);
       const category = classifyNewsCategory(fullText);
 
       if (securityIds.length > 0) summary.withMentions++;

@@ -188,7 +188,7 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     font-feature-settings: "ss01", "cv11";
   }
 
@@ -447,6 +447,18 @@
   .brand-active {
     @apply bg-primary text-primary-foreground;
     box-shadow: 0 6px 16px -4px hsl(var(--primary) / 0.5);
+  }
+
+  /* Exact light/dark inverse requested for selected navigation pills.
+     Defined after .pill-tab so its text color cannot be overridden. */
+  .contrast-active {
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
+    box-shadow: 0 4px 12px -5px hsl(var(--foreground) / 0.4);
+  }
+  .adaptive-tab[data-state="active"] {
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
   }
 
   /* Sticky sub-nav strip */

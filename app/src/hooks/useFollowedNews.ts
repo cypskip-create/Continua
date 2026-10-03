@@ -16,11 +16,12 @@ export function useFollowedNews(symbols: string[], limit = 5) {
   const query = useQuery({
     queryKey: ["continua", "news", "followed", key, limit],
     queryFn: async () => {
-      if (symbols.length === 0) {
-        return newsApi.listRecent({ limit });
-      }
-      const results = await Promise.all(symbols.map((s) => newsApi.getForSymbol(s, { limit }).catch(() => [] as NewsItem[])));
+      const [general, ...results] = await Promise.all([
+        newsApi.listRecent({ limit: Math.max(limit, 20) }),
+        ...symbols.map((s) => newsApi.getForSymbol(s, { limit }).catch(() => [] as NewsItem[])),
+      ]);
       const merged = new Map<string, NewsItem>();
+      for (const item of general) merged.set(item.id, item);
       for (const items of results) for (const item of items) merged.set(item.id, item);
       return Array.from(merged.values())
         .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))

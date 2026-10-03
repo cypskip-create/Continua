@@ -19,6 +19,7 @@ const CATEGORY_KEYWORDS: Record<Exclude<NewsCategory, "top">, string[]> = {
     "central bank", "cbk", "inflation", "gdp", "interest rate", "monetary policy",
     "shilling", "treasury", "budget", "imf", "world bank", "public debt", "fiscal",
     "exchange rate", "forex", "trade deficit", "balance of payments",
+    "real estate", "property market", "housing", "mortgage", "rent", "construction",
   ],
   companies: [
     "appoints", "ceo", "board", "acquisition", "merger", "stake", "ipo", "listing",

@@ -106,7 +106,7 @@ export function PortfolioRiskAnalysis({ holdings, risk }: PortfolioRiskAnalysisP
               key={k}
               data-small-target
               onClick={() => setTab(k)}
-              className={`h-8 px-3 rounded-full text-[11px] font-semibold capitalize ${tab === k ? "bg-foreground text-background" : "bg-muted/60"}`}
+              className={`h-8 px-3 rounded-full text-[11px] font-semibold capitalize ${tab === k ? "contrast-active" : "bg-muted/60"}`}
             >
               {k === "drawdown" ? "Max Drawdown" : k}
             </button>

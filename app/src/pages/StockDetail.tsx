@@ -255,12 +255,29 @@ export default function StockDetail() {
   // price path when the provider has no history; synthetic lines can be mistaken
   // for market data and produce false returns or technical signals.
   const { points: liveCandlePoints } = useHistoricalCandles(upperSymbol || undefined, selectedTimeframe);
-  const periodData = liveCandlePoints;
+  const oneDayQuotePoints = useMemo(() => {
+    if (!liveQuote || selectedTimeframe !== "1D") return [];
+    const now = new Date(liveQuote.timestamp).getTime() || Date.now();
+    const openTime = new Date(now); openTime.setHours(9, 0, 0, 0);
+    const values = [
+      { label: "Open", timestamp: openTime.getTime(), price: liveQuote.open || liveQuote.previousClose },
+      { label: "Now", timestamp: now, price: liveQuote.lastPrice },
+    ];
+    return values.map((point, index) => ({
+      date: point.label, price: point.price, open: index === 0 ? point.price : values[index - 1].price,
+      close: point.price, high: index === 0 ? point.price : Math.max(values[index - 1].price, point.price),
+      low: index === 0 ? point.price : Math.min(values[index - 1].price, point.price),
+      body: [index === 0 ? point.price : Math.min(values[index - 1].price, point.price), index === 0 ? point.price : Math.max(values[index - 1].price, point.price)] as [number, number],
+      wickRange: [index === 0 ? point.price : Math.min(values[index - 1].price, point.price), index === 0 ? point.price : Math.max(values[index - 1].price, point.price)] as [number, number],
+      up: index === 0 || point.price >= values[index - 1].price, timestamp: point.timestamp, volume: liveQuote.volume,
+    }));
+  }, [liveQuote, selectedTimeframe]);
+  const periodData = selectedTimeframe === "1D" ? oneDayQuotePoints : liveCandlePoints;
   const hasHistoricalData = periodData.length > 1;
   const periodFirstPrice = periodData[0]?.price || stock.price;
   const periodLastPrice = periodData[periodData.length - 1]?.price || stock.price;
-  // "1D" isn't backed by real intraday candles yet (see useHistoricalCandles),
-  // so its chart line is a generated mock shape — it must never be the source
+  // "1D" uses the verified session open and latest quote rather than inventing
+  // intraday ticks. It must never be the source
   // of the day's % change, or this header disagrees with the real day change
   // shown everywhere else (sticky header, portfolio rows, etc). Use the live
   // quote's actual change for 1D; every other timeframe still derives its
@@ -814,7 +831,7 @@ export default function StockDetail() {
               key={s.id}
               data-small-target
               onClick={() => scrollTo(s.id)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-full whitespace-nowrap transition-colors ${section === s.id ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-full whitespace-nowrap transition-colors ${section === s.id ? 'contrast-active' : 'text-muted-foreground hover:text-foreground'}`}
             >
               {s.label}
             </button>

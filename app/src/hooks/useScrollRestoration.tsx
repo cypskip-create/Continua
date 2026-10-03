@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
 /**
@@ -28,7 +28,7 @@ export function useScrollRestoration() {
 
   // Browser-native restoration fights with ours (it can jump the scroll
   // position around mid-transition) — take manual control once, up front.
-  useEffect(() => {
+  useLayoutEffect(() => {
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
@@ -60,16 +60,28 @@ export function useScrollRestoration() {
 
     if (navigationType === "POP" && scrollPositions.has(key)) {
       const target = scrollPositions.get(key)!;
+      const root = document.documentElement;
+      const previousBehavior = root.style.scrollBehavior;
+      const previousVisibility = document.body.style.visibility;
+      root.style.scrollBehavior = "auto";
+      // Keep async-growing pages out of sight until their saved offset is
+      // reachable. The user sees the restored frame, never the retries.
+      document.body.style.visibility = "hidden";
       let attempts = 0;
+      const reveal = () => {
+        root.style.scrollBehavior = previousBehavior;
+        document.body.style.visibility = previousVisibility;
+      };
       const tryRestore = () => {
-        if (cancelled) return;
-        window.scrollTo(0, target);
+        if (cancelled) { reveal(); return; }
         const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-        const reachedTarget = Math.abs(window.scrollY - target) < 2;
         attempts += 1;
-        if (!reachedTarget && maxScroll < target - 2 && attempts < RESTORE_ATTEMPTS) {
+        if (maxScroll < target - 2 && attempts < RESTORE_ATTEMPTS) {
           requestAnimationFrame(tryRestore);
+          return;
         }
+        window.scrollTo({ top: Math.min(target, Math.max(0, maxScroll)), behavior: "auto" });
+        reveal();
       };
       requestAnimationFrame(tryRestore);
     } else {

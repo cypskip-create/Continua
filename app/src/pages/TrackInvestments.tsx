@@ -328,7 +328,7 @@ export default function TrackInvestments() {
                   aria-selected={activeTab === tab.id}
                   data-small-target
                   onClick={() => setActiveTab(tab.id)}
-                  className={`pill-tab h-8 shrink-0 whitespace-nowrap ${activeTab === tab.id ? "rounded-full bg-foreground text-background" : ""}`}
+                  className={`pill-tab h-8 shrink-0 whitespace-nowrap ${activeTab === tab.id ? "contrast-active" : ""}`}
                 >
                   {tab.label}
                 </button>

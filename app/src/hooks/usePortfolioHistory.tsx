@@ -15,7 +15,7 @@ const TIMEFRAME_DAYS: Record<string, number | undefined> = {
   "3M": 90,
   "YTD": undefined, // computed specially, see below
   "1Y": 365,
-  "ALL": 400, // matches the backend's candle backfill window (candlesWorker.ts)
+  "ALL": 1825,
 };
 
 /**

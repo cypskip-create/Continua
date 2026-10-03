@@ -206,7 +206,7 @@ export default function Markets() {
               key={tab}
               data-small-target
               onClick={() => setActiveTab(tab)}
-              className={`pill-tab whitespace-nowrap ${activeTab === tab ? 'rounded-full bg-foreground text-background' : ''}`}
+              className={`pill-tab whitespace-nowrap ${activeTab === tab ? 'contrast-active' : ''}`}
             >
               {tab}
             </button>

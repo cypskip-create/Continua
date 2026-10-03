@@ -4,6 +4,7 @@ import {
 import { useMemo, useCallback, useState, useRef, useEffect, useId } from "react";
 import { sma, ema, bollingerBands, rsi, macd, parabolicSAR, kdj, williamsR, cci, DEFAULT_INDICATOR_SETTINGS, type IndicatorSettings } from "@/lib/technicalIndicators";
 import { DRAW_TOOL_LOOKUP, type DrawToolId, type DrawPoint, type Drawing } from "@/lib/drawingTools";
+import type { ChartPoint } from "@/hooks/useHistoricalCandles";
 
 let lastHaptic = 0;
 const chartHaptic = () => {
@@ -23,11 +24,8 @@ interface StockPriceChartProps {
   // (i.e. the first point on screen), not relative to some fixed "today" price. This
   // lets the caller show gain/loss for whichever period the user is scrubbing through.
   onHoverPrice?: (price: number | null, date: string | null, changePercent?: number | null, isUp?: boolean | null) => void;
-  /** Real Continua Data Layer candle data (app/src/hooks/useHistoricalCandles.tsx),
-   *  pre-shaped to match generateMockData's output. When omitted (or empty), the
-   *  chart falls back to its own generated series — this keeps the component
-   *  usable standalone while letting callers supply real data when they have it. */
-  data?: ReturnType<typeof generateMockData>;
+  /** Verified Continua Data Layer candle/quote data, pre-shaped for the chart. */
+  data?: ChartPoint[];
   /** Which overlay/sub-panel indicators are switched on (Moomoo-style). Defaults to
    *  everything off — a clean chart until the person turns something on. */
   indicators?: IndicatorSettings;
@@ -79,73 +77,6 @@ interface StockPriceChartProps {
 const VOLUME_PANEL_HEIGHT = 56;
 const SUB_PANEL_HEIGHT = 84;
 
-export const generateMockData = (timeframe: string, symbol: string = "STK") => {
-  let seed = 0;
-  for (let i = 0; i < symbol.length; i++) seed += symbol.charCodeAt(i);
-  const rand = (() => { let s = seed; return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; }; })();
-
-  const dataPoints: any[] = [];
-  const basePrice = 100 + (seed % 200);
-  let points = 60;
-  switch (timeframe) {
-    case "1D": points = 78; break;
-    case "5D": case "1W": points = 35; break;
-    case "1M": points = 22; break;
-    case "3M": points = 65; break;
-    case "6M": points = 130; break;
-    case "YTD": points = 180; break;
-    case "1Y": points = 252; break;
-    case "5Y": points = 260; break;
-    case "ALL": points = 400; break;
-  }
-
-  let currentPrice = basePrice;
-  for (let i = 0; i < points; i++) {
-    const date = new Date();
-    if (timeframe === "1D") date.setMinutes(date.getMinutes() - (points - i) * 5);
-    else if (timeframe === "5Y" || timeframe === "ALL") date.setDate(date.getDate() - (points - i) * 7);
-    else date.setDate(date.getDate() - (points - i));
-
-    const momentum = rand() > 0.48 ? 1 : -1;
-    const volatility = timeframe === "1D" ? basePrice * 0.003 : basePrice * 0.012;
-    const open = currentPrice;
-    currentPrice = Math.max(basePrice * 0.6, Math.min(basePrice * 1.6, currentPrice + momentum * rand() * volatility));
-    const close = currentPrice;
-    const wick = volatility * (0.4 + rand());
-    const high = Math.max(open, close) + wick * rand();
-    const low = Math.min(open, close) - wick * rand();
-
-    // Mock volume, same seeded-rand convention as the rest of this generator —
-    // used only when there's no real Data Layer candle (see useHistoricalCandles,
-    // which carries the real Mansa-sourced `volume` field for 1W/1M/3M/1Y/ALL).
-    // Bigger price moves get a somewhat higher volume figure, like a real tape.
-    const moveRatio = Math.abs(close - open) / (volatility || 1);
-    const volume = Math.round(150_000 + rand() * 650_000 + moveRatio * 400_000);
-
-    let formattedDate = "";
-    if (timeframe === "1D") formattedDate = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-    else if (["1W", "5D"].includes(timeframe)) formattedDate = date.toLocaleDateString("en-US", { weekday: "short" });
-    else if (["1M", "3M", "6M", "YTD"].includes(timeframe)) formattedDate = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    else formattedDate = date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
-
-    dataPoints.push({
-      date: formattedDate,
-      price: +close.toFixed(2),
-      open: +open.toFixed(2),
-      close: +close.toFixed(2),
-      high: +high.toFixed(2),
-      low: +low.toFixed(2),
-      // candle body plotted as a floating bar [min, max]
-      body: [+Math.min(open, close).toFixed(2), +Math.max(open, close).toFixed(2)],
-      wickRange: [+low.toFixed(2), +high.toFixed(2)],
-      up: close >= open,
-      timestamp: date.getTime(),
-      volume,
-    });
-  }
-  return dataPoints;
-};
-
 export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "area", onHoverPrice, data: liveData, indicators = DEFAULT_INDICATOR_SETTINGS, mainHeight, showPriceAxis = false, showGrid = false, pinCrosshair = false, activeDrawTool = null, onDrawToolComplete, hideDrawings = false, clearDrawSignal, onDrawingsChange }: StockPriceChartProps) => {
   // Recharts synchronizes charts sharing a syncId via a registry keyed by
   // that exact string, shared across the whole app -- not scoped per
@@ -158,8 +89,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "area",
   // gives every mounted instance its own id, so instances never collide.
   const instanceId = useId();
   const syncId = `chart-${instanceId}-${symbol}-${timeframe}`;
-  const mockData = useMemo(() => generateMockData(timeframe, symbol), [timeframe, symbol]);
-  const data = liveData && liveData.length > 1 ? liveData : mockData;
+  const data = useMemo(() => liveData ?? [], [liveData]);
   const firstPrice = data[0]?.price || 0;
   const lastPrice = data[data.length - 1]?.price || 0;
   const isPositive = lastPrice >= firstPrice;
@@ -251,7 +181,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "area",
   const domainMin = domainCenter - domainHalf;
   const domainMax = domainCenter + domainHalf;
 
-  const updateFromChartState = useCallback((state: any) => {
+  const updateFromChartState = useCallback((state: { activeIndex?: number | string; activeCoordinate?: { x: number; y?: number } } | null) => {
     const idx = state?.activeIndex != null ? Number(state.activeIndex) : NaN;
     const coord = state?.activeCoordinate;
     if (Number.isFinite(idx) && data[idx] && coord) {

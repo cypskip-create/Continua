@@ -13,12 +13,30 @@ import * as cheerio from "cheerio";
 
 export function extractArticleBodyText(html: string): string {
   const $ = cheerio.load(html);
-  $("script, style, nav, header, footer, aside, form, iframe, noscript").remove();
+  $("script, style, nav, header, footer, aside, form, iframe, noscript, svg, canvas").remove();
 
-  // Prefer <article> if present — most news sites use it and it's a much
-  // stronger signal than falling back to <body>.
-  const article = $("article");
-  const root = article.length > 0 ? article : $("body");
+  const selectors = [
+    "[itemprop='articleBody']", ".entry-content", ".post-content", ".article-content",
+    ".story-body", ".article-body", "main article", "article", "main", "body",
+  ];
+  const root = selectors.map((selector) => $(selector).first()).find((node) => node.length > 0) ?? $("body");
+
+  root.find([
+    ".related", ".recommended", ".also-read", ".read-more", ".tags", ".tag-list",
+    ".categories", ".breadcrumbs", ".share", ".social", ".newsletter", ".advert",
+    ".advertisement", ".ticker", ".market-watch", "[role='navigation']",
+  ].join(",")).remove();
+
+  // Paragraphs are substantially less likely than a container's complete
+  // textContent to include menus, ticker rails and category clouds. Keep
+  // headings only as a fallback because the RSS title is stored separately.
+  const paragraphs = root.find("p").toArray()
+    .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+    .filter((line) => line.length >= 20);
+  if (paragraphs.length > 0) {
+    const heading = root.find("h1").first().text().replace(/\s+/g, " ").trim();
+    return [heading, ...paragraphs].filter(Boolean).join("\n").trim();
+  }
 
   return root
     .text()

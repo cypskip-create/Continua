@@ -123,7 +123,7 @@ export default function Account() {
                     onClick={() => setFontScale(opt.val)}
                     data-small-target
                     className={`h-9 rounded-lg text-xs font-semibold transition-colors ${
-                      fontScale === opt.val ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:text-foreground"
+                      fontScale === opt.val ? "contrast-active" : "bg-muted text-muted-foreground hover:text-foreground"
                     }`}
                   >{opt.label}</button>
                 ))}

@@ -91,7 +91,13 @@ export function clearStockMentionDirectoryCache(): void {
   directoryCache = null;
 }
 
-export async function resolveStockMentions(text: string, exchange: string): Promise<string[]> {
+export async function resolveStockMentions(headline: string, articleText: string, exchange: string): Promise<string[]> {
+  const title = headline.trim();
+  // Entity evidence far down a page is usually a related-story rail or a
+  // market ticker, not this article. The scraper already extracts prose;
+  // this cap is a second defence for legacy/noisy documents.
+  const body = articleText.slice(0, 2_500);
+  const text = `${title}\n${body}`;
   if (!text.trim()) return [];
   const directory = await loadDirectory(exchange);
   const matched = new Set<string>();
@@ -100,8 +106,10 @@ export async function resolveStockMentions(text: string, exchange: string): Prom
     // Ticker: standalone word, case-sensitive (lowercase "scom" in prose
     // isn't a confident ticker reference; NSE tickers are always written
     // in caps in practice).
-    const tickerPattern = new RegExp(`\\b${escapeRegExp(entry.symbol)}\\b`);
-    if (tickerPattern.test(text)) {
+    const escapedTicker = escapeRegExp(entry.symbol);
+    const explicitTickerPattern = new RegExp(`(?:\\$${escapedTicker}\\b|\\(${escapedTicker}\\)|\\b${escapedTicker}\\s*:)`);
+    const tickerInHeadline = new RegExp(`\\b${escapedTicker}\\b`).test(title);
+    if (tickerInHeadline || explicitTickerPattern.test(text)) {
       matched.add(entry.securityId);
       continue;
     }
@@ -115,5 +123,7 @@ export async function resolveStockMentions(text: string, exchange: string): Prom
     }
   }
 
-  return Array.from(matched);
+  // A genuine company story can mention several issuers, but a dozen
+  // matches means a page-wide watchlist leaked into the extraction.
+  return matched.size <= 5 ? Array.from(matched) : [];
 }

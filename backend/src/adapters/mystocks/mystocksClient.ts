@@ -112,6 +112,70 @@ function parseNumber(raw: string | undefined): number {
  *  than the site's own "update" cadence (30s, per observed responses). */
 const CACHE_TTL_MS = 30_000;
 const quoteCache = new Map<string, { quote: NseRawQuote; fetchedAt: number }>();
+const chartSessionCache = new Map<string, { token: string; fetchedAt: number }>();
+const CHART_SESSION_TTL_MS = 20 * 60_000;
+const CHART_EPOCH_OFFSET_DAYS = 719_162; // ChartDirector day 1 -> Unix epoch
+
+async function getChartSession(slug: string): Promise<string | null> {
+  const cached = chartSessionCache.get(slug);
+  if (cached && Date.now() - cached.fetchedAt < CHART_SESSION_TTL_MS) return cached.token;
+  try {
+    const res = await fetch(`${BASE_URL}/stock=${slug}?historical`, {
+      headers: { Accept: "text/html", "User-Agent": USER_AGENT },
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const token = /MSPGSID=["']([^"']+)/.exec(html)?.[1] ?? null;
+    if (token) chartSessionCache.set(slug, { token, fetchedAt: Date.now() });
+    return token;
+  } catch (err) {
+    logger.warn({ slug, err: err instanceof Error ? err.message : err }, "MyStocksClient: history session failed");
+    return null;
+  }
+}
+
+interface ChartModel {
+  charts?: Array<{
+    axes?: Array<{ labels?: Record<string, [string, number]> }>;
+    layers?: Array<{ id?: number; dataSets?: Array<{ id?: string; data?: Array<number | null> }> }>;
+  }>;
+}
+
+async function fetchDailyHistory(symbol: string, from: string, to: string): Promise<NseRawCandle[]> {
+  const slug = toSlug(symbol);
+  const token = await getChartSession(slug);
+  if (!token) return [];
+  const requestedDays = Math.max(30, Math.ceil((Date.parse(to) - Date.parse(from)) / 86_400_000));
+  const range = requestedDays <= 360 ? 360 : requestedDays <= 720 ? 720 : requestedDays <= 1080 ? 1080 : requestedDays <= 1800 ? 1800 : 3600;
+  const url = `${BASE_URL}/graphs/chart/${slug}?mspgsid=${encodeURIComponent(token)};r=${range};f=d;t=avg;v=ovr;id=${Date.now()};w=600`;
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "text/html", Referer: `${BASE_URL}/stock=${slug}?historical`, "User-Agent": USER_AGENT, "X-MSL-Chart": token },
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!res.ok) return [];
+    const html = await res.text();
+    const encoded = /<div id=['"]?myStocksChart_JS['"]?[^>]*>([\s\S]*?)<\/div>/i.exec(html)?.[1];
+    if (!encoded) return [];
+    const model = JSON.parse(encoded) as ChartModel;
+    const chart = model.charts?.[0];
+    const labels = chart?.axes?.[0]?.labels ?? {};
+    const priceLayer = chart?.layers?.find((layer) => layer.id === 0) ?? chart?.layers?.find((layer) => layer.id === 1);
+    const closes = priceLayer?.dataSets?.find((set) => Array.isArray(set.data))?.data ?? [];
+    return closes.flatMap((close, index) => {
+      const chartSeconds = labels[String(index)]?.[1];
+      if (close == null || !Number.isFinite(close) || !chartSeconds) return [];
+      const barTime = new Date((chartSeconds / 86_400 - CHART_EPOCH_OFFSET_DAYS) * 86_400_000).toISOString();
+      if (barTime < from || barTime > to) return [];
+      return [{ Symbol: symbol.toUpperCase(), Interval: "1D" as const, BarTime: barTime, O: close, H: close, L: close, C: close, V: 0 }];
+    });
+  } catch (err) {
+    chartSessionCache.delete(slug);
+    logger.warn({ symbol, err: err instanceof Error ? err.message : err }, "MyStocksClient: history fetch failed");
+    return [];
+  }
+}
 
 async function fetchOneQuote(symbol: string): Promise<NseRawQuote | null> {
   const cached = quoteCache.get(symbol);
@@ -222,15 +286,12 @@ export class MyStocksClient implements INseClient {
     return results;
   }
 
-  // Not yet implemented against this source — see project convention
-  // (afxClient.ts, RealNseClient) of returning empty rather than
-  // fabricating data the source doesn't actually provide. The site does
-  // have a "Historical Prices" and "Financials" page per ticker
-  // (https://live.mystocks.co.ke/stock={TICKER}?historical /
-  // ?financials) that could support these in a follow-up pass, but their
-  // response shape hasn't been verified yet.
-  async fetchCandles(_symbol: string, _interval: NseRawCandle["Interval"], _from: string, _to: string): Promise<NseRawCandle[]> {
-    return [];
+  // Daily history is decoded from the same ChartDirector model used by the
+  // public historical-prices page. It exposes verified closes (not full
+  // OHLC), so O/H/L intentionally equal C and volume remains zero.
+  async fetchCandles(symbol: string, interval: NseRawCandle["Interval"], from: string, to: string): Promise<NseRawCandle[]> {
+    if (interval !== "1D") return [];
+    return fetchDailyHistory(symbol, from, to);
   }
   async fetchCompanyProfile(_symbol: string): Promise<NseRawCompanyProfile | null> {
     return null;

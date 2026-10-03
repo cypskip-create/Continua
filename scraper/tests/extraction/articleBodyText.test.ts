@@ -43,4 +43,12 @@ describe("extractArticleBodyText", () => {
     expect(text).not.toContain("alert");
     expect(text).not.toContain("color: red");
   });
+
+  it("does not ingest ticker rails, category clouds, or related stories", () => {
+    const html = `<article><h1>Unrelated headline</h1><div class="categories">HOME NEWS BUSINESS SPORTS</div><p>The company-specific article paragraph contains enough text to be retained.</p><div class="ticker">ABSA KCB SCOM EABL</div><div class="related"><p>More stories and tickers KPLC SCBK.</p></div></article>`;
+    const text = extractArticleBodyText(html);
+    expect(text).toContain("The company-specific article paragraph contains enough text to be retained.");
+    expect(text).not.toContain("ABSA");
+    expect(text).not.toContain("HOME NEWS");
+  });
 });

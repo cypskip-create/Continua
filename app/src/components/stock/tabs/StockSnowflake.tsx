@@ -105,7 +105,7 @@ export function StockSnowflake({ symbol }: StockSnowflakeProps) {
                 key={axis}
                 data-small-target
                 onClick={() => setSelected(axis)}
-                className={`shrink-0 h-8 px-3 rounded-full text-[11px] font-semibold ${selected === axis ? "bg-foreground text-background" : "bg-muted/60"}`}
+                className={`shrink-0 h-8 px-3 rounded-full text-[11px] font-semibold ${selected === axis ? "contrast-active" : "bg-muted/60"}`}
               >
                 {axis} {scoreFor(axis).toFixed(0)}/6
               </button>

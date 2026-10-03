@@ -1,11 +1,9 @@
 import { useMemo, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { Newspaper } from "lucide-react";
-import { formatTimestamp } from "@/lib/formatTimestamp";
 import { useMarketNews } from "@/hooks/useMarketNews";
 import { NewsReaderSheet } from "@/components/news/NewsReaderSheet";
+import { NewsStoryCard } from "@/components/news/NewsStoryCard";
 import type { NewsItem } from "@/api/types";
 
 interface MediaFeedProps {
@@ -40,13 +38,9 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
   const { news, isLoading } = useMarketNews(category === "all" ? undefined : category);
 
   const filtered = useMemo(() => {
-    // TradersHub Media is an NSE-company feed, not a generic business-news
-    // reader. Items without a resolved listed-company mention remain in the
-    // backend review queue but are intentionally not presented here.
-    const companyNews = news.filter((item) => item.symbols.length > 0);
-    if (!searchQuery.trim()) return companyNews;
+    if (!searchQuery.trim()) return news;
     const q = searchQuery.toLowerCase();
-    return companyNews.filter((n) => n.headline.toLowerCase().includes(q) || n.symbols.some((s) => s.toLowerCase().includes(q)));
+    return news.filter((n) => n.headline.toLowerCase().includes(q) || n.excerpt?.toLowerCase().includes(q) || n.symbols.some((s) => s.toLowerCase().includes(q)));
   }, [news, searchQuery]);
 
   return (
@@ -79,33 +73,13 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
           <Newspaper className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
           <p className="text-sm font-bold">No stories yet</p>
           <p className="text-[12px] text-muted-foreground mt-1">
-            {searchQuery ? "Try a different company, ticker, or category." : "No verified NSE company stories in this category yet — check back soon."}
+            {searchQuery ? "Try a different company, topic, ticker, or category." : "No verified financial stories in this category yet — check back soon."}
           </p>
         </div>
       ) : (
         <div className="space-y-2">
           {filtered.map((item) => (
-            <button key={item.id} data-small-target onClick={() => setReaderItem(item)} className="block w-full text-left">
-              <Card className="soft-card cursor-pointer active:opacity-70 transition-opacity overflow-hidden">
-                {item.imageUrl && (
-                  <img src={item.imageUrl} alt="" className="w-full h-36 object-cover" />
-                )}
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[11px] font-semibold text-primary">{item.sourceName}</span>
-                    <span className="text-[11px] text-muted-foreground">{formatTimestamp(item.publishedAt)}</span>
-                  </div>
-                  <h2 className="font-bold text-[13px] leading-snug line-clamp-3 mb-1.5">{item.headline}</h2>
-                  {item.symbols.length > 0 && (
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {item.symbols.slice(0, 4).map((s) => (
-                        <Badge key={s} variant="outline" className="text-[9px] px-1.5 py-0 rounded-full">${s}</Badge>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </button>
+            <NewsStoryCard key={item.id} item={item} onOpen={() => setReaderItem(item)} />
           ))}
         </div>
       )}

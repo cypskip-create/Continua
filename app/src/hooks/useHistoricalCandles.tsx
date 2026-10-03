@@ -20,12 +20,12 @@ export interface ChartPoint {
 /** How far back to ask the Data Layer for, per UI timeframe pill.
  *
  *  NOTE: the backend currently only backfills DAILY ("1d") candles
- *  (backend/src/workers/candlesWorker.ts — 400-day backfill, no intraday
+ *  (backend/src/workers/candlesWorker.ts — five-year backfill, no intraday
  *  candle ingestion yet). That's fine for 1W and up, but a "1D" chart made
  *  of daily bars would just be 1-2 points, not an intraday line. So "1D"
- *  intentionally isn't fetched here — StockDetail.tsx keeps its existing
- *  generated series for that one timeframe until the Data Layer has an
- *  intraday candle source to back it with real data.
+ *  intentionally isn't fetched here — StockDetail.tsx instead builds an
+ *  honest two-point session summary from the verified open/previous close
+ *  and latest quote until the Data Layer has an intraday candle source.
  */
 const TIMEFRAME_DAYS: Record<string, number | undefined> = {
   "1D": undefined, // not backed by real data yet — see note above
@@ -64,8 +64,8 @@ function candlesToChartPoints(candles: Candle[], timeframe: string): ChartPoint[
 
 /** Real daily candle history from the Data Layer for a given UI timeframe.
  *  Returns `points: []` (not an error) for "1D" or for a symbol outside
- *  the current universe — callers should fall back to their own generated
- *  series in that case, same pattern as the rest of the live hooks. */
+ *  the current universe. Callers must show an honest empty/summary state,
+ *  never a generated market path. */
 export function useHistoricalCandles(symbol: string | undefined, timeframe: string) {
   const days = timeframe === "YTD" ? undefined : TIMEFRAME_DAYS[timeframe];
   const isSupported = timeframe !== "1D" && !!symbol;

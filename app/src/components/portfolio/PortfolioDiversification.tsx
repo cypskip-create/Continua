@@ -61,7 +61,7 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
     });
 
     return { nodes, links, sectors };
-  }, [holdings, totalValue, hasHoldings]);
+  }, [holdings, hasHoldings]);
 
   const donutData = useMemo(() => {
     if (!hasHoldings) return [{ name: "No holdings yet", fullName: "No holdings yet", value: 1, pct: 100, isOther: false }];
@@ -111,7 +111,7 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
               nodePadding={22}
               margin={{ top: 8, right: 92, bottom: 8, left: 8 }}
               link={{ stroke: FLOW_COLOR, strokeOpacity: hasHoldings ? 0.35 : 0.12 }}
-              node={(props: any) => (
+              node={(props: SankeyNodeProps) => (
                 <SankeyNodeShape {...props} rootIndex={0} sectorCount={sankeyData.sectors.length} muted={!hasHoldings} totalValue={totalValue} />
               )}
             >
@@ -131,19 +131,17 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
           <InfoTip>Each holding's share of your total portfolio value — a concentration check, not a performance measure. Tap a slice to see its detail.</InfoTip>
         </h3>
         <p className="text-[11px] text-muted-foreground mb-3">How much of your portfolio each holding represents.</p>
-        <div className="h-[480px] relative">
+        <div className="h-[280px] relative mx-auto max-w-sm">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 36, right: 44, bottom: 36, left: 44 }}>
+            <PieChart>
               <Pie
                 data={donutData}
                 dataKey="value"
                 nameKey="name"
-                innerRadius="50%"
-                outerRadius="76%"
+                innerRadius="55%"
+                outerRadius="82%"
                 paddingAngle={hasHoldings ? 1.5 : 0}
                 stroke="none"
-                label={hasHoldings ? renderOuterLabel : undefined}
-                labelLine={false}
               >
                 {donutData.map((d) => (
                   <Cell
@@ -190,7 +188,7 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
             the ring itself — tap any to load its detail into the chart's
             center, same as tapping its slice. */}
         {hasHoldings && (
-          <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-border/50">
+          <div className="mt-3 divide-y divide-border/50 border-t border-border/50">
             {donutData.map((d) => {
               const isSelected = selected?.name === d.name;
               return (
@@ -198,12 +196,12 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
                   key={d.name}
                   type="button"
                   onClick={() => setSelectedTicker(d.name)}
-                  className={`flex items-center gap-1.5 h-7 pl-1.5 pr-2.5 rounded-full text-[11px] font-semibold transition-colors ${isSelected ? "bg-muted" : "hover:bg-muted/50"}`}
-                  style={isSelected ? { boxShadow: `inset 0 0 0 1.5px ${colorFor(d.name)}` } : undefined}
+                  className={`flex w-full items-center gap-2 py-2.5 text-left text-[12px] transition-colors ${isSelected ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <span className="h-2 w-2 rounded-full shrink-0" style={{ background: colorFor(d.name) }} />
-                  {d.name}
-                  <span className="text-muted-foreground font-medium">{d.pct.toFixed(1)}%</span>
+                  <span className="min-w-0 flex-1 truncate"><strong className="text-foreground">{d.name}</strong> · {d.fullName}</span>
+                  <span className="font-semibold tabular text-foreground">{d.pct.toFixed(1)}%</span>
+                  <span className="w-20 text-right tabular text-muted-foreground">{showValues ? `${currencyLabel}${d.value.toLocaleString("en-US", { maximumFractionDigits: 0 })}` : "••••"}</span>
                 </button>
               );
             })}
@@ -244,42 +242,20 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
   );
 }
 
-// Outer leader-line labels for the holdings donut — ticker + weight sitting
-// past the ring with a short elbow line back to the slice, same layout as
-// Simply Wall St's "Diversification Across Holdings" chart.
-const RADIAN = Math.PI / 180;
-const OUTER_LABEL_COUNT = 5;
-function renderOuterLabel(props: any) {
-  const { cx, cy, midAngle, outerRadius, index, payload } = props;
-  // Only the top 5 holdings by weight get a leader-line label out past the
-  // ring — donutData is pre-sorted by value descending, so `index` doubles
-  // as rank. Every other slice still renders (with its own color/tap
-  // target), just without a label crowding the chart.
-  if (index >= OUTER_LABEL_COUNT) return null;
-  const color = payload.isOther ? "hsl(var(--muted-foreground))" : colorFor(payload.name);
-  const sin = Math.sin(-RADIAN * midAngle);
-  const cos = Math.cos(-RADIAN * midAngle);
-  const sx = cx + outerRadius * cos;
-  const sy = cy + outerRadius * sin;
-  const mx = cx + (outerRadius + 16) * cos;
-  const my = cy + (outerRadius + 16) * sin;
-  const ex = mx + (cos >= 0 ? 1 : -1) * 12;
-  const ey = my;
-  const anchor = cos >= 0 ? "start" : "end";
-  return (
-    <g key={`diversification-label-${index}`}>
-      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={color} strokeOpacity={0.5} fill="none" />
-      <text x={ex + (cos >= 0 ? 4 : -4)} y={ey - 3} textAnchor={anchor} fontSize={10.5} fontWeight={700} fill={color}>
-        {payload.name}
-      </text>
-      <text x={ex + (cos >= 0 ? 4 : -4)} y={ey + 9} textAnchor={anchor} fontSize={10} fill="hsl(var(--muted-foreground))">
-        {payload.pct.toFixed(1)}%
-      </text>
-    </g>
-  );
+interface SankeyNodeProps {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  index: number;
+  payload: { name: string; value: number };
+  rootIndex: number;
+  sectorCount: number;
+  muted: boolean;
+  totalValue: number;
 }
 
-function SankeyNodeShape({ x, y, width, height, index, payload, rootIndex, sectorCount, muted, totalValue }: any) {
+function SankeyNodeShape({ x, y, width, height, index, payload, rootIndex, sectorCount, muted, totalValue }: SankeyNodeProps) {
   const isRoot = index === rootIndex;
   const isSector = index > rootIndex && index <= sectorCount;
   const pct = !muted && totalValue > 0 ? (payload.value / totalValue) * 100 : 0;

@@ -5,6 +5,7 @@ import { useUpcomingDividends, useRecentEarnings } from "@/hooks/useMarketCalend
 import { formatTimestamp } from "@/lib/formatTimestamp";
 import { useNavigate } from "react-router-dom";
 import { NewsReaderSheet } from "@/components/news/NewsReaderSheet";
+import { NewsStoryCard } from "@/components/news/NewsStoryCard";
 import type { NewsItem } from "@/api/types";
 
 /**
@@ -179,6 +180,9 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
 
       <div className="px-4 space-y-2">
         {filtered.map((e) => {
+          if (e.type === "news" && e.newsItem) {
+            return <NewsStoryCard key={e.id} item={e.newsItem} onOpen={() => setReaderItem(e.newsItem!)} />;
+          }
           const style = TYPE_STYLES[e.type];
           const Icon = style.icon;
           const isExpanded = expandedId === e.id;

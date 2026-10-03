@@ -20,13 +20,12 @@ interface RobinhoodPerformanceChartProps {
   mode?: "value" | "performance";
   /** When true, mask absolute currency values (still show %). */
   hideValue?: boolean;
-  /** Optional seed so the simulated curve stays stable per portfolio. */
+  /** Retained for API compatibility; charts never synthesize market data. */
   seed?: string;
   /** Current holdings (symbol + share count) — when provided, every
    *  timeframe except "1D" plots the portfolio's REAL historical value
-   *  (real daily closes × today's share count) instead of a generated
-   *  shape. Omit to keep the old fully-generated behavior (e.g. for a
-   *  context with no real holdings to look up, like a demo/preview). */
+   *  (real daily closes × today's share count). Without holdings, historical
+   *  windows remain empty rather than fabricating a market path. */
   holdings?: { symbol: string; shares: number }[];
 }
 
@@ -47,7 +46,7 @@ const haptic = (() => {
     if (now - last < 40) return;
     last = now;
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-      try { navigator.vibrate(ms); } catch {}
+      try { navigator.vibrate(ms); } catch { /* Haptics are optional. */ }
     }
   };
 })();
@@ -58,7 +57,7 @@ export function RobinhoodPerformanceChart({
   dayStartValue,
   mode = "value",
   hideValue = false,
-  seed = "",
+  seed: _seed = "",
   holdings,
 }: RobinhoodPerformanceChartProps) {
   const [activeTimeframe, setActiveTimeframe] = useState("1M");
@@ -77,65 +76,11 @@ export function RobinhoodPerformanceChart({
   );
   const useRealData = activeTimeframe !== "1D" && !!holdings && hasRealData && !realLoading;
 
-  const rng = (s: string) => {
-    let h = 2166136261;
-    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
-    return () => {
-      h = Math.imul(h ^ (h >>> 15), 2246822507);
-      h = Math.imul(h ^ (h >>> 13), 3266489909);
-      return ((h ^= h >>> 16) >>> 0) / 4294967296;
-    };
-  };
-
-  // The real anchor for a given window length: 1 day out uses the REAL value as of
-  // yesterday's close (dayStartValue); the full "ALL" window (730d) uses the REAL cost
-  // basis. Everything in between is a smooth blend of those two real numbers — so every
-  // timeframe starts from a value that's actually grounded, not just a re-labeled
-  // re-sample of the same start→end line.
-  const anchorForWindow = (days: number) => {
-    if (days <= 1) return dayStartValue;
-    const t = Math.min(1, Math.pow(days / 730, 0.55));
-    return dayStartValue + (totalCost - dayStartValue) * t;
-  };
-
   const formatDateLabel = (date: Date, days: number): string => {
     if (days <= 1) return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
     if (days <= 7) return date.toLocaleDateString("en-US", { weekday: "short", hour: "numeric" });
     if (days <= 30) return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
-  };
-
-  const generateData = (days: number): PerformancePoint[] => {
-    const data: PerformancePoint[] = [];
-    const now = Date.now();
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const startValue = anchorForWindow(days);
-    const endValue = totalValue;
-    const volatility = 0.012;
-    const rand = rng(`${seed}|${activeTimeframe}|${startValue.toFixed(2)}|${endValue.toFixed(2)}`);
-
-    const points = days <= 1 ? 78
-                 : days <= 7 ? days * 4
-                 : days <= 30 ? days
-                 : days <= 90 ? Math.ceil(days / 2)
-                 : Math.ceil(days / 7);
-
-    let prevValue = startValue;
-    for (let i = 0; i < points; i++) {
-      const progress = i / Math.max(1, points - 1);
-      const baseValue = startValue + (endValue - startValue) * progress;
-      const randomWalk = (rand() - 0.5) * volatility * Math.max(Math.abs(baseValue), 1);
-      const smoothing = 0.7;
-      const value = i === 0 ? startValue : prevValue * smoothing + (baseValue + randomWalk) * (1 - smoothing);
-      prevValue = value;
-
-      const timestamp = now - (points - 1 - i) * (days * msPerDay / points);
-      const date = new Date(timestamp);
-      data.push({ date: formatDateLabel(date, days), value, timestamp });
-    }
-    // Force both endpoints to the exact real anchors — no drift from the numbers shown elsewhere on the page.
-    if (data.length > 0) { data[0].value = startValue; data[data.length - 1].value = endValue; }
-    return data;
   };
 
   // Real daily closes × today's share count, formatted the same way the
@@ -153,14 +98,18 @@ export function RobinhoodPerformanceChart({
     }));
     formatted.push({ date: "Now", value: totalValue, timestamp: Date.now() });
     return formatted;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [useRealData, realPoints, activeTimeframe, totalValue]);
 
-  const selectedTimeframe = timeframes.find(t => t.label === activeTimeframe)!;
   const rawData = useMemo(
-    () => (useRealData ? realData : generateData(selectedTimeframe.days)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [useRealData, realData, activeTimeframe, totalValue, totalCost, dayStartValue, seed]
+    () => useRealData
+      ? realData
+      : activeTimeframe === "1D"
+        ? [
+            { date: "Previous close", value: dayStartValue, timestamp: Date.now() - 86_400_000 },
+            { date: "Now", value: totalValue, timestamp: Date.now() },
+          ]
+        : [],
+    [useRealData, realData, activeTimeframe, totalValue, dayStartValue]
   );
 
   // In "performance" mode every point is shown as % vs cost basis, so the chart's
@@ -174,13 +123,13 @@ export function RobinhoodPerformanceChart({
   // Mirrors the YAxis's auto ['dataMin', 'dataMax'] domain exactly, so our manual
   // y-pixel calc for the crosshair dot lines up with where recharts actually draws the curve.
   const { valMin, valMax } = useMemo(() => {
-    const values = chartData.map(p => p.value);
+    const values = chartData.length ? chartData.map(p => p.value) : [0];
     return { valMin: Math.min(...values), valMax: Math.max(...values) };
   }, [chartData]);
 
   const startOfWindow = chartData[0]?.value ?? 0;
   const endOfWindow = chartData[chartData.length - 1]?.value ?? 0;
-  const displayValue = hoverValue ?? endOfWindow;
+  const displayValue = hoverValue ?? (chartData.length ? endOfWindow : (mode === "performance" && totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : totalValue));
   const changeInWindow = displayValue - startOfWindow;
   const changePercent = mode === "performance"
     ? changeInWindow
@@ -203,7 +152,7 @@ export function RobinhoodPerformanceChart({
   // As with the stock chart, activeCoordinate.y from recharts isn't reliably snapped to
   // the plotted value's pixel position, so we derive the dot's y ourselves from the real
   // value + measured plot area + the same min/max the YAxis uses — keeping the dot exactly on the line.
-  const handleMove = useCallback((state: any) => {
+  const handleMove = useCallback((state: { activeIndex?: number | string; activeCoordinate?: { x: number; y?: number } } | null) => {
     const idx = state?.activeIndex != null ? Number(state.activeIndex) : NaN;
     const coord = state?.activeCoordinate;
     if (Number.isFinite(idx) && chartData[idx] && coord) {
@@ -271,7 +220,7 @@ export function RobinhoodPerformanceChart({
           onTouchStart={() => haptic(10)}
           onTouchEnd={handleLeave}
         >
-          <ResponsiveContainer width="100%" height="100%">
+          {chartData.length >= 2 ? <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={chartData}
               onMouseMove={handleMove}
@@ -306,7 +255,7 @@ export function RobinhoodPerformanceChart({
                 activeDot={false}
               />
             </AreaChart>
-          </ResponsiveContainer>
+          </ResponsiveContainer> : <div className="flex h-full items-center justify-center px-8 text-center text-xs text-muted-foreground">Verified historical portfolio prices are still being collected for this period.</div>}
           {crosshair && (
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
               <div className="absolute w-px bg-foreground/30" style={{ left: crosshair.x, top: 0, bottom: 0 }} />

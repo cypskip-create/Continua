@@ -23,10 +23,10 @@ type Group = "Valuation" | "Future Growth" | "Past Performance" | "Financial Hea
 const GROUPS: Group[] = ["Valuation", "Future Growth", "Past Performance", "Financial Health", "Dividends"];
 
 const SUBMETRICS: Record<Group, string[]> = {
-  Valuation: ["Fair Value", "DCF", "PE", "PS", "PB"],
+  Valuation: ["Fair Value", "PE", "PS", "PEG", "PB"],
   "Future Growth": ["Earnings", "Revenue", "EPS"],
   "Past Performance": ["ROE", "ROCE", "ROA"],
-  "Financial Health": ["Debt to Equity"],
+  "Financial Health": ["Net Debt to Equity"],
   Dividends: ["Yield", "Growth", "Payout"],
 };
 
@@ -40,6 +40,11 @@ export function KeyMetricsBenchmarks({ holdings, research, valuations, growth, d
   const totalValue = holdings.reduce((s, h) => s + h.value, 0);
 
   const selectGroup = (g: Group) => { setGroup(g); setMetric(SUBMETRICS[g][0]); };
+
+  const sum = (fn: (h: HoldingLike) => number | null) => holdings.reduce((total, holding) => {
+    const value = fn(holding);
+    return total + (value != null && Number.isFinite(value) ? value : 0);
+  }, 0);
 
   // Builds dot-plot input for a per-holding numeric field with an optional
   // "higher is better" flag used purely for red/green coloring.
@@ -71,55 +76,74 @@ export function KeyMetricsBenchmarks({ holdings, research, valuations, growth, d
           (s) => valuations[s]?.models.find((m) => m.upsidePercent != null)?.upsidePercent ?? null,
           true,
         );
-        return { title: "Narrative Fair Value", desc: "How far above or below its narrative fair value each holding trades.", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} fmt={pctFmt} unavailableCount={unavailableCount} /> };
+        const fairValue = sum((h) => {
+          const upside = valuations[h.symbol.toUpperCase()]?.models.find((m) => m.upsidePercent != null)?.upsidePercent;
+          return upside == null ? null : h.value * (1 + upside / 100);
+        });
+        const exactUpside = totalValue > 0 && fairValue > 0 ? ((fairValue - totalValue) / totalValue) * 100 : portfolioValue;
+        return { title: "Fair Value", desc: "The combined intrinsic value of covered holdings compared with their current portfolio price.", formula: "Σ(shares × fair value) ÷ Σ(shares × price) − 1", node: <MetricDotPlot points={points} portfolioValue={exactUpside} fmt={pctFmt} unavailableCount={unavailableCount} /> };
       }
       if (metric === "PE") {
         const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios.pe ?? null, false);
-        return { title: "Price / Earnings", desc: "How many times earnings each holding trades at.", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} marketValue={benchmark.pe} marketLabel={benchmark.sampleLabel} fmt={xFmt} unavailableCount={unavailableCount} /> };
+        const earnings = sum((h) => { const pe = research[h.symbol.toUpperCase()]?.ratios.pe; return pe && pe > 0 ? h.value / pe : null; });
+        const exactPe = earnings > 0 ? totalValue / earnings : portfolioValue;
+        return { title: "Price / Earnings", desc: "How much the portfolio pays for each shilling of earnings.", formula: "Σ market value ÷ Σ earnings", node: <MetricDotPlot points={points} portfolioValue={exactPe} marketValue={benchmark.pe} marketLabel={benchmark.sampleLabel} fmt={xFmt} unavailableCount={unavailableCount} /> };
       }
       if (metric === "PB") {
         const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios.pb ?? null, false);
-        return { title: "Price / Book", desc: "How many times book value each holding trades at.", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} fmt={xFmt} unavailableCount={unavailableCount} /> };
+        const bookValue = sum((h) => { const pb = research[h.symbol.toUpperCase()]?.ratios.pb; return pb && pb > 0 ? h.value / pb : null; });
+        const exactPb = bookValue > 0 ? totalValue / bookValue : portfolioValue;
+        return { title: "Price / Book", desc: "Portfolio market value compared with the combined book value of covered holdings.", formula: "Σ market value ÷ Σ book value", node: <MetricDotPlot points={points} portfolioValue={exactPb} fmt={xFmt} unavailableCount={unavailableCount} /> };
       }
-      // DCF / PS — not currently computed by Continua's valuation service.
-      return { title: metric, desc: metric === "DCF" ? "A discounted cash flow model isn't part of Continua's valuation engine yet — Sector P/E, Graham Number and Dividend Discount are." : "Price-to-sales isn't currently computed for NSE holdings.", node: <MetricDotPlot points={[]} fmt={xFmt} /> };
+      return { title: metric, desc: `${metric} requires per-share revenue or forward-growth data that the verified NSE dataset does not provide yet.`, formula: metric === "PS" ? "Σ market value ÷ Σ revenue" : "Weighted average of holding PEG ratios", node: <MetricDotPlot points={[]} fmt={xFmt} /> };
     }
 
     if (group === "Future Growth") {
       const field = metric === "Earnings" ? "earningsGrowthPct" : metric === "Revenue" ? "revenueGrowthPct" : "epsGrowthPct";
       const { points, portfolioValue, unavailableCount } = buildPoints((s) => growth[s]?.[field] ?? null, true);
-      return { title: `Trailing ${metric} Growth`, desc: `How fast each holding's ${metric.toLowerCase()} actually grew last year, year over year — Continua doesn't have analyst forecasts, so this is trailing, not forecast.`, node: <MetricDotPlot points={points} portfolioValue={portfolioValue} fmt={pctFmt} unavailableCount={unavailableCount} /> };
+      return { title: `Annual ${metric} Growth vs Market`, desc: `Value-weighted trailing growth from reported results. Analyst forecasts are not labelled as available when Continua has none.`, formula: "Σ(holding weight × reported growth)", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} fmt={pctFmt} unavailableCount={unavailableCount} /> };
     }
 
     if (group === "Past Performance") {
       if (metric === "ROCE") {
-        return { title: "Return on Capital Employed (ROCE)", desc: "Not currently computed for NSE holdings.", node: <MetricDotPlot points={[]} fmt={pctFmt} /> };
+        return { title: "Return on Capital Employed (ROCE)", desc: "EBIT and capital-employed totals are not yet available consistently for NSE holdings.", formula: "Σ EBIT ÷ Σ capital employed", node: <MetricDotPlot points={[]} fmt={pctFmt} /> };
       }
       const field = metric === "ROE" ? "roe" : "roa";
       const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios[field] ?? null, true);
       const marketValue = metric === "ROE" ? benchmark.roe : null;
-      return { title: `Return on ${metric === "ROE" ? "Equity (ROE)" : "Assets (ROA)"}`, desc: `How much profit each holding earns on its ${metric === "ROE" ? "shareholders' equity" : "assets"}, against the market.`, node: <MetricDotPlot points={points} portfolioValue={portfolioValue} marketValue={marketValue} marketLabel={benchmark.sampleLabel} fmt={pctFmt} unavailableCount={unavailableCount} /> };
+      let exactReturn = portfolioValue;
+      if (metric === "ROE") {
+        const earnings = sum((h) => { const pe = research[h.symbol.toUpperCase()]?.ratios.pe; return pe && pe > 0 ? h.value / pe : null; });
+        const equity = sum((h) => { const pb = research[h.symbol.toUpperCase()]?.ratios.pb; return pb && pb > 0 ? h.value / pb : null; });
+        if (equity > 0) exactReturn = (earnings / equity) * 100;
+      }
+      return { title: `Return on ${metric === "ROE" ? "Equity (ROE)" : "Assets (ROA)"}`, desc: `How efficiently covered holdings generate profit from ${metric === "ROE" ? "shareholders' equity" : "assets"}.`, formula: metric === "ROE" ? "Σ earnings ÷ Σ equity" : "Value-weighted ROA (asset totals unavailable)", node: <MetricDotPlot points={points} portfolioValue={exactReturn} marketValue={marketValue} marketLabel={benchmark.sampleLabel} fmt={pctFmt} unavailableCount={unavailableCount} /> };
     }
 
     if (group === "Financial Health") {
       const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios.debtToEquity ?? null, false);
-      return { title: "Debt to Equity", desc: "How much debt each holding carries for every unit of equity, against the market.", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} marketValue={benchmark.debtToEquity} marketLabel={benchmark.sampleLabel} fmt={pctFmt} unavailableCount={unavailableCount} /> };
+      return { title: "Net Debt to Equity vs Market", desc: "Leverage across holdings compared with the NSE benchmark sample; lower generally means more financial resilience.", formula: "Σ debt ÷ Σ equity (value-weighted proxy where statement totals are unavailable)", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} marketValue={benchmark.debtToEquity} marketLabel={benchmark.sampleLabel} fmt={pctFmt} unavailableCount={unavailableCount} /> };
     }
 
     // Dividends
     if (metric === "Yield") {
       const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios.dividendYield ?? null, true);
-      return { title: "Dividend Yield", desc: "How much income each holding pays, against the market.", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} marketValue={benchmark.dividendYield} marketLabel={benchmark.sampleLabel} fmt={pctFmt} unavailableCount={unavailableCount} /> };
+      const annualIncome = sum((h) => h.shares * (dividendData[h.symbol.toUpperCase()]?.ttmPerShare ?? 0));
+      const exactYield = totalValue > 0 ? (annualIncome / totalValue) * 100 : portfolioValue;
+      return { title: "Portfolio Dividend Yield", desc: "Trailing cash distributions relative to the portfolio's current value.", formula: "Σ(shares × dividend per share) ÷ Σ market value", node: <MetricDotPlot points={points} portfolioValue={exactYield} marketValue={benchmark.dividendYield} marketLabel={benchmark.sampleLabel} fmt={pctFmt} unavailableCount={unavailableCount} /> };
     }
     if (metric === "Payout") {
       const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios.payoutRatio ?? null, false);
-      return { title: "Payout Ratio", desc: "How much of earnings each holding pays out as dividends — lower leaves more room to grow the payout.", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} fmt={pctFmt} unavailableCount={unavailableCount} /> };
+      const dividends = sum((h) => h.shares * (dividendData[h.symbol.toUpperCase()]?.ttmPerShare ?? 0));
+      const earnings = sum((h) => { const pe = research[h.symbol.toUpperCase()]?.ratios.pe; return pe && pe > 0 ? h.value / pe : null; });
+      const exactPayout = earnings > 0 ? (dividends / earnings) * 100 : portfolioValue;
+      return { title: "Payout Ratio", desc: "The share of covered portfolio earnings distributed as dividends.", formula: "Σ dividends ÷ Σ earnings", node: <MetricDotPlot points={points} portfolioValue={exactPayout} fmt={pctFmt} unavailableCount={unavailableCount} /> };
     }
     const { points, portfolioValue, unavailableCount } = buildPoints((s) => dividendData[s]?.growthPct ?? null, true);
-    return { title: "Trailing Dividend Growth", desc: "How each holding's trailing 12-month payout compares with the 12 months before that.", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} fmt={pctFmt} unavailableCount={unavailableCount} /> };
+    return { title: "Dividend Growth Rate", desc: "Value-weighted growth in trailing payouts versus the preceding period.", formula: "Σ(holding weight × dividend growth)", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} fmt={pctFmt} unavailableCount={unavailableCount} /> };
   }
 
-  const { title, desc, node } = render();
+  const { title, desc, formula, node } = render();
 
   return (
     <div className="card-gradient rounded-2xl p-4">
@@ -138,7 +162,7 @@ export function KeyMetricsBenchmarks({ holdings, research, valuations, growth, d
             key={g}
             data-small-target
             onClick={() => selectGroup(g)}
-            className={`shrink-0 h-8 px-3 rounded-full text-[11px] font-semibold ${group === g ? "bg-foreground text-background" : "bg-muted/60"}`}
+            className={`shrink-0 h-8 px-3 rounded-full text-[11px] font-semibold ${group === g ? "contrast-active" : "bg-muted/60"}`}
           >
             {g}
           </button>
@@ -159,6 +183,7 @@ export function KeyMetricsBenchmarks({ holdings, research, valuations, growth, d
 
       <p className="text-[13px] font-bold mb-0.5">{title}</p>
       <p className="text-[11px] text-muted-foreground mb-3">{desc}</p>
+      {formula && <p className="mb-3 rounded-lg bg-muted/40 px-3 py-2 text-[10px] text-muted-foreground"><span className="font-semibold text-foreground">Portfolio calculation:</span> {formula}</p>}
 
       {isLoading ? <p className="text-[11px] text-muted-foreground py-8 text-center">Loading benchmark data…</p> : node}
     </div>
