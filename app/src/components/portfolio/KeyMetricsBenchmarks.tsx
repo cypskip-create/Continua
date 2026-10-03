@@ -158,45 +158,49 @@ export function KeyMetricsBenchmarks({ holdings, research, valuations, growth, d
 
   return (
     <div className="card-gradient rounded-2xl p-4">
-      <div className="flex items-center gap-1.5 mb-3">
+      <div className="flex items-center gap-1.5 mb-4">
         <h3 className="font-serif text-lg">Key Metrics &amp; Benchmarks</h3>
         <InfoTip>
           Your value-weighted portfolio average compared against the {benchmark.sampleLabel} — a
           market-cap sample, not the full exchange, so we're not calling 60+ endpoints on every
           page load.
         </InfoTip>
+        {isLoading && <span className="ml-auto h-2 w-2 animate-pulse rounded-full bg-primary" aria-label="Updating benchmark data" />}
       </div>
 
-      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 mb-2">
+      <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 mb-5 scrollbar-hide">
         {GROUPS.map((g) => (
           <button
             key={g}
             data-small-target
             onClick={() => selectGroup(g)}
-            className={`shrink-0 h-8 px-3 rounded-full text-[11px] font-semibold ${group === g ? "contrast-active" : "bg-muted/60"}`}
+            className={`shrink-0 h-9 px-4 rounded-lg text-[11px] font-semibold ${group === g ? "contrast-active" : "bg-muted/40 text-muted-foreground"}`}
           >
             {g}
           </button>
         ))}
       </div>
-      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 mb-4">
+      <h4 className="mb-3 font-serif text-2xl font-semibold">{group}</h4>
+      <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1 mb-5">
         {SUBMETRICS[group].map((m) => (
           <button
             key={m}
             data-small-target
             onClick={() => setMetric(m)}
-            className={`shrink-0 h-7 px-3 rounded-full text-[10.5px] font-semibold border ${metric === m ? "border-foreground text-foreground" : "border-transparent text-muted-foreground bg-muted/40"}`}
+            className={`shrink-0 h-9 px-4 rounded-md text-xs font-semibold ${metric === m ? "bg-muted text-foreground" : "text-muted-foreground"}`}
           >
             {m}
           </button>
         ))}
       </div>
 
-      <p className="text-[13px] font-bold mb-0.5">{title}</p>
-      <p className="text-[11px] text-muted-foreground mb-3">{desc}</p>
-      {formula && <p className="mb-3 rounded-lg bg-muted/40 px-3 py-2 text-[10px] text-muted-foreground"><span className="font-semibold text-foreground">Portfolio calculation:</span> {formula}</p>}
+      <div className="mb-4 flex items-center gap-1.5">
+        <p className="text-base font-bold">{title}</p>
+        <InfoTip>{desc} Calculation: {formula}</InfoTip>
+      </div>
+      <p className="mb-5 text-sm leading-6 text-muted-foreground">{desc}</p>
 
-      {isLoading ? <p className="text-[11px] text-muted-foreground py-8 text-center">Loading benchmark data…</p> : node}
+      {node}
     </div>
   );
 }

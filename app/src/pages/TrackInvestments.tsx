@@ -506,6 +506,7 @@ export default function TrackInvestments() {
                     outerRadius="88%"
                     paddingAngle={2}
                     stroke="none"
+                    isAnimationActive={false}
                     onClick={(_, i) => setSelectedSlice(prev => prev === activeAlloc[i].name ? null : activeAlloc[i].name)}
                   >
                     {activeAlloc.map((s, i) => {

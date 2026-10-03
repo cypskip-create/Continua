@@ -100,6 +100,8 @@ const TIMEFRAME_LABELS: Record<string, string> = {
 export default function StockDetail() {
   const { exchangeMeta } = useExchange();
   const navigate = useNavigate();
+  const backTouchAt = useRef(0);
+  const goBack = useCallback(() => navigateBack(navigate, "/markets"), [navigate]);
   const { symbol } = useParams();
   const [selectedTimeframe, setSelectedTimeframe] = useState("1D");
   const [chartType, setChartType] = useState<ChartType>("area");
@@ -528,7 +530,23 @@ export default function StockDetail() {
       <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-3 py-2">
           <div className="flex items-center gap-2 min-w-0">
-            <Button type="button" aria-label="Back to markets" variant="ghost" size="icon" onClick={() => navigateBack(navigate, "/markets")} className="tap-scale h-9 w-9 shrink-0 pointer-events-auto">
+            <Button
+              type="button"
+              aria-label="Back to markets"
+              variant="ghost"
+              size="icon"
+              onPointerUp={(event) => {
+                if (event.pointerType !== "touch" && event.pointerType !== "pen") return;
+                event.preventDefault();
+                backTouchAt.current = Date.now();
+                goBack();
+              }}
+              onClick={(event) => {
+                if (Date.now() - backTouchAt.current < 700) { event.preventDefault(); return; }
+                goBack();
+              }}
+              className="tap-scale h-9 w-9 shrink-0 pointer-events-auto touch-manipulation"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-3 min-w-0">

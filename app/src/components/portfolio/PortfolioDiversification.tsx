@@ -142,6 +142,7 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
                 outerRadius="82%"
                 paddingAngle={hasHoldings ? 1.5 : 0}
                 stroke="none"
+                isAnimationActive={false}
               >
                 {donutData.map((d) => (
                   <Cell
@@ -222,7 +223,7 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
         <div className="h-56 relative">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={[{ name: "Not Reported", value: 100 }]} dataKey="value" nameKey="name" innerRadius="62%" outerRadius="90%" stroke="none">
+              <Pie data={[{ name: "Not Reported", value: 100 }]} dataKey="value" nameKey="name" innerRadius="62%" outerRadius="90%" stroke="none" isAnimationActive={false}>
                 <Cell fill="hsl(var(--muted-foreground) / 0.35)" />
               </Pie>
             </PieChart>

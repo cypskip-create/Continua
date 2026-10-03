@@ -1,5 +1,6 @@
 import { Home, TrendingUp, Users, Wallet, User } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfile } from "@/hooks/useProfile";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,8 @@ const MAIN_ROUTES = new Set(["/", "/markets", "/track-investments", "/traders-hu
 
 export function BottomNavigation() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const touchNavigationAt = useRef(0);
   const { profile } = useProfile();
   const isMainRoute = MAIN_ROUTES.has(location.pathname);
 
@@ -37,6 +40,15 @@ export function BottomNavigation() {
             <NavLink
               key={item.id}
               to={item.path}
+              onPointerUp={(event) => {
+                if (event.pointerType !== "touch" && event.pointerType !== "pen") return;
+                event.preventDefault();
+                touchNavigationAt.current = Date.now();
+                navigate(item.path);
+              }}
+              onClick={(event) => {
+                if (Date.now() - touchNavigationAt.current < 700) event.preventDefault();
+              }}
               className={cn(
                 "tab-item relative flex flex-col items-center justify-center py-1.5",
                 isActive ? "active" : "inactive"

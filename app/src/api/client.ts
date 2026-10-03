@@ -86,6 +86,11 @@ function buildUrl(path: string, params?: ContinuaRequestOptions["params"]): stri
  *  instead of re-parsing the response body everywhere. */
 export async function continuaFetch<T>(path: string, options: ContinuaRequestOptions = {}): Promise<T> {
   const url = buildUrl(path, options.params);
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(new DOMException("Request timed out", "TimeoutError")), 12_000);
+  const forwardAbort = () => controller.abort(options.signal?.reason);
+  if (options.signal?.aborted) forwardAbort();
+  else options.signal?.addEventListener("abort", forwardAbort, { once: true });
   let res: Response;
   try {
     res = await fetch(url, {
@@ -95,7 +100,7 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
         ...(options.body !== undefined ? { "Content-Type": "application/json" } : {}),
       },
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-      signal: options.signal,
+      signal: controller.signal,
     });
   } catch (err) {
     throw new ContinuaApiError(
@@ -103,6 +108,9 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
       0,
       path
     );
+  } finally {
+    window.clearTimeout(timeout);
+    options.signal?.removeEventListener("abort", forwardAbort);
   }
 
   if (!res.ok) {

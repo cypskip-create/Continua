@@ -38,7 +38,7 @@ function NewsReaderContent({ item, open, onOpenChange, navigate }: NewsReaderShe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent hideClose className="inset-0 left-0 top-0 h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-none border-0 p-0 data-[state=open]:slide-in-from-bottom-0 data-[state=closed]:slide-out-to-bottom-0">
+      <DialogContent hideClose className="inset-0 left-0 top-0 !flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 data-[state=open]:slide-in-from-bottom-0 data-[state=closed]:slide-out-to-bottom-0">
         <DialogTitle className="sr-only">{article.headline}</DialogTitle>
         <div className="flex h-full flex-col bg-background">
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-3 border-b border-border/60 bg-background/95 px-4 backdrop-blur-xl">
@@ -50,7 +50,10 @@ function NewsReaderContent({ item, open, onOpenChange, navigate }: NewsReaderShe
               <p className="text-[11px] text-muted-foreground">{formatTimestamp(article.publishedAt)}</p>
             </div>
           </header>
-          <div className="min-h-0 flex-1 overflow-y-auto pb-28">
+          <div
+            className="min-h-0 flex-1 overflow-y-scroll overscroll-contain touch-pan-y"
+            style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
+          >
           {article.imageUrl ? (
             <img src={article.imageUrl} alt="" className="w-full max-h-[42vh] min-h-52 object-cover" />
           ) : (
@@ -88,7 +91,7 @@ function NewsReaderContent({ item, open, onOpenChange, navigate }: NewsReaderShe
             </div>
           </article>
           </div>
-          <div className="fixed inset-x-0 bottom-0 border-t border-border/60 bg-background/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-xl">
+          <div className="shrink-0 border-t border-border/60 bg-background/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-xl">
             <a
               href={article.articleUrl}
               target="_blank"

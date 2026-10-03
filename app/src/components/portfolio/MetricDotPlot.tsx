@@ -13,63 +13,109 @@ interface MetricDotPlotProps {
   unavailableCount?: number;
 }
 
-/** Collision-free comparison lanes inspired by visual portfolio analysis:
- * every holding gets an independently tappable row on a shared scale, while
- * portfolio and market references remain visible across every row. */
+const median = (values: number[]) => {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle]! : (sorted[middle - 1]! + sorted[middle]!) / 2;
+};
+
+/** Shared-scale holding bubble plot. Bubble area represents portfolio weight;
+ * horizontal position represents the selected metric. Vertical lanes only
+ * prevent collisions and carry no analytical meaning. */
 export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel = "Market", fmt, unavailableCount }: MetricDotPlotProps) {
   const navigate = useNavigate();
-  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(points[0]?.symbol ?? null);
-  const selected = points.find((point) => point.symbol === selectedSymbol) ?? points[0];
-  const { domainMin, domainMax, ticks } = useMemo(() => {
-    const values = [...points.map((point) => point.value), ...(portfolioValue != null ? [portfolioValue] : []), ...(marketValue != null ? [marketValue] : [])];
-    const min = Math.min(0, ...values);
-    const max = Math.max(...values, min + 1);
-    const pad = (max - min) * 0.1 || 1;
-    const low = min - pad;
-    const high = max + pad;
-    return { domainMin: low, domainMax: high, ticks: Array.from({ length: 4 }, (_, index) => low + ((high - low) / 3) * index) };
-  }, [points, portfolioValue, marketValue]);
-  const pctOf = (value: number) => Math.max(2, Math.min(98, ((value - domainMin) / (domainMax - domainMin)) * 100));
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+  const values = points.map((point) => point.value);
+  const middle = median(values);
+  const mad = median(values.map((value) => Math.abs(value - middle)));
+  const outliers = useMemo(() => new Set(points.filter((point) => {
+    if (points.length < 4) return false;
+    const robustLimit = Math.max(mad * 6, Math.abs(middle) * 4, 1);
+    return Math.abs(point.value - middle) > robustLimit;
+  }).map((point) => point.symbol)), [points, mad, middle]);
+  const [hideOutliers, setHideOutliers] = useState(true);
+  const visiblePoints = hideOutliers ? points.filter((point) => !outliers.has(point.symbol)) : points;
+  const selected = points.find((point) => point.symbol === selectedSymbol);
+
+  const refs = [portfolioValue, marketValue].filter((value): value is number => value != null && Number.isFinite(value));
+  const domainValues = [...visiblePoints.map((point) => point.value), ...refs];
+  const rawMin = Math.min(0, ...domainValues);
+  const rawMax = Math.max(...domainValues, rawMin + 1);
+  const pad = (rawMax - rawMin) * 0.08 || 1;
+  const domainMin = rawMin - pad;
+  const domainMax = rawMax + pad;
+  const pctOf = (value: number) => Math.max(1.5, Math.min(98.5, ((value - domainMin) / (domainMax - domainMin)) * 100));
+  const ticks = Array.from({ length: 5 }, (_, index) => domainMin + ((domainMax - domainMin) / 4) * index);
+  const maxWeight = Math.max(1, ...visiblePoints.map((point) => point.weight ?? 1));
+  const directionSample = visiblePoints.find((point) => point.good != null && portfolioValue != null && point.value !== portfolioValue);
+  const higherIsBetter = directionSample ? directionSample.good === (directionSample.value > (portfolioValue ?? 0)) : true;
+
+  const positioned = (() => {
+    const laneEnds = [-100, -100, -100, -100];
+    return [...visiblePoints].sort((a, b) => a.value - b.value).map((point, index) => {
+      const x = pctOf(point.value);
+      let lane = laneEnds.findIndex((end) => x - end > 12);
+      if (lane < 0) lane = index % laneEnds.length;
+      laneEnds[lane] = x;
+      return { ...point, x, lane };
+    });
+  })();
 
   if (points.length === 0 && portfolioValue == null) {
-    return <p className="py-8 text-center text-[11px] text-muted-foreground">No verified data on file for this metric yet.</p>;
+    return <p className="py-10 text-center text-sm text-muted-foreground">No verified data is available for this metric yet.</p>;
   }
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2 text-[10px] font-semibold">
-        {portfolioValue != null && <span className="rounded-full bg-blue-500/10 px-2 py-1 text-blue-500">Portfolio {fmt(portfolioValue)}</span>}
-        {marketValue != null && <span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{marketLabel} {fmt(marketValue)}</span>}
-      </div>
-
-      <div className="overflow-hidden rounded-xl border border-border/60 bg-muted/10">
-        {points.map((point) => {
-          const isSelected = point.symbol === selected?.symbol;
-          return (
-            <button key={point.symbol} type="button" onClick={() => setSelectedSymbol(point.symbol)} className={`grid w-full grid-cols-[4.25rem_1fr] items-center border-b border-border/40 px-2 py-2.5 text-left last:border-b-0 ${isSelected ? "bg-primary/8" : "hover:bg-muted/30"}`}>
-              <span className={`truncate text-[11px] font-bold ${isSelected ? "text-primary" : "text-foreground"}`}>{point.symbol}</span>
-              <span className="relative block h-5">
-                {ticks.map((_, index) => <span key={index} className="absolute inset-y-0 border-l border-border/30" style={{ left: `${index * (100 / 3)}%` }} />)}
-                {marketValue != null && <span className="absolute inset-y-0 border-l border-dashed border-muted-foreground/70" style={{ left: `${pctOf(marketValue)}%` }} />}
-                {portfolioValue != null && <span className="absolute inset-y-0 border-l-2 border-blue-500/70" style={{ left: `${pctOf(portfolioValue)}%` }} />}
-                <span className={`absolute top-1/2 grid h-5 min-w-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full px-1 text-[8px] font-bold text-white shadow-sm ${point.good === false ? "bg-bear" : point.good === true ? "bg-bull" : "bg-muted-foreground"} ${isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`} style={{ left: `${pctOf(point.value)}%` }}>{fmt(point.value)}</span>
-              </span>
+      <div className="flex min-h-8 flex-wrap items-center gap-2">
+        {portfolioValue != null && <span className="rounded-full border border-sky-500/70 px-3 py-1 text-xs font-bold text-sky-500">Portfolio {fmt(portfolioValue)}</span>}
+        {marketValue != null && <span className="rounded-full border border-muted-foreground/70 px-3 py-1 text-xs font-bold text-foreground">{marketLabel} {fmt(marketValue)}</span>}
+        {outliers.size > 0 && (
+          <label className="ml-auto flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-muted-foreground">
+            <button type="button" role="switch" aria-checked={hideOutliers} onClick={() => setHideOutliers((value) => !value)} className={`relative h-5 w-9 rounded-full transition-colors ${hideOutliers ? "bg-primary" : "bg-muted"}`}>
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-background shadow transition-transform ${hideOutliers ? "translate-x-[18px]" : "translate-x-0.5"}`} />
             </button>
-          );
-        })}
+            Hide {outliers.size} outlier{outliers.size === 1 ? "" : "s"}
+          </label>
+        )}
       </div>
 
-      <div className="flex justify-between px-[4.75rem] text-[9px] tabular-nums text-muted-foreground">{ticks.map((tick, index) => <span key={index}>{fmt(tick)}</span>)}</div>
+      <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+        <div className="relative h-[310px] overflow-hidden rounded-lg" style={{ background: higherIsBetter ? "linear-gradient(90deg, hsl(var(--bear)/.10), hsl(var(--bull)/.10))" : "linear-gradient(90deg, hsl(var(--bull)/.10), hsl(var(--bear)/.10))" }}>
+          {ticks.map((_, index) => <span key={index} className="absolute inset-y-0 border-l border-border/50" style={{ left: `${index * 25}%` }} />)}
+          {marketValue != null && <span className="absolute inset-y-0 z-[1] border-l-2 border-dashed border-foreground/65" style={{ left: `${pctOf(marketValue)}%` }} />}
+          {portfolioValue != null && <span className="absolute inset-y-0 z-[1] border-l-[3px] border-sky-500" style={{ left: `${pctOf(portfolioValue)}%` }} />}
+
+          {positioned.map((point) => {
+            const size = 38 + Math.sqrt((point.weight ?? 1) / maxWeight) * 30;
+            return (
+              <button
+                key={point.symbol}
+                type="button"
+                aria-label={`${point.symbol}: ${fmt(point.value)}`}
+                onClick={() => setSelectedSymbol(point.symbol)}
+                className={`absolute z-[2] grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-background text-[10px] font-bold text-white shadow-md transition-transform active:scale-95 ${point.good === false ? "bg-bear" : point.good === true ? "bg-bull" : "bg-muted-foreground"} ${selectedSymbol === point.symbol ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
+                style={{ left: `${point.x}%`, top: `${20 + point.lane * 21}%`, width: size, height: size }}
+              >
+                {point.symbol}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-2 flex justify-between text-[10px] tabular-nums text-muted-foreground">{ticks.map((tick, index) => <span key={index}>{fmt(tick)}</span>)}</div>
+      </div>
+
+      {outliers.size > 0 && hideOutliers && <p className="text-[11px] text-muted-foreground">Hiding {[...outliers].join(", ")}, which sit far outside the range of the other holdings. Portfolio and market reference lines still use the complete dataset.</p>}
+      {!!unavailableCount && <p className="text-[11px] text-muted-foreground">{unavailableCount} holding{unavailableCount === 1 ? "" : "s"} do{unavailableCount === 1 ? "es" : ""} not have a verified value for this metric.</p>}
 
       {selected && (
-        <button type="button" onClick={() => navigate(`/stock/${selected.symbol}`)} className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-background/60 p-3 text-left">
-          <div className="grid h-9 w-9 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">{selected.symbol.slice(0, 3)}</div>
+        <button type="button" onClick={() => navigate(`/stock/${selected.symbol}`)} className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 text-left">
+          <div className={`grid h-10 w-10 place-items-center rounded-full text-xs font-bold text-white ${selected.good === false ? "bg-bear" : selected.good === true ? "bg-bull" : "bg-muted-foreground"}`}>{selected.symbol.slice(0, 3)}</div>
           <div className="min-w-0 flex-1"><p className="truncate text-xs font-bold">{selected.name || selected.symbol}</p><p className="text-[11px] text-muted-foreground">{fmt(selected.value)} · {(selected.weight ?? 0).toFixed(1)}% portfolio weight</p></div>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </button>
       )}
-
-      {!!unavailableCount && <p className="text-[10.5px] text-muted-foreground">{unavailableCount} holding{unavailableCount === 1 ? "" : "s"} lack verified data for this metric.</p>}
     </div>
   );
 }

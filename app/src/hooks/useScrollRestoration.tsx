@@ -61,17 +61,13 @@ export function useScrollRestoration() {
     const restore = () => window.scrollTo({ top: target, behavior: "auto" });
     restore();
     const frame = requestAnimationFrame(restore);
-    const observer = new ResizeObserver(restore);
-    observer.observe(document.body);
-    const stop = window.setTimeout(() => {
-      observer.disconnect();
-      root.style.scrollBehavior = previousBehavior;
-    }, 750);
+    // One post-paint correction covers lazy route mounting without leaving a
+    // live observer that can fight the person's first swipe or tap.
+    const stop = window.setTimeout(() => { root.style.scrollBehavior = previousBehavior; }, 100);
 
     return () => {
       cancelAnimationFrame(frame);
       clearTimeout(stop);
-      observer.disconnect();
       root.style.scrollBehavior = previousBehavior;
     };
   }, [location.key, navigationType]);

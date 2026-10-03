@@ -225,6 +225,7 @@
   .tab-item, nav a, [class*="TabsTrigger"], [class*="DropdownMenuItem"] {
     min-height: auto;
     min-width: auto;
+    touch-action: manipulation;
   }
 }
 
@@ -292,6 +293,8 @@
     background: hsl(var(--background) / 0.85);
     backdrop-filter: blur(24px) saturate(1.2);
     -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    pointer-events: auto;
+    isolation: isolate;
   }
 
   .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 8px); }
@@ -302,6 +305,8 @@
     @apply flex flex-col items-center justify-center gap-0.5;
     min-height: 52px;
     transition: color 0.18s ease;
+    touch-action: manipulation;
+    pointer-events: auto;
   }
   .tab-item.active { @apply text-foreground; }
   .tab-item.inactive { @apply text-muted-foreground; }
