@@ -1,8 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700;800&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
+@config "../tailwind.config.ts";
 
 /* Continua — canvas-first design system.
    Light: Robinhood/Fidelity warm off-white.
@@ -437,7 +436,8 @@
     @apply text-muted-foreground hover:text-foreground;
   }
   .pill-tab.active {
-    @apply brand-active;
+    @apply bg-primary text-primary-foreground;
+    box-shadow: 0 6px 16px -4px hsl(var(--primary) / 0.5);
   }
 
   /* Shared "selected/primary" treatment for pills, segmented controls, and
