@@ -5,6 +5,9 @@ import { useMarketNews } from "@/hooks/useMarketNews";
 import { NewsReaderSheet } from "@/components/news/NewsReaderSheet";
 import { NewsStoryCard } from "@/components/news/NewsStoryCard";
 import type { NewsItem } from "@/api/types";
+import { dedupeNews } from "@/lib/news";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useNavigate } from "react-router-dom";
 
 interface MediaFeedProps {
   searchQuery: string;
@@ -26,22 +29,24 @@ const CATEGORIES: { id: NewsItem["category"] | "all"; label: string }[] = [
  * are the article's own og:image when the publisher set one (never
  * generated); no sentiment (never computed — fabricating Bullish/
  * Bearish on real articles would misrepresent them). Tapping a card
- * opens the in-app reader (NewsReaderSheet) with the real excerpt and
- * a clear link to the full story — only an excerpt is ever stored, not
- * the full body (reproducing full articles isn't something Continua is
- * licensed to do), so the reader is honest about that rather than
- * pretending to show the whole piece.
+ * opens the full-screen in-app reader. The list stays lightweight; the
+ * cleaned extracted body is requested only after a story is opened, with
+ * a clear canonical link and publisher attribution retained.
  */
 export function MediaFeed({ searchQuery }: MediaFeedProps) {
+  const navigate = useNavigate();
   const [category, setCategory] = useState<NewsItem["category"] | "all">("all");
   const [readerItem, setReaderItem] = useState<NewsItem | null>(null);
   const { news, isLoading } = useMarketNews(category === "all" ? undefined : category);
 
   const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return news;
+    const unique = dedupeNews(news);
+    if (!searchQuery.trim()) return unique;
     const q = searchQuery.toLowerCase();
-    return news.filter((n) => n.headline.toLowerCase().includes(q) || n.excerpt?.toLowerCase().includes(q) || n.symbols.some((s) => s.toLowerCase().includes(q)));
+    return unique.filter((n) => n.headline.toLowerCase().includes(q) || n.excerpt?.toLowerCase().includes(q) || n.symbols.some((s) => s.toLowerCase().includes(q)));
   }, [news, searchQuery]);
+  const symbols = useMemo(() => [...new Set(filtered.flatMap((item) => item.symbols))], [filtered]);
+  const { quotes } = useLiveQuotes(symbols);
 
   return (
     <div className="px-4 pt-3 pb-6 space-y-4">
@@ -79,7 +84,7 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
       ) : (
         <div className="space-y-2">
           {filtered.map((item) => (
-            <NewsStoryCard key={item.id} item={item} onOpen={() => setReaderItem(item)} />
+            <NewsStoryCard key={item.id} item={item} quotes={quotes} onSymbolOpen={(symbol) => navigate(`/stock/${symbol}`)} onOpen={() => setReaderItem(item)} />
           ))}
         </div>
       )}

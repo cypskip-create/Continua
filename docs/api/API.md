@@ -105,13 +105,20 @@ continua-scraper's generic RSS adapter and bridged into `market.news_items`
 Ordered by `published_at` (falls back to when it was scraped, for feeds that don't reliably
 expose a publish date).
 
+Duplicate crawl/syndication rows are collapsed by canonical URL and normalized headline, and
+non-financial hard-news false positives are excluded before results leave the API.
+
+### `GET /news/item/:id`
+Detail payload for the full-screen in-app reader. It includes cleaned extracted `content` when
+the source page supplied usable article text, while retaining publisher attribution and the
+canonical `articleUrl`. Feed endpoints omit this heavier field so Home and TradersHub stay fast.
+
 ### `GET /news/:symbol?exchange=NSE&limit=20`
 News mentioning one specific security. `securityIds` on each item is a best-effort keyword
 match against ticker/company name (see `resolveStockMentions.ts`) — an article can legitimately
 mention several companies, or none (general market/economy news), so an empty `securityIds` list
 elsewhere in the feed isn't itself an error; `needsReview: true` is the explicit "the bridge
-wasn't confident about this one" signal. Only an excerpt is stored, never the full article body —
-`articleUrl` links to the original publisher for the full story.
+wasn't confident about this one" signal. `articleUrl` always links to the original publisher.
 
 ## Market movers
 

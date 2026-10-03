@@ -14,6 +14,13 @@ export const newsController = {
     res.json({ data: items });
   },
 
+  /** GET /api/v1/news/item/:id — full in-app reader payload. */
+  async getById(req: Request, res: Response) {
+    const item = await newsRepository.getById(req.params.id!);
+    if (!item) throw new ApiError(404, "News item not found");
+    res.json({ data: item });
+  },
+
   /** GET /api/v1/news/:symbol — news mentioning one specific security, for the stock research page. */
   async getForSymbol(req: Request, res: Response) {
     const { symbol } = req.params;

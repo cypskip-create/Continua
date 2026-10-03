@@ -196,14 +196,6 @@ export default function TrackInvestments() {
   };
 
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary/30 border-t-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="page-canvas min-h-screen bg-background pb-24">
       {/* Header — thin, editorial (no back button) */}
@@ -220,6 +212,11 @@ export default function TrackInvestments() {
           </div>
         </div>
       </header>
+      {loading && portfolio.length === 0 && (
+        <div className="mx-4 mt-3 flex items-center gap-2 rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          <span className="h-3 w-3 animate-spin rounded-full border border-primary/30 border-t-primary" /> Loading your holdings…
+        </div>
+      )}
 
       <div className="px-4 pt-6 space-y-8">
         {/* ── HERO — canvas, no card ── */}

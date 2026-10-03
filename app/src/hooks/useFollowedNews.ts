@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { newsApi } from "@/api/newsApi";
 import type { NewsItem } from "@/api/types";
+import { dedupeNews } from "@/lib/news";
 
 /** Real news for the Home page's "Latest Updates" strip. When the person
  *  has a portfolio/watchlist, fetches news for each of those symbols in
@@ -23,7 +24,7 @@ export function useFollowedNews(symbols: string[], limit = 5) {
       const merged = new Map<string, NewsItem>();
       for (const item of general) merged.set(item.id, item);
       for (const items of results) for (const item of items) merged.set(item.id, item);
-      return Array.from(merged.values())
+      return dedupeNews(Array.from(merged.values()))
         .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
         .slice(0, limit);
     },

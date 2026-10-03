@@ -53,13 +53,14 @@ export function KeyMetricsBenchmarks({ holdings, research, valuations, growth, d
     higherIsBetter: boolean,
     thresholdIsPortfolio = true,
   ) {
-    const rows = holdings.map((h) => ({ symbol: h.symbol, weight: h.weight, value: getValue(h.symbol.toUpperCase()) }));
-    const withValue = rows.filter((r): r is { symbol: string; weight: number; value: number } => r.value != null);
+    const rows = holdings.map((h) => ({ symbol: h.symbol, name: h.name, weight: h.weight, value: getValue(h.symbol.toUpperCase()) }));
+    const withValue = rows.filter((r): r is { symbol: string; name: string | undefined; weight: number; value: number } => r.value != null);
     const unavailableCount = rows.length - withValue.length;
     const coveredWeight = withValue.reduce((s, r) => s + r.weight, 0);
     const portfolioValue = coveredWeight > 0 ? withValue.reduce((s, r) => s + r.value * r.weight, 0) / coveredWeight : null;
     const points = withValue.map((r) => ({
       symbol: r.symbol,
+      name: r.name,
       value: r.value,
       weight: r.weight,
       good: thresholdIsPortfolio && portfolioValue != null
@@ -95,7 +96,16 @@ export function KeyMetricsBenchmarks({ holdings, research, valuations, growth, d
         const exactPb = bookValue > 0 ? totalValue / bookValue : portfolioValue;
         return { title: "Price / Book", desc: "Portfolio market value compared with the combined book value of covered holdings.", formula: "Σ market value ÷ Σ book value", node: <MetricDotPlot points={points} portfolioValue={exactPb} fmt={xFmt} unavailableCount={unavailableCount} /> };
       }
-      return { title: metric, desc: `${metric} requires per-share revenue or forward-growth data that the verified NSE dataset does not provide yet.`, formula: metric === "PS" ? "Σ market value ÷ Σ revenue" : "Weighted average of holding PEG ratios", node: <MetricDotPlot points={[]} fmt={xFmt} /> };
+      if (metric === "PS") {
+        const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios.ps ?? null, false);
+        return { title: "Price / Sales", desc: "Market value paid for each shilling of reported revenue.", formula: "Σ market value ÷ Σ revenue", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} fmt={xFmt} unavailableCount={unavailableCount} /> };
+      }
+      const { points, portfolioValue, unavailableCount } = buildPoints((s) => {
+        const pe = research[s]?.ratios.pe;
+        const epsGrowth = growth[s]?.epsGrowthPct;
+        return pe != null && epsGrowth != null && epsGrowth > 0 ? pe / epsGrowth : null;
+      }, false);
+      return { title: "PEG Ratio", desc: "P/E adjusted for the latest verified annual EPS growth; lower can indicate better growth-adjusted value.", formula: "P/E ÷ annual EPS growth (%)", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} fmt={xFmt} unavailableCount={unavailableCount} /> };
     }
 
     if (group === "Future Growth") {
@@ -106,11 +116,12 @@ export function KeyMetricsBenchmarks({ holdings, research, valuations, growth, d
 
     if (group === "Past Performance") {
       if (metric === "ROCE") {
-        return { title: "Return on Capital Employed (ROCE)", desc: "EBIT and capital-employed totals are not yet available consistently for NSE holdings.", formula: "Σ EBIT ÷ Σ capital employed", node: <MetricDotPlot points={[]} fmt={pctFmt} /> };
+        const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios.roic != null ? research[s]!.ratios.roic! * 100 : null, true);
+        return { title: "Return on Invested Capital", desc: "Operating profit relative to verified equity and debt capital. Shown as ROIC because complete current-liability data is not available for a consistent ROCE calculation.", formula: "Operating income ÷ (equity + debt)", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} fmt={pctFmt} unavailableCount={unavailableCount} /> };
       }
       const field = metric === "ROE" ? "roe" : "roa";
-      const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios[field] ?? null, true);
-      const marketValue = metric === "ROE" ? benchmark.roe : null;
+      const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios[field] != null ? research[s]!.ratios[field]! * 100 : null, true);
+      const marketValue = metric === "ROE" && benchmark.roe != null ? benchmark.roe * 100 : null;
       let exactReturn = portfolioValue;
       if (metric === "ROE") {
         const earnings = sum((h) => { const pe = research[h.symbol.toUpperCase()]?.ratios.pe; return pe && pe > 0 ? h.value / pe : null; });
@@ -122,18 +133,18 @@ export function KeyMetricsBenchmarks({ holdings, research, valuations, growth, d
 
     if (group === "Financial Health") {
       const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios.debtToEquity ?? null, false);
-      return { title: "Net Debt to Equity vs Market", desc: "Leverage across holdings compared with the NSE benchmark sample; lower generally means more financial resilience.", formula: "Σ debt ÷ Σ equity (value-weighted proxy where statement totals are unavailable)", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} marketValue={benchmark.debtToEquity} marketLabel={benchmark.sampleLabel} fmt={pctFmt} unavailableCount={unavailableCount} /> };
+      return { title: "Debt to Equity vs Market", desc: "Leverage across holdings compared with the NSE benchmark sample; lower generally means more financial resilience.", formula: "Σ debt ÷ Σ equity (value-weighted proxy where statement totals are unavailable)", node: <MetricDotPlot points={points} portfolioValue={portfolioValue} marketValue={benchmark.debtToEquity} marketLabel={benchmark.sampleLabel} fmt={xFmt} unavailableCount={unavailableCount} /> };
     }
 
     // Dividends
     if (metric === "Yield") {
-      const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios.dividendYield ?? null, true);
+      const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios.dividendYield != null ? research[s]!.ratios.dividendYield! * 100 : null, true);
       const annualIncome = sum((h) => h.shares * (dividendData[h.symbol.toUpperCase()]?.ttmPerShare ?? 0));
       const exactYield = totalValue > 0 ? (annualIncome / totalValue) * 100 : portfolioValue;
-      return { title: "Portfolio Dividend Yield", desc: "Trailing cash distributions relative to the portfolio's current value.", formula: "Σ(shares × dividend per share) ÷ Σ market value", node: <MetricDotPlot points={points} portfolioValue={exactYield} marketValue={benchmark.dividendYield} marketLabel={benchmark.sampleLabel} fmt={pctFmt} unavailableCount={unavailableCount} /> };
+      return { title: "Portfolio Dividend Yield", desc: "Trailing cash distributions relative to the portfolio's current value.", formula: "Σ(shares × dividend per share) ÷ Σ market value", node: <MetricDotPlot points={points} portfolioValue={exactYield} marketValue={benchmark.dividendYield != null ? benchmark.dividendYield * 100 : null} marketLabel={benchmark.sampleLabel} fmt={pctFmt} unavailableCount={unavailableCount} /> };
     }
     if (metric === "Payout") {
-      const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios.payoutRatio ?? null, false);
+      const { points, portfolioValue, unavailableCount } = buildPoints((s) => research[s]?.ratios.payoutRatio != null ? research[s]!.ratios.payoutRatio! * 100 : null, false);
       const dividends = sum((h) => h.shares * (dividendData[h.symbol.toUpperCase()]?.ttmPerShare ?? 0));
       const earnings = sum((h) => { const pe = research[h.symbol.toUpperCase()]?.ratios.pe; return pe && pe > 0 ? h.value / pe : null; });
       const exactPayout = earnings > 0 ? (dividends / earnings) * 100 : portfolioValue;

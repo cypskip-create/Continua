@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import {
   ArrowLeft, Check, Crown, Sparkles, Zap, LineChart, Users, Bell, ShieldCheck,
   FileText, BarChart3, Loader2,
@@ -87,7 +88,7 @@ export default function Upgrade() {
     <div className="min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(-1)} aria-label="Back">
+          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigateBack(navigate, "/profile")} aria-label="Back">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-bold text-foreground">Continua Premium</h1>

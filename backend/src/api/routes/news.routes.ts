@@ -6,4 +6,5 @@ import { NewsQuerySchema, SecurityNewsQuerySchema } from "../validators/querySch
 
 export const newsRoutes = Router();
 newsRoutes.get("/news", validateQuery(NewsQuerySchema), asyncHandler(newsController.listRecent));
+newsRoutes.get("/news/item/:id", asyncHandler(newsController.getById));
 newsRoutes.get("/news/:symbol", validateQuery(SecurityNewsQuerySchema), asyncHandler(newsController.getForSymbol));

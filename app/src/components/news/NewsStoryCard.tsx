@@ -2,10 +2,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatTimestamp } from "@/lib/formatTimestamp";
 import type { NewsItem } from "@/api/types";
+import type { Quote } from "@/api/types";
 
-export function NewsStoryCard({ item, onOpen }: { item: NewsItem; onOpen: () => void }) {
+interface Props {
+  item: NewsItem;
+  onOpen: () => void;
+  quotes?: Record<string, Quote>;
+  onSymbolOpen?: (symbol: string) => void;
+}
+
+export function NewsStoryCard({ item, onOpen, quotes = {}, onSymbolOpen }: Props) {
   return (
-    <button type="button" data-small-target onClick={onOpen} className="block w-full text-left">
+    <div role="button" tabIndex={0} data-small-target onClick={onOpen} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onOpen(); }} className="block w-full text-left">
       <Card className="soft-card cursor-pointer overflow-hidden transition-opacity active:opacity-70">
         {item.imageUrl && <img src={item.imageUrl} alt="" className="h-36 w-full object-cover" />}
         <CardContent className="p-3">
@@ -17,11 +25,19 @@ export function NewsStoryCard({ item, onOpen }: { item: NewsItem; onOpen: () => 
           {item.excerpt && <p className="mb-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">{item.excerpt}</p>}
           {item.symbols.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
-              {item.symbols.slice(0, 4).map((symbol) => <Badge key={symbol} variant="outline" className="rounded-full px-1.5 py-0 text-[9px]">${symbol}</Badge>)}
+              {item.symbols.slice(0, 3).map((symbol) => {
+                const quote = quotes[symbol.toUpperCase()];
+                return (
+                  <button type="button" key={symbol} onClick={(event) => { event.stopPropagation(); onSymbolOpen?.(symbol); }} className="flex items-center gap-1 rounded-lg border border-border/70 bg-background/70 px-2 py-1 text-[10px] font-semibold">
+                    <span>${symbol}</span>
+                    {quote && <><span className="tabular-nums">KES {quote.lastPrice.toFixed(2)}</span><span className={quote.changePercent >= 0 ? "text-bull" : "text-bear"}>{quote.changePercent >= 0 ? "+" : ""}{quote.changePercent.toFixed(2)}%</span></>}
+                  </button>
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
-    </button>
+    </div>
   );
 }

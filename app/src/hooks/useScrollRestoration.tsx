@@ -9,8 +9,6 @@ import { useLocation, useNavigationType } from "react-router-dom";
  */
 const scrollPositions = new Map<string, number>();
 
-const RESTORE_ATTEMPTS = 30; // ~500ms at 60fps — enough for most async page content to settle in.
-
 /**
  * Restores scroll position when navigating back (or forward) to a page you'd
  * already scrolled down on, and starts fresh at the top for any new page you
@@ -53,45 +51,28 @@ export function useScrollRestoration() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [location.key]);
 
-  // Apply the right scroll position for the page we've just landed on.
-  useEffect(() => {
-    const key = location.key;
-    let cancelled = false;
-
-    if (navigationType === "POP" && scrollPositions.has(key)) {
-      const target = scrollPositions.get(key)!;
-      const root = document.documentElement;
-      const previousBehavior = root.style.scrollBehavior;
-      const previousVisibility = document.body.style.visibility;
-      root.style.scrollBehavior = "auto";
-      // Keep async-growing pages out of sight until their saved offset is
-      // reachable. The user sees the restored frame, never the retries.
-      document.body.style.visibility = "hidden";
-      let attempts = 0;
-      const reveal = () => {
-        root.style.scrollBehavior = previousBehavior;
-        document.body.style.visibility = previousVisibility;
-      };
-      const tryRestore = () => {
-        if (cancelled) { reveal(); return; }
-        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-        attempts += 1;
-        if (maxScroll < target - 2 && attempts < RESTORE_ATTEMPTS) {
-          requestAnimationFrame(tryRestore);
-          return;
-        }
-        window.scrollTo({ top: Math.min(target, Math.max(0, maxScroll)), behavior: "auto" });
-        reveal();
-      };
-      requestAnimationFrame(tryRestore);
-    } else {
-      // A genuinely new page (PUSH) or an in-place update (REPLACE) — start at the top,
-      // same as opening any page fresh.
-      window.scrollTo(0, 0);
-    }
+  // Restore before paint. Re-apply while async content grows, but never hide
+  // the page or use smooth scrolling: back navigation should feel instant.
+  useLayoutEffect(() => {
+    const target = navigationType === "POP" ? (scrollPositions.get(location.key) ?? 0) : 0;
+    const root = document.documentElement;
+    const previousBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    const restore = () => window.scrollTo({ top: target, behavior: "auto" });
+    restore();
+    const frame = requestAnimationFrame(restore);
+    const observer = new ResizeObserver(restore);
+    observer.observe(document.body);
+    const stop = window.setTimeout(() => {
+      observer.disconnect();
+      root.style.scrollBehavior = previousBehavior;
+    }, 750);
 
     return () => {
-      cancelled = true;
+      cancelAnimationFrame(frame);
+      clearTimeout(stop);
+      observer.disconnect();
+      root.style.scrollBehavior = previousBehavior;
     };
   }, [location.key, navigationType]);
 }

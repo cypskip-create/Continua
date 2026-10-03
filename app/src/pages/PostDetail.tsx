@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import { ArrowLeft, Search, MoreHorizontal, Send, X, Bookmark, BookmarkCheck, Share2, MessageSquare, Verified, SlidersHorizontal, ChevronDown, Trash2, Link2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -154,7 +155,7 @@ export default function PostDetail() {
     return (
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-40 flex items-center gap-3 px-3 py-2.5 border-b border-border/60 bg-background/95 backdrop-blur-xl">
-          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigateBack(navigate, "/traders-hub")}><ArrowLeft className="h-5 w-5" /></Button>
           <h1 className="text-sm font-bold">Post</h1>
         </header>
         <p className="p-10 text-center text-sm text-muted-foreground">This post is no longer available.</p>
@@ -172,7 +173,7 @@ export default function PostDetail() {
     <div className="min-h-screen bg-background flex flex-col pb-[76px]">
       {/* Detail header — back, author identity, search, overflow */}
       <header className="sticky top-0 z-40 flex items-center gap-2 px-2 py-2 border-b border-border/60 bg-background/95 backdrop-blur-xl">
-        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(-1)} aria-label="Back">
+        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigateBack(navigate, "/traders-hub")} aria-label="Back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <button className="flex items-center gap-2 min-w-0 flex-1" onClick={() => navigate(`/profile/${post.user_id}`)}>

@@ -1,10 +1,12 @@
 import { query, withTransaction } from "../db.js";
 import type { NewsItem } from "../../types/market.js";
+import { cleanArticleContent, dedupeNewsItems, isFinancialNews } from "../../domain/newsQuality.js";
 
 interface NewsItemRow {
   id: string;
   headline: string;
   excerpt: string | null;
+  content?: string | null;
   articleUrl: string;
   source: string;
   sourceName: string;
@@ -24,6 +26,7 @@ function mapRow(row: NewsItemRow): NewsItem {
     id: row.id,
     headline: row.headline,
     excerpt: row.excerpt,
+    content: cleanArticleContent(row.headline, row.content),
     articleUrl: row.articleUrl,
     source: row.source,
     sourceName: row.sourceName,
@@ -64,11 +67,8 @@ const TRUSTED_NEWS_FILTER = `
   AND lower(n.article_url) NOT LIKE '%news.ycombinator.com%'
   AND lower(n.article_url) NOT LIKE '%hnrss.org%'
   AND lower(n.source) NOT IN ('test-rss', 'real-rss')
-  AND (
-    EXISTS (SELECT 1 FROM market.news_item_securities linked WHERE linked.news_item_id = n.id)
-    OR lower(coalesce(n.headline, '') || ' ' || coalesce(n.excerpt, '')) ~
-      '(market|stock|share|bond|treasury|business|company|bank|insurance|invest|fund|finance|financial|econom|inflation|interest rate|monetary|currency|shilling|forex|exchange rate|gdp|budget|tax|debt|real estate|property|mortgage|rent|housing|construction|commodity|oil|energy|trade|earnings|profit|revenue|dividend|ipo|merger|acquisition)'
-  )
+  AND lower(coalesce(n.headline, '') || ' ' || coalesce(n.excerpt, '')) !~
+    '(road accident|car crash|bus crash|crash leaves|pilgrims? dead|murder|football|celebrity|entertainment|church service|obituary)'
 `;
 
 export const newsRepository = {
@@ -137,25 +137,38 @@ export const newsRepository = {
   },
 
   async listRecent(limit = 50, category?: NewsItem["category"]): Promise<NewsItem[]> {
+    const candidateLimit = Math.min(Math.max(limit * 4, 80), 400);
     const res = category
       ? await query<NewsItemRow>(
           `${SELECT_WITH_SECURITIES} WHERE ${TRUSTED_NEWS_FILTER} AND n.category = $2 GROUP BY n.id ORDER BY n.published_at DESC NULLS LAST, n.created_at DESC LIMIT $1`,
-          [limit, category],
+          [candidateLimit, category],
         )
       : await query<NewsItemRow>(
           `${SELECT_WITH_SECURITIES} WHERE ${TRUSTED_NEWS_FILTER} GROUP BY n.id ORDER BY n.published_at DESC NULLS LAST, n.created_at DESC LIMIT $1`,
-          [limit],
+          [candidateLimit],
         );
-    return res.rows.map(mapRow);
+    return dedupeNewsItems(res.rows.map(mapRow).filter((item) => isFinancialNews(item.headline, item.excerpt ?? "", item.securityIds.length > 0))).slice(0, limit);
   },
 
   async listBySecurity(securityId: string, limit = 50): Promise<NewsItem[]> {
+    const candidateLimit = Math.min(Math.max(limit * 4, 80), 400);
     const res = await query<NewsItemRow>(
       `${SELECT_WITH_SECURITIES} WHERE ${TRUSTED_NEWS_FILTER} AND n.id IN (SELECT news_item_id FROM market.news_item_securities WHERE security_id = $1)
        GROUP BY n.id ORDER BY n.published_at DESC NULLS LAST, n.created_at DESC LIMIT $2`,
-      [securityId, limit],
+      [securityId, candidateLimit],
     );
-    return res.rows.map(mapRow);
+    return dedupeNewsItems(res.rows.map(mapRow).filter((item) => isFinancialNews(item.headline, item.excerpt ?? "", item.securityIds.length > 0))).slice(0, limit);
+  },
+
+  async getById(id: string): Promise<NewsItem | null> {
+    const res = await query<NewsItemRow>(
+      `${SELECT_WITH_SECURITIES.replace("n.excerpt,", "n.excerpt, e.text as content,")}
+       LEFT JOIN scraping.extractions e ON e.id = n.scraped_extraction_id
+       WHERE ${TRUSTED_NEWS_FILTER} AND n.id = $1 GROUP BY n.id, e.text LIMIT 1`,
+      [id],
+    );
+    const item = res.rows[0] ? mapRow(res.rows[0]) : null;
+    return item && isFinancialNews(item.headline, item.excerpt ?? "", item.securityIds.length > 0) ? item : null;
   },
 
   async existsForExtraction(scrapedExtractionId: number): Promise<boolean> {

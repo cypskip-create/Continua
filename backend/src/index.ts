@@ -21,7 +21,15 @@ async function main() {
 
   startWebSocketServer(httpServer);
 
-  const stopWorkers = await startAllWorkers();
+  let stopWorkers = () => {};
+  try {
+    stopWorkers = await startAllWorkers();
+  } catch (err) {
+    // A transient upstream/database failure must not take the health endpoint
+    // down after the HTTP server has successfully bound. Render can keep the
+    // API healthy while the next deploy/restart retries background workers.
+    logger.error({ err }, "Background workers failed to start; API running in degraded mode");
+  }
 
   const shutdown = async (signal: string) => {
     logger.info({ signal }, "Shutting down…");

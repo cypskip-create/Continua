@@ -230,6 +230,7 @@ export interface ComputedRatios {
   securityId: string;
   asOf: string;
   pe?: number;
+  ps?: number;
   pb?: number;
   evEbitda?: number;
   roe?: number;
@@ -328,6 +329,8 @@ export interface NewsItem {
   id: string;
   headline: string;
   excerpt: string | null;
+  /** Article text retained by the extraction pipeline; returned only by the detail endpoint. */
+  content?: string | null;
   articleUrl: string;
   source: string;
   sourceName: string;

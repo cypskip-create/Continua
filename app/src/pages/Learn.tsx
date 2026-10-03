@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { TopBar } from "@/components/shared/TopBar";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
@@ -205,7 +206,7 @@ export default function Learn() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(-1)}
+          onClick={() => navigateBack(navigate, "/")}
           className="mb-2"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

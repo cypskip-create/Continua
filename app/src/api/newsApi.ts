@@ -11,6 +11,11 @@ export const newsApi = {
     });
   },
 
+  /** Detail payload used by the in-app reader, including extracted text. */
+  getById(id: string) {
+    return continuaFetch<NewsItem>(`/news/item/${encodeURIComponent(id)}`);
+  },
+
   /** News mentioning one specific security — GET /news/:symbol. */
   getForSymbol(symbol: string, opts: { exchange?: string; limit?: number } = {}) {
     const { exchange = "NSE", limit = 20 } = opts;

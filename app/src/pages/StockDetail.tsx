@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Heart, TrendingUp, TrendingDown, AlarmClock, GitCompare, MessageSquare, Plus, Pencil, Maximize2, Minimize2, CandlestickChart, LineChart as LineChartIcon, AreaChart as AreaChartIcon, ChevronRight, ChevronDown, FileText, Users2, Briefcase, Download, Building2, Eye, Bell, SlidersHorizontal, Crosshair, LayoutGrid, Expand, Shrink, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -527,7 +528,7 @@ export default function StockDetail() {
       <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-3 py-2">
           <div className="flex items-center gap-2 min-w-0">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="tap-scale h-9 w-9 shrink-0">
+            <Button type="button" aria-label="Back to markets" variant="ghost" size="icon" onClick={() => navigateBack(navigate, "/markets")} className="tap-scale h-9 w-9 shrink-0 pointer-events-auto">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-3 min-w-0">

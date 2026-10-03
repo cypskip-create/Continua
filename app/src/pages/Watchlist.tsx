@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useToast } from "@/hooks/use-toast";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
@@ -145,7 +146,7 @@ export default function Watchlist() {
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3 min-w-0">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-9 w-9 rounded-full tap-scale shrink-0">
+            <Button variant="ghost" size="icon" onClick={() => navigateBack(navigate, "/markets")} className="h-9 w-9 rounded-full tap-scale shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="min-w-0">

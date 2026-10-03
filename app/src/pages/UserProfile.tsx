@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import { ArrowLeft, Calendar, UserPlus, MessageCircle, MoreHorizontal, Lock, Verified, Heart, Repeat2, FileText, Camera, Loader2, Share, TrendingUp, TrendingDown, Award, Target, PieChart, ChevronRight, Image as ImageIcon, MapPin, Pin, Bookmark, VolumeX, UserX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -389,7 +390,7 @@ export default function UserProfile() {
       <div className="min-h-screen bg-background pb-20">
         <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border">
           <div className="flex items-center gap-3 px-4 py-3">
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => navigateBack(navigate, "/traders-hub")}><ArrowLeft className="h-5 w-5" /></Button>
             <h1 className="font-bold">User Not Found</h1>
           </div>
         </header>
@@ -414,7 +415,7 @@ export default function UserProfile() {
 
         {/* Top controls overlay */}
         <div className="absolute top-2 left-2 right-2 flex items-center justify-between z-10">
-          <Button variant="secondary" size="icon" className="h-9 w-9 rounded-full bg-background/40 hover:bg-background/60 backdrop-blur-sm text-foreground" onClick={() => navigate(-1)}>
+          <Button variant="secondary" size="icon" className="h-9 w-9 rounded-full bg-background/40 hover:bg-background/60 backdrop-blur-sm text-foreground" onClick={() => navigateBack(navigate, "/traders-hub")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-1.5">

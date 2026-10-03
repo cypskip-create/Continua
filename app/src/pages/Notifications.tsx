@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications, AppNotification } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
@@ -144,7 +145,7 @@ export default function Notifications() {
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-9 w-9 rounded-full">
+            <Button variant="ghost" size="icon" onClick={() => navigateBack(navigate, "/")} className="h-9 w-9 rounded-full">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-base font-bold flex items-center gap-2">

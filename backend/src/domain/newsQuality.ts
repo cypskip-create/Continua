@@ -1,0 +1,62 @@
+import type { NewsItem } from "../types/market.js";
+
+const FINANCE_TERMS = /\b(stock|shares?|securit(?:y|ies)|nse|bond|treasur(?:y|ies)|bank(?:ing)?|loan|credit|insurance|invest(?:ment|or|ing)?|fund|financ(?:e|ial)|econom(?:y|ic)|inflation|interest rate|monetary|currency|shilling|forex|exchange rate|gdp|budget|tax|debt|real estate|propert(?:y|ies)|mortgage|rent|housing|construction|commodit(?:y|ies)|oil|fuel price|energy tariff|trade|earnings|profit|revenue|dividend|ipo|merger|acquisition|telecom|m-pesa|mobile money|pension|sacco|capital market)\b/i;
+const NON_FINANCIAL_TERMS = /\b(road accident|car crash|bus crash|crash leaves|pilgrims? dead|murder|football|celebrity|entertainment|church service|obituary)\b/i;
+
+export function isFinancialNews(headline: string, excerpt = "", hasLinkedSecurity = false): boolean {
+  const text = `${headline} ${excerpt}`;
+  return !NON_FINANCIAL_TERMS.test(text) && (hasLinkedSecurity || FINANCE_TERMS.test(text));
+}
+
+export function normalizeNewsHeadline(value: string): string {
+  return value.normalize("NFKD").toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+export function canonicalNewsUrl(value: string): string {
+  try {
+    const url = new URL(value);
+    url.hash = "";
+    url.search = "";
+    return `${url.hostname.replace(/^www\./, "")}${url.pathname.replace(/\/$/, "")}`.toLowerCase();
+  } catch {
+    return value.split(/[?#]/)[0]!.replace(/\/$/, "").toLowerCase();
+  }
+}
+
+const MENU_TERMS = /\b(home|factcheck|person of interest|election watch|sports|throw back|word of the day|brand voice|careers|leadership|lifestyle|inspiration|self-help)\b/gi;
+
+export function cleanArticleContent(headline: string, value: string | null | undefined): string | null {
+  if (!value) return null;
+  const normalizedHeadline = normalizeNewsHeadline(headline);
+  const lines = value.split(/\n+/).map((line) => line.replace(/\s+/g, " ").trim()).filter((line) => {
+    if (line.length < 20 || normalizeNewsHeadline(line) === normalizedHeadline) return false;
+    const menuMatches = line.match(MENU_TERMS)?.length ?? 0;
+    return menuMatches < 4;
+  });
+  const unique = lines.filter((line, index) => lines.findIndex((candidate) => normalizeNewsHeadline(candidate) === normalizeNewsHeadline(line)) === index);
+  return unique.join("\n\n") || null;
+}
+
+/** Merge syndication/crawl duplicates and preserve all affected tickers. */
+export function dedupeNewsItems(items: NewsItem[]): NewsItem[] {
+  const byKey = new Map<string, NewsItem>();
+  for (const item of items) {
+    const headlineKey = normalizeNewsHeadline(item.headline);
+    const urlKey = canonicalNewsUrl(item.articleUrl);
+    const existingKey = [...byKey.entries()].find(([, candidate]) =>
+      normalizeNewsHeadline(candidate.headline) === headlineKey || canonicalNewsUrl(candidate.articleUrl) === urlKey,
+    )?.[0];
+    if (!existingKey) {
+      byKey.set(`${headlineKey}|${urlKey}`, item);
+      continue;
+    }
+    const previous = byKey.get(existingKey)!;
+    const prefer = (item.content?.length ?? item.excerpt?.length ?? 0) > (previous.content?.length ?? previous.excerpt?.length ?? 0) ? item : previous;
+    byKey.set(existingKey, {
+      ...prefer,
+      symbols: [...new Set([...previous.symbols, ...item.symbols])],
+      securityIds: [...new Set([...previous.securityIds, ...item.securityIds])],
+    });
+  }
+  return [...byKey.values()];
+}

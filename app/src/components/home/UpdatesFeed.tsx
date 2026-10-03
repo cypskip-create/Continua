@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { NewsReaderSheet } from "@/components/news/NewsReaderSheet";
 import { NewsStoryCard } from "@/components/news/NewsStoryCard";
 import type { NewsItem } from "@/api/types";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 
 /**
  * The home page's "Updates" feed — merges three real data sources into
@@ -67,6 +68,8 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
   const { news } = useFollowedNews(followedSymbols, limit);
   const { dividends } = useUpcomingDividends();
   const { earnings } = useRecentEarnings();
+  const newsSymbols = useMemo(() => [...new Set(news.flatMap((item) => item.symbols))], [news]);
+  const { quotes: newsQuotes } = useLiveQuotes(newsSymbols);
 
   const events = useMemo<UpdateEvent[]>(() => {
     const followedSet = new Set(followedSymbols.map((s) => s.toUpperCase()));
@@ -181,7 +184,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
       <div className="px-4 space-y-2">
         {filtered.map((e) => {
           if (e.type === "news" && e.newsItem) {
-            return <NewsStoryCard key={e.id} item={e.newsItem} onOpen={() => setReaderItem(e.newsItem!)} />;
+            return <NewsStoryCard key={e.id} item={e.newsItem} quotes={newsQuotes} onSymbolOpen={(symbol) => navigate(`/stock/${symbol}`)} onOpen={() => setReaderItem(e.newsItem!)} />;
           }
           const style = TYPE_STYLES[e.type];
           const Icon = style.icon;

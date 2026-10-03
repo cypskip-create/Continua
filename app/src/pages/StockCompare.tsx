@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, GitCompare, Plus, X, TrendingUp, TrendingDown, Search, BarChart3, DollarSign, Percent, Scale, ChevronRight, Gauge } from "lucide-react";
@@ -147,7 +148,7 @@ export default function StockCompare() {
       <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="tap-scale h-9 w-9">
+            <Button variant="ghost" size="icon" onClick={() => navigateBack(navigate, "/markets")} className="tap-scale h-9 w-9">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>

@@ -98,7 +98,7 @@ export function CommunityTab({ symbol }: Props) {
       ) : (
         <div className="space-y-2">
           {relevant.map(p => (
-            <Card key={p.id} className="soft-card cursor-pointer active:scale-[0.99] transition-transform" onClick={() => navigate(`/traders-hub?post=${p.id}`)}>
+            <Card key={p.id} className="soft-card cursor-pointer active:scale-[0.99] transition-transform" onClick={() => navigate(`/traders-hub/post/${p.id}`)}>
               <CardContent className="p-3">
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <p className="text-xs font-bold truncate">

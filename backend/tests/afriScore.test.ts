@@ -11,6 +11,7 @@ describe("ratiosEngine", () => {
       operatingIncome: 15_000_000,
     });
     expect(ratios.pe).toBeCloseTo(10, 1);       // price 100 / eps 10
+    expect(ratios.ps).toBeCloseTo(2, 1);        // 100M market cap / 50M revenue
     expect(ratios.roe).toBeCloseTo(0.25, 2);     // 10M / 40M
     expect(ratios.netMargin).toBeCloseTo(0.2, 2); // 10M / 50M
     expect(ratios.currentRatio).toBeCloseTo(2, 1);

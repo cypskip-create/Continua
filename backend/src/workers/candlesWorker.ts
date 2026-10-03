@@ -12,7 +12,7 @@ import { isTradingDay } from "../config/tradingCalendar.js";
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 
-const BACKFILL_DAYS = 1_825; // five years for long-range charts and cycle analysis
+const BACKFILL_DAYS = 3_600; // deepest range supported by the NSE adapter (~10 years)
 const TOPUP_DAYS = 5;        // idempotent upsert, so a small overlapping window self-heals gaps
 
 export async function runCandlesBackfillOnce(): Promise<void> {

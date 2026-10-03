@@ -201,14 +201,13 @@ export interface CompanyAnnouncement {
  *  best-effort keyword match against article text and can be empty for
  *  genuine market/economy-wide stories, not just a missed match — see
  *  `needsReview` for whether the bridge itself flagged this one as
- *  uncertain. There is no in-app "full article" body: only an excerpt is
- *  stored, and the full story lives at `articleUrl` on the original
- *  publisher's site (reproducing full articles isn't something Continua
- *  is licensed to do). */
+ *  uncertain. List endpoints omit `content`; the detail endpoint includes
+ *  extracted body text when the source permits it. */
 export interface NewsItem {
   id: string;
   headline: string;
   excerpt: string | null;
+  content?: string | null;
   articleUrl: string;
   source: string;
   sourceName: string;
@@ -289,6 +288,7 @@ export interface ComputedRatios {
   securityId: string;
   asOf: string;
   pe?: number | null;
+  ps?: number | null;
   pb?: number | null;
   evEbitda?: number | null;
   roe?: number | null;

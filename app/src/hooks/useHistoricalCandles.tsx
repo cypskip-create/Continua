@@ -34,7 +34,7 @@ const TIMEFRAME_DAYS: Record<string, number | undefined> = {
   "3M": 90,
   "YTD": undefined, // computed specially, see below
   "1Y": 365,
-  "ALL": 1_825, // matches the backend's five-year backfill window
+  "ALL": 3_600, // deepest verified range supported by the NSE adapter
 };
 
 function formatDateLabel(date: Date, timeframe: string): string {

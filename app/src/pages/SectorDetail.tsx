@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import { ArrowLeft, TrendingUp, TrendingDown, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -60,7 +61,7 @@ export default function SectorDetail() {
     <div className="page-canvas min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center gap-2 px-3 py-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-9 w-9" data-small-target>
+          <Button variant="ghost" size="icon" onClick={() => navigateBack(navigate, "/markets")} className="h-9 w-9" data-small-target>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="min-w-0">

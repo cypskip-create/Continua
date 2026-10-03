@@ -49,6 +49,7 @@ export function computeRatios(i: RatioInputs): Omit<ComputedRatios, "securityId"
 
   return {
     pe: round4(safeDiv(i.price, eps)),
+    ps: round4(safeDiv(marketCap, i.revenue)),
     pb: round4(safeDiv(i.price, bookValuePerShare)),
     evEbitda: round4(safeDiv(enterpriseValue, i.ebitda ?? undefined)),
     roe: round4(safeDiv(i.netIncome, i.totalEquity)),
