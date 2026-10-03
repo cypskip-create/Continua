@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
 import { computePortfolioStats } from "@/lib/stockPrices";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { ReturnsBreakdown } from "@/components/portfolio/ReturnsBreakdown";
 import { ReturnsContributors } from "@/components/portfolio/ReturnsContributors";
 import { PortfolioValuations } from "@/components/portfolio/PortfolioValuations";
@@ -49,6 +49,16 @@ import { fx } from "@/lib/chartPalette";
 const ALLOC_COLORS = [fx.revenue, fx.netIncome, fx.assets, fx.foreign, fx.liabilities, fx.operatingIncome, fx.eps, fx.retail];
 
 type SortKey = "value" | "gain" | "name";
+type PortfolioTab = "holdings" | "returns" | "updates" | "valuations" | "dividends" | "analysis";
+
+const PORTFOLIO_TABS: { id: PortfolioTab; label: string }[] = [
+  { id: "holdings", label: "Holdings" },
+  { id: "returns", label: "Returns" },
+  { id: "updates", label: "Updates" },
+  { id: "valuations", label: "Valuations" },
+  { id: "dividends", label: "Dividends" },
+  { id: "analysis", label: "Analysis" },
+];
 
 
 export default function TrackInvestments() {
@@ -67,6 +77,7 @@ export default function TrackInvestments() {
   const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
   const [privacyPanelOpen, setPrivacyPanelOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<PortfolioTab>("holdings");
 
   // Live Continua Data Layer quotes — the SAME quotes HoldingsList (rendered further
   // down) uses internally, so this page's total balance / allocation chart can't disagree
@@ -293,7 +304,7 @@ export default function TrackInvestments() {
         />
 
         <PortfolioRisksRewards
-          holdings={holdings.map(h => ({ symbol: h.symbol, name: (h as any).name }))}
+          holdings={holdings.map(h => ({ symbol: h.symbol, name: h.name }))}
           research={research}
           valuations={valuations}
           benchmark={marketBenchmark}
@@ -303,16 +314,26 @@ export default function TrackInvestments() {
         <PortfolioInsights holdings={portfolio} prices={Object.fromEntries(portfolio.map(h => [h.symbol, getLivePrice(h.symbol)]).filter(([, p]) => p != null) as [string, number][])} />
 
         {/* ── HOLDINGS / RETURNS ── */}
-        <Tabs defaultValue="holdings">
-          <div className="sticky top-[60px] z-30 -mx-4 px-4 bg-background/92 backdrop-blur-xl">
-            <TabsList className="w-full flex overflow-x-auto scrollbar-hide gap-5 h-10 bg-transparent p-0 justify-start border-b border-border rounded-none">
-              <TabsTrigger value="holdings" className="shrink-0 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 text-[12.5px] font-semibold text-muted-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors">Holdings</TabsTrigger>
-              <TabsTrigger value="returns" className="shrink-0 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 text-[12.5px] font-semibold text-muted-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors">Returns</TabsTrigger>
-              <TabsTrigger value="updates" className="shrink-0 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 text-[12.5px] font-semibold text-muted-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors">Updates</TabsTrigger>
-              <TabsTrigger value="valuations" className="shrink-0 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 text-[12.5px] font-semibold text-muted-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors">Valuations</TabsTrigger>
-              <TabsTrigger value="dividends" className="shrink-0 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 text-[12.5px] font-semibold text-muted-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors">Dividends</TabsTrigger>
-              <TabsTrigger value="analysis" className="shrink-0 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 text-[12.5px] font-semibold text-muted-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors">Analysis</TabsTrigger>
-            </TabsList>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as PortfolioTab)}>
+          {/* Keep this rail identical in geometry to Markets. Radix tab
+              triggers add active-state padding/shadow styles and focus
+              scrolling, which made this rail visibly jump between panels. */}
+          <div className="sticky top-[60px] z-30 -mx-4 bg-background/95 backdrop-blur-xl border-b border-border">
+            <div className="flex h-12 items-center overflow-x-auto scrollbar-hide px-4 gap-1 py-2">
+              {PORTFOLIO_TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  data-small-target
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`pill-tab h-8 shrink-0 whitespace-nowrap ${activeTab === tab.id ? "rounded-full bg-foreground text-background" : ""}`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <TabsContent value="updates" className="mt-4 space-y-4">
@@ -340,14 +361,14 @@ export default function TrackInvestments() {
             ) : (
               <>
                 <PortfolioScorecard
-                  holdings={holdings.map(h => ({ symbol: h.symbol, name: (h as any).name, weight: h.weight }))}
+                  holdings={holdings.map(h => ({ symbol: h.symbol, name: h.name, weight: h.weight }))}
                   research={research}
                   valuations={valuations}
                   benchmark={marketBenchmark}
                   dividendData={dividendData}
                 />
                 <KeyMetricsBenchmarks
-                  holdings={holdings.map(h => ({ symbol: h.symbol, name: (h as any).name, value: h.value, weight: h.weight, price: h.price, avgCost: h.avg_cost, shares: h.shares }))}
+                  holdings={holdings.map(h => ({ symbol: h.symbol, name: h.name, value: h.value, weight: h.weight, price: h.price, avgCost: h.avg_cost, shares: h.shares }))}
                   research={research}
                   valuations={valuations}
                   growth={growth}
@@ -356,7 +377,7 @@ export default function TrackInvestments() {
                   isLoading={researchLoading || benchmarkLoading}
                 />
                 <PortfolioDiversification
-                  holdings={holdings.map(h => ({ symbol: h.symbol, name: (h as any).name, sector: h.sector, value: h.value }))}
+                  holdings={holdings.map(h => ({ symbol: h.symbol, name: h.name, sector: h.sector, value: h.value }))}
                   showValues={showBalance}
                 />
                 <PortfolioCorrelation
@@ -385,25 +406,25 @@ export default function TrackInvestments() {
             ) : (
               <>
                 <DividendHistory
-                  holdings={holdings.map(h => ({ symbol: h.symbol, name: (h as any).name, shares: h.shares }))}
+                  holdings={holdings.map(h => ({ symbol: h.symbol, name: h.name, shares: h.shares }))}
                   dividendData={dividendData}
                   isPremium={isPremium}
                   showValues={showBalance}
                 />
                 <DividendContributors
-                  holdings={holdings.map(h => ({ symbol: h.symbol, name: (h as any).name, shares: h.shares }))}
+                  holdings={holdings.map(h => ({ symbol: h.symbol, name: h.name, shares: h.shares }))}
                   dividendData={dividendData}
                   isPremium={isPremium}
                   showValues={showBalance}
                 />
                 <DividendQuality
-                  holdings={holdings.map(h => ({ id: h.id, symbol: h.symbol, name: (h as any).name, shares: h.shares, price: h.price, avgCost: h.avg_cost }))}
+                  holdings={holdings.map(h => ({ id: h.id, symbol: h.symbol, name: h.name, shares: h.shares, price: h.price, avgCost: h.avg_cost }))}
                   dividendData={dividendData}
                   isPremium={isPremium}
                   showValues={showBalance}
                 />
                 <DividendForecast
-                  holdings={holdings.map(h => ({ symbol: h.symbol, name: (h as any).name, shares: h.shares }))}
+                  holdings={holdings.map(h => ({ symbol: h.symbol, name: h.name, shares: h.shares }))}
                   dividendData={dividendData}
                   isPremium={isPremium}
                   showValues={showBalance}
@@ -425,7 +446,7 @@ export default function TrackInvestments() {
               </div>
             ) : (
               <PortfolioValuations
-                holdings={holdings.map(h => ({ id: h.id, symbol: h.symbol, name: (h as any).name, shares: h.shares, price: h.price, value: h.value }))}
+                holdings={holdings.map(h => ({ id: h.id, symbol: h.symbol, name: h.name, shares: h.shares, price: h.price, value: h.value }))}
                 valuations={valuations}
                 isLoading={valuationsLoading}
                 isPremium={isPremium}
@@ -450,7 +471,7 @@ export default function TrackInvestments() {
                   showValues={showBalance}
                 />
                 <ReturnsContributors
-                  holdings={holdings.map(h => ({ symbol: h.symbol, name: (h as any).name, amount: h.gain, gainPct: h.gainPct }))}
+                  holdings={holdings.map(h => ({ symbol: h.symbol, name: h.name, amount: h.gain, gainPct: h.gainPct }))}
                   showValues={showBalance}
                 />
               </>
@@ -652,7 +673,7 @@ export default function TrackInvestments() {
         <SharePortfolioDialog
           open={shareDialogOpen}
           onOpenChange={setShareDialogOpen}
-          holdings={holdings.map(h => ({ symbol: h.symbol, name: (h as any).name || h.symbol, shares: h.shares, currentPrice: h.price, avgCost: h.avg_cost, dayChangePct: h.dayChangePct, gainPct: h.gainPct }))}
+          holdings={holdings.map(h => ({ symbol: h.symbol, name: h.name || h.symbol, shares: h.shares, currentPrice: h.price, avgCost: h.avg_cost, dayChangePct: h.dayChangePct, gainPct: h.gainPct }))}
           totalValue={stats.totalValue}
           totalGain={stats.totalGain}
           gainPercent={stats.gainPct}

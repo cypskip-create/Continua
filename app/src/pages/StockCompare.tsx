@@ -1,13 +1,15 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, GitCompare, Plus, X, TrendingUp, TrendingDown, Search, BarChart3, PieChart, Activity, DollarSign, Percent, Scale, ChevronRight } from "lucide-react";
+import { ArrowLeft, GitCompare, Plus, X, TrendingUp, TrendingDown, Search, BarChart3, DollarSign, Percent, Scale, ChevronRight, Gauge } from "lucide-react";
 import { SparklineChart } from "@/components/shared/SparklineChart";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { CANONICAL_SYMBOLS, STOCK_META, DIV_YIELD, getStockFundamentals, tickerSeed } from "@/lib/stockPrices";
+import { CANONICAL_SYMBOLS, STOCK_META } from "@/lib/stockPrices";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { useSparklines } from "@/hooks/useSparklines";
+import { useQuery } from "@tanstack/react-query";
+import { screenerApi } from "@/api/screenerApi";
 
 interface Stock {
   symbol: string;
@@ -15,14 +17,9 @@ interface Stock {
   price: number;
   change: number;
   marketCap: string;
-  pe: number;
-  eps: number;
-  dividendYield: number;
-  roe: number;
-  debtToEquity: number;
-  beta: number;
-  high52: number;
-  low52: number;
+  pe: number | null;
+  dividendYield: number | null;
+  afriScore: number | null;
   volume: string;
   sector: string;
 }
@@ -47,44 +44,23 @@ function parseMagnitude(s: string): number {
   return n * mult;
 }
 
-// Real fields: price/change/marketCap/volume — live quotes only (see
-// stocksDatabase below). P/E and beta are illustrative placeholders (no
-// real source yet — see getStockFundamentals). ROE and debt/equity aren't
-// tracked anywhere real either, so they're derived deterministically per
-// symbol (stable across reloads, compare-only, clearly a placeholder).
-function buildStaticStock(symbol: string, price: number): Omit<Stock, "symbol" | "name" | "sector" | "price" | "change" | "marketCap" | "volume"> {
-  const seed = tickerSeed(symbol);
-  const meta = getStockFundamentals(symbol);
-  return {
-    pe: meta.pe,
-    eps: meta.pe > 0 ? +(price / meta.pe).toFixed(2) : 0,
-    dividendYield: DIV_YIELD[symbol] ?? 0,
-    roe: +(10 + (seed % 20)).toFixed(1),
-    debtToEquity: +(0.3 + (seed % 70) / 100).toFixed(2),
-    beta: meta.beta,
-    high52: +(price * 1.12).toFixed(2),
-    low52: +(price * 0.85).toFixed(2),
-  };
-}
-
 const comparisonMetrics = [
   { key: "price", label: "Price", icon: DollarSign, format: (v: number) => `KES ${v.toFixed(2)}` },
   { key: "change", label: "Change %", icon: TrendingUp, format: (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`, colorize: true },
   { key: "marketCap", label: "Market Cap", icon: BarChart3, format: (v: string) => v },
   { key: "pe", label: "P/E Ratio", icon: Scale, format: (v: number) => v.toFixed(1) },
-  { key: "eps", label: "EPS", icon: Activity, format: (v: number) => `KES ${v.toFixed(2)}` },
   { key: "dividendYield", label: "Dividend Yield", icon: Percent, format: (v: number) => `${v.toFixed(1)}%` },
-  { key: "roe", label: "ROE", icon: PieChart, format: (v: number) => `${v.toFixed(1)}%` },
-  { key: "debtToEquity", label: "Debt/Equity", icon: Scale, format: (v: number) => v.toFixed(2) },
-  { key: "beta", label: "Beta", icon: Activity, format: (v: number) => v.toFixed(2) },
-  { key: "high52", label: "52W High", icon: TrendingUp, format: (v: number) => `KES ${v.toFixed(2)}` },
-  { key: "low52", label: "52W Low", icon: TrendingDown, format: (v: number) => `KES ${v.toFixed(2)}` },
+  { key: "afriScore", label: "AfriScore", icon: Gauge, format: (v: number) => `${v.toFixed(0)}/100` },
   { key: "volume", label: "Volume", icon: BarChart3, format: (v: string) => v },
 ];
 
 export default function StockCompare() {
   const navigate = useNavigate();
-  const [selectedSymbols, setSelectedSymbols] = useState<string[]>([]);
+  const [searchParams] = useSearchParams();
+  const [selectedSymbols, setSelectedSymbols] = useState<string[]>(() => {
+    const requested = searchParams.get("stock")?.toUpperCase();
+    return requested && CANONICAL_SYMBOLS.includes(requested) ? [requested] : [];
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
 
@@ -93,11 +69,21 @@ export default function StockCompare() {
   // stocksDatabase entirely (so it can't be searched/added while unpriced,
   // and the comparison table never has to show a fabricated cell).
   const { quotes } = useLiveQuotes(CANONICAL_SYMBOLS);
+  const screenerQuery = useQuery({
+    queryKey: ["continua", "compare", "screener"],
+    queryFn: () => screenerApi.run({ limit: 100 }),
+    staleTime: 60_000,
+  });
+  const researchBySymbol = useMemo(
+    () => new Map((screenerQuery.data ?? []).map((row) => [row.symbol.toUpperCase(), row])),
+    [screenerQuery.data]
+  );
   const stocksDatabase = useMemo(() => {
     return CANONICAL_SYMBOLS
       .map(symbol => {
         const q = quotes[symbol];
         if (!q) return null;
+        const research = researchBySymbol.get(symbol);
         const price = q.lastPrice;
         return {
           symbol,
@@ -107,11 +93,13 @@ export default function StockCompare() {
           change: +q.changePercent.toFixed(2),
           marketCap: q.marketCap != null ? formatMagnitude(q.marketCap) : "—",
           volume: formatMagnitude(q.volume),
-          ...buildStaticStock(symbol, price),
+          pe: research?.pe ?? null,
+          dividendYield: research?.dividendYield != null ? research.dividendYield * 100 : null,
+          afriScore: research?.afriScore ?? null,
         } satisfies Stock;
       })
       .filter((s): s is Stock => s !== null);
-  }, [quotes]);
+  }, [quotes, researchBySymbol]);
 
   const selectedStocks = useMemo(
     () => selectedSymbols.map(sym => stocksDatabase.find(s => s.symbol === sym)).filter((s): s is Stock => !!s),
@@ -143,12 +131,14 @@ export default function StockCompare() {
     if (selectedStocks.length < 2) return null;
     const values = selectedStocks.map(s => {
       const val = s[key as keyof Stock];
-      return typeof val === 'number' ? val : parseMagnitude(String(val));
-    });
-    const bestIdx = isHigherBetter
-      ? values.indexOf(Math.max(...values))
-      : values.indexOf(Math.min(...values));
-    return selectedStocks[bestIdx]?.symbol;
+      if (typeof val === "number" && Number.isFinite(val)) return { symbol: s.symbol, value: val };
+      if (typeof val === "string" && val !== "—") return { symbol: s.symbol, value: parseMagnitude(val) };
+      return null;
+    }).filter((entry): entry is { symbol: string; value: number } => entry !== null);
+    if (values.length < 2) return null;
+    return values.reduce((best, entry) => isHigherBetter
+      ? (entry.value > best.value ? entry : best)
+      : (entry.value < best.value ? entry : best)).symbol;
   };
 
   return (
@@ -285,7 +275,7 @@ export default function StockCompare() {
                 <tbody>
                   {comparisonMetrics.map((metric) => {
                     const Icon = metric.icon;
-                    const isHigherBetter = !['pe', 'debtToEquity', 'beta'].includes(metric.key);
+                    const isHigherBetter = metric.key !== 'pe';
                     const bestSymbol = getBestValue(metric.key, isHigherBetter);
 
                     return (
@@ -309,7 +299,7 @@ export default function StockCompare() {
                               key={stock.symbol}
                               className={`text-center py-2.5 px-3 tabular ${isBest ? 'font-bold text-primary' : ''} ${colorClass}`}
                             >
-                              {typeof value === 'number'
+                              {value == null ? "—" : typeof value === 'number'
                                 ? (metric.format as (v: number) => string)(value)
                                 : (metric.format as (v: string) => string)(value as string)}
                               {isBest && <span className="ml-1">★</span>}

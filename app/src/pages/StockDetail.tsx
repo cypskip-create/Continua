@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Heart, TrendingUp, TrendingDown, AlarmClock, GitCompare, MessageSquare, Plus, Pencil, Maximize2, Minimize2, CandlestickChart, LineChart as LineChartIcon, AreaChart as AreaChartIcon, ChevronRight, ChevronDown, FileText, Users2, Briefcase, Download, Building2, Eye, Bell, SlidersHorizontal, Crosshair, LayoutGrid, Expand, Shrink, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { StockPriceChart, generateMockData, type ChartType } from "@/components/stock/StockPriceChart";
+import { StockPriceChart, type ChartType } from "@/components/stock/StockPriceChart";
 import { ChartIndicatorsSheet } from "@/components/stock/ChartIndicatorsSheet";
 import { DrawingToolsSheet } from "@/components/stock/DrawingToolsSheet";
 import { type DrawToolId } from "@/lib/drawingTools";
@@ -89,6 +89,12 @@ const REPORT_JUMP_NAV: { id: string; label: string }[] = [
   { id: "rpt-9", label: "9. Company Info" },
   { id: "rpt-technicals", label: "Technicals" },
 ];
+
+const CHART_TIMEFRAMES = ["1D", "1W", "1M", "3M", "YTD", "1Y", "ALL"];
+const TIMEFRAME_LABELS: Record<string, string> = {
+  "1D": "Today", "1W": "Past week", "1M": "Past month", "3M": "Past 3 months",
+  "YTD": "Year to date", "1Y": "Past year", "ALL": "All time",
+};
 
 export default function StockDetail() {
   const { exchangeMeta } = useExchange();
@@ -235,11 +241,6 @@ export default function StockDetail() {
     }
   }, [fullscreen]);
 
-  const timeframes = ["1D", "1W", "1M", "3M", "YTD", "1Y", "ALL"];
-  const timeframeLabels: Record<string, string> = {
-    "1D": "Today", "1W": "Past week", "1M": "Past month", "3M": "Past 3 months",
-    "YTD": "Year to date", "1Y": "Past year", "ALL": "All time",
-  };
   // dividendYield from the Data Layer's ratios engine is a raw fraction
   // (e.g. 0.0493), not a percentage — see backend/src/services/research/ratiosEngine.ts.
   const divYield = liveResearch?.ratios.dividendYield != null
@@ -250,11 +251,12 @@ export default function StockDetail() {
   // series. This is the same series the chart itself renders, so the header numbers and
   // the chart's red/green always agree, and both update when the timeframe pill changes.
   // Real daily candles from the Data Layer when available (every timeframe except "1D" —
-  // see useHistoricalCandles for why); falls back to the existing generated series
-  // otherwise, so the chart never goes blank while data loads or for an uncovered symbol.
+  // see useHistoricalCandles for why). We deliberately do not draw a generated
+  // price path when the provider has no history; synthetic lines can be mistaken
+  // for market data and produce false returns or technical signals.
   const { points: liveCandlePoints } = useHistoricalCandles(upperSymbol || undefined, selectedTimeframe);
-  const mockPeriodData = useMemo(() => generateMockData(selectedTimeframe, symbol || "STK"), [selectedTimeframe, symbol]);
-  const periodData = liveCandlePoints.length > 1 ? liveCandlePoints : mockPeriodData;
+  const periodData = liveCandlePoints;
+  const hasHistoricalData = periodData.length > 1;
   const periodFirstPrice = periodData[0]?.price || stock.price;
   const periodLastPrice = periodData[periodData.length - 1]?.price || stock.price;
   // "1D" isn't backed by real intraday candles yet (see useHistoricalCandles),
@@ -267,6 +269,28 @@ export default function StockDetail() {
     ? Number(stock.changePercent)
     : (periodFirstPrice ? ((periodLastPrice - periodFirstPrice) / periodFirstPrice) * 100 : 0);
   const periodIsUp = selectedTimeframe === "1D" ? stock.isUp : periodLastPrice >= periodFirstPrice;
+
+  const exportHistoricalCsv = useCallback(() => {
+    if (!hasHistoricalData) {
+      toast({ title: "No history to export", description: `Historical OHLCV data is not available for ${upperSymbol} in ${TIMEFRAME_LABELS[selectedTimeframe]}.` });
+      return;
+    }
+    const escape = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
+    const rows = [
+      ["timestamp", "open", "high", "low", "close", "volume"],
+      ...periodData.map((point) => [new Date(point.timestamp).toISOString(), point.open, point.high, point.low, point.close, point.volume]),
+    ];
+    const csv = rows.map((row) => row.map(escape).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${upperSymbol}-${selectedTimeframe.toLowerCase()}-history.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    toast({ title: "CSV downloaded", description: `${periodData.length} verified market-history rows exported.` });
+  }, [hasHistoricalData, periodData, selectedTimeframe, toast, upperSymbol]);
 
   // While scrubbing the chart, show change vs. the start of the selected period instead;
   // otherwise show the full period's change. Percent is scaled onto the real quoted price
@@ -383,7 +407,6 @@ export default function StockDetail() {
     const els = REPORT_JUMP_NAV.map(({ id }) => document.getElementById(id)).filter((el): el is HTMLElement => !!el);
     els.forEach(el => observer.observe(el));
     return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Free-tier research quota — Simply Wall St-style 5 distinct stocks'
@@ -558,7 +581,7 @@ export default function StockDetail() {
             <>
               {displayIsUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
               <span>{priceChange >= 0 ? '+' : ''}KES {Math.abs(priceChange).toFixed(2)} · {priceChange >= 0 ? '+' : ''}{priceChangePercent}%</span>
-              <span className="text-muted-foreground font-normal text-xs ml-1">{hoverDate || timeframeLabels[selectedTimeframe] || selectedTimeframe}</span>
+              <span className="text-muted-foreground font-normal text-xs ml-1">{hoverDate || TIMEFRAME_LABELS[selectedTimeframe] || selectedTimeframe}</span>
             </>
           ) : (
             <Skeleton className="h-4 w-32" />
@@ -569,7 +592,15 @@ export default function StockDetail() {
       {/* CHART — embedded, no card wrapper */}
       <div className="relative">
         <div className="px-1">
-          <StockPriceChart symbol={symbol} timeframe={selectedTimeframe} chartType={chartType} onHoverPrice={handleChartHover} data={periodData} indicators={indicatorSettings} mainHeight={280} />
+          {hasHistoricalData ? (
+            <StockPriceChart symbol={symbol} timeframe={selectedTimeframe} chartType={chartType} onHoverPrice={handleChartHover} data={periodData} indicators={indicatorSettings} mainHeight={280} />
+          ) : (
+            <div className="h-[280px] flex flex-col items-center justify-center px-8 text-center">
+              <LineChartIcon className="h-7 w-7 text-muted-foreground/35 mb-2" />
+              <p className="text-xs font-semibold">Historical chart unavailable</p>
+              <p className="text-[10px] text-muted-foreground mt-1">No verified {TIMEFRAME_LABELS[selectedTimeframe].toLowerCase()} OHLCV series is available yet. The live quote above is still current.</p>
+            </div>
+          )}
         </div>
         {/* Chart tool row */}
         <div className="absolute top-2 right-3 z-10 flex items-center gap-1">
@@ -608,7 +639,7 @@ export default function StockDetail() {
 
       {/* Timeframe pills */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-border/50">
-        {timeframes.map(tf => (
+        {CHART_TIMEFRAMES.map(tf => (
           <button
             key={tf}
             data-small-target
@@ -676,22 +707,30 @@ export default function StockDetail() {
               is handled inside StockPriceChart itself, anchored to real
               price/time so it survives axis zoom and resizing. */}
           <div className="relative flex-1 min-h-0 px-1 py-2">
-            <StockPriceChart
-              symbol={symbol}
-              timeframe={selectedTimeframe}
-              chartType={chartType}
-              onHoverPrice={handleChartHover}
-              data={periodData}
-              indicators={indicatorSettings}
-              showPriceAxis
-              showGrid={fsShowGrid}
-              pinCrosshair={fsCrosshairPinned}
-              activeDrawTool={fsActiveDrawTool}
-              onDrawToolComplete={() => setFsActiveDrawTool(null)}
-              hideDrawings={fsDrawingsHidden}
-              clearDrawSignal={fsClearDrawSignal}
-              onDrawingsChange={setFsHasDrawings}
-            />
+            {hasHistoricalData ? (
+              <StockPriceChart
+                symbol={symbol}
+                timeframe={selectedTimeframe}
+                chartType={chartType}
+                onHoverPrice={handleChartHover}
+                data={periodData}
+                indicators={indicatorSettings}
+                showPriceAxis
+                showGrid={fsShowGrid}
+                pinCrosshair={fsCrosshairPinned}
+                activeDrawTool={fsActiveDrawTool}
+                onDrawToolComplete={() => setFsActiveDrawTool(null)}
+                hideDrawings={fsDrawingsHidden}
+                clearDrawSignal={fsClearDrawSignal}
+                onDrawingsChange={setFsHasDrawings}
+              />
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center px-8 text-center">
+                <LineChartIcon className="h-8 w-8 text-muted-foreground/35 mb-2" />
+                <p className="text-sm font-semibold">No verified history available</p>
+                <p className="text-xs text-muted-foreground mt-1">Choose another range or return after the next data sync.</p>
+              </div>
+            )}
           </div>
 
           {/* Bottom toolbar — period picker on the left (opens the same
@@ -706,7 +745,7 @@ export default function StockDetail() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" side="top" className="w-32 z-[110]">
-                {timeframes.map(tf => (
+                {CHART_TIMEFRAMES.map(tf => (
                   <DropdownMenuItem key={tf} onClick={() => setSelectedTimeframe(tf)} className="text-xs justify-between">
                     {tf}
                     {tf === selectedTimeframe && <span className="text-foreground">✓</span>}
@@ -835,7 +874,7 @@ export default function StockDetail() {
             symbol={symbol || ""} name={stock.name} sector={stock.sector}
             price={stock.price} changePercent={stock.changePercent}
             pe={stock.pe} eps={stock.eps} dividend={stock.dividend}
-            marketCap={stock.marketCap ?? "—"} scores={scores as any}
+            marketCap={stock.marketCap ?? "—"} scores={scores}
           />
 
           <div>
@@ -991,13 +1030,10 @@ export default function StockDetail() {
                   ),
                 }),
               },
-              {
-                icon: FileText, label: "Documents", detail: "Not connected yet",
-                action: () => toast({ title: "No filings source yet", description: "Annual reports & filings need a documents/filings endpoint on the Data Layer — none is defined in docs/api/API.md yet." }),
-              },
+              { icon: FileText, label: "Documents & Filings", detail: "NSE announcements and company reports", action: () => scrollTo("news") },
               { icon: Heart, label: "Watchlist", detail: isInWatchlist(symbol || "") ? "In your watchlist" : "Add to watchlist", action: handleWatchlistToggle },
               { icon: GitCompare, label: "Compare", detail: "Benchmark against peers", action: () => navigate(`/compare?stock=${symbol}`) },
-              { icon: Download, label: "Export", detail: "Download data as CSV", action: () => toast({ title: "Export coming soon" }) },
+              { icon: Download, label: "Export", detail: "Download verified OHLCV history as CSV", action: exportHistoricalCsv },
               { icon: Bell, label: "Alerts", detail: "Price & event alerts", action: () => setShowAlertsDialog(true) },
               { icon: MessageSquare, label: "Discuss on TradersHub", detail: `Start a $${symbol} thread`, action: () => navigate(`/traders-hub?compose=true&ticker=${symbol}`) },
               {

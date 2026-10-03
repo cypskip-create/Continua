@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
-import { Crown, MessageCircle, ChevronRight, Wallet, Eye, EyeOff, ArrowUpRight, ArrowDownRight, LogIn, TrendingUp, Search, Sparkles, Coins, Shield, BarChart3, Bell, Binoculars } from "lucide-react";
+import { Crown, ChevronRight, Eye, EyeOff, ArrowUpRight, ArrowDownRight, LogIn, TrendingUp, Search, Coins, Shield, BarChart3, Bell, Binoculars, GitCompare, Grid3X3 } from "lucide-react";
 import { QuickTradeWidget } from "@/components/home/QuickTradeWidget";
 import { CommandCenterSections } from "@/components/home/CommandCenterSections";
 import { TopBar } from "@/components/shared/TopBar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -108,6 +108,13 @@ export default function Home() {
     { label: "High Growth",     icon: TrendingUp, route: "/screener?filter=growth" },
     { label: "Strong Dividends",icon: Coins,      route: "/screener?filter=dividends" },
     { label: "Financial Health",icon: Shield,     route: "/screener?filter=health" },
+  ];
+
+  const researchTools = [
+    { label: "Stock Screener", detail: "Filter valuation, growth and yield", icon: Search, route: "/screener" },
+    { label: "Compare", detail: "Review companies side by side", icon: GitCompare, route: "/compare" },
+    { label: "Sector Heatmap", detail: "Scan sector strength at a glance", icon: Grid3X3, route: "/sector-heatmap" },
+    { label: "Price Alerts", detail: "Monitor prices and technical signals", icon: Bell, route: "/alerts" },
   ];
 
   // Followed symbols feed the Updates section below — whatever the
@@ -212,6 +219,27 @@ export default function Home() {
         {/* UPDATES — real scraped news, real upcoming dividends, and real
             reported earnings merged into one chronological feed. */}
         <UpdatesFeed followedSymbols={followedSymbols} />
+
+        {/* A compact research launchpad makes the analysis workflow visible
+            from Home instead of hiding capable tools several screens deep. */}
+        <div>
+          <Eyebrow action="All markets" onAction={() => navigate('/markets')}>Research Toolkit</Eyebrow>
+          <div className="grid grid-cols-2 gap-2">
+            {researchTools.map((tool) => (
+              <button
+                key={tool.label}
+                type="button"
+                data-small-target
+                onClick={() => navigate(tool.route)}
+                className="min-h-[88px] rounded-2xl border border-border/70 bg-card p-3 text-left hover:border-primary/40 hover:bg-primary/[0.03] active:scale-[0.98] transition-all"
+              >
+                <tool.icon className="h-4 w-4 text-primary mb-3" />
+                <p className="text-xs font-bold">{tool.label}</p>
+                <p className="text-[10px] leading-snug text-muted-foreground mt-0.5">{tool.detail}</p>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* OPPORTUNITIES — pill row */}
         <div>

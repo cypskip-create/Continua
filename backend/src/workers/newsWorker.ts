@@ -14,8 +14,17 @@ import { logger } from "../monitoring/logger.js";
 
 export async function runNewsBridgeOnce(): Promise<void> {
   try {
-    const summary = await runNewsBridge();
-    logger.info(summary, "News bridge sync complete");
+    const total = { processed: 0, withMentions: 0, withoutMentions: 0, failed: 0 };
+    const batchSize = 100;
+    for (let batch = 0; batch < 10; batch++) {
+      const summary = await runNewsBridge("NSE", batchSize);
+      total.processed += summary.processed;
+      total.withMentions += summary.withMentions;
+      total.withoutMentions += summary.withoutMentions;
+      total.failed += summary.failed;
+      if (summary.processed < batchSize || summary.failed === summary.processed) break;
+    }
+    logger.info(total, "News bridge sync complete");
   } catch (err) {
     logger.error({ err }, "News bridge sync failed");
   }

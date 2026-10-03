@@ -103,27 +103,6 @@ const FEATURED_LIST_ICONS: Record<string, typeof Star> = {
 // Theme change % is computed live inside the component (via themesWithChange
 // below), from real quotes — never a hardcoded number that could drift.
 
-// Volume/avgVolume/ratio below are still illustrative (no real avgVolume
-// source exists yet — flagged as a follow-up); price/change are attached
-// live inside the component instead of fabricated here.
-const volumeLeaderSymbols = [
-  { symbol: "KPLC", name: "Kenya Power", volume: "15.2M", avgVolume: "8.5M", ratio: 1.79 },
-  { symbol: "SCOM", name: "Safaricom", volume: "8.1M", avgVolume: "6.2M", ratio: 1.31 },
-  { symbol: "EQTY", name: "Equity Group", volume: "2.4M", avgVolume: "1.8M", ratio: 1.33 },
-  { symbol: "BRIT", name: "Britam", volume: "1.8M", avgVolume: "950K", ratio: 1.89 },
-];
-
-// Ratings/targets/firms below are illustrative placeholders, NOT real
-// analyst research — labelled "Illustrative" in the UI (see the Analyst
-// Ratings card) so they can never be mistaken for real coverage attributed
-// to these firms. `current` price is live, never fabricated.
-const analystRatingSymbols = [
-  { symbol: "SCOM", rating: "Buy", target: 40.50, firm: "Genghis Capital" },
-  { symbol: "EQTY", rating: "Strong Buy", target: 108.00, firm: "SBG Securities" },
-  { symbol: "KCB", rating: "Hold", target: 98.00, firm: "Dyer & Blair" },
-  { symbol: "SCBK", rating: "Sell", target: 320.00, firm: "Standard Investment" },
-];
-
 function StockRow({ stock, onTap }: { stock: { symbol: string; name: string; price: number; change: number }; onTap: () => void }) {
   return (
     <div onClick={onTap} className="flex items-center justify-between py-3 px-1 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30 active:scale-[0.99] transition-all duration-150">
@@ -204,11 +183,11 @@ export default function Markets() {
     return { ...theme, change, isLive: memberChanges.length > 0 };
   }), [liveQuotes]);
 
-  const volumeLeaders = volumeLeaderSymbols.map(v => ({ ...v, quote: liveQuotes[v.symbol] }));
-  const analystRatings = analystRatingSymbols.map(r => {
-    const current = liveQuotes[r.symbol]?.lastPrice ?? null;
-    return { ...r, current, upside: current != null ? +(((r.target - current) / current) * 100).toFixed(1) : null };
-  });
+  const volumeLeaders = Object.values(liveQuotes)
+    .filter((quote) => quote.volume > 0)
+    .sort((a, b) => b.volume - a.volume)
+    .slice(0, 5)
+    .map((quote) => ({ quote, name: STOCK_META[quote.symbol]?.name ?? quote.symbol }));
 
   const sortedDividendStocks = [...highDividendStocks].sort((a, b) => {
     if (divSortBy === "amount") return b.amount - a.amount;
@@ -407,36 +386,33 @@ export default function Markets() {
               </Card>
             </div>
 
-            {/* Volume Leaders */}
+            {/* Most traded — ranked only from current Data Layer volume. */}
             <div>
               <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
                 <Volume2 className="h-4 w-4 text-accent" />
-                Volume Leaders
+                Most Traded
               </h2>
               <Card className="soft-card overflow-hidden">
                 {volumeLeaders.map(v => (
-                  <div key={v.symbol} onClick={() => navigate(`/stock/${v.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30 transition-colors">
+                  <div key={v.quote.symbol} onClick={() => navigate(`/stock/${v.quote.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center text-xs font-bold text-accent shrink-0">
-                        {v.symbol.slice(0, 2)}
+                        {v.quote.symbol.slice(0, 2)}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold">{v.symbol}</p>
-                        <p className="text-xs text-muted-foreground">Vol: {v.volume}</p>
+                        <p className="text-sm font-semibold">{v.quote.symbol}</p>
+                        <p className="text-xs text-muted-foreground truncate max-w-40">{v.name}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold">{v.ratio.toFixed(1)}x</p>
-                      {v.quote ? (
-                        <p className={`text-xs font-semibold ${v.quote.changePercent >= 0 ? 'text-bull' : 'text-bear'}`}>
-                          {v.quote.changePercent >= 0 ? '+' : ''}{v.quote.changePercent.toFixed(1)}%
-                        </p>
-                      ) : (
-                        <Skeleton className="h-3.5 w-10 ml-auto" />
-                      )}
+                      <p className="text-sm font-bold tabular">{v.quote.volume.toLocaleString()}</p>
+                      <p className={`text-xs font-semibold ${v.quote.changePercent >= 0 ? 'text-bull' : 'text-bear'}`}>
+                        {v.quote.changePercent >= 0 ? '+' : ''}{v.quote.changePercent.toFixed(1)}%
+                      </p>
                     </div>
                   </div>
                 ))}
+                {volumeLeaders.length === 0 && <p className="p-4 text-xs text-muted-foreground text-center">Trading volume is not available yet.</p>}
               </Card>
             </div>
 
@@ -466,42 +442,6 @@ export default function Markets() {
                     <StockRow key={s.symbol} stock={s} onTap={() => navigate(`/stock/${s.symbol}`)} />
                   ))}
                 </div>
-              </Card>
-            </div>
-
-            {/* Analyst Ratings — illustrative only, not real analyst coverage */}
-            <div>
-              <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-                <Award className="h-4 w-4 text-accent" />
-                Analyst Ratings
-                <span className="text-[10px] font-normal text-muted-foreground normal-case">(Illustrative)</span>
-              </h2>
-              <Card className="soft-card overflow-hidden">
-                {analystRatings.map(r => (
-                  <div key={r.symbol} onClick={() => navigate(`/stock/${r.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold">{r.symbol}</span>
-                        <Badge className={`text-[10px] py-0 px-1.5 ${
-                          r.rating.includes('Buy') ? 'bg-bull/10 text-bull border-bull/20' :
-                          r.rating === 'Hold' ? 'bg-accent/10 text-accent border-accent/20' :
-                          'bg-bear/10 text-bear border-bear/20'
-                        }`}>{r.rating}</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{r.firm}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">KES {r.target.toFixed(2)}</p>
-                      {r.upside != null ? (
-                        <p className={`text-xs font-semibold ${r.upside >= 0 ? 'text-bull' : 'text-bear'}`}>
-                          {r.upside >= 0 ? '+' : ''}{r.upside}% upside
-                        </p>
-                      ) : (
-                        <Skeleton className="h-3.5 w-16 ml-auto" />
-                      )}
-                    </div>
-                  </div>
-                ))}
               </Card>
             </div>
 

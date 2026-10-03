@@ -55,6 +55,17 @@ const SELECT_WITH_SECURITIES = `
   LEFT JOIN market.securities sec ON sec.id = nis.security_id
 `;
 
+// Production feeds must never surface development fixtures or generic tech
+// aggregators. Keep this read-side guard even after the cleanup migration so
+// a mistakenly re-enabled source cannot leak into TradersHub.
+const TRUSTED_NEWS_FILTER = `
+  lower(n.source) NOT LIKE '%hacker%'
+  AND lower(n.source_name) NOT LIKE '%hacker news%'
+  AND lower(n.article_url) NOT LIKE '%news.ycombinator.com%'
+  AND lower(n.article_url) NOT LIKE '%hnrss.org%'
+  AND lower(n.source) NOT IN ('test-rss', 'real-rss')
+`;
+
 export const newsRepository = {
   /**
    * Upsert keyed on scraped_extraction_id — same idempotency pattern as
@@ -123,11 +134,11 @@ export const newsRepository = {
   async listRecent(limit = 50, category?: NewsItem["category"]): Promise<NewsItem[]> {
     const res = category
       ? await query<NewsItemRow>(
-          `${SELECT_WITH_SECURITIES} WHERE n.category = $2 GROUP BY n.id ORDER BY n.published_at DESC NULLS LAST, n.created_at DESC LIMIT $1`,
+          `${SELECT_WITH_SECURITIES} WHERE ${TRUSTED_NEWS_FILTER} AND n.category = $2 GROUP BY n.id ORDER BY n.published_at DESC NULLS LAST, n.created_at DESC LIMIT $1`,
           [limit, category],
         )
       : await query<NewsItemRow>(
-          `${SELECT_WITH_SECURITIES} GROUP BY n.id ORDER BY n.published_at DESC NULLS LAST, n.created_at DESC LIMIT $1`,
+          `${SELECT_WITH_SECURITIES} WHERE ${TRUSTED_NEWS_FILTER} GROUP BY n.id ORDER BY n.published_at DESC NULLS LAST, n.created_at DESC LIMIT $1`,
           [limit],
         );
     return res.rows.map(mapRow);
@@ -135,7 +146,7 @@ export const newsRepository = {
 
   async listBySecurity(securityId: string, limit = 50): Promise<NewsItem[]> {
     const res = await query<NewsItemRow>(
-      `${SELECT_WITH_SECURITIES} WHERE n.id IN (SELECT news_item_id FROM market.news_item_securities WHERE security_id = $1)
+      `${SELECT_WITH_SECURITIES} WHERE ${TRUSTED_NEWS_FILTER} AND n.id IN (SELECT news_item_id FROM market.news_item_securities WHERE security_id = $1)
        GROUP BY n.id ORDER BY n.published_at DESC NULLS LAST, n.created_at DESC LIMIT $2`,
       [securityId, limit],
     );

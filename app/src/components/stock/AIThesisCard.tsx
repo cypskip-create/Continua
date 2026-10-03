@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import type { ContinuaScores } from "@/components/stock/ContinuaScore";
 
 interface Props {
   symbol: string;
@@ -14,7 +15,7 @@ interface Props {
   eps: string | number;
   dividend: string | number;
   marketCap?: string;
-  scores?: Record<string, number>;
+  scores?: ContinuaScores;
   mode?: "thesis" | "news_summary" | "market_insight";
   headlines?: string[];
   title?: string;
@@ -46,9 +47,9 @@ export function AIThesisCard(props: Props) {
         },
       });
       if (error) throw error;
-      setText((data as any)?.text || "No analysis available.");
-    } catch (e: any) {
-      setError(e?.message || "Failed to load analysis");
+      setText(typeof data === "object" && data !== null && "text" in data && typeof data.text === "string" ? data.text : "No analysis available.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load analysis");
     } finally {
       setLoading(false);
     }

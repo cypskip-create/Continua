@@ -20,8 +20,17 @@ import { logger } from "../monitoring/logger.js";
 
 export async function runAnnouncementsBridgeOnce(): Promise<void> {
   try {
-    const summary = await runAnnouncementsBridge();
-    logger.info(summary, "Announcements bridge sync complete");
+    const total = { processed: 0, resolved: 0, unresolved: 0, failed: 0 };
+    const batchSize = 100;
+    for (let batch = 0; batch < 10; batch++) {
+      const summary = await runAnnouncementsBridge("NSE", batchSize);
+      total.processed += summary.processed;
+      total.resolved += summary.resolved;
+      total.unresolved += summary.unresolved;
+      total.failed += summary.failed;
+      if (summary.processed < batchSize || summary.failed === summary.processed) break;
+    }
+    logger.info(total, "Announcements bridge sync complete");
   } catch (err) {
     logger.error({ err }, "Announcements bridge sync failed");
   }

@@ -22,6 +22,12 @@ import { logger } from "../../monitoring/logger.js";
 
 const EXCERPT_LENGTH = 400;
 
+function isDisallowedTestFeed(sourceId: string, documentUrl: string): boolean {
+  const value = `${sourceId} ${documentUrl}`.toLowerCase();
+  return sourceId === "test-rss" || sourceId === "real-rss" || value.includes("hacker-news")
+    || value.includes("news.ycombinator.com") || value.includes("hnrss.org");
+}
+
 interface PendingNewsRow {
   extractionId: number;
   confidence: string | null;
@@ -43,6 +49,12 @@ async function fetchPendingExtractions(limit: number): Promise<PendingNewsRow[]>
      FROM scraping.extractions e
      JOIN scraping.raw_artifacts a ON a.id = e.artifact_id
      WHERE a.adapter = 'rss'
+       AND lower(a.source_id) NOT IN ('test-rss', 'real-rss')
+       AND lower(a.source_id) NOT LIKE '%hacker%'
+       AND lower(a.document_url) NOT LIKE '%news.ycombinator.com%'
+       AND lower(a.document_url) NOT LIKE '%hnrss.org%'
+       AND a.title IS NOT NULL AND btrim(a.title) <> ''
+       AND e.text IS NOT NULL AND btrim(e.text) <> ''
        AND NOT EXISTS (
          SELECT 1 FROM market.news_items n WHERE n.scraped_extraction_id = e.id
        )
@@ -76,6 +88,10 @@ export async function runNewsBridge(exchange = "NSE", batchSize = 100): Promise<
   for (const row of pending) {
     summary.processed++;
     try {
+      if (isDisallowedTestFeed(row.sourceId, row.documentUrl)) {
+        logger.warn({ sourceId: row.sourceId, documentUrl: row.documentUrl }, "Skipping disallowed test/news-aggregator feed");
+        continue;
+      }
       if (!row.title || !row.text) {
         // No usable text (e.g. non-HTML content the adapter couldn't
         // extract from) — nothing to classify or match; skip rather than

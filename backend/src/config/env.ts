@@ -77,8 +77,8 @@ const EnvSchema = z.object({
   INDEX_POLL_INTERVAL_MS: z.coerce.number().default(300_000), // 5 min — see workers/indexWorker.ts
   FINANCIALS_SYNC_CRON: z.string().default("0 2 * * *"),
   CORPORATE_ACTIONS_SYNC_CRON: z.string().default("0 3 * * *"),
-  ANNOUNCEMENTS_BRIDGE_CRON: z.string().default("*/15 * * * *"), // every 15 min — scraper runs independently; this just catches up whatever it produced
-  FINANCIAL_CANDIDATES_BRIDGE_CRON: z.string().default("*/15 * * * *"), // same cadence as the announcements bridge, same reasoning
+  ANNOUNCEMENTS_BRIDGE_CRON: z.string().default("*/5 * * * *"), // scraper runs independently; promptly publish whatever it produced
+  FINANCIAL_CANDIDATES_BRIDGE_CRON: z.string().default("*/5 * * * *"), // keep reviewable fundamental tables close behind new filings
   NEWS_BRIDGE_CRON: z.string().default("*/2 * * * *"), // keep newly scraped headlines close to real time
 
   // ── CORS ────────────────────────────────────────────────────────────

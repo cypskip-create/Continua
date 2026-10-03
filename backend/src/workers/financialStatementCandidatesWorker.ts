@@ -14,8 +14,18 @@ import { logger } from "../monitoring/logger.js";
 
 export async function runFinancialCandidatesBridgeOnce(): Promise<void> {
   try {
-    const summary = await runFinancialStatementCandidatesBridge();
-    logger.info(summary, "Financial statement candidates bridge sync complete");
+    const total = { extractionsProcessed: 0, candidatesCreated: 0, resolved: 0, unresolved: 0, failed: 0 };
+    const batchSize = 100;
+    for (let batch = 0; batch < 10; batch++) {
+      const summary = await runFinancialStatementCandidatesBridge("NSE", batchSize);
+      total.extractionsProcessed += summary.extractionsProcessed;
+      total.candidatesCreated += summary.candidatesCreated;
+      total.resolved += summary.resolved;
+      total.unresolved += summary.unresolved;
+      total.failed += summary.failed;
+      if (summary.extractionsProcessed < batchSize || summary.failed === summary.extractionsProcessed) break;
+    }
+    logger.info(total, "Financial statement candidates bridge sync complete");
   } catch (err) {
     logger.error({ err }, "Financial statement candidates bridge sync failed");
   }

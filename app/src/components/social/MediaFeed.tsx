@@ -40,9 +40,13 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
   const { news, isLoading } = useMarketNews(category === "all" ? undefined : category);
 
   const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return news;
+    // TradersHub Media is an NSE-company feed, not a generic business-news
+    // reader. Items without a resolved listed-company mention remain in the
+    // backend review queue but are intentionally not presented here.
+    const companyNews = news.filter((item) => item.symbols.length > 0);
+    if (!searchQuery.trim()) return companyNews;
     const q = searchQuery.toLowerCase();
-    return news.filter((n) => n.headline.toLowerCase().includes(q) || n.symbols.some((s) => s.toLowerCase().includes(q)));
+    return companyNews.filter((n) => n.headline.toLowerCase().includes(q) || n.symbols.some((s) => s.toLowerCase().includes(q)));
   }, [news, searchQuery]);
 
   return (
@@ -75,7 +79,7 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
           <Newspaper className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
           <p className="text-sm font-bold">No stories yet</p>
           <p className="text-[12px] text-muted-foreground mt-1">
-            {searchQuery ? "Try a different search or category." : "Nothing scraped for this category yet — check back soon."}
+            {searchQuery ? "Try a different company, ticker, or category." : "No verified NSE company stories in this category yet — check back soon."}
           </p>
         </div>
       ) : (
