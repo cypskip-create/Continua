@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 process.env.DATABASE_URL ??= "postgres://user:pass@localhost:5432/continua_test";
 process.env.LOG_LEVEL ??= "fatal";
 
-const { withRetry } = await import("../../src/crawler/retry.js");
+const { withRetry } = await import("../../../src/crawler/retry.js");
 
 describe("withRetry", () => {
   it("retries transient failures and succeeds once the underlying function succeeds", async () => {

@@ -101,12 +101,10 @@ export const cache = createCache();
 
 /** Cache key conventions — keep these consistent so invalidation stays sane. */
 export const CacheKeys = {
-  quote: (symbol: string) => `quote:${symbol}`,
-  quotesBatch: (symbols: string[]) => `quotes:${[...symbols].sort().join(",")}`,
-  movers: () => "movers:all",
-  candles: (symbol: string, interval: string, from: string, to: string) => `candles:${symbol}:${interval}:${from}:${to}`,
-  ratios: (symbol: string) => `ratios:${symbol}`,
-  afriScore: (symbol: string) => `afriscore:${symbol}`,
+  quote: (exchange: string, symbol: string) => `quote:${exchange}:${symbol}`,
+  candles: (exchange: string, symbol: string, interval: string, from: string, to: string) => `candles:${exchange}:${symbol}:${interval}:${from}:${to}`,
+  ratios: (exchange: string, symbol: string) => `ratios:${exchange}:${symbol}`,
+  afriScore: (exchange: string, symbol: string) => `afriscore:${exchange}:${symbol}`,
   sectors: () => "sectors:all",
   instruments: (exchange: string) => `instruments:${exchange}`,
   indices: (exchange: string) => `indices:${exchange}`,

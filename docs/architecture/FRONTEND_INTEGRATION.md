@@ -233,7 +233,7 @@ Added to `app/.env`:
 
 ```
 VITE_AFRIFINANCE_API_URL="http://localhost:4000/api/v1"
-VITE_AFRIFINANCE_WS_URL="ws://localhost:4001"
+VITE_AFRIFINANCE_WS_URL="ws://localhost:4000"
 VITE_AFRIFINANCE_API_KEY="dev-local-only-key"   # matches backend's DEV_API_KEY
 ```
 

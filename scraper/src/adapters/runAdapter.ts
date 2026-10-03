@@ -35,7 +35,11 @@ export async function runAdapter(adapter: SourceAdapter): Promise<AdapterRunSumm
   const documents = await adapter.discover();
   summary.discovered = documents.length;
 
-  for (const doc of documents) {
+  const pending = [...documents];
+  const processNext = async (): Promise<void> => {
+    for (;;) {
+      const doc = pending.shift();
+      if (!doc) return;
     try {
       const fetched = await adapter.fetch(doc);
       summary.fetched++;
@@ -68,7 +72,11 @@ export async function runAdapter(adapter: SourceAdapter): Promise<AdapterRunSumm
       await recordDeadLetter({ sourceId: adapter.id, url: doc.url, stage: "fetch", reason });
       summary.failed++;
     }
-  }
+    }
+  };
+
+  const concurrency = Math.max(1, Math.min(adapter.documentConcurrency ?? 1, 8));
+  await Promise.all(Array.from({ length: Math.min(concurrency, documents.length) }, processNext));
 
   logger.info(summary, "Adapter run complete");
   return summary;

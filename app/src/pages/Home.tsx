@@ -33,6 +33,12 @@ const Eyebrow = ({ children, action, onAction }: { children: React.ReactNode; ac
   </div>
 );
 
+function getAuthorHandle(author: unknown): string | undefined {
+  if (!author || typeof author !== "object" || !("handle" in author)) return undefined;
+  const handle = (author as { handle?: unknown }).handle;
+  return typeof handle === "string" ? handle : undefined;
+}
+
 export default function Home() {
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -194,18 +200,18 @@ export default function Home() {
           </div>
         </div>
 
-        {/* UPDATES — the home page centerpiece: real scraped news, real
-            upcoming dividends, real reported earnings, merged into one
-            chronological feed. See UpdatesFeed.tsx. */}
-        <UpdatesFeed followedSymbols={followedSymbols} />
-
-        {/* QUICK WATCH — marquee, no card */}
+        {/* QUICK WATCH — directly below Market Snapshot, as the fast path
+            from the index overview into individual live quotes. */}
         {user && (
           <div>
             <Eyebrow>Quick Watch</Eyebrow>
             <QuickTradeWidget quotes={homeQuotes} />
           </div>
         )}
+
+        {/* UPDATES — real scraped news, real upcoming dividends, and real
+            reported earnings merged into one chronological feed. */}
+        <UpdatesFeed followedSymbols={followedSymbols} />
 
         {/* OPPORTUNITIES — pill row */}
         <div>
@@ -285,8 +291,8 @@ export default function Home() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className="text-xs font-semibold truncate">{post.author?.full_name || "User"}</span>
-                      {(post.author as any)?.handle && (
-                        <span className="text-[10px] text-muted-foreground truncate">@{(post.author as any).handle}</span>
+                      {getAuthorHandle(post.author) && (
+                        <span className="text-[10px] text-muted-foreground truncate">@{getAuthorHandle(post.author)}</span>
                       )}
                       <span className="text-[10px] text-muted-foreground shrink-0">
                         · {formatPostDate(post.created_at)}

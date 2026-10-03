@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 process.env.DATABASE_URL ??= "postgres://user:pass@localhost:5432/continua_test";
 process.env.LOG_LEVEL ??= "fatal";
 
-const { throttleHost } = await import("../../src/crawler/rateLimiter.js");
+const { throttleHost } = await import("../../../src/crawler/rateLimiter.js");
 
 describe("throttleHost", () => {
   it("enforces the minimum interval between requests to the same host", async () => {

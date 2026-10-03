@@ -61,6 +61,7 @@ async function getTickers(): Promise<string[]> {
 
 export const kenyanstocksAdapter: SourceAdapter = {
   id: ADAPTER_ID,
+  documentConcurrency: 2,
 
   async discover(): Promise<SourceDocument[]> {
     const tickers = await getTickers();

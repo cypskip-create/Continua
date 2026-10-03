@@ -79,7 +79,7 @@ const EnvSchema = z.object({
   CORPORATE_ACTIONS_SYNC_CRON: z.string().default("0 3 * * *"),
   ANNOUNCEMENTS_BRIDGE_CRON: z.string().default("*/15 * * * *"), // every 15 min — scraper runs independently; this just catches up whatever it produced
   FINANCIAL_CANDIDATES_BRIDGE_CRON: z.string().default("*/15 * * * *"), // same cadence as the announcements bridge, same reasoning
-  NEWS_BRIDGE_CRON: z.string().default("*/15 * * * *"), // same cadence, same reasoning
+  NEWS_BRIDGE_CRON: z.string().default("*/2 * * * *"), // keep newly scraped headlines close to real time
 
   // ── CORS ────────────────────────────────────────────────────────────
   // Comma-separated list of origins allowed to call this API from a browser

@@ -61,6 +61,8 @@ export interface ParsedExtraction {
 
 export interface SourceAdapter {
   id: string;
+  /** Maximum documents processed simultaneously for this adapter run. */
+  documentConcurrency?: number;
   discover(): Promise<SourceDocument[]>;
   fetch(document: SourceDocument): Promise<FetchedDocument>;
   parse?(fetched: FetchedDocument): Promise<ParsedExtraction>;

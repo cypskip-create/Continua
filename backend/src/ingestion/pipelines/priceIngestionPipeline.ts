@@ -50,10 +50,9 @@ export async function runPriceIngestion(adapter: IExchangeAdapter, symbols: stri
     if (accepted.length > 0) {
       await pricesRepository.upsertQuotesBatch(accepted);
       for (const q of accepted) {
-        await cache.set(CacheKeys.quote(q.symbol), q, 10_000);
+        await cache.set(CacheKeys.quote(q.exchange, q.symbol), q, 10_000);
         marketEventBus.publishQuote(q);
       }
-      await cache.del(CacheKeys.movers());
     }
   } catch (err) {
     // Collector exhausted its retries and threw — the whole tick failed for

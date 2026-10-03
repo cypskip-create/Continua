@@ -62,15 +62,23 @@ function extractImageUrl(html: string, pageUrl: string): string | null {
   return resolveUrl(pageUrl, raw);
 }
 
+function normalizeFeedSummary(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const text = cheerio.load(value).text().replace(/\s+/g, " ").trim();
+  return text || null;
+}
+
 export function createRssFeedAdapter(source: Source): SourceAdapter {
   const feedUrl = source.config.feedUrl;
   if (!feedUrl) {
     throw new Error(`Source '${source.id}' uses the rss adapter but has no config.feedUrl set`);
   }
   const requestsPerSecond = source.config.requestsPerSecond ?? env.DEFAULT_REQUESTS_PER_SECOND;
+  const maxItemsPerRun = Math.max(1, Math.min(source.config.maxItemsPerRun ?? 50, 200));
 
   return {
     id: source.id,
+    documentConcurrency: source.config.concurrency ?? 2,
 
     async discover(): Promise<SourceDocument[]> {
       const allowed = await isAllowedByRobots(feedUrl);
@@ -87,6 +95,7 @@ export function createRssFeedAdapter(source: Source): SourceAdapter {
       const feed = await rssParser.parseString(res.body.toString("utf-8"));
       const docs: SourceDocument[] = (feed.items ?? [])
         .filter((item) => !!item.link)
+        .slice(0, maxItemsPerRun)
         .map((item) => ({
           url: item.link!,
           title: item.title ?? null,
@@ -96,6 +105,7 @@ export function createRssFeedAdapter(source: Source): SourceAdapter {
             author: item.creator ?? item.author ?? null,
             guid: item.guid ?? item.id ?? null,
             categories: item.categories ?? [],
+            feedSummary: normalizeFeedSummary(item.contentSnippet ?? item.summary ?? item.content),
           },
         }));
 
@@ -104,6 +114,32 @@ export function createRssFeedAdapter(source: Source): SourceAdapter {
     },
 
     async fetch(document: SourceDocument): Promise<FetchedDocument> {
+      const articleAllowed = await isAllowedByRobots(document.url);
+      if (!articleAllowed) {
+        const summary = typeof document.context?.feedSummary === "string"
+          ? document.context.feedSummary.trim()
+          : "";
+        if (!summary) throw new Error(`Article disallowed by robots.txt and feed contained no summary: ${document.url}`);
+        const body = Buffer.from(summary, "utf-8");
+        const bodyHash = sha256(body);
+        const storagePath = await storeRawArtifact({ sourceId: source.id, sha256: bodyHash, contentType: "text/plain; charset=utf-8", body });
+        const { artifact, isNew } = await upsertArtifact({
+          sourceId: source.id,
+          adapter: "rss",
+          sha256: bodyHash,
+          documentUrl: document.url,
+          sourceUrl: document.discoveredFrom,
+          contentType: "text/plain; charset=utf-8",
+          sizeBytes: body.byteLength,
+          storagePath,
+          title: document.title ?? null,
+          publishedAt: (document.context?.publishedAt as string | null) ?? null,
+          crawlerVersion: CRAWLER_VERSION,
+          metadata: { ...(document.context ?? {}), contentSource: "rss_summary", articleRobotsAllowed: false },
+        });
+        return { document, sha256: bodyHash, contentType: "text/plain; charset=utf-8", sizeBytes: body.byteLength, storagePath, body, isNewArtifact: isNew, artifactId: artifact.id };
+      }
+
       const res = await fetchWithRetry(document.url, { requestsPerSecond });
       if (res.status >= 400) {
         throw new Error(`Failed to fetch ${document.url}: HTTP ${res.status}`);
@@ -146,6 +182,18 @@ export function createRssFeedAdapter(source: Source): SourceAdapter {
 
     async parse(fetched: FetchedDocument): Promise<ParsedExtraction> {
       const isHtml = (fetched.contentType ?? "").includes("text/html");
+      const isText = (fetched.contentType ?? "").includes("text/plain");
+      if (isText) {
+        const text = fetched.body.toString("utf-8").trim();
+        return {
+          method: "html",
+          confidence: text.length >= MIN_BODY_TEXT_LENGTH ? 0.5 : 0.25,
+          text: text || null,
+          tables: [],
+          entity: { companyName: null, ticker: null, exchange: "N/A", imageUrl: null },
+          needsReview: text.length < MIN_BODY_TEXT_LENGTH,
+        };
+      }
       if (!isHtml) {
         return {
           method: "html",

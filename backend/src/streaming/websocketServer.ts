@@ -3,8 +3,9 @@
  * Clients subscribe to specific symbols/channels so we only ever send them
  * data they asked for — not the whole exchange's tape on every tick.
  *
- * Connect with an API key as a query param: ws://host:port?apiKey=<key>
- * (same keys issued via `npm run apikey:create`, or DEV_API_KEY locally).
+ * Authenticate as the first frame: { "action": "authenticate", "apiKey":
+ * "..." }. Keeping credentials out of URLs prevents them being retained in
+ * reverse-proxy access logs and observability traces.
  *
  * Client protocol (JSON messages over the WS connection):
  *   → { "action": "subscribe",   "symbols": ["SCOM", "EQTY"] }
@@ -22,6 +23,7 @@ import { cache } from "../storage/cache.js";
 interface ClientState {
   socket: WebSocket;
   symbols: Set<string>;
+  authorized: boolean;
 }
 
 /** Same key check as the REST API's apiKeyAuth middleware, applied at the
@@ -43,29 +45,42 @@ export function startWebSocketServer(httpServer: import("http").Server): WebSock
   // Services. Railway happened to expose a second port as its own
   // subdomain, which masked this constraint; that's not a general
   // assumption we can keep making about every host.
-  const wss = new WebSocketServer({
-    server: httpServer,
-    verifyClient: (info, callback) => {
-      const url = new URL(info.req.url ?? "", "http://localhost");
-      const presented = url.searchParams.get("apiKey");
-      isAuthorized(presented)
-        .then((ok) => callback(ok, ok ? undefined : 401, ok ? undefined : "Missing or invalid API key — connect with ?apiKey=<key>"))
-        .catch((err) => {
-          logger.error({ err }, "WebSocket auth check failed");
-          callback(false, 500, "Internal error during auth check");
-        });
-    },
-  });
+  const wss = new WebSocketServer({ server: httpServer });
   const clients = new Set<ClientState>();
 
   wss.on("connection", (socket) => {
-    const state: ClientState = { socket, symbols: new Set() };
+    const state: ClientState = { socket, symbols: new Set(), authorized: !env.API_KEY_AUTH_ENABLED };
     clients.add(state);
-    logger.info({ clientCount: clients.size }, "WebSocket client connected");
+    const authTimer = setTimeout(() => {
+      if (!state.authorized) socket.close(1008, "Authentication timeout");
+    }, 5000);
+    authTimer.unref();
 
     socket.on("message", (raw) => {
       try {
         const msg = JSON.parse(raw.toString());
+        if (msg.action === "authenticate" && typeof msg.apiKey === "string") {
+          void isAuthorized(msg.apiKey)
+            .then((ok) => {
+              if (!ok) {
+                socket.close(1008, "Invalid API key");
+                return;
+              }
+              state.authorized = true;
+              clearTimeout(authTimer);
+              socket.send(JSON.stringify({ type: "authenticated" }));
+              logger.info({ clientCount: clients.size }, "WebSocket client authenticated");
+            })
+            .catch((err) => {
+              logger.error({ err }, "WebSocket auth check failed");
+              socket.close(1011, "Authentication failed");
+            });
+          return;
+        }
+        if (!state.authorized) {
+          socket.close(1008, "Authenticate before subscribing");
+          return;
+        }
         if (msg.action === "subscribe" && Array.isArray(msg.symbols)) {
           msg.symbols.forEach((s: string) => state.symbols.add(s.toUpperCase()));
         } else if (msg.action === "unsubscribe" && Array.isArray(msg.symbols)) {
@@ -77,6 +92,7 @@ export function startWebSocketServer(httpServer: import("http").Server): WebSock
     });
 
     socket.on("close", () => {
+      clearTimeout(authTimer);
       clients.delete(state);
       logger.info({ clientCount: clients.size }, "WebSocket client disconnected");
     });

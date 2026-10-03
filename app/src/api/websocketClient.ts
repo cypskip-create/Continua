@@ -4,6 +4,8 @@
 // through this same manager instead of each opening its own connection.
 //
 // Protocol (docs/api/API.md):
+//   → { action: "authenticate", apiKey: "..." }
+//   ← { type: "authenticated" }
 //   → { action: "subscribe",   symbols: ["SCOM", "EQTY"] }
 //   → { action: "unsubscribe", symbols: ["EQTY"] }
 //   ← { type: "quote", payload: Quote }
@@ -44,19 +46,14 @@ class ContinuaRealtimeClient {
     if (this.connecting) return;
     this.connecting = true;
 
-    const url = `${AFRIFINANCE_WS_URL}?apiKey=${encodeURIComponent(this.getApiKey())}`;
-    const socket = new WebSocket(url);
+    const socket = new WebSocket(AFRIFINANCE_WS_URL);
     this.socket = socket;
 
     socket.onopen = () => {
       this.connecting = false;
-      this.reconnectAttempt = 0;
-      this.notifyConnection(true);
-      // Re-subscribe to everything listeners currently care about — this
-      // covers both first connect and any reconnect after a drop.
-      if (this.subscribedSymbols.length > 0) {
-        this.send({ action: "subscribe", symbols: this.subscribedSymbols });
-      }
+      // Authenticate inside the encrypted WebSocket stream. Credentials in
+      // query strings are routinely captured by access logs and monitoring.
+      socket.send(JSON.stringify({ action: "authenticate", apiKey: this.getApiKey() }));
     };
 
     socket.onmessage = (event) => {
@@ -67,7 +64,13 @@ class ContinuaRealtimeClient {
         return;
       }
       if (!parsed || typeof parsed !== "object") return;
-      if (parsed.type === "quote") {
+      if ((parsed as { type?: string }).type === "authenticated") {
+        this.reconnectAttempt = 0;
+        this.notifyConnection(true);
+        if (this.subscribedSymbols.length > 0) {
+          this.send({ action: "subscribe", symbols: this.subscribedSymbols });
+        }
+      } else if (parsed.type === "quote") {
         const listeners = this.quoteListeners.get(parsed.payload.symbol.toUpperCase());
         listeners?.forEach((l) => l(parsed!.payload as Quote));
       } else if (parsed.type === "corporate_action") {

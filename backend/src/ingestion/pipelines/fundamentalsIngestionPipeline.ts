@@ -63,8 +63,8 @@ export async function runFundamentalsIngestion(adapter: IExchangeAdapter, symbol
       const quote = await pricesRepository.getQuote(security.id);
       if (quote) {
         await researchService.recomputeAndStore(security.id, quote.lastPrice);
-        await cache.del(CacheKeys.ratios(security.symbol));
-        await cache.del(CacheKeys.afriScore(security.symbol));
+        await cache.del(CacheKeys.ratios(security.exchange, security.symbol));
+        await cache.del(CacheKeys.afriScore(security.exchange, security.symbol));
       }
     } catch (err) {
       errors.push(`${bundle.security.symbol}: ${String(err)}`);

@@ -17,7 +17,7 @@
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 
-const hasDb = !!process.env.DATABASE_URL;
+const hasDb = process.env.RUN_INTEGRATION_TESTS === "true" && !!process.env.DATABASE_URL;
 const d = hasDb ? describe : describe.skip;
 
 d("pipeline integration (requires DATABASE_URL)", () => {

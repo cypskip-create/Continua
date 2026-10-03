@@ -17,7 +17,7 @@ function withFreshnessCheck(quote: Quote | null): Quote | null {
 
 export const quoteService = {
   async getQuote(exchange: ExchangeCode, symbol: string): Promise<Quote | null> {
-    const quote = await cache.getOrSet(CacheKeys.quote(symbol), 5_000, async () => {
+    const quote = await cache.getOrSet(CacheKeys.quote(exchange, symbol), 5_000, async () => {
       const security = await securitiesRepository.getBySymbol(exchange, symbol);
       if (!security) return null as any;
       return pricesRepository.getQuote(security.id);
@@ -26,18 +26,12 @@ export const quoteService = {
   },
 
   async getQuotesBatch(exchange: ExchangeCode, symbols: string[]): Promise<Quote[]> {
-    const quotes = await cache.getOrSet(CacheKeys.quotesBatch(symbols), 5_000, async () => {
-      // One batched lookup instead of one query per symbol (see
-      // securitiesRepository.getBySymbols's own doc comment — it exists
-      // for exactly this). The old Promise.all(symbols.map(getBySymbol))
-      // turned every quote batch into N individual DB round-trips, and
-      // with several widgets each firing their own quotes request on a
-      // single page load, that added up to dozens of concurrent queries
-      // competing for a small free-tier connection pool.
-      const securities = await securitiesRepository.getBySymbols(exchange, symbols);
-      const ids = securities.map((s) => s.id);
-      return pricesRepository.getQuotesBatch(ids);
-    });
+    // This is already two efficient batched queries. Do not put a second,
+    // symbol-set-specific cache in front of live_quotes: there are countless
+    // possible symbol combinations to invalidate after each tick, and the
+    // old five-second cache made a successful refresh look delayed.
+    const securities = await securitiesRepository.getBySymbols(exchange, symbols);
+    const quotes = await pricesRepository.getQuotesBatch(securities.map((s) => s.id));
     quotes.forEach(checkQuoteFreshness);
     return quotes;
   },

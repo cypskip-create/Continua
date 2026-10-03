@@ -63,7 +63,15 @@ async function extractNativePdfText(buffer: Buffer): Promise<Omit<ParsedExtracti
     logger.error({ err }, "PDF text extraction threw an exception");
     return { method: "native_pdf_text", confidence: 0, text: null, tables: [], needsReview: true };
   } finally {
-    await parser.destroy();
+    // pdf-parse 2.x can leave its internal document in a partially-created
+    // state (notably when paired with an overridden pdfjs-dist). Cleanup
+    // must never turn a successful extraction or OCR fallback into a hard
+    // failure. Keep this guard until upstream's destroy() is idempotent.
+    try {
+      await parser.destroy();
+    } catch (err) {
+      logger.warn({ err }, "PDF parser cleanup failed");
+    }
   }
 
   const looksUsable = text.length >= MIN_USABLE_TEXT_LENGTH;

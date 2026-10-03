@@ -12,12 +12,10 @@
  * weren't inspectable from here and the spec explicitly warns against
  * assuming a fixed structure (§11).
  *
- * KNOWN GAP: the page has year-filter tabs (2026 down to 2015) that only
- * surface a handful of items per load — these are almost certainly
- * AJAX-driven and require a real browser to drive (Phase 4). This
- * adapter's discover() only sees what's server-rendered on initial load,
- * i.e. the most recent announcements. It is NOT a full historical
- * backfill yet — don't rely on it for that until Phase 4 lands.
+ * Historical discovery follows real year/archive links exposed by the page
+ * and optional `config.archiveUrls`. JavaScript-only tabs still require an
+ * explicit archive URL, but a deploy can now backfill them declaratively
+ * without changing adapter code.
  */
 import * as cheerio from "cheerio";
 import { fetchWithRetry } from "../../crawler/httpClient.js";
@@ -87,8 +85,26 @@ function parseAnnouncementsPage(html: string, pageUrl: string): SourceDocument[]
   return docs;
 }
 
+function discoverArchiveLinks(html: string, pageUrl: string): string[] {
+  const $ = cheerio.load(html);
+  const page = new URL(pageUrl);
+  const links = new Set<string>();
+  $("a[href]").each((_, el) => {
+    const label = $(el).text().trim();
+    const href = $(el).attr("href");
+    if (!href || !/^(19|20)\d{2}$/.test(label)) return;
+    const resolved = resolveUrl(pageUrl, href);
+    if (!resolved) return;
+    const candidate = new URL(resolved);
+    if (candidate.origin === page.origin && candidate.href !== page.href && !candidate.hash) links.add(candidate.href);
+  });
+  return [...links];
+}
+
 export const nseAnnouncementsAdapter: SourceAdapter = {
   id: ADAPTER_ID,
+  // pdf.js' fake worker is not concurrency-safe in this Node setup.
+  documentConcurrency: 1,
 
   async discover(): Promise<SourceDocument[]> {
     const allowed = await isAllowedByRobots(ANNOUNCEMENTS_URL);
@@ -97,14 +113,30 @@ export const nseAnnouncementsAdapter: SourceAdapter = {
       return [];
     }
 
-    const res = await fetchWithRetry(ANNOUNCEMENTS_URL, { requestsPerSecond: await getRequestsPerSecond() });
+    const requestsPerSecond = await getRequestsPerSecond();
+    const res = await fetchWithRetry(ANNOUNCEMENTS_URL, { requestsPerSecond });
     if (res.status >= 400) {
       throw new Error(`Failed to fetch NSE announcements page: HTTP ${res.status}`);
     }
     const html = res.body.toString("utf-8");
+    const source = await getSource(ADAPTER_ID);
+    const configuredArchives = Array.isArray(source?.config.archiveUrls)
+      ? source.config.archiveUrls.filter((url): url is string => typeof url === "string")
+      : [];
+    const archiveUrls = [...new Set([...discoverArchiveLinks(html, res.finalUrl), ...configuredArchives])];
     const docs = parseAnnouncementsPage(html, res.finalUrl);
-    logger.info({ count: docs.length }, "NSE discover() found announcement PDFs");
-    return docs;
+    for (const archiveUrl of archiveUrls) {
+      if (!(await isAllowedByRobots(archiveUrl))) continue;
+      try {
+        const archive = await fetchWithRetry(archiveUrl, { requestsPerSecond });
+        if (archive.status < 400) docs.push(...parseAnnouncementsPage(archive.body.toString("utf-8"), archive.finalUrl));
+      } catch (err) {
+        logger.warn({ archiveUrl, err }, "NSE archive discovery failed — continuing with other years");
+      }
+    }
+    const uniqueDocs = [...new Map(docs.map((doc) => [doc.url, doc])).values()];
+    logger.info({ count: uniqueDocs.length, archivePages: archiveUrls.length }, "NSE discover() found announcement PDFs");
+    return uniqueDocs;
   },
 
   async fetch(document: SourceDocument): Promise<FetchedDocument> {

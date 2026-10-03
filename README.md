@@ -1,22 +1,45 @@
-# Continua Project Documentation
+# Continua
 
-## Overview
-Continua is a comprehensive financial management application designed to meet the needs of individuals and small businesses in Africa. The application provides tools for budgeting, expense tracking, and financial reporting, helping users take control of their finances.
+Continua is an African markets and investing platform. It combines live and
+historical market data, portfolio tracking, company research, alerts,
+screening, financial news, and an investor community in one mobile-first app.
 
-## Features
-- **Budgeting**: Users can create and manage budgets tailored to their financial goals.
-- **Expense Tracking**: Track daily expenses and categorize them for better analysis.
-- **Financial Reports**: Generate insightful reports to help understand spending habits.
-- **Multi-Currency Support**: Handle transactions in various currencies common in Africa.
+## Services
 
-## Architecture
-The Continua application is built using a microservices architecture, enabling scalability and ease of maintenance. Key components include:
-- **Frontend**: Developed using React for a responsive user interface.
-- **Backend**: Node.js and Express.js for handling API requests and business logic.
-- **Database**: MongoDB for storing user data and financial records.
+- `app/` — React, Vite, TypeScript, Tailwind, React Query, and Supabase.
+- `backend/` — Express REST/WebSocket market-data API, ingestion workers,
+  research calculations, technical indicators, and multi-exchange adapters.
+- `scraper/` — polite, robots-aware news and filing ingestion with RSS,
+  HTML, PDF, OCR, deduplication, provenance, retries, and dead letters.
+- `supabase/` — database migrations and Edge Functions.
+- `docs/` — API, architecture, data-flow, and deployment documentation.
 
-## Target Users
-Continua is aimed at:
-- Individuals seeking to manage personal finances more effectively.
-- Small business owners who need to keep their finances organized.
-- Financial advisors looking for tools to assist their clients.
+## Local development
+
+```bash
+npm install
+npm run dev
+```
+
+The backend and scraper have their own dependencies and environment files:
+
+```bash
+cd backend && npm install && npm run dev
+cd scraper && npm install && npm run dev
+```
+
+Copy each service's `.env.example` to `.env` and provide a PostgreSQL URL.
+See `docs/deployment/RENDER_DEPLOY.md` for deployment configuration.
+
+## Verification
+
+```bash
+npm run build
+npx tsc --noEmit -p app/tsconfig.app.json
+cd backend && npm run typecheck && npm test
+cd scraper && npm run typecheck && npm test
+```
+
+The backend integration suite is opt-in because it truncates its dedicated
+test database. Set `RUN_INTEGRATION_TESTS=true` with a migrated test-only
+`DATABASE_URL` to run it.

@@ -6,7 +6,7 @@ import type { ExchangeCode } from "../../config/index.js";
 
 export const historicalService = {
   async getCandles(exchange: ExchangeCode, symbol: string, interval: CandleInterval, from: string, to: string): Promise<Candle[]> {
-    return cache.getOrSet(CacheKeys.candles(symbol, interval, from, to), 30_000, async () => {
+    return cache.getOrSet(CacheKeys.candles(exchange, symbol, interval, from, to), 30_000, async () => {
       const security = await securitiesRepository.getBySymbol(exchange, symbol);
       if (!security) return [];
       return candlesRepository.getCandles(security.id, interval, from, to);

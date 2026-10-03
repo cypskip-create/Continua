@@ -1,61 +1,41 @@
-# Continua Scraper (Web Intelligence / Data Ingestion Engine)
+# Continua Scraper
 
-**Phase 0 of a multi-phase build.** This delivery is the foundation only —
-service scaffold + database schema. There is no crawler yet.
+The scraper is Continua's independent web-intelligence service. It discovers
+and preserves public market material without competing with the live quote API
+for CPU or memory.
 
-## What's actually built right now
+It currently provides:
 
-- Standalone Node/TypeScript service (`continua-scraper`), separate from
-  `continua-data` (`backend/`) so heavy crawl/PDF/OCR work never competes
-  with the live price/WebSocket process for memory or CPU.
-- `scraping` Postgres schema (same instance as `market`/`public`):
-  - `scraping.sources` — declarative source config + required licensing
-    metadata (terms/robots/license/redistribution).
-  - `scraping.crawl_state` — per-URL crawl status, for incremental crawls.
-  - `scraping.raw_artifacts` + `scraping.artifact_urls` — deduplicated
-    downloaded content, keyed by content hash, with every URL it was ever
-    found at.
-  - `scraping.extractions` — output of processing an artifact (text/tables/
-    OCR), versioned so a document can be reprocessed by a newer parser
-    without re-downloading.
-  - `scraping.dead_letters` — permanently failed jobs with a reason.
-- `GET /health` — checks DB connectivity.
-- `GET /sources` — lists enabled sources (empty until Phase 1, when the
-  NSE/generic source configs get seeded via `upsertSource`).
-- `npx tsc --noEmit -p tsconfig.json` and `npm run build` both verified
-  passing.
+- declarative source registration and per-source schedules;
+- immediate startup crawls plus recurring cron runs;
+- official NSE announcement/PDF discovery with archive-page support;
+- reusable RSS/Atom news ingestion with feed-summary fallback;
+- robots.txt enforcement, SSRF protection, rate limiting, bounded downloads,
+  retries, and dead-letter tracking;
+- content hashing and artifact deduplication;
+- HTML extraction, native PDF text extraction, table recovery, and OCR fallback;
+- provenance and review metadata consumed by the backend news, announcement,
+  and financial-statement bridges.
 
-## What's explicitly NOT built yet (next phases)
-
-- The crawler itself — no HTTP fetching, no link discovery, no content-type
-  detection, nothing in `scraping.crawl_state` gets populated by anything
-  yet.
-- PDF discovery/extraction, table extraction, OCR.
-- The NSE adapter (or any adapter).
-- Playwright browser worker.
-- Rate limiting / retry-backoff / scheduling (config columns exist on
-  `sources`, nothing reads them yet).
-- Raw artifact file storage (the `RAW_STORAGE_DRIVER` env var exists,
-  nothing writes to disk or Supabase Storage yet).
+Built-in sources are inserted only when missing, so an operator's manual
+configuration or disabled state is preserved across restarts.
 
 ## Local setup
 
 ```bash
 cp .env.example .env
-# point DATABASE_URL at the same Postgres continua-data uses locally
 npm install
 npm run dev
 ```
 
-Apply `supabase/migrations/20260827090000 scraping engine foundation schema.sql`
-in the Supabase SQL Editor before starting the service — same manual-apply
-convention as every other Continua migration.
+Use the same PostgreSQL instance as `backend/` and apply the scraper migrations
+before startup. Raw local artifacts are staging data and may be re-fetched;
+structured extraction records live in PostgreSQL.
 
-## Next step
+## Verification
 
-Phase 1: generic HTTP crawler — fetch, link discovery (`<a>`, `<iframe>`,
-sitemap.xml), content-type detection, hashing/dedup against
-`crawl_state`/`raw_artifacts`, and generic HTML metadata extraction
-(title, OpenGraph, JSON-LD). No PDFs, no adapters, no NSE-specific logic
-yet — just prove the crawl loop and the storage layer work end to end on
-a real page.
+```bash
+npm run typecheck
+npm test
+npm run build
+```

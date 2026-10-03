@@ -6,7 +6,7 @@ import Parser from "rss-parser";
 process.env.DATABASE_URL ??= "postgres://user:pass@localhost:5432/continua_test";
 process.env.LOG_LEVEL ??= "fatal";
 
-const { createRssFeedAdapter } = await import("../../src/adapters/rss/createRssFeedAdapter.js");
+const { createRssFeedAdapter } = await import("../../../src/adapters/rss/createRssFeedAdapter.js");
 
 const FIXTURE_PATH = path.join(import.meta.dirname, "../fixtures/real-rss-feed.xml");
 

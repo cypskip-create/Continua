@@ -13,6 +13,8 @@ export interface SourceConfig {
   schedule?: string;
   /** RSS/Atom feed URL — required for sources using the 'rss' adapter (Phase 7). */
   feedUrl?: string;
+  /** Bound each RSS run so one unexpectedly large feed cannot monopolize a worker. */
+  maxItemsPerRun?: number;
   documents?: {
     pdf?: boolean;
     ocr?: boolean;
@@ -36,6 +38,8 @@ export interface Source {
   createdAt: string;
   updatedAt: string;
 }
+
+export type SourceDefinition = Omit<Source, "createdAt" | "updatedAt">;
 
 export type CrawlStatus = "discovered" | "queued" | "crawling" | "crawled" | "failed" | "skipped";
 

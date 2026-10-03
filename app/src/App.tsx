@@ -10,34 +10,35 @@ import { AuthProvider } from "./hooks/useAuth";
 import { ProfileProvider } from "./hooks/useProfile";
 import { ExchangeProvider } from "./hooks/useExchange";
 import { Analytics } from "@vercel/analytics/react";
-import Home from "./pages/Home";
-import Markets from "./pages/Markets";
-import Discover from "./pages/Discover";
-
-import Account from "./pages/Account";
-import Upgrade from "./pages/Upgrade";
-import StockDetail from "./pages/StockDetail";
-import Watchlist from "./pages/Watchlist";
-import SectorDetail from "./pages/SectorDetail";
-import Auth from "./pages/Auth";
-import NotFound from "./pages/NotFound";
-import Learn from "./pages/Learn";
-import Notifications from "./pages/Notifications";
-import Landing from "./pages/Landing";
-import SectorHeatmap from "./pages/SectorHeatmap";
-import TrackInvestments from "./pages/TrackInvestments";
-import TradersHub from "./pages/TradersHub";
-import Rooms from "./pages/Rooms";
-import { StockScreener } from "./pages/StockScreener";
-import StockCompare from "./pages/StockCompare";
-import UserProfile from "./pages/UserProfile";
-import Settings from "./pages/Settings";
-import PostDetail from "./pages/PostDetail";
-import ThemeDetail from "./pages/ThemeDetail";
-import FeaturedListDetail from "./pages/FeaturedListDetail";
-import AdminFinancialsReview from "./pages/AdminFinancialsReview";
 import { AppLockGate } from "./components/security/AppLockGate";
 import { useScrollRestoration } from "./hooks/useScrollRestoration";
+import { lazy, Suspense } from "react";
+
+const Home = lazy(() => import("./pages/Home"));
+const Markets = lazy(() => import("./pages/Markets"));
+const Discover = lazy(() => import("./pages/Discover"));
+const Account = lazy(() => import("./pages/Account"));
+const Upgrade = lazy(() => import("./pages/Upgrade"));
+const StockDetail = lazy(() => import("./pages/StockDetail"));
+const Watchlist = lazy(() => import("./pages/Watchlist"));
+const SectorDetail = lazy(() => import("./pages/SectorDetail"));
+const Auth = lazy(() => import("./pages/Auth"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Learn = lazy(() => import("./pages/Learn"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Landing = lazy(() => import("./pages/Landing"));
+const SectorHeatmap = lazy(() => import("./pages/SectorHeatmap"));
+const TrackInvestments = lazy(() => import("./pages/TrackInvestments"));
+const TradersHub = lazy(() => import("./pages/TradersHub"));
+const Rooms = lazy(() => import("./pages/Rooms"));
+const StockScreener = lazy(() => import("./pages/StockScreener").then((module) => ({ default: module.StockScreener })));
+const StockCompare = lazy(() => import("./pages/StockCompare"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
+const Settings = lazy(() => import("./pages/Settings"));
+const PostDetail = lazy(() => import("./pages/PostDetail"));
+const ThemeDetail = lazy(() => import("./pages/ThemeDetail"));
+const FeaturedListDetail = lazy(() => import("./pages/FeaturedListDetail"));
+const AdminFinancialsReview = lazy(() => import("./pages/AdminFinancialsReview"));
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
             <AppLockGate>
               <BrowserRouter>
                 <ScrollRestorationController />
+                <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="h-7 w-7 rounded-full border-2 border-muted-foreground/25 border-t-primary animate-spin" /></div>}>
                 <Routes>
                   <Route path="/" element={<Landing />} />
                   <Route path="/landing" element={<Landing />} />
@@ -95,6 +97,7 @@ const App = () => (
                     <Route path="*" element={<NotFound />} />
                   </Route>
                 </Routes>
+                </Suspense>
               </BrowserRouter>
             </AppLockGate>
           </ExchangeProvider>

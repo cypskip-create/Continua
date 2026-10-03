@@ -4,6 +4,7 @@ import { quotesApi } from "@/api/quotesApi";
 import { continuaRealtime } from "@/api/websocketClient";
 import { useExchange } from "@/hooks/useExchange";
 import type { Quote } from "@/api/types";
+import { readQuoteSnapshot, writeQuoteSnapshot } from "@/lib/quoteSnapshotCache";
 
 /**
  * The single hook every screen should use to get live Continua quotes.
@@ -38,6 +39,10 @@ export function useLiveQuotes(symbols: string[], exchange?: string) {
     [symbols.join(",")]
   );
   const key = normalized.join(",");
+  const persistedSnapshot = useMemo(
+    () => readQuoteSnapshot(activeExchange, normalized),
+    [activeExchange, normalized]
+  );
 
   const query = useQuery({
     queryKey: ["continua", "quotes", activeExchange, key],
@@ -45,6 +50,10 @@ export function useLiveQuotes(symbols: string[], exchange?: string) {
     enabled: normalized.length > 0,
     staleTime: 15_000,
     refetchInterval: 30_000,
+    refetchOnMount: "always",
+    refetchOnReconnect: "always",
+    initialData: persistedSnapshot?.quotes,
+    initialDataUpdatedAt: persistedSnapshot?.savedAt ?? 0,
     retry: 1,
   });
 
@@ -70,6 +79,13 @@ export function useLiveQuotes(symbols: string[], exchange?: string) {
     Object.values(liveTicks).forEach((q) => { map[q.symbol.toUpperCase()] = q; });
     return map;
   }, [query.data, liveTicks]);
+
+  useEffect(() => {
+    const snapshot = Object.values(quotes);
+    if (snapshot.length === 0) return;
+    const timer = window.setTimeout(() => writeQuoteSnapshot(activeExchange, snapshot), 250);
+    return () => window.clearTimeout(timer);
+  }, [activeExchange, quotes]);
 
   return {
     quotes,

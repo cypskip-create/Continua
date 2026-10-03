@@ -17,6 +17,7 @@ import { sweepUnextractedArtifacts } from "../extraction/extractionSweep.js";
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 import type { Source } from "../types.js";
+import { ensureDefaultSources } from "../config/defaultSources.js";
 
 const scheduledTasks: ScheduledTask[] = [];
 
@@ -46,6 +47,7 @@ export async function startScheduler(): Promise<ScheduledTask[]> {
     return [];
   }
 
+  await ensureDefaultSources();
   const sources = await listEnabledSources();
   for (const source of sources) {
     const cronExpression = source.config.schedule ?? env.DEFAULT_CRAWL_CRON;
@@ -61,6 +63,23 @@ export async function startScheduler(): Promise<ScheduledTask[]> {
     scheduledTasks.push(task);
     logger.info({ sourceId: source.id, adapter: source.adapter, cronExpression }, "Scheduled source");
   }
+
+  // Do not wait up to six hours for the first content. Run each source once
+  // at startup with bounded source-level concurrency; per-host throttling
+  // and each adapter's document concurrency still apply underneath.
+  void (async () => {
+    const pending = [...sources];
+    const workers = Array.from({ length: Math.min(2, pending.length) }, async () => {
+      for (;;) {
+        const source = pending.shift();
+        if (!source) return;
+        await runSourceOnce(source);
+      }
+    });
+    await Promise.all(workers);
+    await sweepUnextractedArtifacts(env.EXTRACTION_SWEEP_BATCH_SIZE);
+    logger.info({ sourceCount: sources.length }, "Initial source crawl complete");
+  })().catch((err) => logger.error({ err }, "Initial source crawl failed"));
 
   // Independent of any one source: catches up generic-crawled artifacts
   // (every source without a registered adapter — see registry.ts) that

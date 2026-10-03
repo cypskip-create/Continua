@@ -1,5 +1,5 @@
 import { query } from "./db.js";
-import type { Source } from "../types.js";
+import type { Source, SourceDefinition } from "../types.js";
 
 interface SourceRow {
   id: string;
@@ -51,7 +51,7 @@ export async function getSource(id: string): Promise<Source | null> {
  * throughout the codebase") and synced into this table at boot, not
  * edited by hand in the DB.
  */
-export async function upsertSource(source: Omit<Source, "createdAt" | "updatedAt">): Promise<void> {
+export async function upsertSource(source: SourceDefinition): Promise<void> {
   await query(
     `INSERT INTO scraping.sources
        (id, name, adapter, enabled, config, terms_url, robots_url, license, allowed_usage, redistribution_allowed, attribution_required, updated_at)
@@ -68,6 +68,32 @@ export async function upsertSource(source: Omit<Source, "createdAt" | "updatedAt
        redistribution_allowed = EXCLUDED.redistribution_allowed,
        attribution_required = EXCLUDED.attribution_required,
        updated_at = now()`,
+    [
+      source.id,
+      source.name,
+      source.adapter,
+      source.enabled,
+      JSON.stringify(source.config),
+      source.termsUrl,
+      source.robotsUrl,
+      source.license,
+      source.allowedUsage,
+      source.redistributionAllowed,
+      source.attributionRequired,
+    ],
+  );
+}
+
+
+/** Install a built-in source only when an operator has not already created
+ * it. Unlike upsertSource, this deliberately preserves a manual disable or
+ * local configuration change across restarts. */
+export async function insertSourceIfMissing(source: SourceDefinition): Promise<void> {
+  await query(
+    `INSERT INTO scraping.sources
+       (id, name, adapter, enabled, config, terms_url, robots_url, license, allowed_usage, redistribution_allowed, attribution_required)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+     ON CONFLICT (id) DO NOTHING`,
     [
       source.id,
       source.name,

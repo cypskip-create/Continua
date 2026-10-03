@@ -10,10 +10,22 @@ export const AFRIFINANCE_API_URL =
   (import.meta.env.VITE_AFRIFINANCE_API_URL as string | undefined) ??
   "http://localhost:4000/api/v1";
 
+function deriveWebSocketUrl(apiUrl: string): string {
+  const url = new URL(apiUrl);
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+  url.pathname = "";
+  url.search = "";
+  url.hash = "";
+  return url.toString().replace(/\/$/, "");
+}
+
+// The WebSocket server is attached to the same HTTP server as REST. Derive
+// the correct origin by default so local/dev deployments cannot silently
+// point live quotes at the old, unused :4001 listener.
 export const AFRIFINANCE_WS_URL =
   (import.meta.env.VITE_CONTINUA_WS_URL as string | undefined) ??
   (import.meta.env.VITE_AFRIFINANCE_WS_URL as string | undefined) ??
-  "ws://localhost:4001";
+  deriveWebSocketUrl(AFRIFINANCE_API_URL);
 
 // DEV-ONLY key, read from Vite env (see app/.env). This is a first-party key
 // for Continua's OWN backend, not an upstream NSE credential — but it is

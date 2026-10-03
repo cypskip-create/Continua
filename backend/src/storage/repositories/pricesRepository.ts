@@ -24,9 +24,33 @@ export const pricesRepository = {
 
   async upsertQuotesBatch(quotes: Quote[]): Promise<void> {
     if (quotes.length === 0) return;
-    // Sequential upserts are fine at NSE's ~60-symbol scale; if/when a much
-    // larger exchange is added, switch this to a single multi-row INSERT.
-    for (const q of quotes) await this.upsertQuote(q);
+    const columnsPerQuote = 18;
+    const values: unknown[] = [];
+    const rows = quotes.map((q, rowIndex) => {
+      const offset = rowIndex * columnsPerQuote;
+      values.push(
+        q.securityId, q.symbol, q.exchange, q.lastPrice, q.open, q.high, q.low,
+        q.previousClose, q.change, q.changePercent, q.volume, q.bid ?? null,
+        q.ask ?? null, q.marketCap ?? null, q.currency, q.status, q.timestamp, q.source,
+      );
+      return `(${Array.from({ length: columnsPerQuote }, (_, i) => `$${offset + i + 1}`).join(",")})`;
+    });
+
+    // One round trip and one transaction instead of N sequential INSERTs.
+    // On a hosted Postgres connection the old implementation could spend
+    // most of a polling interval waiting on network latency alone.
+    await query(
+      `INSERT INTO market.live_quotes
+         (security_id, symbol, exchange, last_price, open, high, low, previous_close,
+          change, change_percent, volume, bid, ask, market_cap, currency, status, event_timestamp, source)
+       VALUES ${rows.join(",")}
+       ON CONFLICT (security_id) DO UPDATE SET
+         last_price = EXCLUDED.last_price, open = EXCLUDED.open, high = EXCLUDED.high, low = EXCLUDED.low,
+         previous_close = EXCLUDED.previous_close, change = EXCLUDED.change, change_percent = EXCLUDED.change_percent,
+         volume = EXCLUDED.volume, bid = EXCLUDED.bid, ask = EXCLUDED.ask, market_cap = EXCLUDED.market_cap,
+         status = EXCLUDED.status, event_timestamp = EXCLUDED.event_timestamp, source = EXCLUDED.source, updated_at = now()`,
+      values,
+    );
   },
 
   async getQuote(securityId: string): Promise<Quote | null> {
