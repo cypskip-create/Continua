@@ -8,6 +8,7 @@ import { pricesRepository } from "../../storage/repositories/pricesRepository.js
 import { securitiesRepository } from "../../storage/repositories/securitiesRepository.js";
 import type { ComputedRatios, AfriScoreResult } from "../../types/market.js";
 import { logger } from "../../monitoring/logger.js";
+import { trailingDividendPerShare } from "./dividendMetrics.js";
 
 export const researchService = {
   /** Recomputes ratios + AfriScore for a security from whatever's currently
@@ -29,10 +30,7 @@ export const researchService = {
     const priceHistory90d = candles.map((c) => c.close);
 
     const dividends = await corporateActionsRepository.getDividendsBySecurity(securityId);
-    const ttmDividend = dividends
-      .filter((d) => d.details.type === "dividend")
-      .slice(0, 4)
-      .reduce((sum, d) => sum + (d.details.type === "dividend" ? d.details.amountPerShare : 0), 0);
+    const ttmDividend = trailingDividendPerShare(dividends, to);
 
     const ratioInputs = {
       price: currentPrice,
@@ -45,9 +43,10 @@ export const researchService = {
       totalEquity: latest.totalEquity,
       totalAssets: latest.totalAssets,
       totalDebt: latest.totalDebt,
+      cash: latest.cash,
       currentAssets: latest.currentAssets,
       currentLiabilities: latest.currentLiabilities,
-      dividendPerShareTtm: ttmDividend || undefined,
+      dividendPerShareTtm: ttmDividend,
       priceHistory90d: priceHistory90d.length ? priceHistory90d : undefined,
     };
 

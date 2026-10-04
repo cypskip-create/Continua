@@ -267,6 +267,11 @@ export function RobinhoodPerformanceChart({
           )}
         </div>
 
+        <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+          {activeTimeframe === "1D"
+            ? "Previous close to latest quote only; not an intraday price path."
+            : "Historical closes at today's share counts. Excludes past trades, cash flows and dividends; not your account's historical return."}
+        </p>
         {/* Timeframe */}
         <div className="flex justify-between mt-3 border-t border-border pt-3">
           {timeframes.map((tf) => (

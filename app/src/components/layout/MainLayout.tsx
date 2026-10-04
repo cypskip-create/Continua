@@ -1,18 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Outlet } from "react-router-dom";
 import { BottomNavigation } from "./BottomNavigation";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { SplashScreen } from "@/components/shared/SplashScreen";
 import { RouteSeo } from "@/components/shared/RouteSeo";
-import { AppLockGate } from "@/components/security/AppLockGate";
+import { PullToRefresh } from "./PullToRefresh";
 import { useAlertsWatcher } from "@/hooks/useAlertsWatcher";
 
 
 // Session-scoped: splash only shows once per app open, not on every re-mount.
 let splashShown = false;
 
-export function MainLayout() {
+export function MainLayout({ children }: { children?: React.ReactNode }) {
   const [showSplash, setShowSplash] = useState(!splashShown);
+  const dismissSplash = useCallback(() => setShowSplash(false), []);
 
   // App-wide: checks the person's own active price alerts against live
   // quotes so they fire the moment they're met while the app is open,
@@ -24,17 +25,15 @@ export function MainLayout() {
   return (
     <ProtectedRoute>
       <RouteSeo />
-      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
-      <AppLockGate>
+      {showSplash && <SplashScreen onDone={dismissSplash} />}
         <div className="min-h-screen bg-background">
-
+          <PullToRefresh>
           <div className="pb-20">
-            <Outlet />
+            {children ?? <Outlet />}
           </div>
-
+          </PullToRefresh>
           <BottomNavigation />
         </div>
-      </AppLockGate>
     </ProtectedRoute>
   );
 }

@@ -28,10 +28,10 @@ export interface RatioInputs {
 }
 
 const safeDiv = (a: number | null | undefined, b: number | null | undefined): number | undefined => {
-  if (a == null || b == null || b === 0) return undefined;
+  if (a == null || b == null || !Number.isFinite(a) || !Number.isFinite(b) || b === 0) return undefined;
   return a / b;
 };
-const round4 = (n: number | undefined) => (n == null ? undefined : Math.round(n * 10000) / 10000);
+const round4 = (n: number | undefined) => (n == null || !Number.isFinite(n) ? undefined : Math.round(n * 10000) / 10000);
 
 export function computeRatios(i: RatioInputs): Omit<ComputedRatios, "securityId" | "asOf"> {
   const eps = i.sharesOutstanding ? i.netIncome / i.sharesOutstanding : undefined;

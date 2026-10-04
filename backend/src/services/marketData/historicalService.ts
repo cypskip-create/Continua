@@ -3,12 +3,21 @@ import { securitiesRepository } from "../../storage/repositories/securitiesRepos
 import { cache, CacheKeys } from "../../storage/cache.js";
 import type { Candle, CandleInterval } from "../../types/market.js";
 import type { ExchangeCode } from "../../config/index.js";
+import { aggregateCandles } from "../analytics/candleAggregator.js";
 
 export const historicalService = {
   async getCandles(exchange: ExchangeCode, symbol: string, interval: CandleInterval, from: string, to: string): Promise<Candle[]> {
     return cache.getOrSet(CacheKeys.candles(exchange, symbol, interval, from, to), 30_000, async () => {
       const security = await securitiesRepository.getBySymbol(exchange, symbol);
       if (!security) return [];
+      // Reconstruct coarse bars from the daily source of truth. Older deployments
+      // stored Thursday-aligned weeks and partial top-up months/years; never mix
+      // those legacy rows with corrected bars or require a destructive cleanup.
+      if (interval === "1w" || interval === "1M" || interval === "1y") {
+        const daily = await candlesRepository.getCandles(security.id, "1d", from, to);
+        const start = new Date(from).getTime();
+        return aggregateCandles(daily, interval).filter((bar) => new Date(bar.timestamp).getTime() >= start);
+      }
       return candlesRepository.getCandles(security.id, interval, from, to);
     });
   },

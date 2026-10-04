@@ -32,6 +32,7 @@ import { extractFromHtml } from "./htmlExtract.js";
 import { canonicalizeUrl, isSameOrSubdomain } from "./urlNormalize.js";
 import { sha256 } from "./hash.js";
 import { env } from "../config/index.js";
+import { matchesDiscoveryPaths } from "./discoveryPolicy.js";
 
 const CRAWLER_VERSION = "scraper-phase6-0.1.0";
 
@@ -111,6 +112,7 @@ export async function crawlSource(sourceId: string, batchSize = 20): Promise<Cra
         sizeBytes: res.body.byteLength,
         storagePath,
         crawlerVersion: CRAWLER_VERSION,
+        title: source.config.issuerName ?? null,
       });
       if (isNew) summary.stored++;
 
@@ -129,6 +131,7 @@ export async function crawlSource(sourceId: string, batchSize = 20): Promise<Cra
             continue;
           }
           if (allowedDomains.length > 0 && !isSameOrSubdomain(linkUrl.hostname, allowedDomains)) continue;
+          if (!matchesDiscoveryPaths(link.url, source.config.discoveryPaths)) continue;
 
           await recordDiscovered({
             sourceId,

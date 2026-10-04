@@ -54,7 +54,11 @@ export async function recordDiscovered(params: {
   const res = await query<CrawlStateSqlRow>(
     `INSERT INTO scraping.crawl_state (source_id, url, canonical_url, parent_url, depth)
      VALUES ($1,$2,$3,$4,$5)
-     ON CONFLICT (source_id, url) DO UPDATE SET last_seen = now()
+     ON CONFLICT (source_id, url) DO UPDATE SET
+       status = CASE WHEN scraping.crawl_state.status IN ('crawled', 'failed')
+         AND COALESCE(scraping.crawl_state.last_crawled, scraping.crawl_state.last_seen) < now() - interval '1 day'
+         THEN 'discovered' ELSE scraping.crawl_state.status END,
+       last_seen = now()
      RETURNING *`,
     [params.sourceId, params.url, params.canonicalUrl ?? null, params.parentUrl ?? null, params.depth],
   );
@@ -67,10 +71,11 @@ export async function recordDiscovered(params: {
 export async function claimNextBatch(sourceId: string, limit: number): Promise<CrawlStateRow[]> {
   const res = await query<CrawlStateSqlRow>(
     `UPDATE scraping.crawl_state
-       SET status = 'queued'
+       SET status = 'queued', last_seen = now()
      WHERE id IN (
        SELECT id FROM scraping.crawl_state
-       WHERE source_id = $1 AND status = 'discovered'
+       WHERE source_id = $1 AND (status = 'discovered'
+         OR (status IN ('queued', 'crawling') AND last_seen < now() - interval '1 hour'))
        ORDER BY depth ASC, first_seen ASC
        LIMIT $2
        FOR UPDATE SKIP LOCKED

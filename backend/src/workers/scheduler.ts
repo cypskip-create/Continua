@@ -47,20 +47,26 @@ export async function startAllWorkers(): Promise<() => void> {
     logger.info("Bootstrapping reference data + fundamentals in background…");
     await runFinancialsSyncOnce();
 
-    await Promise.all([
+    const enrichment = await Promise.allSettled([
       runCorporateActionsSyncOnce(),
       runCandlesBackfillOnce(),
       runAnnouncementsBridgeOnce(),
       runFinancialCandidatesBridgeOnce(),
       runNewsBridgeOnce(),
     ]);
+    enrichment.forEach((result, index) => {
+      if (result.status === "rejected") logger.error({ err: result.reason, worker: ["actions", "candles", "announcements", "financial-candidates", "news"][index] }, "Enrichment failed; continuing independent workers");
+    });
 
     // Populate symbols that could not be priced until financials created
     // their security rows, then compute derived research data.
-    await runPriceIngestionOnce({ respectTradingCalendar: false });
-    await runIndexIngestionOnce({ respectTradingCalendar: false });
+    await Promise.allSettled([
+      runPriceIngestionOnce({ respectTradingCalendar: false }),
+      runIndexIngestionOnce({ respectTradingCalendar: false }),
+    ]);
     for (const exchange of ACTIVE_EXCHANGES) {
-      await researchService.recomputeAllForExchange(exchange);
+      try { await researchService.recomputeAllForExchange(exchange); }
+      catch (err) { logger.error({ err, exchange }, "Research recompute failed"); }
     }
     logger.info("Background bootstrap complete");
   })().catch((err) => logger.error({ err }, "Background bootstrap failed"));

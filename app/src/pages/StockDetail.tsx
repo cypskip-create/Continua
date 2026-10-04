@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { navigateBack } from "@/lib/navigation";
+import { useTouchClick } from "@/hooks/useTouchClick";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Heart, TrendingUp, TrendingDown, AlarmClock, GitCompare, MessageSquare, Plus, Pencil, Maximize2, Minimize2, CandlestickChart, LineChart as LineChartIcon, AreaChart as AreaChartIcon, ChevronRight, ChevronDown, FileText, Users2, Briefcase, Download, Building2, Eye, Bell, SlidersHorizontal, Crosshair, LayoutGrid, Expand, Shrink, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -100,8 +101,8 @@ const TIMEFRAME_LABELS: Record<string, string> = {
 export default function StockDetail() {
   const { exchangeMeta } = useExchange();
   const navigate = useNavigate();
-  const backTouchAt = useRef(0);
   const goBack = useCallback(() => navigateBack(navigate, "/markets"), [navigate]);
+  const backTap = useTouchClick<HTMLButtonElement>();
   const { symbol } = useParams();
   const [selectedTimeframe, setSelectedTimeframe] = useState("1D");
   const [chartType, setChartType] = useState<ChartType>("area");
@@ -533,18 +534,10 @@ export default function StockDetail() {
             <Button
               type="button"
               aria-label="Back to markets"
+              {...backTap}
               variant="ghost"
               size="icon"
-              onPointerUp={(event) => {
-                if (event.pointerType !== "touch" && event.pointerType !== "pen") return;
-                event.preventDefault();
-                backTouchAt.current = Date.now();
-                goBack();
-              }}
-              onClick={(event) => {
-                if (Date.now() - backTouchAt.current < 700) { event.preventDefault(); return; }
-                goBack();
-              }}
+              onClick={goBack}
               className="tap-scale h-9 w-9 shrink-0 pointer-events-auto touch-manipulation"
             >
               <ArrowLeft className="h-5 w-5" />

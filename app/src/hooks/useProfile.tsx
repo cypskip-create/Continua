@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { usePageRefresh } from './usePageRefresh';
 
 export interface Profile {
   id: string;
@@ -74,6 +75,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   };
+
+  usePageRefresh(fetchProfile);
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: 'Not signed in' };

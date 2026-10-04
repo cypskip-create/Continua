@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { layoutMetricBubbles } from "@/lib/metricLayout";
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -25,6 +26,16 @@ const median = (values: number[]) => {
  * prevent collisions and carry no analytical meaning. */
 export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel = "Market", fmt, unavailableCount }: MetricDotPlotProps) {
   const navigate = useNavigate();
+  const plotRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(280);
+  const hasPlot = points.length > 0 || portfolioValue != null;
+  useEffect(() => {
+    const element = plotRef.current;
+    if (!element) return;
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [hasPlot]);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const values = points.map((point) => point.value);
   const middle = median(values);
@@ -51,16 +62,11 @@ export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel
   const directionSample = visiblePoints.find((point) => point.good != null && portfolioValue != null && point.value !== portfolioValue);
   const higherIsBetter = directionSample ? directionSample.good === (directionSample.value > (portfolioValue ?? 0)) : true;
 
-  const positioned = (() => {
-    const laneEnds = [-100, -100, -100, -100];
-    return [...visiblePoints].sort((a, b) => a.value - b.value).map((point, index) => {
-      const x = pctOf(point.value);
-      let lane = laneEnds.findIndex((end) => x - end > 12);
-      if (lane < 0) lane = index % laneEnds.length;
-      laneEnds[lane] = x;
-      return { ...point, x, lane };
-    });
-  })();
+  const pixelX = (value: number) => 38 + pctOf(value) / 100 * Math.max(1, width - 76);
+  const positioned = layoutMetricBubbles(visiblePoints.map((point) => ({
+    ...point, x: pixelX(point.value), size: 38 + Math.sqrt(Math.max(0, point.weight ?? 1) / maxWeight) * 30,
+  })));
+  const plotHeight = Math.max(310, (Math.max(0, ...positioned.map((point) => point.lane)) + 1) * 80 + 30);
 
   if (points.length === 0 && portfolioValue == null) {
     return <p className="py-10 text-center text-sm text-muted-foreground">No verified data is available for this metric yet.</p>;
@@ -82,13 +88,13 @@ export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel
       </div>
 
       <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
-        <div className="relative h-[310px] overflow-hidden rounded-lg" style={{ background: higherIsBetter ? "linear-gradient(90deg, hsl(var(--bear)/.10), hsl(var(--bull)/.10))" : "linear-gradient(90deg, hsl(var(--bull)/.10), hsl(var(--bear)/.10))" }}>
-          {ticks.map((_, index) => <span key={index} className="absolute inset-y-0 border-l border-border/50" style={{ left: `${index * 25}%` }} />)}
-          {marketValue != null && <span className="absolute inset-y-0 z-[1] border-l-2 border-dashed border-foreground/65" style={{ left: `${pctOf(marketValue)}%` }} />}
-          {portfolioValue != null && <span className="absolute inset-y-0 z-[1] border-l-[3px] border-sky-500" style={{ left: `${pctOf(portfolioValue)}%` }} />}
+        <div ref={plotRef} className="relative overflow-hidden rounded-lg" style={{ height: plotHeight, background: higherIsBetter ? "linear-gradient(90deg, hsl(var(--bear)/.10), hsl(var(--bull)/.10))" : "linear-gradient(90deg, hsl(var(--bull)/.10), hsl(var(--bear)/.10))" }}>
+          {ticks.map((tick, index) => <span key={index} className="absolute inset-y-0 border-l border-border/50" style={{ left: pixelX(tick) }} />)}
+          {marketValue != null && <span className="absolute inset-y-0 z-[1] border-l-2 border-dashed border-foreground/65" style={{ left: pixelX(marketValue) }} />}
+          {portfolioValue != null && <span className="absolute inset-y-0 z-[1] border-l-[3px] border-sky-500" style={{ left: pixelX(portfolioValue) }} />}
 
           {positioned.map((point) => {
-            const size = 38 + Math.sqrt((point.weight ?? 1) / maxWeight) * 30;
+            const size = point.size;
             return (
               <button
                 key={point.symbol}
@@ -96,14 +102,14 @@ export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel
                 aria-label={`${point.symbol}: ${fmt(point.value)}`}
                 onClick={() => setSelectedSymbol(point.symbol)}
                 className={`absolute z-[2] grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-background text-[10px] font-bold text-white shadow-md transition-transform active:scale-95 ${point.good === false ? "bg-bear" : point.good === true ? "bg-bull" : "bg-muted-foreground"} ${selectedSymbol === point.symbol ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
-                style={{ left: `${point.x}%`, top: `${20 + point.lane * 21}%`, width: size, height: size }}
+                style={{ left: point.x, top: 55 + point.lane * 80, width: size, height: size }}
               >
                 {point.symbol}
               </button>
             );
           })}
         </div>
-        <div className="mt-2 flex justify-between text-[10px] tabular-nums text-muted-foreground">{ticks.map((tick, index) => <span key={index}>{fmt(tick)}</span>)}</div>
+        <div className="relative mt-2 h-5 text-[10px] tabular-nums text-muted-foreground">{ticks.map((tick, index) => <span className="absolute -translate-x-1/2" style={{ left: pixelX(tick) }} key={index}>{fmt(tick)}</span>)}</div>
       </div>
 
       {outliers.size > 0 && hideOutliers && <p className="text-[11px] text-muted-foreground">Hiding {[...outliers].join(", ")}, which sit far outside the range of the other holdings. Portfolio and market reference lines still use the complete dataset.</p>}

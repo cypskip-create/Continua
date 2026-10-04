@@ -38,6 +38,7 @@ export function AddInvestmentDialog({
   const { portfolio, addToPortfolio, updatePortfolioItem } = usePortfolio();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const existing: PortfolioItem | undefined = lockedSymbol
     ? portfolio.find(p => p.symbol.toUpperCase() === lockedSymbol.toUpperCase())
@@ -63,10 +64,13 @@ export function AddInvestmentDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    try {
     const sharesNum = parseFloat(shares);
     const costNum = parseFloat(avgCost);
 
-    if (!symbol || !name || !sharesNum || !costNum) {
+    if (!symbol || !name || !Number.isFinite(sharesNum) || sharesNum <= 0 || !Number.isFinite(costNum) || costNum < 0) {
       toast({ title: "Missing info", description: "Fill all required fields", variant: "destructive" });
       return;
     }
@@ -102,6 +106,7 @@ export function AddInvestmentDialog({
     }
 
     setOpen(false);
+    } finally { setSaving(false); }
   };
 
   const defaultTrigger = (
@@ -225,8 +230,8 @@ export function AddInvestmentDialog({
 
           <div className="flex gap-2.5 pt-1">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1 h-10">Cancel</Button>
-            <Button type="submit" className="flex-1 h-10 btn-primary">
-              {existing ? "Save Changes" : "Add Investment"}
+            <Button type="submit" disabled={saving} className="flex-1 h-10 btn-primary">
+              {saving ? "Saving…" : existing ? "Save Changes" : "Add Investment"}
             </Button>
           </div>
         </form>

@@ -14,9 +14,9 @@ export const candlesRepository = {
         const chunk = candles.slice(i, i + chunkSize);
         const values: unknown[] = [];
         const rows = chunk.map((c, idx) => {
-          const base = idx * 7;
-          values.push(c.securityId, c.interval, c.timestamp, c.open, c.high, c.low, c.close);
-          return `($${base + 1},$${base + 2},$${base + 3},$${base + 4},$${base + 5},$${base + 6},$${base + 7},${c.volume})`;
+          const base = idx * 8;
+          values.push(c.securityId, c.interval, c.timestamp, c.open, c.high, c.low, c.close, c.volume);
+          return `($${base + 1},$${base + 2},$${base + 3},$${base + 4},$${base + 5},$${base + 6},$${base + 7},$${base + 8})`;
         });
         await client.query(
           `INSERT INTO market.candles (security_id, interval, bar_time, open, high, low, close, volume)

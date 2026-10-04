@@ -64,21 +64,26 @@ export function useLiveQuotes(symbols: string[], exchange?: string) {
     setLiveTicks({});
     const unsubscribers = normalized.map((symbol) =>
       continuaRealtime.subscribeQuote(symbol, (quote) => {
+        if (quote.exchange !== activeExchange) return;
         setLiveTicks((prev) => ({ ...prev, [symbol]: quote }));
       })
     );
     return () => unsubscribers.forEach((unsub) => unsub());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, activeExchange]);
 
   useEffect(() => continuaRealtime.onConnectionChange(setIsConnected), []);
 
   const quotes = useMemo(() => {
     const map: Record<string, Quote> = {};
     (query.data ?? []).forEach((q) => { map[q.symbol.toUpperCase()] = q; });
-    Object.values(liveTicks).forEach((q) => { map[q.symbol.toUpperCase()] = q; });
+    Object.values(liveTicks).forEach((q) => {
+      if (q.exchange !== activeExchange) return;
+      const current = map[q.symbol.toUpperCase()];
+      if (!current || new Date(q.timestamp).getTime() >= new Date(current.timestamp).getTime()) map[q.symbol.toUpperCase()] = q;
+    });
     return map;
-  }, [query.data, liveTicks]);
+  }, [query.data, liveTicks, activeExchange]);
 
   useEffect(() => {
     const snapshot = Object.values(quotes);

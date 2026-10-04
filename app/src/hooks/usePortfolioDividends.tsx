@@ -1,6 +1,7 @@
 import { useQueries } from "@tanstack/react-query";
 import { corporateActionsApi } from "@/api/corporateActionsApi";
 import type { CorporateAction } from "@/api/types";
+import { dividendWindows } from "@/lib/dividendWindows";
 
 export interface DividendPayout {
   amountPerShare: number;
@@ -13,8 +14,8 @@ export interface DividendPayout {
 export interface HoldingDividendData {
   symbol: string;
   payouts: DividendPayout[];       // real, most-recent-first
-  ttmPerShare: number;             // sum of last 4 real payouts
-  priorTtmPerShare: number | null; // sum of the 4 before that, if on record
+  ttmPerShare: number;             // recorded ex-dividends in the last calendar year
+  priorTtmPerShare: number | null; // recorded ex-dividends in the preceding calendar year
   growthPct: number | null;        // ttm vs priorTtm, null if not enough history
   avgIntervalDays: number | null;  // median gap between consecutive ex-dates
   lastExDate: string | null;
@@ -45,17 +46,12 @@ function toDividendPayout(action: CorporateAction): DividendPayout | null {
 
 function analyze(symbol: string, actions: CorporateAction[]): HoldingDividendData {
   const payouts = actions
+    .filter((action) => action.type === "dividend" && action.status !== "cancelled")
     .map(toDividendPayout)
     .filter((p): p is DividendPayout => !!p && !!p.exDate)
     .sort((a, b) => new Date(b.exDate as string).getTime() - new Date(a.exDate as string).getTime());
 
-  const ttmPerShare = payouts.slice(0, 4).reduce((s, p) => s + p.amountPerShare, 0);
-  const priorTtmPerShare = payouts.length >= 8
-    ? payouts.slice(4, 8).reduce((s, p) => s + p.amountPerShare, 0)
-    : null;
-  const growthPct = priorTtmPerShare && priorTtmPerShare > 0
-    ? ((ttmPerShare - priorTtmPerShare) / priorTtmPerShare) * 100
-    : null;
+  const { ttm: ttmPerShare, prior: priorTtmPerShare, growth: growthPct } = dividendWindows(payouts);
 
   const gaps: number[] = [];
   for (let i = 0; i < payouts.length - 1; i++) {

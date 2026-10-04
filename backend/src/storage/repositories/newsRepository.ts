@@ -95,6 +95,30 @@ export const newsRepository = {
     publishedAt: string | null;
   }): Promise<void> {
     await withTransaction(async (client) => {
+      // Serialize same-URL receipts even before the optional unique-index
+      // migration is installed. Repeated crawls must not fail that index.
+      await client.query(`SELECT pg_advisory_xact_lock(hashtextextended(lower(regexp_replace(split_part($1, '?', 1), '/$', '')), 0))`, [input.articleUrl]);
+      const existing = await client.query<{ id: string }>(
+        `SELECT id FROM market.news_items WHERE scraped_extraction_id = $1
+         OR lower(regexp_replace(split_part(article_url, '?', 1), '/$', '')) =
+            lower(regexp_replace(split_part($2, '?', 1), '/$', ''))
+         ORDER BY created_at ASC LIMIT 1`, [input.scrapedExtractionId, input.articleUrl],
+      );
+      if (existing.rows[0]) {
+        const id = existing.rows[0].id;
+        await client.query(
+          `UPDATE market.news_items SET headline=$2, excerpt=$3, category=$4, image_url=$5,
+           scraped_artifact_id=$6, scraped_extraction_id=$7, extraction_confidence=$8,
+           needs_review=$9, updated_at=now() WHERE id=$1`,
+          [id, input.headline, input.excerpt, input.category, input.imageUrl, input.scrapedArtifactId,
+           input.scrapedExtractionId, input.extractionConfidence, input.needsReview],
+        );
+        await client.query(`DELETE FROM market.news_item_securities WHERE news_item_id=$1`, [id]);
+        for (const securityId of input.securityIds) await client.query(
+          `INSERT INTO market.news_item_securities (news_item_id, security_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`, [id, securityId],
+        );
+        return;
+      }
       const res = await client.query<{ id: string }>(
         `INSERT INTO market.news_items
            (headline, excerpt, article_url, source, source_name, category, image_url,

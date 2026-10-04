@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { usePageRefresh } from './usePageRefresh';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
@@ -98,6 +99,7 @@ export function useWatchlist() {
     }
   }, [user]);
 
+  usePageRefresh(fetchWatchlist);
   useEffect(() => {
     if (user) {
       fetchFolders();

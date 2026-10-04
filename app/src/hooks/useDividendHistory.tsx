@@ -27,9 +27,10 @@ export function useDividendHistory(symbol: string | undefined) {
     const actions = query.data ?? [];
     const byYear = new Map<string, number>();
     for (const action of actions) {
+      if (action.status === "cancelled" || action.type !== "dividend") continue;
       const amount = Number((action.details as { amountPerShare?: number })?.amountPerShare ?? 0);
-      const dateStr = action.exDate ?? action.announcedAt;
-      if (!dateStr || !amount) continue;
+      const dateStr = action.exDate;
+      if (!dateStr || !amount || !Number.isFinite(Date.parse(dateStr)) || Date.parse(dateStr) > Date.now()) continue;
       const year = String(new Date(dateStr).getFullYear());
       byYear.set(year, (byYear.get(year) ?? 0) + amount);
     }

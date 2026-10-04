@@ -6,6 +6,21 @@ import { insertSourceIfMissing } from "../storage/sourcesRepository.js";
  * articles. Operators can disable or edit any seeded row and that choice is
  * preserved because startup only inserts missing IDs. */
 export const DEFAULT_SOURCES: SourceDefinition[] = [
+  ...[
+    { id: "safaricom-filings", name: "Safaricom PLC", domain: "safaricom.co.ke", seeds: ["https://www.safaricom.co.ke/investor-relations-landing/reports/financial-report/financial-results"], paths: ["/investor-relations", "/annualreport", "/images/downloads/"] },
+    { id: "kcb-filings", name: "KCB Group PLC", domain: "kcbgroup.com", seeds: ["https://kcbgroup.com/investor-relations/", "https://kcbgroup.com/financial-statements"], paths: ["/investor", "/financial", "/annual", ".pdf"] },
+    { id: "equity-filings", name: "Equity Group Holdings PLC", domain: "equitygroupholdings.com", seeds: ["https://equitygroupholdings.com/investor-relation/?cat=financial-results"], paths: ["/investor", "/wp-content/uploads/", "financial-results", "annual-report"] },
+  ].map((issuer, index): SourceDefinition => ({
+    id: issuer.id, name: `${issuer.name} historical filings`, adapter: "web", enabled: true,
+    config: {
+      seeds: issuer.seeds, allowedDomains: [issuer.domain], discoveryPaths: issuer.paths,
+      issuerName: issuer.name, maxDepth: 3, requestsPerSecond: 0.2, concurrency: 1,
+      schedule: `${10 + index * 15} 4 * * *`, documents: { pdf: true, ocr: true, tables: true },
+    },
+    termsUrl: `https://${issuer.domain}/`, robotsUrl: `https://${issuer.domain}/robots.txt`,
+    license: null, redistributionAllowed: null, attributionRequired: true,
+    allowedUsage: "Public issuer filings for financial-statement review, with period, currency and unit verification. Retain provenance; no automatic full-document republication.",
+  })),
   {
     id: "nse",
     name: "Nairobi Securities Exchange",

@@ -111,7 +111,7 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
               nodePadding={22}
               margin={{ top: 8, right: 92, bottom: 8, left: 8 }}
               link={{ stroke: FLOW_COLOR, strokeOpacity: hasHoldings ? 0.35 : 0.12 }}
-              node={(props: SankeyNodeProps) => (
+              node={(props) => (
                 <SankeyNodeShape {...props} rootIndex={0} sectorCount={sankeyData.sectors.length} muted={!hasHoldings} totalValue={totalValue} />
               )}
             >

@@ -57,6 +57,8 @@ async function fetchPendingExtractions(limit: number): Promise<PendingNewsRow[]>
        AND e.text IS NOT NULL AND btrim(e.text) <> ''
        AND NOT EXISTS (
          SELECT 1 FROM market.news_items n WHERE n.scraped_extraction_id = e.id
+           OR lower(regexp_replace(split_part(n.article_url, '?', 1), '/$', '')) =
+              lower(regexp_replace(split_part(a.document_url, '?', 1), '/$', ''))
        )
      ORDER BY e.extracted_at ASC
      LIMIT $1`,

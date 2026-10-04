@@ -3,7 +3,7 @@ import type { ComputedRatios, AfriScoreResult } from "../../types/market.js";
 
 export const scoresRepository = {
   async upsertRatios(r: ComputedRatios): Promise<void> {
-    await query(
+    try { await query(
       `INSERT INTO market.computed_ratios
          (security_id, as_of, pe, ps, pb, ev_ebitda, roe, roa, roic, gross_margin, operating_margin, net_margin,
           dividend_yield, payout_ratio, current_ratio, debt_to_equity, interest_coverage, price_momentum_3m, volatility_90d)
@@ -17,12 +17,36 @@ export const scoresRepository = {
       [r.securityId, r.asOf, r.pe ?? null, r.ps ?? null, r.pb ?? null, r.evEbitda ?? null, r.roe ?? null, r.roa ?? null, r.roic ?? null,
        r.grossMargin ?? null, r.operatingMargin ?? null, r.netMargin ?? null, r.dividendYield ?? null, r.payoutRatio ?? null,
        r.currentRatio ?? null, r.debtToEquity ?? null, r.interestCoverage ?? null, r.priceMomentum3m ?? null, r.volatility90d ?? null]
-    );
+    ); } catch (error) {
+      // Rolling deployment: keep all existing research available while the
+      // additive PS migration is awaiting application. Don't mask other errors.
+      const pgError = error as { code?: string; message?: string };
+      if (pgError.code !== "42703" || !/\bps\b/.test(pgError.message ?? "")) throw error;
+      await query(
+        `INSERT INTO market.computed_ratios
+          (security_id, as_of, pe, pb, ev_ebitda, roe, roa, roic, gross_margin, operating_margin, net_margin,
+           dividend_yield, payout_ratio, current_ratio, debt_to_equity, interest_coverage, price_momentum_3m, volatility_90d)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+         ON CONFLICT (security_id) DO UPDATE SET
+           as_of=EXCLUDED.as_of, pe=EXCLUDED.pe, pb=EXCLUDED.pb, ev_ebitda=EXCLUDED.ev_ebitda,
+           roe=EXCLUDED.roe, roa=EXCLUDED.roa, roic=EXCLUDED.roic, gross_margin=EXCLUDED.gross_margin,
+           operating_margin=EXCLUDED.operating_margin, net_margin=EXCLUDED.net_margin,
+           dividend_yield=EXCLUDED.dividend_yield, payout_ratio=EXCLUDED.payout_ratio,
+           current_ratio=EXCLUDED.current_ratio, debt_to_equity=EXCLUDED.debt_to_equity,
+           interest_coverage=EXCLUDED.interest_coverage, price_momentum_3m=EXCLUDED.price_momentum_3m,
+           volatility_90d=EXCLUDED.volatility_90d`,
+        [r.securityId, r.asOf, r.pe ?? null, r.pb ?? null, r.evEbitda ?? null, r.roe ?? null, r.roa ?? null, r.roic ?? null,
+         r.grossMargin ?? null, r.operatingMargin ?? null, r.netMargin ?? null, r.dividendYield ?? null, r.payoutRatio ?? null,
+         r.currentRatio ?? null, r.debtToEquity ?? null, r.interestCoverage ?? null, r.priceMomentum3m ?? null, r.volatility90d ?? null],
+      );
+    }
   },
 
   async getRatios(securityId: string): Promise<ComputedRatios | null> {
     const res = await query<any>(
-      `SELECT security_id as "securityId", as_of as "asOf", pe, ps, pb, ev_ebitda as "evEbitda", roe, roa, roic,
+      `SELECT security_id as "securityId", as_of as "asOf", pe,
+              COALESCE((to_jsonb(computed_ratios)->>'ps')::numeric, pe * net_margin) as ps,
+              pb, ev_ebitda as "evEbitda", roe, roa, roic,
               gross_margin as "grossMargin", operating_margin as "operatingMargin", net_margin as "netMargin",
               dividend_yield as "dividendYield", payout_ratio as "payoutRatio", current_ratio as "currentRatio",
               debt_to_equity as "debtToEquity", interest_coverage as "interestCoverage",

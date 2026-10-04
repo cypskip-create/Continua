@@ -6,8 +6,8 @@
  */
 import type { Candle, CandleInterval } from "../../types/market.js";
 
-// Fixed-length intervals bucket cleanly by dividing epoch-ms — a "week" is
-// always exactly 7*86400000ms. Months and years are NOT fixed-length
+// Intraday/daily intervals bucket cleanly by dividing epoch-ms. Weeks need
+// Monday alignment, while months and years are NOT fixed-length
 // (28-31 days; 365-366 days), so bucketing them the same way is wrong: a
 // naive `Math.floor(t / (30 * 86400000))` puts Jan 30 and Feb 2 in the same
 // "30-day" bucket depending on epoch alignment, silently merging two
@@ -15,13 +15,19 @@ import type { Candle, CandleInterval } from "../../types/market.js";
 // calendar month/year instead — see bucketKeyFor below.
 const FIXED_BUCKET_MS: Partial<Record<CandleInterval, number>> = {
   "1m": 60_000, "5m": 5 * 60_000, "15m": 15 * 60_000, "1h": 3_600_000,
-  "1d": 86_400_000, "1w": 7 * 86_400_000,
+  "1d": 86_400_000,
 };
 
 /** Returns a bucket key (not necessarily a timestamp) that groups candles
  *  correctly for the target interval, plus the ISO timestamp that should
  *  represent that bucket's start. */
 function bucketFor(date: Date, targetInterval: CandleInterval): { key: string; startIso: string } {
+  if (targetInterval === "1w") {
+    // Exchange weeks begin Monday, not Thursday (Unix epoch alignment).
+    const monday = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    monday.setUTCDate(monday.getUTCDate() - (monday.getUTCDay() + 6) % 7);
+    return { key: monday.toISOString(), startIso: monday.toISOString() };
+  }
   const fixedMs = FIXED_BUCKET_MS[targetInterval];
   if (fixedMs) {
     const bucketStartMs = Math.floor(date.getTime() / fixedMs) * fixedMs;

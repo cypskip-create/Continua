@@ -33,7 +33,7 @@ const TIMEFRAME_DAYS: Record<string, number | undefined> = {
  *
  * "1D" isn't covered here, same reason `useHistoricalCandles` skips it —
  * no intraday candle source exists yet (see that hook's note). Callers
- * should keep a generated/estimated shape for that one timeframe only.
+ * must show an unavailable state instead of inventing intraday performance.
  */
 export function usePortfolioHistory(holdings: { symbol: string; shares: number }[], timeframe: string) {
   const days = timeframe === "YTD" ? undefined : TIMEFRAME_DAYS[timeframe];
@@ -86,7 +86,7 @@ export function usePortfolioHistory(holdings: { symbol: string; shares: number }
     const out: PortfolioHistoryPoint[] = [];
     for (const d of sortedDates) {
       let value = 0;
-      let anyPriced = false;
+      let allPriced = true;
       for (const h of holdings) {
         const sym = h.symbol.toUpperCase();
         const close = perSymbol.get(sym)?.get(d);
@@ -94,10 +94,9 @@ export function usePortfolioHistory(holdings: { symbol: string; shares: number }
         const price = close ?? lastKnown.get(sym);
         if (price != null) {
           value += price * h.shares;
-          anyPriced = true;
-        }
+        } else allPriced = false;
       }
-      if (anyPriced) out.push({ date: d, timestamp: new Date(d).getTime(), value });
+      if (allPriced) out.push({ date: d, timestamp: new Date(d).getTime(), value });
     }
     return out;
   }, [results, symbols, holdings, supported]);

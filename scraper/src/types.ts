@@ -7,6 +7,10 @@ export interface SourceConfig {
   seeds?: string[];
   allowedDomains?: string[];
   maxDepth?: number;
+  /** Case-insensitive URL path fragments allowed during link discovery. Seeds are explicit. */
+  discoveryPaths?: string[];
+  /** Explicit publisher identity for first-party issuer archives, not inferred from article mentions. */
+  issuerName?: string;
   concurrency?: number;
   requestsPerSecond?: number;
   /** Cron expression for how often this source should run — Phase 6. Falls back to env.DEFAULT_CRAWL_CRON if unset. */

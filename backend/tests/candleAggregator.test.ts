@@ -7,6 +7,13 @@ function makeDailyCandle(dateStr: string, open: number, high: number, low: numbe
 }
 
 describe("aggregateCandles", () => {
+  it("keeps Monday through Friday in the same trading week", () => {
+    const daily = [5, 6, 7, 8, 9].map((day) => makeDailyCandle(`2026-01-0${day}`, 10, 12, 9, 11));
+    const bars = aggregateCandles(daily, "1w");
+    expect(bars).toHaveLength(1);
+    expect(bars[0]!.timestamp).toBe("2026-01-05T00:00:00.000Z");
+    expect(bars[0]!.volume).toBe(5000);
+  });
   it("returns an empty array for empty input", () => {
     expect(aggregateCandles([], "1w")).toEqual([]);
   });

@@ -6,7 +6,7 @@ import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { MainLayout } from "./components/layout/MainLayout";
-import { AuthProvider } from "./hooks/useAuth";
+import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ProfileProvider } from "./hooks/useProfile";
 import { ExchangeProvider } from "./hooks/useExchange";
 import { Analytics } from "@vercel/analytics/react";
@@ -42,6 +42,12 @@ const AdminFinancialsReview = lazy(() => import("./pages/AdminFinancialsReview")
 
 const queryClient = new QueryClient();
 
+function EntryPage() {
+  const { user, loading } = useAuth();
+  if (loading) return <div role="status" className="min-h-screen bg-background p-6">Loading…</div>;
+  return user ? <MainLayout><Home /></MainLayout> : <Landing />;
+}
+
 // Lives inside <BrowserRouter> (needs router context) and renders nothing —
 // it just keeps window scroll position in sync with navigation, app-wide.
 function ScrollRestorationController() {
@@ -65,7 +71,7 @@ const App = () => (
                 <ScrollRestorationController />
                 <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="h-7 w-7 rounded-full border-2 border-muted-foreground/25 border-t-primary animate-spin" /></div>}>
                 <Routes>
-                  <Route path="/" element={<Landing />} />
+                  <Route path="/" element={<EntryPage />} />
                   <Route path="/landing" element={<Landing />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/admin/financials-review" element={<AdminFinancialsReview />} />

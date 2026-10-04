@@ -12,8 +12,8 @@
  * execute the SPA's JS) — never the actual rendered DOM. Writing cheerio
  * selectors against markup that was never seen would be guessing, which
  * is exactly what this project has repeatedly ruled out. So parse() here
- * does the same generic thing extractByContentType.ts's HTML branch does
- * for any ordinary page — strip to body text — and flags everything
+ * preserves body text and generic financial-table rows (labels, units and
+ * reported period headers), without guessing field mappings, and flags everything
  * needsReview so nothing from this source is ever silently treated as
  * confirmed. Once someone can see the real rendered DOM (e.g. paste
  * output of `page.content()` after a manual run, or an actual browser's
@@ -26,6 +26,7 @@
  * redistributionAllowed, same gate as everywhere else in this project).
  */
 import * as cheerio from "cheerio";
+import { extractHtmlFinancialTables } from "../../extraction/htmlFinancialTables.js";
 import { renderPage } from "../../crawler/renderWithBrowser.js";
 import { isAllowedByRobots } from "../../crawler/robotsCheck.js";
 import { sha256 } from "../../crawler/hash.js";
@@ -129,7 +130,7 @@ export const kenyanstocksAdapter: SourceAdapter = {
       method: "html",
       confidence: looksUsable ? 0.4 : 0.1, // capped below extractByContentType.ts's normal HTML confidence — see module doc comment on why nothing here is a confirmed parse
       text: looksUsable ? text : null,
-      tables: [],
+      tables: extractHtmlFinancialTables(fetched.body.toString("utf-8")),
       entity: { companyName: null, ticker: (fetched.document.context?.ticker as string | undefined) ?? null, exchange: "NSE" },
       needsReview: true, // always — see module doc comment
     };

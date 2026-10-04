@@ -36,15 +36,13 @@ export async function ingestDailyCandles(adapter: IExchangeAdapter, symbols: str
       );
       const { valid: validShapes, rejected } = validateBatch(CandleSchema, raw);
       rejected.forEach((r) => errors.push(`${symbol}: candle rejected: ${JSON.stringify(r.issues)}`));
-      const validIds = new Set(validShapes.map((v) => `${v.securityId}:${v.timestamp}`));
 
       // A well-behaved feed shouldn't send the same bar twice in one
       // response, but a paginated/retried provider call sometimes does —
       // drop repeats before they hit an upsert (which would silently mask
       // it) so it's visible in the ingestion log instead.
       const seen = new Set<string>();
-      const daily = raw.filter((c) => {
-        if (!validIds.has(`${c.securityId}:${c.timestamp}`)) return false;
+      const daily = validShapes.filter((c) => {
         if (checkDuplicateCandle(seen, `${c.securityId}:${c.interval}:${c.timestamp}`)) {
           duplicatesDropped++;
           return false;
@@ -56,12 +54,19 @@ export async function ingestDailyCandles(adapter: IExchangeAdapter, symbols: str
       await candlesRepository.upsertCandlesBatch(daily);
       stored += daily.length;
 
-      // Derive higher timeframes from the daily series we just fetched —
-      // no separate adapter calls needed for weekly/monthly/yearly.
+      // Never replace an entire month/year with a five-day top-up. Rebuild
+      // touched buckets from stored daily history, including cross-year weeks.
+      const earliest = Math.min(...daily.map((c) => new Date(c.timestamp).getTime()));
+      const yearStart = Date.UTC(new Date(earliest).getUTCFullYear(), 0, 1);
+      const history = await candlesRepository.getCandles(
+        daily[0]!.securityId, "1d", new Date(yearStart - 7 * 86_400_000).toISOString(), to.toISOString(),
+      );
+      const touched = (interval: "1w" | "1M" | "1y") => {
+        const keys = new Set(aggregateCandles(daily, interval).map((c) => c.timestamp));
+        return aggregateCandles(history, interval).filter((c) => keys.has(c.timestamp));
+      };
       const derived: Candle[] = [
-        ...aggregateCandles(daily, "1w"),
-        ...aggregateCandles(daily, "1M"),
-        ...aggregateCandles(daily, "1y"),
+        ...touched("1w"), ...touched("1M"), ...touched("1y"),
       ];
       if (derived.length) {
         await candlesRepository.upsertCandlesBatch(derived);

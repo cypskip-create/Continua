@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { usePageRefresh } from './usePageRefresh';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -58,6 +59,7 @@ export function useNotifications() {
     setLoading(false);
   }, [user]);
 
+  usePageRefresh(fetch);
   useEffect(() => { fetch(); }, [fetch]);
 
   // Realtime

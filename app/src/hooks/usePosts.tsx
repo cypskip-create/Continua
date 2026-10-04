@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { usePageRefresh } from './usePageRefresh';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
@@ -276,6 +277,7 @@ export function usePosts() {
     }
   }, [user, cacheKey]);
 
+  usePageRefresh(fetchPosts);
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
   useEffect(() => { if (posts.length > 0) { __postsCache = posts; __postsCacheKey = cacheKey; } }, [posts, cacheKey]);
 

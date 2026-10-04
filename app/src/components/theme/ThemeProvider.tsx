@@ -32,15 +32,15 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove("light", "dark", "amoled");
-
-    let applied: Exclude<Theme, "system"> = "light";
-    if (theme === "system") {
-      applied = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    } else {
-      applied = theme;
-    }
-    root.classList.add(applied);
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      root.classList.remove("light", "dark", "amoled");
+      root.classList.add(theme === "system" ? (media.matches ? "dark" : "light") : theme);
+    };
+    apply();
+    if (theme !== "system") return;
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
   }, [theme]);
 
   const value = {

@@ -42,7 +42,10 @@ export async function runCandlesTopUpOnce(): Promise<void> {
 
 /** Runs shortly after market close on trading days. */
 export function startCandlesWorker(): ScheduledTask {
-  return cron.schedule("30 16 * * 1-5", () => { void runCandlesTopUpOnce(); });
+  return cron.schedule("30 16 * * 1-5", async () => {
+    try { await runCandlesTopUpOnce(); }
+    catch (err) { logger.error({ err }, "Candle top-up failed; next scheduled run will retry"); }
+  }, { timezone: "Africa/Nairobi", noOverlap: true });
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

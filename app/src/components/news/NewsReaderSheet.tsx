@@ -7,6 +7,7 @@ import type { NewsItem } from "@/api/types";
 import { useQuery } from "@tanstack/react-query";
 import { newsApi } from "@/api/newsApi";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useTouchClick } from "@/hooks/useTouchClick";
 
 interface NewsReaderSheetProps {
   item: NewsItem | null;
@@ -25,6 +26,7 @@ export function NewsReaderSheet({ item, open, onOpenChange }: NewsReaderSheetPro
 }
 
 function NewsReaderContent({ item, open, onOpenChange, navigate }: NewsReaderSheetProps & { item: NewsItem; navigate: ReturnType<typeof useNavigate> }) {
+  const closeTap = useTouchClick<HTMLButtonElement>();
   const detail = useQuery({
     queryKey: ["continua", "news", "detail", item.id],
     queryFn: () => newsApi.getById(item.id),
@@ -38,11 +40,11 @@ function NewsReaderContent({ item, open, onOpenChange, navigate }: NewsReaderShe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent hideClose className="inset-0 left-0 top-0 !flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 data-[state=open]:slide-in-from-bottom-0 data-[state=closed]:slide-out-to-bottom-0">
+      <DialogContent hideClose fullScreen aria-describedby={undefined} className="!flex flex-col gap-0 overflow-hidden border-0 p-0">
         <DialogTitle className="sr-only">{article.headline}</DialogTitle>
-        <div className="flex h-full flex-col bg-background">
+        <div className="flex min-h-0 flex-1 flex-col bg-background">
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-3 border-b border-border/60 bg-background/95 px-4 backdrop-blur-xl">
-            <button type="button" aria-label="Close article" onClick={() => onOpenChange(false)} className="inline-btn -ml-2 grid h-10 w-10 place-items-center rounded-full hover:bg-muted">
+            <button {...closeTap} type="button" aria-label="Close article" onClick={() => onOpenChange(false)} className="inline-btn -ml-2 grid h-10 w-10 place-items-center rounded-full hover:bg-muted">
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div className="min-w-0">

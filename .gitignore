@@ -32,3 +32,4 @@ backend/.env.local
 *.sln
 *.sw?
 scraper/data/*
+.qa-artifacts/
