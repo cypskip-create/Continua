@@ -50,17 +50,18 @@ export async function recordDiscovered(params: {
   canonicalUrl?: string | null;
   parentUrl?: string | null;
   depth: number;
+  revisitAfterMinutes?: number;
 }): Promise<CrawlStateRow> {
   const res = await query<CrawlStateSqlRow>(
     `INSERT INTO scraping.crawl_state (source_id, url, canonical_url, parent_url, depth)
      VALUES ($1,$2,$3,$4,$5)
      ON CONFLICT (source_id, url) DO UPDATE SET
        status = CASE WHEN scraping.crawl_state.status IN ('crawled', 'failed')
-         AND COALESCE(scraping.crawl_state.last_crawled, scraping.crawl_state.last_seen) < now() - interval '1 day'
+         AND COALESCE(scraping.crawl_state.last_crawled, scraping.crawl_state.last_seen) < now() - ($6 * interval '1 minute')
          THEN 'discovered' ELSE scraping.crawl_state.status END,
        last_seen = now()
      RETURNING *`,
-    [params.sourceId, params.url, params.canonicalUrl ?? null, params.parentUrl ?? null, params.depth],
+    [params.sourceId, params.url, params.canonicalUrl ?? null, params.parentUrl ?? null, params.depth, Math.max(5, params.revisitAfterMinutes ?? 1440)],
   );
   const row = res.rows[0];
   if (!row) throw new Error(`recordDiscovered: insert returned no row for ${params.url}`);

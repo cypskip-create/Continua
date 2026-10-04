@@ -37,8 +37,8 @@ export function SemiGauge({ label, value, industryValue, max = 40, companyLabel 
       <div className="text-center -mt-2">
         <p className="text-sm font-bold">{label}</p>
         <div className="flex items-center justify-center gap-4 mt-1">
-          <span className="text-[11px]"><span className="text-primary font-semibold">{companyLabel}</span> {value != null ? `${value.toFixed(1)}%` : "—"}</span>
-          <span className="text-[11px] text-muted-foreground">Industry {industryValue != null ? `${industryValue.toFixed(1)}%` : "—"}</span>
+          <span className="text-[0.6875rem]"><span className="text-primary font-semibold">{companyLabel}</span> {value != null ? `${value.toFixed(1)}%` : "—"}</span>
+          <span className="text-[0.6875rem] text-muted-foreground">Industry {industryValue != null ? `${industryValue.toFixed(1)}%` : "—"}</span>
         </div>
       </div>
     </div>

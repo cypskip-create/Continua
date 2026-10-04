@@ -151,7 +151,7 @@ export default function Watchlist() {
             </Button>
             <div className="min-w-0">
               <h1 className="text-base font-bold leading-tight truncate">{currentFolder?.name || "Watchlist"}</h1>
-              <p className="text-[11px] text-muted-foreground leading-tight">
+              <p className="text-[0.6875rem] text-muted-foreground leading-tight">
                 {rows.length} {rows.length === 1 ? "stock" : "stocks"}
                 {rows.length > 0 && <> · <span className="text-bull font-medium">{gainers} up</span> · <span className="text-bear font-medium">{losers} down</span></>}
               </p>
@@ -193,7 +193,7 @@ export default function Watchlist() {
                 key={folder.id}
                 onClick={() => setActiveFolderId(folder.id)}
                 className={cn(
-                  "shrink-0 px-3.5 py-1.5 rounded-full text-[12.5px] font-semibold border transition-colors",
+                  "shrink-0 px-3.5 py-1.5 rounded-full text-[0.78125rem] font-semibold border transition-colors",
                   currentFolderId === folder.id
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-muted/40 text-muted-foreground border-transparent hover:bg-muted/70"
@@ -205,14 +205,14 @@ export default function Watchlist() {
             {canCreateFolder ? (
               <button
                 onClick={() => setNewListOpen(true)}
-                className="shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded-full text-[12.5px] font-semibold border border-dashed border-border text-muted-foreground hover:bg-muted/40 transition-colors"
+                className="shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded-full text-[0.78125rem] font-semibold border border-dashed border-border text-muted-foreground hover:bg-muted/40 transition-colors"
               >
                 <Plus className="h-3 w-3" /> New list
               </button>
             ) : (
               <button
                 onClick={() => navigate("/upgrade")}
-                className="shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded-full text-[12.5px] font-semibold border border-dashed border-border text-muted-foreground hover:bg-muted/40 transition-colors"
+                className="shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded-full text-[0.78125rem] font-semibold border border-dashed border-border text-muted-foreground hover:bg-muted/40 transition-colors"
               >
                 <Lock className="h-3 w-3" /> Upgrade for more
               </button>
@@ -224,10 +224,10 @@ export default function Watchlist() {
       {rows.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center px-8 py-24">
           <Heart className="h-11 w-11 mb-4 text-muted-foreground/40" />
-          <h3 className="font-semibold text-[15px] mb-1">
+          <h3 className="font-semibold text-[0.9375rem] mb-1">
             {currentFolder?.name ? `"${currentFolder.name}" is empty` : "Your watchlist is empty"}
           </h3>
-          <p className="text-[13px] text-muted-foreground mb-5 max-w-[240px]">Add stocks you're tracking to keep an eye on their price right here.</p>
+          <p className="text-[0.8125rem] text-muted-foreground mb-5 max-w-[240px]">Add stocks you're tracking to keep an eye on their price right here.</p>
           <Button className="rounded-full" onClick={() => setAddOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />Add a stock
           </Button>
@@ -242,8 +242,8 @@ export default function Watchlist() {
               className="w-full flex items-center gap-3 px-4 py-3 border-b border-border/40 text-left active:bg-muted/30 transition-colors"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-[13.5px] font-bold leading-tight">{stock.symbol}</p>
-                <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">{stock.name}</p>
+                <p className="text-[0.84375rem] font-bold leading-tight">{stock.symbol}</p>
+                <p className="text-[0.6875rem] text-muted-foreground truncate leading-tight mt-0.5">{stock.name}</p>
               </div>
 
               <SparklineChart width={52} height={22} isPositive={stock.isUp} data={getSparkline(stock.symbol)} isLoading={!stock.isLive} />
@@ -251,10 +251,10 @@ export default function Watchlist() {
               <div className="text-right shrink-0 w-[92px]">
                 {stock.isLive ? (
                   <>
-                    <p className="text-[13.5px] font-bold tabular-nums leading-tight">KES {stock.price!.toFixed(2)}</p>
+                    <p className="text-[0.84375rem] font-bold tabular-nums leading-tight">KES {stock.price!.toFixed(2)}</p>
                     <div className={`flex items-center justify-end gap-0.5 mt-0.5 ${stock.isUp ? "text-bull" : "text-bear"}`}>
                       {stock.isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                      <span className="text-[11px] font-semibold tabular-nums">{stock.isUp ? "+" : ""}{stock.changePercent!.toFixed(2)}%</span>
+                      <span className="text-[0.6875rem] font-semibold tabular-nums">{stock.isUp ? "+" : ""}{stock.changePercent!.toFixed(2)}%</span>
                     </div>
                   </>
                 ) : (
@@ -277,7 +277,7 @@ export default function Watchlist() {
       <Dialog open={addOpen} onOpenChange={v => { setAddOpen(v); if (!v) setQuery(""); }}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-[15px]">Add to {currentFolder?.name || "watchlist"}</DialogTitle>
+            <DialogTitle className="text-[0.9375rem]">Add to {currentFolder?.name || "watchlist"}</DialogTitle>
           </DialogHeader>
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -286,7 +286,7 @@ export default function Watchlist() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search ticker or company name"
-              className="h-10 pl-10 pr-9 rounded-full text-[13.5px]"
+              className="h-10 pl-10 pr-9 rounded-full text-[0.84375rem]"
             />
             {query && (
               <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -296,19 +296,19 @@ export default function Watchlist() {
           </div>
           <div className="max-h-[50vh] overflow-y-auto -mx-1 px-1">
             {searchResults.length === 0 ? (
-              <p className="text-[13px] text-muted-foreground text-center py-8">No matching stocks</p>
+              <p className="text-[0.8125rem] text-muted-foreground text-center py-8">No matching stocks</p>
             ) : searchResults.map(s => {
               const already = currentFolderId ? isInFolder(s.symbol, currentFolderId) : false;
               return (
                 <div key={s.symbol} className="flex items-center justify-between gap-3 py-2.5 border-b border-border/40 last:border-0">
                   <div className="min-w-0">
-                    <p className="text-[13px] font-bold">{s.symbol}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{s.companyName}</p>
+                    <p className="text-[0.8125rem] font-bold">{s.symbol}</p>
+                    <p className="text-[0.6875rem] text-muted-foreground truncate">{s.companyName}</p>
                   </div>
                   <Button
                     size="sm"
                     variant={already ? "outline" : "default"}
-                    className="h-8 rounded-full text-[12px] shrink-0"
+                    className="h-8 rounded-full text-[0.75rem] shrink-0"
                     disabled={already}
                     onClick={() => handleAdd(s.symbol, s.companyName)}
                   >
@@ -325,7 +325,7 @@ export default function Watchlist() {
       <Dialog open={newListOpen} onOpenChange={v => { setNewListOpen(v); if (!v) setNewListName(""); }}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-[15px]">New watchlist</DialogTitle>
+            <DialogTitle className="text-[0.9375rem]">New watchlist</DialogTitle>
           </DialogHeader>
           <Input
             autoFocus
@@ -334,7 +334,7 @@ export default function Watchlist() {
             onChange={e => setNewListName(e.target.value)}
             onKeyDown={e => e.key === "Enter" && submitNewList()}
             placeholder="e.g. Banking, Dividend Picks…"
-            className="h-10 rounded-full text-[13.5px]"
+            className="h-10 rounded-full text-[0.84375rem]"
           />
           <Button className="rounded-full w-full mt-1" disabled={!newListName.trim()} onClick={submitNewList}>
             Create list
@@ -346,7 +346,7 @@ export default function Watchlist() {
       <Dialog open={!!renameTarget} onOpenChange={v => !v && setRenameTarget(null)}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-[15px]">Rename watchlist</DialogTitle>
+            <DialogTitle className="text-[0.9375rem]">Rename watchlist</DialogTitle>
           </DialogHeader>
           <Input
             autoFocus
@@ -354,7 +354,7 @@ export default function Watchlist() {
             maxLength={40}
             onChange={e => setRenameValue(e.target.value)}
             onKeyDown={e => e.key === "Enter" && submitRename()}
-            className="h-10 rounded-full text-[13.5px]"
+            className="h-10 rounded-full text-[0.84375rem]"
           />
           <Button className="rounded-full w-full mt-1" disabled={!renameValue.trim()} onClick={submitRename}>
             Save

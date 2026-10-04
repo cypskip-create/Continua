@@ -16,14 +16,22 @@ export const researchController = {
     const security = await securitiesRepository.getBySymbol(exchange, upperSymbol);
     if (!security) throw new ApiError(404, `Unknown symbol ${symbol}`);
 
-    let ratios = await cache.getOrSet(CacheKeys.ratios(exchange, upperSymbol), 60_000, () => researchService.getRatios(security.id));
-    let score = await cache.getOrSet(CacheKeys.afriScore(exchange, upperSymbol), 60_000, () => researchService.getAfriScore(security.id));
+    let [ratios, score] = await Promise.all([
+      cache.getOrSet(CacheKeys.ratios(exchange, upperSymbol), 60_000, () => researchService.getRatios(security.id)),
+      cache.getOrSet(CacheKeys.afriScore(exchange, upperSymbol), 60_000, () => researchService.getAfriScore(security.id)),
+    ]);
 
     if (!ratios || !score) {
       const quote = await pricesRepository.getQuote(security.id);
       if (quote) {
         const recomputed = await researchService.recomputeAndStore(security.id, quote.lastPrice);
-        if (recomputed) { ratios = recomputed.ratios; score = recomputed.score; }
+        if (recomputed) {
+          ratios = recomputed.ratios; score = recomputed.score;
+          await Promise.all([
+            cache.set(CacheKeys.ratios(exchange, upperSymbol), ratios, 60_000),
+            cache.set(CacheKeys.afriScore(exchange, upperSymbol), score, 60_000),
+          ]);
+        }
       }
     }
 

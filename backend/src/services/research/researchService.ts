@@ -10,26 +10,35 @@ import type { ComputedRatios, AfriScoreResult } from "../../types/market.js";
 import { logger } from "../../monitoring/logger.js";
 import { trailingDividendPerShare } from "./dividendMetrics.js";
 
+type ResearchResult = { ratios: ComputedRatios; score: AfriScoreResult } | null;
+const pending = new Map<string, Promise<ResearchResult>>();
+
 export const researchService = {
   /** Recomputes ratios + AfriScore for a security from whatever's currently
    *  stored (latest financials, price history, dividends) and persists both.
    *  Called after fundamentals ingestion, and can be called on-demand by
    *  the API for a cache-miss. */
   async recomputeAndStore(securityId: string, currentPrice: number): Promise<{ ratios: ComputedRatios; score: AfriScoreResult } | null> {
-    const latest = await financialsRepository.getLatestPeriodBundle(securityId, "annual");
-    if (!latest) {
-      logger.debug({ securityId }, "No fundamentals available yet — skipping research recompute");
-      return null;
-    }
-    const history = await financialsRepository.getHistoricalPeriods(securityId, "annual", 2);
-    const prior = history.length >= 2 ? history[0] : null;
+    const key = `${securityId}:${currentPrice}`;
+    const existing = pending.get(key);
+    if (existing) return existing;
+    const job = this.computeAndStore(securityId, currentPrice).finally(() => pending.delete(key));
+    pending.set(key, job);
+    return job;
+  },
 
+  async computeAndStore(securityId: string, currentPrice: number): Promise<ResearchResult> {
     const to = new Date();
     const from = new Date(to.getTime() - 90 * 24 * 60 * 60 * 1000);
-    const candles = await candlesRepository.getCandles(securityId, "1d", from.toISOString(), to.toISOString());
-    const priceHistory90d = candles.map((c) => c.close);
-
-    const dividends = await corporateActionsRepository.getDividendsBySecurity(securityId);
+    const [latest, history, candles, dividends] = await Promise.all([
+      financialsRepository.getLatestPeriodBundle(securityId, "annual"),
+      financialsRepository.getHistoricalPeriods(securityId, "annual", 2),
+      candlesRepository.getCandles(securityId, "1d", from.toISOString(), to.toISOString()),
+      corporateActionsRepository.getDividendsBySecurity(securityId),
+    ]);
+    if (!latest) return null;
+    const prior = history.length >= 2 ? history[0] : null;
+    const priceHistory90d = candles.map(c => c.close);
     const ttmDividend = trailingDividendPerShare(dividends, to);
 
     const ratioInputs = {

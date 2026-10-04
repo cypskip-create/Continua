@@ -23,6 +23,10 @@ const user = { id: '11111111-1111-4111-8111-111111111111', email: 'test@example.
 const profile = { ...user, user_id: user.id, full_name: 'Test Investor', handle: 'testinvestor', subscription_plan: 'premium_plus', tradershub_onboarded: true, interests: [], followers_count: 0, following_count: 0 };
 const holdings = [{ id: '22222222-2222-4222-8222-222222222222', user_id: user.id, symbol: 'KCB', name: 'KCB Group', shares: 10, avg_cost: 30, sector: 'Banking', created_at: '2025-01-01', updated_at: '2025-01-01' }];
 const news = { id: 'fixture-news', headline: 'KCB reports annual earnings growth', excerpt: 'Fixture financial article for reader interaction testing.', content: Array.from({ length: 35 }, (_, i) => `Paragraph ${i + 1}. This is locally generated test content for checking article scrolling. No publisher content is used.`).join('\n\n'), articleUrl: 'https://example.invalid/article', source: 'fixture', sourceName: 'Test financial news', publishedAt: new Date().toISOString(), category: 'earnings', symbols: ['KCB'], imageUrl: '/test-image.svg' };
+const fixturePosts = [];
+let pollChoice = null;
+let uploadRequests = 0;
+let newsOffline = false;
 let quoteRequests = 0;
 let portfolioRequests = 0;
 const unknown = new Set();
@@ -32,6 +36,22 @@ await context.route('**/*', async (route) => {
   if (url.pathname === '/test-image.svg') return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400"><rect width="800" height="400" fill="#7862df"/></svg>' });
   if (url.port === '5188') return route.continue();
   if (url.hostname === 'continua-test.supabase.co') {
+    if (url.pathname.includes('/storage/v1/object/public/')) return route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="purple"/></svg>'});
+    if (url.pathname.includes('/storage/v1/object/post-images/')) { uploadRequests++; return json({Key:'fixture-image'}); }
+    if (url.pathname.endsWith('/rpc/post_poll_result')) {
+      const body = route.request().postDataJSON();
+      if (body.p_choice != null && pollChoice === null) pollChoice = body.p_choice;
+      return json({counts:pollChoice === null ? [0,0] : [1,0],choice:pollChoice});
+    }
+    if (url.pathname.endsWith('/rest/v1/posts')) {
+      if (route.request().method() === 'POST') {
+        const body = route.request().postDataJSON();
+        const saved = {...body,id:'33333333-3333-4333-8333-333333333333',created_at:new Date().toISOString(),updated_at:new Date().toISOString(),poll:body.poll ? {...body.poll,endsAt:new Date(Date.now()+86400000).toISOString()} : null};
+        fixturePosts.unshift(saved);
+        return json(saved);
+      }
+      return json(route.request().headers().accept?.includes('object') ? fixturePosts[0] ?? null : fixturePosts);
+    }
     if (url.pathname.includes('/auth/')) return json(user);
     if (url.pathname.includes('/profiles')) return json(route.request().headers().accept?.includes('object') ? profile : [profile]);
     if (url.pathname.includes('/watchlist_folders')) return json([{ id: 'fixture-folder', user_id: user.id, name: 'Watchlist', is_default: true }]);
@@ -46,7 +66,7 @@ await context.route('**/*', async (route) => {
       const quotes = symbols.map((symbol) => ({ symbol, securityId: `NSE:${symbol}`, exchange: 'NSE', lastPrice: 50, open: 48, high: 51, low: 47, previousClose: 49, change: 1, changePercent: 2.04, volume: 10000, currency: 'KES', status: 'active', timestamp: new Date().toISOString(), source: 'eod' }));
       return json({ data: path === '/quotes' ? quotes : quotes[0] });
     }
-    if (path.startsWith('/news')) return json({ data: path.includes('/item/') ? news : [news] });
+    if (path.startsWith('/news')) return newsOffline ? json({error:'Fixture offline'},503) : json({ data: path.includes('/item/') ? news : [news] });
     if (path.startsWith('/research/')) return json({ data: { ratios: { pe: 10, pb: 1.5, ps: 2, roe: .15, roa: .05, debtToEquity: .3, dividendYield: .06, netMargin: .2 }, score: { afriScore: 70, afriValue: 60, afriGrowth: 65, afriHealth: 80, afriIncome: 70, afriRisk: 60, afriQuality: 70, afriMomentum: 50, inputs: {} } } });
     if (path.startsWith('/historical/')) return json({ data: Array.from({ length: 30 }, (_, i) => ({ securityId: 'NSE:KCB', interval: '1d', timestamp: new Date(Date.now() - (30 - i) * 86400000).toISOString(), open: 40 + i / 3, high: 41 + i / 3, low: 39 + i / 3, close: 40 + i / 3, volume: 10000 })) });
     if (path.startsWith('/indices') || path.startsWith('/screener') || path.includes('/dividends') || path.includes('/announcements')) return json({ data: [] });
@@ -172,6 +192,80 @@ try {
   await dialog.getByRole('button', { name: 'Close', exact: true }).tap();
   await dialog.waitFor({ state: 'hidden' });
   console.log('PASS interactive metric selection, dark-mode contrast and bottom-up portfolio sharing');
+
+  // Regression checks for tab memory, text sizing and flat page surfaces.
+  await page.goto('http://127.0.0.1:5188/traders-hub?tab=media');
+  await wait(700);
+  await page.locator('.bottom-nav').getByText('Home', { exact: true }).tap();
+  await page.locator('.bottom-nav').getByText('TradersHub', { exact: true }).tap();
+  await page.waitForURL('**/traders-hub?tab=media');
+  console.log('PASS TradersHub restores Media destination');
+  await page.locator('.bottom-nav').getByText('Markets', { exact: true }).tap();
+  await wait(700);
+  await page.evaluate(() => window.scrollTo({ top: 600, behavior: 'instant' }));
+  await wait(100);
+  const savedMarketScroll = await page.evaluate(() => window.scrollY);
+  await page.locator('.bottom-nav').getByText('Home', { exact: true }).tap();
+  await page.locator('.bottom-nav').getByText('Markets', { exact: true }).tap();
+  await wait(700);
+  assert.ok(Math.abs(await page.evaluate(() => window.scrollY) - savedMarketScroll) < 3, 'Markets returns to saved scroll offset');
+  const surfaces = await page.locator('.content-surface').evaluateAll(nodes => nodes.map(n => {
+    const style = getComputedStyle(n);
+    return { radius: style.borderRadius, shadow: style.boxShadow, border: style.borderTopWidth };
+  }));
+  assert.ok(surfaces.length > 0);
+  assert.ok(surfaces.every(s => s.radius === '0px' && s.shadow === 'none' && s.border === '0px'));
+  await page.locator('.bottom-nav').getByText('Profile', { exact: true }).tap();
+  await page.getByRole('button', { name: 'S', exact: true }).tap();
+  const small = await page.getByText('Text size', { exact: true }).evaluate(el => parseFloat(getComputedStyle(el).fontSize));
+  await page.getByRole('button', { name: 'XL', exact: true }).tap();
+  const large = await page.getByText('Text size', { exact: true }).evaluate(el => parseFloat(getComputedStyle(el).fontSize));
+  assert.ok(large > small * 1.25, 'Text setting must visibly scale rem labels');
+  await page.reload();
+  await page.getByText('Text size', { exact: true }).waitFor();
+  assert.equal(await page.evaluate(() => document.documentElement.style.fontSize), '19.2px');
+  await page.getByRole('button', { name: 'M', exact: true }).tap();
+  console.log('PASS saved scroll, flat surfaces and persistent global text sizing');
+
+  await page.goto('http://127.0.0.1:5188/traders-hub');
+  await page.getByRole('button', {name:'Create post',exact:true}).tap();
+  await page.getByRole('dialog', {name:'Compose post'}).waitFor();
+  const composer = page.getByRole('dialog', {name:'Compose post'});
+  await wait(300);
+  assert.equal(await composer.evaluate(el=>getComputedStyle(el).animationName),'none');
+  await page.setViewportSize({width:390,height:430});
+  await wait(200);
+  const composeBox = await composer.boundingBox();
+  assert.ok(composeBox.y >= 0 && composeBox.y + composeBox.height <= 431, 'Composer remains in keyboard-sized visual viewport');
+  await composer.locator('textarea').fill('Fixture post with five images and a poll');
+  await composer.getByRole('button',{name:'Add poll',exact:true}).tap();
+  await composer.getByRole('textbox',{name:'Poll question',exact:true}).fill('Which research tool do you use?');
+  await composer.getByRole('textbox',{name:'Poll option 1',exact:true}).fill('Charts');
+  await composer.getByRole('textbox',{name:'Poll option 2',exact:true}).fill('Fundamentals');
+  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aXioAAAAASUVORK5CYII=', 'base64');
+  await composer.locator('input[type=file]').setInputFiles(Array.from({length:5},(_,i)=>({name:`image-${i}.png`,mimeType:'image/png',buffer:pixel})));
+  await composer.getByAltText('Selected image 5',{exact:true}).waitFor();
+  assert.equal(await composer.getByRole('button',{name:'Add images'}).isDisabled(),true);
+  await composer.getByRole('button',{name:'Post',exact:true}).tap();
+  await composer.waitFor({state:'hidden'});
+  assert.equal(uploadRequests,5);
+  assert.equal(fixturePosts[0].image_urls.length,5);
+  assert.ok(fixturePosts[0].image_urls.every(url=>url.startsWith('https://')));
+  await page.setViewportSize({width:390,height:844});
+  await page.getByRole('button',{name:'Open image 5 of 5'}).waitFor();
+  await page.getByRole('button',{name:'Charts',exact:true}).tap();
+  await page.getByText('1 votes',{exact:false}).waitFor();
+  assert.equal(pollChoice,0);
+  console.log('PASS centred composer, keyboard-sized viewport, five uploads, inline gallery and poll voting');
+
+  // A backend outage must not masquerade as an empty feed.
+  newsOffline = true;
+  await page.goto('http://127.0.0.1:5188/traders-hub?tab=media');
+  await page.getByText(/News could not refresh/).waitFor();
+  await page.getByText(news.headline,{exact:true}).waitFor();
+  assert.equal(await page.getByText('No stories yet',{exact:true}).count(),0);
+  newsOffline = false;
+  console.log('PASS news outage retains saved stories and shows an explicit error');
 
   // Route smoke coverage exercises mounted empty/error states, not every mutation.
   for (const path of ['/markets', '/discover', '/account', '/upgrade', '/settings', '/stock/KCB', '/watchlist', '/sector/Banking', '/theme/dividends', '/featured/dividends', '/learn', '/notifications', '/sector-heatmap', '/track-investments', '/traders-hub', '/rooms', '/screener', '/compare', `/profile/${user.id}`, '/traders-hub/post/missing', '/not-a-route']) {

@@ -30,6 +30,8 @@ export interface Post {
   user_id: string;
   content: string;
   image_url: string | null;
+  image_urls?: string[];
+  poll?: import("@/components/social/PostAttachments").PostPoll | null;
   stock_mentions: string[] | null;
   created_at: string;
   updated_at: string;
@@ -281,15 +283,33 @@ export function usePosts() {
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
   useEffect(() => { if (posts.length > 0) { __postsCache = posts; __postsCacheKey = cacheKey; } }, [posts, cacheKey]);
 
-  const createPost = async (content: string, imageUrl?: string, quotedPostId?: string) => {
+  const createPost = async (content: string, imageInput?: string | string[], quotedPostId?: string, poll?: import("@/components/social/PostAttachments").PostPoll) => {
     if (!user) return { error: { message: 'Must be logged in' } };
-    const stockMentions = content.match(/\$[A-Z]+/g)?.map(s => s.slice(1)) || [];
-    const { data, error } = await supabase
-      .from('posts')
-      .insert({ user_id: user.id, content, image_url: imageUrl || null, stock_mentions: stockMentions.length > 0 ? stockMentions : null, quoted_post_id: quotedPostId || null } as any)
-      .select().single();
-    if (!error) fetchPosts();
-    return { data, error };
+    const images = Array.isArray(imageInput) ? imageInput : imageInput ? [imageInput] : [];
+    if (images.length > 5) return { error: { message: 'Maximum five images' } };
+    const uploaded: string[] = [];
+    try {
+      const urls: string[] = [];
+      for (const image of images) {
+        if (!image.startsWith('data:')) { urls.push(image); continue; }
+        const blob = await (await fetch(image)).blob();
+        const path = `${user.id}/${crypto.randomUUID()}`;
+        const { error } = await supabase.storage.from('post-images').upload(path, blob, { contentType: blob.type, upsert: false });
+        if (error) throw error;
+        uploaded.push(path);
+        urls.push(supabase.storage.from('post-images').getPublicUrl(path).data.publicUrl);
+      }
+      const stockMentions = [...new Set(content.match(/\$[A-Z]+/g)?.map(s => s.slice(1)) || [])];
+      const { data, error } = await supabase.from('posts')
+        .insert({ user_id: user.id, content, image_url: urls[0] || null, ...(urls.length ? { image_urls: urls } : {}), ...(poll ? { poll } : {}),
+          stock_mentions: stockMentions.length ? stockMentions : null, quoted_post_id: quotedPostId || null } as any).select().single();
+      if (error) throw error;
+      void fetchPosts();
+      return { data, error: null };
+    } catch (error) {
+      if (uploaded.length) await supabase.storage.from('post-images').remove(uploaded);
+      return { error };
+    }
   };
 
   const deletePost = async (postId: string) => {
@@ -356,9 +376,9 @@ export function usePosts() {
     return { error };
   };
 
-  const reactToPost = async (postId: string, reaction: ReactionKind) => {
+  const reactToPost = async (postId: string, reaction: ReactionKind, currentReaction?: ReactionKind | null) => {
     if (!user) return { error: { message: 'Must be logged in' } };
-    const current = posts.find(p => p.id === postId)?.my_reaction;
+    const current = currentReaction !== undefined ? currentReaction : posts.find(p => p.id === postId)?.my_reaction;
     const query = current === reaction
       ? supabase.from('post_reactions' as any).delete().eq('post_id', postId).eq('user_id', user.id)
       : supabase.from('post_reactions' as any).upsert({ post_id: postId, user_id: user.id, reaction }, { onConflict: 'post_id,user_id' });

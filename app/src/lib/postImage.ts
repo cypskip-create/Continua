@@ -13,6 +13,9 @@ export interface ImageReadResult {
  *  server-side limit instead of letting the insert fail later with a
  *  confusing database error. */
 export function readPostImage(file: File): Promise<ImageReadResult> {
+  if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+    return Promise.resolve({ error: 'Choose a JPEG, PNG, WebP or GIF image.' });
+  }
   if (file.size > MAX_POST_IMAGE_BYTES) {
     const maxMb = (MAX_POST_IMAGE_BYTES / 1_000_000).toFixed(1);
     return Promise.resolve({

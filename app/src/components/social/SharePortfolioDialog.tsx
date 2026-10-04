@@ -168,7 +168,7 @@ function ToggleRow({ icon, title, desc, checked, onChange }: { icon: React.React
         <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground shrink-0">{icon}</div>
         <div className="min-w-0">
           <div className="text-sm font-medium truncate">{title}</div>
-          <div className="text-[11px] text-muted-foreground truncate">{desc}</div>
+          <div className="text-[0.6875rem] text-muted-foreground truncate">{desc}</div>
         </div>
       </div>
       <Switch checked={checked} onCheckedChange={onChange} />

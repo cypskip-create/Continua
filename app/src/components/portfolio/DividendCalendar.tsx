@@ -74,17 +74,17 @@ export function DividendCalendar({ holdings, dividendData, showValues = true, cu
           <button data-small-target onClick={() => setMonth((m) => subMonths(m, 1))} className="p-1 rounded-full hover:bg-muted active:opacity-70">
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="text-[12px] font-semibold tabular w-20 text-center">{format(month, "MMM yyyy")}</span>
+          <span className="text-[0.75rem] font-semibold tabular w-20 text-center">{format(month, "MMM yyyy")}</span>
           <button data-small-target onClick={() => setMonth((m) => addMonths(m, 1))} className="p-1 rounded-full hover:bg-muted active:opacity-70">
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-3">Ex-dividend and payment dates for your holdings.</p>
+      <p className="text-[0.6875rem] text-muted-foreground mb-3">Ex-dividend and payment dates for your holdings.</p>
 
       <div className="grid grid-cols-7 gap-1 text-center">
         {WEEKDAYS.map((w) => (
-          <span key={w} className="text-[9px] font-semibold text-muted-foreground tracking-wide">{w}</span>
+          <span key={w} className="text-[0.5625rem] font-semibold text-muted-foreground tracking-wide">{w}</span>
         ))}
         {days.map((day) => {
           const dayEvents = eventsOn(day);
@@ -96,7 +96,7 @@ export function DividendCalendar({ holdings, dividendData, showValues = true, cu
                 isToday(day) ? "bg-primary/15" : inMonth ? "" : "opacity-30"
               }`}
             >
-              <span className="text-[11px] tabular">{format(day, "d")}</span>
+              <span className="text-[0.6875rem] tabular">{format(day, "d")}</span>
               {dayEvents.length > 0 && (
                 <div className="flex gap-0.5">
                   {dayEvents.slice(0, 3).map((e, i) => (
@@ -125,11 +125,11 @@ export function DividendCalendar({ holdings, dividendData, showValues = true, cu
 
       <p className="section-eyebrow mt-4 mb-2">Upcoming Events</p>
       {upcoming.length === 0 ? (
-        <p className="text-[11px] text-muted-foreground py-2">No upcoming dividend events on file yet.</p>
+        <p className="text-[0.6875rem] text-muted-foreground py-2">No upcoming dividend events on file yet.</p>
       ) : (
         <div className="divide-y divide-border/40">
           {upcoming.map((e, i) => (
-            <div key={i} className="flex items-center justify-between py-2 text-[12px]">
+            <div key={i} className="flex items-center justify-between py-2 text-[0.75rem]">
               <span className="tabular text-muted-foreground w-16 shrink-0">{format(e.date, "MMM dd")}</span>
               <span className="font-bold w-14 shrink-0">{e.symbol}</span>
               <span className="text-muted-foreground flex-1">
@@ -150,7 +150,7 @@ function Legend({ swatch, label }: { swatch: React.ReactNode; label: string }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className="inline-flex items-center justify-center w-3">{swatch}</span>
-      <span className="text-[10px] text-muted-foreground">{label}</span>
+      <span className="text-[0.625rem] text-muted-foreground">{label}</span>
     </div>
   );
 }

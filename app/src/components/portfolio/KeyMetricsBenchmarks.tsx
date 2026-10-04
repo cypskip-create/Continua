@@ -166,7 +166,7 @@ export function KeyMetricsBenchmarks({ holdings, research, valuations, growth, d
             key={g}
             data-small-target
             onClick={() => selectGroup(g)}
-            className={`shrink-0 h-9 px-4 rounded-lg text-[11px] font-semibold ${group === g ? "contrast-active" : "bg-muted/40 text-muted-foreground"}`}
+            className={`shrink-0 h-9 px-4 rounded-lg text-[0.6875rem] font-semibold ${group === g ? "contrast-active" : "bg-muted/40 text-muted-foreground"}`}
           >
             {g}
           </button>

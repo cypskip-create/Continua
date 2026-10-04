@@ -27,7 +27,7 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
             className="relative shadow-lg splash-mark"
           />
         </div>
-        <div className="splash-word text-[15px] font-semibold tracking-tight text-foreground">
+        <div className="splash-word text-[0.9375rem] font-semibold tracking-tight text-foreground">
           Continua
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -25,38 +25,23 @@ export interface PriceAlert {
 
 export function usePriceAlerts() {
   const { user } = useAuth();
-  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      fetchAlerts();
-    } else {
-      setAlerts([]);
-      setLoading(false);
-    }
-  }, [user]);
-
-  const fetchAlerts = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('price_alerts')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching alerts:', error);
-      } else {
-        setAlerts((data || []) as PriceAlert[]);
-      }
-    } catch (error) {
-      console.error('Error fetching alerts:', error);
-    } finally {
-      setLoading(false);
-    }
+  const queryClient = useQueryClient();
+  const queryKey = ['continua', 'price-alerts', user?.id];
+  const result = useQuery({
+    queryKey, enabled: !!user, staleTime: 15000,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.from('price_alerts').select('*')
+        .eq('user_id', user!.id).order('created_at', { ascending: false }).abortSignal(signal);
+      if (error) throw error;
+      return (data ?? []) as PriceAlert[];
+    },
+  });
+  const alerts = user ? result.data ?? [] : [];
+  const loading = !!user && result.isLoading;
+  const fetchAlerts = () => result.refetch();
+  const setAlerts = (update: (previous: PriceAlert[]) => PriceAlert[]) => {
+    queryClient.setQueryData<PriceAlert[]>(queryKey, previous => update(previous ?? []));
+    void queryClient.invalidateQueries({ queryKey });
   };
 
   const createAlert = async (alertData: Omit<PriceAlert, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'triggered_at'>) => {

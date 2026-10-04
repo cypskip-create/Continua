@@ -546,10 +546,10 @@ export default function StockDetail() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className={`font-semibold tracking-tight transition-all duration-200 ${priceVisible ? 'text-lg' : 'text-sm'}`}>{symbol}</span>
-                  <span className="text-[10px] text-muted-foreground">{stock.exchange}</span>
+                  <span className="text-[0.625rem] text-muted-foreground">{stock.exchange}</span>
                 </div>
                 <div className="relative h-[15px] min-w-0">
-                  <p className={`absolute inset-0 text-[11px] text-muted-foreground truncate transition-opacity duration-200 ${priceVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                  <p className={`absolute inset-0 text-[0.6875rem] text-muted-foreground truncate transition-opacity duration-200 ${priceVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                     {stock.name}
                   </p>
                   <span className={`absolute inset-0 text-sm font-bold tabular leading-tight transition-opacity duration-200 ${priceVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
@@ -561,7 +561,7 @@ export default function StockDetail() {
                 <span className={`text-xs font-semibold tabular ${dayChangeIsUp ? 'text-bull' : 'text-bear'}`}>
                   {stock.isLive ? <>{dayChangeIsUp ? '+' : ''}{stock.change.toFixed(2)}</> : <Skeleton className="h-3 w-10" />}
                 </span>
-                <span className={`text-[11px] font-medium tabular flex items-center gap-0.5 ${dayChangeIsUp ? 'text-bull' : 'text-bear'}`}>
+                <span className={`text-[0.6875rem] font-medium tabular flex items-center gap-0.5 ${dayChangeIsUp ? 'text-bull' : 'text-bear'}`}>
                   {stock.isLive ? (
                     <>
                       {dayChangeIsUp ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
@@ -587,7 +587,7 @@ export default function StockDetail() {
 
       {/* HERO — company · price · delta. No card. */}
       <div className="px-4 pt-4 pb-2 animate-fade-in">
-        <h1 className="text-[15px] font-medium text-muted-foreground tracking-tight leading-tight">{stock.name}</h1>
+        <h1 className="text-[0.9375rem] font-medium text-muted-foreground tracking-tight leading-tight">{stock.name}</h1>
         <div ref={heroPriceRef} className="mt-1 flex items-end justify-between gap-3">
           {stock.isLive ? (
             <span className="text-4xl font-bold tabular tracking-tight">KES {displayPrice.toFixed(2)}</span>
@@ -599,7 +599,7 @@ export default function StockDetail() {
             size="sm"
             aria-label="Compare stock"
             onClick={() => navigate(`/compare?stock=${symbol}`)}
-            className="h-8 rounded-full px-3 text-[11px] font-semibold text-muted-foreground gap-1.5"
+            className="h-8 rounded-full px-3 text-[0.6875rem] font-semibold text-muted-foreground gap-1.5"
           >
             <GitCompare className="h-3.5 w-3.5" />
             Compare
@@ -627,7 +627,7 @@ export default function StockDetail() {
             <div className="h-[280px] flex flex-col items-center justify-center px-8 text-center">
               <LineChartIcon className="h-7 w-7 text-muted-foreground/35 mb-2" />
               <p className="text-xs font-semibold">Historical chart unavailable</p>
-              <p className="text-[10px] text-muted-foreground mt-1">No verified {TIMEFRAME_LABELS[selectedTimeframe].toLowerCase()} OHLCV series is available yet. The live quote above is still current.</p>
+              <p className="text-[0.625rem] text-muted-foreground mt-1">No verified {TIMEFRAME_LABELS[selectedTimeframe].toLowerCase()} OHLCV series is available yet. The live quote above is still current.</p>
             </div>
           )}
         </div>
@@ -673,7 +673,7 @@ export default function StockDetail() {
             key={tf}
             data-small-target
             onClick={() => setSelectedTimeframe(tf)}
-            className={`px-2 py-1 text-[11px] font-semibold rounded-md tabular border transition-colors ${tf === selectedTimeframe ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+            className={`px-2 py-1 text-[0.6875rem] font-semibold rounded-md tabular border transition-colors ${tf === selectedTimeframe ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
           >
             {tf}
           </button>
@@ -688,7 +688,7 @@ export default function StockDetail() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-sm">{symbol}</span>
-                  <span className="text-[10px] text-muted-foreground">{stock.exchange}</span>
+                  <span className="text-[0.625rem] text-muted-foreground">{stock.exchange}</span>
                 </div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-xl font-bold tabular">KES {displayPrice.toFixed(2)}</span>
@@ -768,7 +768,7 @@ export default function StockDetail() {
           <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-border/60 shrink-0" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
             <DropdownMenu open={fsPeriodMenuOpen} onOpenChange={setFsPeriodMenuOpen}>
               <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="sm" className="h-8 rounded-md px-2.5 text-[12px] font-semibold gap-1">
+                <Button variant="secondary" size="sm" className="h-8 rounded-md px-2.5 text-[0.75rem] font-semibold gap-1">
                   {selectedTimeframe}
                   <ChevronDown className="h-3 w-3" />
                 </Button>
@@ -860,9 +860,9 @@ export default function StockDetail() {
               <Eyebrow>Your Position</Eyebrow>
               <div className="flex items-center justify-between border-t border-border/60 pt-3">
                 <div className="grid grid-cols-3 gap-6 flex-1">
-                  <div><p className="text-[10px] text-muted-foreground">Shares</p><p className="text-sm font-semibold tabular">{myHolding.shares}</p></div>
-                  <div><p className="text-[10px] text-muted-foreground">Avg cost</p><p className="text-sm font-semibold tabular">KES {myHolding.avg_cost.toFixed(2)}</p></div>
-                  <div><p className="text-[10px] text-muted-foreground">P/L</p>
+                  <div><p className="text-[0.625rem] text-muted-foreground">Shares</p><p className="text-sm font-semibold tabular">{myHolding.shares}</p></div>
+                  <div><p className="text-[0.625rem] text-muted-foreground">Avg cost</p><p className="text-sm font-semibold tabular">KES {myHolding.avg_cost.toFixed(2)}</p></div>
+                  <div><p className="text-[0.625rem] text-muted-foreground">P/L</p>
                     <p className={`text-sm font-semibold tabular ${(stock.price - myHolding.avg_cost) >= 0 ? 'text-bull' : 'text-bear'}`}>
                       {(stock.price - myHolding.avg_cost) >= 0 ? '+' : ''}{(((stock.price - myHolding.avg_cost) / myHolding.avg_cost) * 100).toFixed(1)}%
                     </p>
@@ -915,7 +915,7 @@ export default function StockDetail() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <p className="section-eyebrow">Recent News</p>
-                <button data-small-target onClick={() => scrollTo("news")} className="text-[11px] text-primary font-semibold flex items-center">More <ChevronRight className="h-3 w-3" /></button>
+                <button data-small-target onClick={() => scrollTo("news")} className="text-[0.6875rem] text-primary font-semibold flex items-center">More <ChevronRight className="h-3 w-3" /></button>
               </div>
               <div className="border-t border-border/60">
                 {stockNews.slice(0, 3).map(n => (
@@ -929,7 +929,7 @@ export default function StockDetail() {
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium leading-snug">{n.headline}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{n.sourceName} · {n.publishedAt ? formatTimestamp(n.publishedAt) : "Date unknown"}</p>
+                      <p className="text-[0.625rem] text-muted-foreground mt-0.5">{n.sourceName} · {n.publishedAt ? formatTimestamp(n.publishedAt) : "Date unknown"}</p>
                     </div>
                   </a>
                 ))}
@@ -942,7 +942,7 @@ export default function StockDetail() {
         <section ref={refs.research} data-section="research" className="space-y-4 scroll-mt-32">
           <Eyebrow>Research</Eyebrow>
           {!isPremium && quota && quota.limit != null && (
-            <p className="text-[10.5px] text-muted-foreground -mt-2">
+            <p className="text-[0.65625rem] text-muted-foreground -mt-2">
               {quota.remaining ?? 0} of {quota.limit} free stock research{quota.limit === 1 ? "" : "es"} left this month
             </p>
           )}
@@ -958,7 +958,7 @@ export default function StockDetail() {
                   key={id}
                   data-small-target
                   onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                  className={`px-3 py-1 text-[11px] font-semibold rounded-full whitespace-nowrap border transition-colors ${
+                  className={`px-3 py-1 text-[0.6875rem] font-semibold rounded-full whitespace-nowrap border transition-colors ${
                     reportSection === id ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:border-foreground/30 hover:text-foreground"
                   }`}
                 >
@@ -987,7 +987,7 @@ export default function StockDetail() {
                 <div id="rpt-8" className="scroll-mt-40"><OwnershipSection ownership={liveOwnership} topShareholders={liveTopShareholders} isLoading={ownershipLoading} /></div>
                 <div id="rpt-9" className="scroll-mt-40"><CompanyInfoSection symbol={symbol || ""} exchange={exchangeMeta.code} marketCap={stock.marketCap ?? "—"} /></div>
                 <div id="rpt-technicals" className="scroll-mt-40 space-y-2">
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[0.6875rem] text-muted-foreground">
                     Technicals and the Institutional Scorecard below aren't part of Simply Wall St's report —
                     they're Continua-original tools kept from the existing research suite.
                   </p>
@@ -1032,7 +1032,7 @@ export default function StockDetail() {
                     <div className="text-sm space-y-1">
                       <p><span className="text-muted-foreground">CEO:</span> {company.ceo}</p>
                       <p><span className="text-muted-foreground">Employees:</span> {company.employees}</p>
-                      <p className="text-[11px] text-muted-foreground pt-2">Full leadership team and board data isn't in the Data Layer's /companies/:symbol response yet — this shows the CEO field only, live.</p>
+                      <p className="text-[0.6875rem] text-muted-foreground pt-2">Full leadership team and board data isn't in the Data Layer's /companies/:symbol response yet — this shows the CEO field only, live.</p>
                     </div>
                   ),
                 }),
@@ -1050,9 +1050,9 @@ export default function StockDetail() {
                         <div key={a.id} className="flex items-center justify-between border-b border-border/40 pb-2 last:border-0">
                           <div>
                             <p className="text-xs font-semibold capitalize">{a.type.replace(/_/g, " ")}</p>
-                            <p className="text-[11px] text-muted-foreground">{a.exDate ? `Ex-date ${new Date(a.exDate).toLocaleDateString()}` : new Date(a.announcedAt).toLocaleDateString()}</p>
+                            <p className="text-[0.6875rem] text-muted-foreground">{a.exDate ? `Ex-date ${new Date(a.exDate).toLocaleDateString()}` : new Date(a.announcedAt).toLocaleDateString()}</p>
                           </div>
-                          <Badge variant="outline" className="text-[10px] capitalize">{a.status}</Badge>
+                          <Badge variant="outline" className="text-[0.625rem] capitalize">{a.status}</Badge>
                         </div>
                       ))}
                     </div>
@@ -1088,7 +1088,7 @@ export default function StockDetail() {
                   <row.icon className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div className="min-w-0">
                     <p className="text-xs font-semibold">{row.label}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{row.detail}</p>
+                    <p className="text-[0.625rem] text-muted-foreground truncate">{row.detail}</p>
                   </div>
                 </div>
                 <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />

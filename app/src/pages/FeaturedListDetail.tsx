@@ -64,7 +64,7 @@ export default function FeaturedListDetail() {
           </Button>
           <div className="min-w-0">
             <h1 className="text-base font-semibold truncate">{list.title}</h1>
-            <p className="text-[11px] text-muted-foreground truncate">Featured List</p>
+            <p className="text-[0.6875rem] text-muted-foreground truncate">Featured List</p>
           </div>
         </div>
       </header>
@@ -89,7 +89,7 @@ export default function FeaturedListDetail() {
           </div>
           <div className="flex gap-1.5 mt-3 flex-wrap">
             {list.symbols.map(s => (
-              <Badge key={s} variant="secondary" className="text-[10px] py-0 px-1.5 border-0">{s}</Badge>
+              <Badge key={s} variant="secondary" className="text-[0.625rem] py-0 px-1.5 border-0">{s}</Badge>
             ))}
           </div>
         </Card>

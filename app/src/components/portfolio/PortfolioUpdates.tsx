@@ -37,7 +37,7 @@ export function PortfolioUpdates({ items, recentCounts, isLoading }: PortfolioUp
         Updates
         <InfoTip>Earnings and dividends come from Continua's structured data; filings are real NSE documents from the scraper that haven't been sorted by type yet.</InfoTip>
       </h3>
-      <p className="text-[11px] text-muted-foreground mb-3">
+      <p className="text-[0.6875rem] text-muted-foreground mb-3">
         Earnings and dividends are structured data; filings are real NSE documents Continua's scraper hasn't sorted by type yet.
       </p>
 
@@ -51,7 +51,7 @@ export function PortfolioUpdates({ items, recentCounts, isLoading }: PortfolioUp
               key={c.key}
               data-small-target
               onClick={() => setFilter(c.key)}
-              className={`shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-full text-[11px] font-semibold transition-colors ${
+              className={`shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-full text-[0.6875rem] font-semibold transition-colors ${
                 filter === c.key ? "contrast-active" : "bg-muted/60 hover:bg-muted"
               }`}
             >
@@ -66,9 +66,9 @@ export function PortfolioUpdates({ items, recentCounts, isLoading }: PortfolioUp
       </div>
 
       {isLoading && items.length === 0 ? (
-        <p className="text-[11px] text-muted-foreground py-6 text-center">Loading updates…</p>
+        <p className="text-[0.6875rem] text-muted-foreground py-6 text-center">Loading updates…</p>
       ) : filtered.length === 0 ? (
-        <p className="text-[11px] text-muted-foreground py-6 text-center">Nothing here yet.</p>
+        <p className="text-[0.6875rem] text-muted-foreground py-6 text-center">Nothing here yet.</p>
       ) : (
         <div className="divide-y divide-border/40">
           {filtered.slice(0, 30).map((item) => (
@@ -79,21 +79,21 @@ export function PortfolioUpdates({ items, recentCounts, isLoading }: PortfolioUp
               rel={item.url ? "noopener noreferrer" : undefined}
               className={`flex gap-3 py-3 ${item.url ? "active:opacity-70 cursor-pointer" : ""}`}
             >
-              <div className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center shrink-0 text-[10px] font-bold">
+              <div className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center shrink-0 text-[0.625rem] font-bold">
                 {item.symbol.slice(0, 2)}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-[12.5px] font-bold">{item.symbol}</p>
-                  <span className="text-[10px] text-muted-foreground">· {timeAgo(item.date)}</span>
+                  <p className="text-[0.78125rem] font-bold">{item.symbol}</p>
+                  <span className="text-[0.625rem] text-muted-foreground">· {timeAgo(item.date)}</span>
                   {item.needsReview && (
                     <span title="Company match not fully confirmed">
                       <AlertCircle className="h-3 w-3 text-amber-500" />
                     </span>
                   )}
                 </div>
-                <p className="text-[12.5px] font-semibold mt-0.5">{item.title}</p>
-                {item.detail && <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{item.detail}</p>}
+                <p className="text-[0.78125rem] font-semibold mt-0.5">{item.title}</p>
+                {item.detail && <p className="text-[0.6875rem] text-muted-foreground mt-0.5 line-clamp-2">{item.detail}</p>}
               </div>
               {item.url && <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-1" />}
             </a>

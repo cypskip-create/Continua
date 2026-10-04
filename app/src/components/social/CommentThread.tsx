@@ -83,18 +83,18 @@ function CommentNode({ comment, depth, onReply, onReactComment, replyingToId, cu
         <div className="relative shrink-0 flex flex-col items-center">
           <Avatar className="h-7 w-7 z-10 bg-background" onClick={() => navigate(`/profile/${comment.user_id}`)}>
             <AvatarImage src={comment.author?.avatar_url || ""} />
-            <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">{getInitials(comment.author?.full_name)}</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary text-[0.625rem] font-bold">{getInitials(comment.author?.full_name)}</AvatarFallback>
           </Avatar>
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="font-bold text-[12.5px] truncate">{comment.author?.full_name || "Investor"}</span>
-              <span className="text-[11px] text-muted-foreground truncate">{atHandle(comment.author as any)}</span>
+              <span className="font-bold text-[0.78125rem] truncate">{comment.author?.full_name || "Investor"}</span>
+              <span className="text-[0.6875rem] text-muted-foreground truncate">{atHandle(comment.author as any)}</span>
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-[0.6875rem] text-muted-foreground">
                 {formatTimestamp(comment.created_at)}{comment.edited_at ? " · edited" : ""}
               </span>
               {isOwn && (onEditSave || onDeleteComment) && !isEditing && (
@@ -129,19 +129,19 @@ function CommentNode({ comment, depth, onReply, onReactComment, replyingToId, cu
                 value={editDraft}
                 onChange={e => setEditDraft(e.target.value)}
                 maxLength={500}
-                className="w-full min-h-[64px] text-[13px] leading-[1.55] bg-muted/40 rounded-lg p-2 outline-none resize-none border border-border/60 focus:border-primary/50"
+                className="w-full min-h-[64px] text-[0.8125rem] leading-[1.55] bg-muted/40 rounded-lg p-2 outline-none resize-none border border-border/60 focus:border-primary/50"
               />
               <div className="flex items-center justify-end gap-2 mt-1.5">
-                <Button variant="ghost" size="sm" className="h-7 rounded-full text-[11px] px-3" onClick={() => { setIsEditing(false); setEditDraft(comment.content); }}>
+                <Button variant="ghost" size="sm" className="h-7 rounded-full text-[0.6875rem] px-3" onClick={() => { setIsEditing(false); setEditDraft(comment.content); }}>
                   Cancel
                 </Button>
-                <Button size="sm" className="h-7 rounded-full text-[11px] px-3" disabled={!editDraft.trim() || saving} onClick={saveEdit}>
+                <Button size="sm" className="h-7 rounded-full text-[0.6875rem] px-3" disabled={!editDraft.trim() || saving} onClick={saveEdit}>
                   {saving ? "Saving…" : "Save"}
                 </Button>
               </div>
             </div>
           ) : (
-            <p className="text-[13px] mt-1 leading-[1.55] break-words whitespace-pre-wrap">{renderRichText(comment.content, navigate)}</p>
+            <p className="text-[0.8125rem] mt-1 leading-[1.55] break-words whitespace-pre-wrap">{renderRichText(comment.content, navigate)}</p>
           )}
 
           <div className="mt-1.5">
@@ -154,7 +154,7 @@ function CommentNode({ comment, depth, onReply, onReactComment, replyingToId, cu
               type="button"
               data-small-target
               onClick={() => onReply(comment)}
-              className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+              className="flex items-center gap-1 text-[0.6875rem] text-muted-foreground hover:text-foreground"
             >
               <MessageSquare className="h-3.5 w-3.5" />Reply
             </button>
@@ -165,7 +165,7 @@ function CommentNode({ comment, depth, onReply, onReactComment, replyingToId, cu
               type="button"
               data-small-target
               onClick={() => setExpanded(v => !v)}
-              className="mt-2 inline-flex items-center gap-1 text-[12px] font-bold text-primary"
+              className="mt-2 inline-flex items-center gap-1 text-[0.75rem] font-bold text-primary"
             >
               <ChevronRight className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-90" : ""}`} />
               {expanded ? `Hide ${replies.length} ${replies.length === 1 ? "reply" : "replies"}` : `${replies.length} ${replies.length === 1 ? "reply" : "replies"}`}

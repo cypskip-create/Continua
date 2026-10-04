@@ -1,3 +1,4 @@
+import { PostAttachments } from "@/components/social/PostAttachments";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { navigateBack } from "@/lib/navigation";
@@ -17,7 +18,7 @@ import { atHandle, getInitials } from "@/lib/handle";
 import { shareLink } from "@/lib/share";
 import { renderRichText, splitContent } from "@/components/social/HubPostCard";
 import { formatTimestamp } from "@/lib/formatTimestamp";
-import { ImageViewer } from "@/components/social/ImageViewer";
+
 
 export default function PostDetail() {
   const { postId } = useParams();
@@ -34,7 +35,7 @@ export default function PostDetail() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [sortBy, setSortBy] = useState<"relevant" | "latest">("relevant");
-  const [viewerOpen, setViewerOpen] = useState(false);
+
 
   const cached = useMemo(() => posts.find(p => p.id === postId) || null, [posts, postId]);
 
@@ -82,9 +83,6 @@ export default function PostDetail() {
     return count(comments);
   }, [comments]);
 
-  const viewCount = post
-    ? Math.max(1, (post.comments_count || 0) * 24 + Object.values(post.reaction_counts || {}).reduce((s, n) => s + (n || 0), 0) * 11 + 37)
-    : 0;
 
   const submit = async () => {
     if (!draft.trim() || !post) return;
@@ -133,14 +131,16 @@ export default function PostDetail() {
       if (next) counts[next] = (counts[next] || 0) + 1;
       return { ...p, reaction_counts: counts, my_reaction: next };
     });
-    await reactToPost(post.id, reaction);
+    const { error } = await reactToPost(post.id, reaction, prev);
+    if (error) setPost(post);
   };
 
   const bookmark = async () => {
     if (!user || !post) { navigate("/auth"); return; }
     const wasBookmarked = !!post.is_bookmarked;
     setPost(p => p ? { ...p, is_bookmarked: !p.is_bookmarked } : p);
-    await bookmarkPost(post.id, wasBookmarked);
+    const { error } = await bookmarkPost(post.id, wasBookmarked);
+    if (error) { setPost(post); toast({ title: "Couldn't update bookmark", variant: "destructive" }); return; }
     toast({ title: wasBookmarked ? "Removed from bookmarks" : "Saved to bookmarks" });
   };
 
@@ -179,16 +179,16 @@ export default function PostDetail() {
         <button className="flex items-center gap-2 min-w-0 flex-1" onClick={() => navigate(`/profile/${post.user_id}`)}>
           <Avatar className="h-7 w-7 shrink-0">
             <AvatarImage src={post.author?.avatar_url || ""} className="object-cover" />
-            <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">{getInitials(post.author?.full_name)}</AvatarFallback>
+            <AvatarFallback className="text-[0.625rem] font-bold bg-primary/10 text-primary">{getInitials(post.author?.full_name)}</AvatarFallback>
           </Avatar>
-          <span className="text-[13px] font-bold truncate">{post.author?.full_name || "Investor"}</span>
+          <span className="text-[0.8125rem] font-bold truncate">{post.author?.full_name || "Investor"}</span>
           <Verified className="h-3 w-3 text-primary fill-primary shrink-0" />
         </button>
         {!following && user?.id !== post.user_id && (
           <button
             data-small-target
             onClick={() => toggleFollow(post.user_id)}
-            className="h-7 px-2.5 rounded-full text-[12px] font-bold text-primary hover:bg-primary/10"
+            className="h-7 px-2.5 rounded-full text-[0.75rem] font-bold text-primary hover:bg-primary/10"
           >
             + Follow
           </button>
@@ -217,37 +217,33 @@ export default function PostDetail() {
           <div className="flex items-center gap-2.5">
             <Avatar className="h-9 w-9" onClick={() => navigate(`/profile/${post.user_id}`)}>
               <AvatarImage src={post.author?.avatar_url || ""} className="object-cover" />
-              <AvatarFallback className="bg-primary/10 text-primary text-[11px] font-bold">{getInitials(post.author?.full_name)}</AvatarFallback>
+              <AvatarFallback className="bg-primary/10 text-primary text-[0.6875rem] font-bold">{getInitials(post.author?.full_name)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
               <div className="flex items-center gap-1">
-                <span className="font-bold text-[13px] truncate">{post.author?.full_name || "Investor"}</span>
-                <span className="text-[12px] text-muted-foreground">{atHandle(post.author as any)}</span>
+                <span className="font-bold text-[0.8125rem] truncate">{post.author?.full_name || "Investor"}</span>
+                <span className="text-[0.75rem] text-muted-foreground">{atHandle(post.author as any)}</span>
               </div>
-              <p className="text-[11px] text-muted-foreground">{formatTimestamp(post.created_at)}{post.edited_at ? " · edited" : ""}</p>
+              <p className="text-[0.6875rem] text-muted-foreground">{formatTimestamp(post.created_at)}{post.edited_at ? " · edited" : ""}</p>
             </div>
           </div>
 
-          <h1 className="mt-3 text-[17px] font-bold leading-snug break-words">{renderRichText(title, navigate)}</h1>
-          {body && <p className="mt-2 text-[13.5px] leading-[1.6] whitespace-pre-wrap break-words">{renderRichText(body, navigate)}</p>}
+          <h1 className="mt-3 text-[1.0625rem] font-bold leading-snug break-words">{renderRichText(title, navigate)}</h1>
+          {body && <p className="mt-2 text-[0.84375rem] leading-[1.6] whitespace-pre-wrap break-words">{renderRichText(body, navigate)}</p>}
 
-          {post.image_url && (
-            <button className="mt-3 block w-full rounded-xl overflow-hidden bg-muted/40" onClick={() => setViewerOpen(true)}>
-              <img src={post.image_url} alt="Post attachment" className="w-full max-h-[380px] object-cover" />
-            </button>
-          )}
+          <PostAttachments post={post} />
 
           {post.stock_mentions && post.stock_mentions.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {post.stock_mentions.map(s => (
-                <button key={s} data-small-target onClick={() => navigate(`/stock/${s}`)} className="h-7 px-2.5 rounded-full bg-muted/50 text-[11px] font-semibold text-primary">
+                <button key={s} data-small-target onClick={() => navigate(`/stock/${s}`)} className="h-7 px-2.5 rounded-full bg-muted/50 text-[0.6875rem] font-semibold text-primary">
                   ${s}
                 </button>
               ))}
             </div>
           )}
 
-          <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="mt-3 text-[0.6875rem] leading-relaxed text-muted-foreground">
             Disclaimer: Continua provides this content for information and educational use only. It is not investment advice.
           </p>
 
@@ -255,18 +251,18 @@ export default function PostDetail() {
             <ReactionChips counts={post.reaction_counts || {}} selected={post.my_reaction} onSelect={react} />
           </div>
 
-          <p className="mt-3 text-right text-[11px] text-muted-foreground tabular-nums">
-            {post.comments_count || 0} Comments · {viewCount.toLocaleString()} Views
+          <p className="mt-3 text-right text-[0.6875rem] text-muted-foreground tabular-nums">
+            {post.comments_count || 0} Comments
           </p>
         </div>
 
         {/* Comments */}
         <div className="border-t-4 border-muted/40">
           <div className="flex items-center justify-between px-4 py-3">
-            <h2 className="text-[14px] font-bold">Comments ({totalComments})</h2>
+            <h2 className="text-[0.875rem] font-bold">Comments ({totalComments})</h2>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px] gap-1" data-small-target>
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-[0.6875rem] gap-1" data-small-target>
                   <SlidersHorizontal className="h-3 w-3" />{sortBy === "latest" ? "Latest" : "Relevant"}<ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
@@ -280,7 +276,7 @@ export default function PostDetail() {
           {loadingComments ? (
             <div className="flex justify-center py-10"><div className="h-6 w-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" /></div>
           ) : sorted.length === 0 ? (
-            <p className="py-10 text-center text-[13px] text-muted-foreground">No comments yet. Start the discussion.</p>
+            <p className="py-10 text-center text-[0.8125rem] text-muted-foreground">No comments yet. Start the discussion.</p>
           ) : (
             <CommentThread
               comments={sorted} onReply={setReplyingTo} onReactComment={reactToComment as any} replyingToId={replyingTo?.id}
@@ -293,7 +289,7 @@ export default function PostDetail() {
       {/* Sticky composer + engagement rail */}
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-background/97 backdrop-blur-xl">
         {replyingTo && (
-          <div className="flex items-center justify-between px-4 py-1.5 bg-muted/40 text-[11px]">
+          <div className="flex items-center justify-between px-4 py-1.5 bg-muted/40 text-[0.6875rem]">
             <span className="text-muted-foreground truncate">Replying to <span className="text-primary font-semibold">{atHandle(replyingTo.author as any)}</span></span>
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setReplyingTo(null)} data-small-target><X className="h-3.5 w-3.5" /></Button>
           </div>
@@ -304,7 +300,7 @@ export default function PostDetail() {
             onChange={e => setDraft(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") submit(); }}
             placeholder={replyingTo ? `Reply to ${replyingTo.author?.full_name || "investor"}` : "Say something"}
-            className="h-9 flex-1 rounded-full bg-muted/50 border-0 text-[13px]"
+            className="h-9 flex-1 rounded-full bg-muted/50 border-0 text-[0.8125rem]"
           />
           {draft.trim() ? (
             <Button size="icon" className="h-9 w-9 rounded-full shrink-0" onClick={submit} disabled={sending} aria-label="Send comment">
@@ -315,7 +311,7 @@ export default function PostDetail() {
               <CommunityReactionButton counts={post.reaction_counts || {}} selected={post.my_reaction} onSelect={react} />
               <button data-small-target aria-label="Comments" className="flex items-center gap-1 h-9 px-1.5 text-muted-foreground">
                 <MessageSquare className="h-[17px] w-[17px]" />
-                <span className="text-[11px] tabular-nums">{post.comments_count || 0}</span>
+                <span className="text-[0.6875rem] tabular-nums">{post.comments_count || 0}</span>
               </button>
               <button data-small-target aria-label="Share" onClick={share} className="h-9 px-1.5 text-muted-foreground"><Share2 className="h-[17px] w-[17px]" /></button>
               <button data-small-target aria-label="Bookmark" onClick={bookmark} className={`h-9 px-1.5 ${post.is_bookmarked ? "text-primary" : "text-muted-foreground"}`}>
@@ -326,7 +322,7 @@ export default function PostDetail() {
         </div>
       </div>
 
-      {post.image_url && <ImageViewer open={viewerOpen} onOpenChange={setViewerOpen} images={[post.image_url]} />}
+
     </div>
   );
 }

@@ -244,20 +244,20 @@ export const EnhancedStockChart = ({ symbol, timeframe }: EnhancedStockChartProp
       {/* Technical Indicators Summary */}
       <div className="grid grid-cols-4 gap-2 pt-2 border-t border-border">
         <div className="text-center">
-          <p className="text-[10px] text-muted-foreground">Open</p>
+          <p className="text-[0.625rem] text-muted-foreground">Open</p>
           <p className="text-xs font-medium">KES {firstPrice.toFixed(2)}</p>
         </div>
         <div className="text-center">
-          <p className="text-[10px] text-muted-foreground">High</p>
+          <p className="text-[0.625rem] text-muted-foreground">High</p>
           <p className="text-xs font-medium">KES {maxPrice.toFixed(2)}</p>
         </div>
         <div className="text-center">
-          <p className="text-[10px] text-muted-foreground">Low</p>
+          <p className="text-[0.625rem] text-muted-foreground">Low</p>
           <p className="text-xs font-medium">KES {minPrice.toFixed(2)}</p>
         </div>
         <div className="text-center">
-          <p className="text-[10px] text-muted-foreground">Signal</p>
-          <Badge variant={isPositive ? "default" : "destructive"} className="text-[10px] px-1">
+          <p className="text-[0.625rem] text-muted-foreground">Signal</p>
+          <Badge variant={isPositive ? "default" : "destructive"} className="text-[0.625rem] px-1">
             {technicalIndicators.signal}
           </Badge>
         </div>

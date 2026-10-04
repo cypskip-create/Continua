@@ -32,7 +32,7 @@ export function CriteriaChecklist({ checks, narrative }: CriteriaChecklistProps)
         className="w-full flex items-center justify-between gap-3"
       >
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[12.5px] font-semibold">Criteria checks {passed}/{evaluable.length || checks.length}</span>
+          <span className="text-[0.78125rem] font-semibold">Criteria checks {passed}/{evaluable.length || checks.length}</span>
           <div className="flex items-center gap-1">
             {checks.map((c, i) => (
               c.status === "pass" ? (
@@ -40,7 +40,7 @@ export function CriteriaChecklist({ checks, narrative }: CriteriaChecklistProps)
               ) : c.status === "fail" ? (
                 <XCircle key={i} className="h-4 w-4 text-bear" />
               ) : (
-                <span key={i} className="h-4 w-4 rounded-full border border-muted-foreground/40 flex items-center justify-center text-[8px] text-muted-foreground">—</span>
+                <span key={i} className="h-4 w-4 rounded-full border border-muted-foreground/40 flex items-center justify-center text-[0.5rem] text-muted-foreground">—</span>
               )
             ))}
           </div>
@@ -48,7 +48,7 @@ export function CriteriaChecklist({ checks, narrative }: CriteriaChecklistProps)
         <ChevronRight className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform ${expanded ? "rotate-90" : ""}`} />
       </button>
 
-      <p className="text-[12.5px] text-muted-foreground mt-2 leading-snug">{narrative}</p>
+      <p className="text-[0.78125rem] text-muted-foreground mt-2 leading-snug">{narrative}</p>
 
       {expanded && (
         <div className="mt-3 pt-3 border-t border-border/50 divide-y divide-border/30">
@@ -62,9 +62,9 @@ export function CriteriaChecklist({ checks, narrative }: CriteriaChecklistProps)
                 <span className="h-3.5 w-3.5 rounded-full border border-muted-foreground/40 mt-0.5 shrink-0" />
               )}
               <div className="min-w-0">
-                <p className="text-[12px] font-medium">{c.label}</p>
-                {c.detail && <p className="text-[11px] text-muted-foreground mt-0.5">{c.detail}</p>}
-                {c.status === "unknown" && !c.detail && <p className="text-[11px] text-muted-foreground mt-0.5">No data on file to evaluate this yet.</p>}
+                <p className="text-[0.75rem] font-medium">{c.label}</p>
+                {c.detail && <p className="text-[0.6875rem] text-muted-foreground mt-0.5">{c.detail}</p>}
+                {c.status === "unknown" && !c.detail && <p className="text-[0.6875rem] text-muted-foreground mt-0.5">No data on file to evaluate this yet.</p>}
               </div>
             </div>
           ))}

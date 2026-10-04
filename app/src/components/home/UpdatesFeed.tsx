@@ -65,7 +65,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [readerItem, setReaderItem] = useState<NewsItem | null>(null);
 
-  const { news } = useFollowedNews(followedSymbols, limit);
+  const { news, isError: newsError, refetch: refreshNews } = useFollowedNews(followedSymbols, limit);
   const { dividends } = useUpcomingDividends();
   const { earnings } = useRecentEarnings();
   const newsSymbols = useMemo(() => [...new Set(news.flatMap((item) => item.symbols))], [news]);
@@ -148,11 +148,12 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
 
   return (
     <div>
+      {newsError && <p role="status" className="px-4 pb-3 text-xs text-muted-foreground">News could not refresh. {news.length ? 'Showing saved stories.' : 'Please retry.'} <button className="underline" onClick={()=>void refreshNews()}>Retry</button></p>}
       <div className="flex items-center justify-between mb-2 px-4">
         <div className="flex items-center gap-2">
           <p className="section-eyebrow">Updates</p>
           {newCount > 0 && (
-            <span className="text-[10px] font-bold text-primary bg-primary/10 rounded-full px-2 py-0.5">
+            <span className="text-[0.625rem] font-bold text-primary bg-primary/10 rounded-full px-2 py-0.5">
               {newCount} new
             </span>
           )}
@@ -160,7 +161,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
         <button
           data-small-target
           onClick={() => navigate("/traders-hub?tab=media")}
-          className="text-[11px] text-primary font-semibold flex items-center"
+          className="text-[0.6875rem] text-primary font-semibold flex items-center"
         >
           All <ChevronRight className="h-3 w-3" />
         </button>
@@ -172,7 +173,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
             key={f.id}
             data-small-target
             onClick={() => setFilter(f.id)}
-            className={`shrink-0 h-7 px-3 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors ${
+            className={`shrink-0 h-7 px-3 rounded-full text-[0.6875rem] font-semibold whitespace-nowrap transition-colors ${
               filter === f.id ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/50 text-muted-foreground"
             }`}
           >
@@ -196,7 +197,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
               key={e.id}
               data-small-target
               onClick={() => handleTap(e)}
-              className="rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors cursor-pointer overflow-hidden"
+              className="flat-section rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors cursor-pointer overflow-hidden"
             >
               {hasImage && (
                 <img src={e.newsItem!.imageUrl!} alt="" className="w-full h-32 object-cover" />
@@ -207,11 +208,11 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
                     <Icon className={`h-3 w-3 ${style.fg}`} />
                   </div>
                   <span className="text-xs font-bold">{e.companyLabel}</span>
-                  <span className={`text-[10px] font-semibold ${style.fg}`}>· {style.label}</span>
-                  <span className="text-[10px] text-muted-foreground ml-auto shrink-0">{formatTimestamp(e.timestamp)}</span>
+                  <span className={`text-[0.625rem] font-semibold ${style.fg}`}>· {style.label}</span>
+                  <span className="text-[0.625rem] text-muted-foreground ml-auto shrink-0">{formatTimestamp(e.timestamp)}</span>
                 </div>
 
-                <p className="text-[13px] font-bold leading-snug mb-1">{e.headline}</p>
+                <p className="text-[0.8125rem] font-bold leading-snug mb-1">{e.headline}</p>
 
                 {e.description && (
                   <>
@@ -225,7 +226,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
                           ev.stopPropagation();
                           setExpandedId(isExpanded ? null : e.id);
                         }}
-                        className="text-[11px] font-semibold text-primary flex items-center gap-0.5 mt-1"
+                        className="text-[0.6875rem] font-semibold text-primary flex items-center gap-0.5 mt-1"
                       >
                         {isExpanded ? "Show less" : "Show more"}
                         <ChevronDown className={`h-3 w-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />

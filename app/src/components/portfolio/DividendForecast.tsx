@@ -101,13 +101,13 @@ export function DividendForecast({ holdings, dividendData, isPremium = false, sh
         <button
           data-small-target
           onClick={() => setView((v) => (v === "monthly" ? "annual" : "monthly"))}
-          className="flex items-center gap-1.5 h-7 px-1 rounded-full bg-muted/60 text-[10px] font-semibold"
+          className="flex items-center gap-1.5 h-7 px-1 rounded-full bg-muted/60 text-[0.625rem] font-semibold"
         >
           <span className={`px-2 py-0.5 rounded-full transition-colors ${view === "monthly" ? "bg-background" : ""}`}>Monthly</span>
           <span className={`px-2 py-0.5 rounded-full transition-colors ${view === "annual" ? "bg-background" : ""}`}>Annual</span>
         </button>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-3">
+      <p className="text-[0.6875rem] text-muted-foreground mb-3">
         Plan your cash flow month-by-month, or switch to Annual for the 3-year forecast.
       </p>
 
@@ -115,8 +115,8 @@ export function DividendForecast({ holdings, dividendData, isPremium = false, sh
           already zero-filled placeholders regardless of data, so a portfolio
           with no confirmed or projected payments yet still shows the tool
           (an empty timeline), not a text box in its place. */}
-      <div className="rounded-xl bg-muted/40 p-3 mb-3">
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+      <div className="flat-section rounded-xl bg-muted/40 p-3 mb-3">
+        <p className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">
           {thisPeriod.label}{view === "monthly" ? ` ${new Date().getFullYear()}` : ""} (Unrealised)
         </p>
         <p className="text-lg font-bold tabular mt-0.5">
@@ -137,12 +137,12 @@ export function DividendForecast({ holdings, dividendData, isPremium = false, sh
         </ResponsiveContainer>
       </div>
       {!hasAnyData && (
-        <p className="text-[10px] text-muted-foreground text-center -mt-1 mb-2">
+        <p className="text-[0.625rem] text-muted-foreground text-center -mt-1 mb-2">
           Not enough dividend history yet to project future payments for this portfolio.
         </p>
       )}
       {hasAnyData && !isPremium && (
-        <p className="text-[10px] text-muted-foreground text-center -mt-1 mb-2">
+        <p className="text-[0.625rem] text-muted-foreground text-center -mt-1 mb-2">
           Showing the next {view === "monthly" ? "period" : "year"} only · the full forecast is a premium feature
         </p>
       )}
@@ -151,25 +151,25 @@ export function DividendForecast({ holdings, dividendData, isPremium = false, sh
         {thisPeriod.label}{view === "monthly" ? ` ${new Date().getFullYear()}` : ""}
         <span className="text-muted-foreground font-normal"> · {declaredEvents.length} declared · {estimatedEvents.length} estimated</span>
       </p>
-      <div className="grid grid-cols-2 text-[10px] text-muted-foreground uppercase tracking-wide pb-1 border-b border-border/50">
+      <div className="grid grid-cols-2 text-[0.625rem] text-muted-foreground uppercase tracking-wide pb-1 border-b border-border/50">
         <span>Symbol</span><span className="text-right">Amount</span>
       </div>
       <div className="flex items-center justify-between py-2 rounded-lg bg-primary/10 px-2 -mx-2 mt-1">
-        <span className="text-[12px] font-bold">Declared payments</span>
-        <span className="text-[12px] font-bold tabular">{showValues ? `${currencyLabel}${declaredTotal.toFixed(2)}` : "••••"}</span>
+        <span className="text-[0.75rem] font-bold">Declared payments</span>
+        <span className="text-[0.75rem] font-bold tabular">{showValues ? `${currencyLabel}${declaredTotal.toFixed(2)}` : "••••"}</span>
       </div>
       <div className="divide-y divide-border/40">
         {declaredEvents.map((e, i) => (
           <div key={i} className="flex items-center justify-between py-2">
             <div>
-              <span className="text-[12px] font-bold text-primary">{e.symbol}</span>
-              <span className="text-[11px] text-muted-foreground ml-1.5 truncate">{e.name}</span>
+              <span className="text-[0.75rem] font-bold text-primary">{e.symbol}</span>
+              <span className="text-[0.6875rem] text-muted-foreground ml-1.5 truncate">{e.name}</span>
             </div>
-            <span className="text-[12px] font-semibold tabular">{showValues ? `${currencyLabel}${e.amount.toFixed(2)}` : "••••"}</span>
+            <span className="text-[0.75rem] font-semibold tabular">{showValues ? `${currencyLabel}${e.amount.toFixed(2)}` : "••••"}</span>
           </div>
         ))}
         {declaredEvents.length === 0 && (
-          <p className="text-[11px] text-muted-foreground py-2">No confirmed payments announced for this period yet.</p>
+          <p className="text-[0.6875rem] text-muted-foreground py-2">No confirmed payments announced for this period yet.</p>
         )}
       </div>
     </div>

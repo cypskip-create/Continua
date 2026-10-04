@@ -83,22 +83,22 @@ export function PortfolioRisksRewards({ holdings, research, valuations, benchmar
         <button
           data-small-target
           onClick={() => setExpanded((e) => (e === "rewards" ? null : "rewards"))}
-          className="flex items-center justify-between rounded-xl bg-bull/10 px-3 py-2.5"
+          className="flat-section flex items-center justify-between rounded-xl bg-bull/10 px-3 py-2.5"
         >
           <span className="flex items-center gap-1.5 text-bull">
             <Star className="h-3.5 w-3.5 fill-bull" />
-            <span className="text-[12px] font-bold">{rewards.length} Reward{rewards.length === 1 ? "" : "s"}</span>
+            <span className="text-[0.75rem] font-bold">{rewards.length} Reward{rewards.length === 1 ? "" : "s"}</span>
           </span>
           <ChevronDown className={`h-3.5 w-3.5 text-bull transition-transform ${expanded === "rewards" ? "rotate-180" : ""}`} />
         </button>
         <button
           data-small-target
           onClick={() => setExpanded((e) => (e === "risks" ? null : "risks"))}
-          className="flex items-center justify-between rounded-xl bg-bear/10 px-3 py-2.5"
+          className="flat-section flex items-center justify-between rounded-xl bg-bear/10 px-3 py-2.5"
         >
           <span className="flex items-center gap-1.5 text-bear">
             <ShieldAlert className="h-3.5 w-3.5" />
-            <span className="text-[12px] font-bold">{risks.length} Risk{risks.length === 1 ? "" : "s"}</span>
+            <span className="text-[0.75rem] font-bold">{risks.length} Risk{risks.length === 1 ? "" : "s"}</span>
           </span>
           <ChevronDown className={`h-3.5 w-3.5 text-bear transition-transform ${expanded === "risks" ? "rotate-180" : ""}`} />
         </button>
@@ -107,10 +107,10 @@ export function PortfolioRisksRewards({ holdings, research, valuations, benchmar
       {expanded && (
         <div className="mt-3 space-y-2">
           {(expanded === "rewards" ? rewards : risks).length === 0 ? (
-            <p className="text-[11px] text-muted-foreground py-2">No {expanded} identified from data on file.</p>
+            <p className="text-[0.6875rem] text-muted-foreground py-2">No {expanded} identified from data on file.</p>
           ) : (
             (expanded === "rewards" ? rewards : risks).map((f, i) => (
-              <div key={i} className="flex items-start gap-2 text-[12px]">
+              <div key={i} className="flex items-start gap-2 text-[0.75rem]">
                 <span className={`font-bold shrink-0 w-12 ${expanded === "rewards" ? "text-bull" : "text-bear"}`}>{f.symbol}</span>
                 <span className="text-muted-foreground">{f.label}</span>
               </div>

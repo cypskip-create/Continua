@@ -169,7 +169,7 @@ export default function Auth() {
         {FLOATING_CHIPS.map((chip) => (
           <motion.div
             key={chip.symbol}
-            className={`absolute hidden sm:flex items-center gap-1 rounded-full bg-card/70 backdrop-blur border border-border px-2.5 py-1 text-[10px] font-mono font-semibold shadow-sm ${chip.className} ${chip.change >= 0 ? 'text-bull' : 'text-bear'}`}
+            className={`absolute hidden sm:flex items-center gap-1 rounded-full bg-card/70 backdrop-blur border border-border px-2.5 py-1 text-[0.625rem] font-mono font-semibold shadow-sm ${chip.className} ${chip.change >= 0 ? 'text-bull' : 'text-bear'}`}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: [0, 1, 1, 0], y: [12, -4, -4, -22] }}
             transition={{ duration: 6, repeat: Infinity, delay: chip.delay, ease: 'easeInOut' }}
@@ -188,7 +188,7 @@ export default function Auth() {
           transition={{ type: 'spring', stiffness: 260, damping: 20 }}
         >
           <Logo size="lg" />
-          <div className="mt-4 flex items-center gap-1.5 text-[11px] font-semibold text-primary bg-primary/10 rounded-full px-3 py-1 min-w-[240px] justify-center">
+          <div className="mt-4 flex items-center gap-1.5 text-[0.6875rem] font-semibold text-primary bg-primary/10 rounded-full px-3 py-1 min-w-[240px] justify-center">
             <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
             <AnimatePresence mode="wait">
               <motion.span
@@ -205,7 +205,7 @@ export default function Auth() {
         </motion.div>
 
         <motion.div
-          className="relative w-full max-w-sm rounded-3xl border border-border bg-card shadow-xl overflow-hidden"
+          className="flat-section relative w-full max-w-sm rounded-3xl border border-border bg-card shadow-xl overflow-hidden"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
@@ -227,7 +227,7 @@ export default function Auth() {
                 >
                   <CheckCircle2 className="h-7 w-7" />
                 </motion.div>
-                <p className="text-[14px] font-semibold">
+                <p className="text-[0.875rem] font-semibold">
                   {isSignUp ? "You're in! Welcome to Continua" : 'Welcome back!'}
                 </p>
               </motion.div>
@@ -246,14 +246,14 @@ export default function Auth() {
                 <button
                   type="button"
                   onClick={() => switchMode('signin')}
-                  className={`relative z-10 h-9 rounded-full text-[13.5px] font-semibold transition-colors ${mode === 'signin' ? 'text-foreground' : 'text-muted-foreground'}`}
+                  className={`relative z-10 h-9 rounded-full text-[0.84375rem] font-semibold transition-colors ${mode === 'signin' ? 'text-foreground' : 'text-muted-foreground'}`}
                 >
                   Log In
                 </button>
                 <button
                   type="button"
                   onClick={() => switchMode('signup')}
-                  className={`relative z-10 h-9 rounded-full text-[13.5px] font-semibold transition-colors ${mode === 'signup' ? 'text-foreground' : 'text-muted-foreground'}`}
+                  className={`relative z-10 h-9 rounded-full text-[0.84375rem] font-semibold transition-colors ${mode === 'signup' ? 'text-foreground' : 'text-muted-foreground'}`}
                 >
                   Sign Up
                 </button>
@@ -268,10 +268,10 @@ export default function Auth() {
                   transition={{ duration: 0.22 }}
                   className="p-6 pt-5"
                 >
-                  <h1 className="text-[19px] font-extrabold tracking-tight">
+                  <h1 className="text-[1.1875rem] font-extrabold tracking-tight">
                     {isSignUp ? 'Create your account' : 'Welcome back'}
                   </h1>
-                  <p className="text-[13px] text-muted-foreground mt-1 mb-5">
+                  <p className="text-[0.8125rem] text-muted-foreground mt-1 mb-5">
                     {isSignUp ? 'Start researching and tracking NSE stocks in minutes.' : 'Log in to pick up where you left off.'}
                   </p>
 
@@ -297,7 +297,7 @@ export default function Auth() {
 
                   <div className="relative mb-4">
                     <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-                    <div className="relative flex justify-center text-[11px]"><span className="bg-card px-2 text-muted-foreground uppercase tracking-wide">or use email</span></div>
+                    <div className="relative flex justify-center text-[0.6875rem]"><span className="bg-card px-2 text-muted-foreground uppercase tracking-wide">or use email</span></div>
                   </div>
 
                   <form onSubmit={handleSubmit} className="space-y-3">
@@ -317,7 +317,7 @@ export default function Auth() {
                               value={fullName}
                               onChange={(e) => setFullName(e.target.value)}
                               placeholder="Full name"
-                              className="h-12 pl-10 rounded-xl text-[14px] focus-visible:shadow-[0_0_0_4px_hsl(var(--primary)/0.15)] transition-shadow"
+                              className="h-12 pl-10 rounded-xl text-[0.875rem] focus-visible:shadow-[0_0_0_4px_hsl(var(--primary)/0.15)] transition-shadow"
                               required={isSignUp}
                             />
                           </div>
@@ -332,7 +332,7 @@ export default function Auth() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Email address"
-                        className="h-12 pl-10 rounded-xl text-[14px] focus-visible:shadow-[0_0_0_4px_hsl(var(--primary)/0.15)] transition-shadow"
+                        className="h-12 pl-10 rounded-xl text-[0.875rem] focus-visible:shadow-[0_0_0_4px_hsl(var(--primary)/0.15)] transition-shadow"
                         required
                       />
                     </div>
@@ -345,7 +345,7 @@ export default function Auth() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Password"
-                          className="h-12 pl-10 pr-10 rounded-xl text-[14px] focus-visible:shadow-[0_0_0_4px_hsl(var(--primary)/0.15)] transition-shadow"
+                          className="h-12 pl-10 pr-10 rounded-xl text-[0.875rem] focus-visible:shadow-[0_0_0_4px_hsl(var(--primary)/0.15)] transition-shadow"
                           required
                         />
                         <button
@@ -367,14 +367,14 @@ export default function Auth() {
                               />
                             ))}
                           </div>
-                          <span className="text-[10.5px] font-medium text-muted-foreground whitespace-nowrap">{passwordStrength.label}</span>
+                          <span className="text-[0.65625rem] font-medium text-muted-foreground whitespace-nowrap">{passwordStrength.label}</span>
                         </div>
                       )}
                     </div>
 
                     {!isSignUp && (
                       <div className="flex justify-end">
-                        <button type="button" onClick={() => switchMode('reset')} className="text-[12.5px] font-semibold text-primary hover:underline">
+                        <button type="button" onClick={() => switchMode('reset')} className="text-[0.78125rem] font-semibold text-primary hover:underline">
                           Forgot password?
                         </button>
                       </div>
@@ -382,7 +382,7 @@ export default function Auth() {
 
                     <Button
                       type="submit"
-                      className="w-full h-12 text-[14.5px] font-semibold rounded-xl mt-1 transition-transform hover:-translate-y-0.5 active:scale-[0.97]"
+                      className="w-full h-12 text-[0.90625rem] font-semibold rounded-xl mt-1 transition-transform hover:-translate-y-0.5 active:scale-[0.97]"
                       disabled={loading}
                     >
                       {loading ? (
@@ -398,7 +398,7 @@ export default function Auth() {
           ) : (
             /* Reset password */
             <div className="p-6">
-              <button type="button" onClick={() => switchMode('signin')} className="flex items-center gap-1.5 text-[12.5px] font-semibold text-muted-foreground mb-4">
+              <button type="button" onClick={() => switchMode('signin')} className="flex items-center gap-1.5 text-[0.78125rem] font-semibold text-muted-foreground mb-4">
                 <ArrowLeft className="h-3.5 w-3.5" /> Back to log in
               </button>
               {resetSent ? (
@@ -411,13 +411,13 @@ export default function Auth() {
                   <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
                     <Mail className="h-5 w-5" />
                   </div>
-                  <h2 className="text-[16px] font-bold mb-1">Check your inbox</h2>
-                  <p className="text-[13px] text-muted-foreground">We've sent a password reset link to <span className="font-medium text-foreground">{email}</span>.</p>
+                  <h2 className="text-[1rem] font-bold mb-1">Check your inbox</h2>
+                  <p className="text-[0.8125rem] text-muted-foreground">We've sent a password reset link to <span className="font-medium text-foreground">{email}</span>.</p>
                 </motion.div>
               ) : (
                 <>
-                  <h1 className="text-[19px] font-extrabold tracking-tight">Reset your password</h1>
-                  <p className="text-[13px] text-muted-foreground mt-1 mb-5">Enter your email and we'll send you a link to reset it.</p>
+                  <h1 className="text-[1.1875rem] font-extrabold tracking-tight">Reset your password</h1>
+                  <p className="text-[0.8125rem] text-muted-foreground mt-1 mb-5">Enter your email and we'll send you a link to reset it.</p>
                   <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="relative">
                       <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -426,11 +426,11 @@ export default function Auth() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Email address"
-                        className="h-12 pl-10 rounded-xl text-[14px] focus-visible:shadow-[0_0_0_4px_hsl(var(--primary)/0.15)] transition-shadow"
+                        className="h-12 pl-10 rounded-xl text-[0.875rem] focus-visible:shadow-[0_0_0_4px_hsl(var(--primary)/0.15)] transition-shadow"
                         required
                       />
                     </div>
-                    <Button type="submit" className="w-full h-12 text-[14.5px] font-semibold rounded-xl transition-transform hover:-translate-y-0.5 active:scale-[0.97]" disabled={loading}>
+                    <Button type="submit" className="w-full h-12 text-[0.90625rem] font-semibold rounded-xl transition-transform hover:-translate-y-0.5 active:scale-[0.97]" disabled={loading}>
                       {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                       Send reset link
                     </Button>
@@ -442,7 +442,7 @@ export default function Auth() {
         </motion.div>
 
         {mode !== 'reset' && (
-          <p className="text-[13px] text-muted-foreground mt-5 text-center">
+          <p className="text-[0.8125rem] text-muted-foreground mt-5 text-center">
             {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button type="button" className="font-semibold text-primary hover:underline" onClick={() => switchMode(isSignUp ? 'signin' : 'signup')}>
               {isSignUp ? 'Log In' : 'Sign Up'}
@@ -450,12 +450,12 @@ export default function Auth() {
           </p>
         )}
 
-        <div className="flex items-center gap-1.5 mt-6 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-1.5 mt-6 text-[0.6875rem] text-muted-foreground">
           <TrendingUp className="h-3 w-3" />
           Real-time research on NSE-listed companies
         </div>
 
-        <p className="text-[11px] text-muted-foreground/80 mt-3 text-center max-w-xs">
+        <p className="text-[0.6875rem] text-muted-foreground/80 mt-3 text-center max-w-xs">
           By continuing, you agree to our Terms of Service and Privacy Policy
         </p>
       </div>

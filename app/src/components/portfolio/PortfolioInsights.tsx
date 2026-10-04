@@ -92,13 +92,13 @@ export function PortfolioInsights({ holdings, prices }: Props) {
 
         <div className="grid grid-cols-3 gap-2">
           {insights.map((i) => (
-            <div key={i.label} className="bg-muted/30 rounded-xl p-2.5">
+            <div key={i.label} className="flat-section bg-muted/30 rounded-xl p-2.5">
               <div className="flex items-center gap-1 mb-1">
                 <i.icon className={`h-3 w-3 ${i.tone}`} />
-                <span className="text-[10px] font-medium text-muted-foreground">{i.label}</span>
+                <span className="text-[0.625rem] font-medium text-muted-foreground">{i.label}</span>
               </div>
               <p className={`text-sm font-bold ${i.tone}`}>{i.value}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{i.sub}</p>
+              <p className="text-[0.625rem] text-muted-foreground mt-0.5 truncate">{i.sub}</p>
             </div>
           ))}
         </div>
@@ -106,10 +106,10 @@ export function PortfolioInsights({ holdings, prices }: Props) {
         {(biggestGain.gainPct > 0 || biggestLoss.gainPct < 0) && (
           <div className="grid grid-cols-2 gap-2 pt-1">
             {biggestGain.gainPct > 0 ? (
-              <div className="rounded-xl p-2.5 bg-bull/10">
+              <div className="flat-section rounded-xl p-2.5 bg-bull/10">
                 <div className="flex items-center gap-1">
                   <TrendingUp className="h-3 w-3 text-bull" />
-                  <span className="text-[10px] font-medium text-muted-foreground">Biggest Gainer</span>
+                  <span className="text-[0.625rem] font-medium text-muted-foreground">Biggest Gainer</span>
                 </div>
                 <p className="text-sm font-bold mt-0.5 text-bull">
                   {biggestGain.symbol} +{biggestGain.gainPct.toFixed(1)}%
@@ -117,10 +117,10 @@ export function PortfolioInsights({ holdings, prices }: Props) {
               </div>
             ) : <div />}
             {biggestLoss.gainPct < 0 ? (
-              <div className="rounded-xl p-2.5 bg-bear/10">
+              <div className="flat-section rounded-xl p-2.5 bg-bear/10">
                 <div className="flex items-center gap-1">
                   <TrendingDown className="h-3 w-3 text-bear" />
-                  <span className="text-[10px] font-medium text-muted-foreground">Biggest Loser</span>
+                  <span className="text-[0.625rem] font-medium text-muted-foreground">Biggest Loser</span>
                 </div>
                 <p className="text-sm font-bold mt-0.5 text-bear">
                   {biggestLoss.symbol} {biggestLoss.gainPct.toFixed(1)}%

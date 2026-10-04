@@ -12,17 +12,12 @@ import {
   mapCorporateAction, mapEarningsEvent, mapOwnership, mapCompany, mapSector,
 } from "./nseMapper.js";
 import type { NseRawCandle } from "./nseRawTypes.js";
+import { readPublishedNseIndices } from "./nseIndices.js";
 
 const INTERVAL_TO_RAW: Record<Candle["interval"], NseRawCandle["Interval"]> = {
   "1m": "1MIN", "5m": "5MIN", "15m": "15MIN", "1h": "1HR",
   "1d": "1D", "1w": "1W", "1M": "1MO", "1y": "1Y",
 };
-
-// Real NSE base value for NASI (Jan 2008 = 100, rebased) is in the
-// low-100s; the current real-world level (~130 as of early 2026) is a
-// reasonable anchor so the mock index reads plausibly next to the real
-// index name, without claiming to BE the real NASI's actual live value.
-const NASI_BASE_VALUE: number = 132.5;
 
 export class NseAdapter implements IExchangeAdapter {
   readonly exchange = "NSE" as const;
@@ -57,35 +52,10 @@ export class NseAdapter implements IExchangeAdapter {
     return raw.map(mapQuote);
   }
 
-  /** No real NASI index feed exists in mock mode — this is a genuine
-   *  market-cap-weighted composite computed from the same seeded mock
-   *  quotes everything else in this adapter uses, not a hardcoded number.
-   *  Moves realistically in step with the mock securities because it's
-   *  actually derived from them, tick to tick. */
+  /** Only publisher observations; individual stock moves cannot recreate
+   * the exchange's official index without its divisor and constituents. */
   async getIndices(): Promise<MarketIndex[]> {
-    const quotes = await this.getQuotes([]); // [] = "all mock symbols", per fetchQuotes' own convention
-    if (quotes.length === 0) return [];
-
-    const totalCapNow = quotes.reduce((sum, q) => sum + (q.marketCap ?? 0), 0);
-    const totalCapPrev = quotes.reduce((sum, q) => sum + (q.marketCap ?? 0) / (1 + q.changePercent / 100), 0);
-    const value = NASI_BASE_VALUE * (totalCapPrev > 0 ? totalCapNow / totalCapPrev : 1);
-    const previousClose = NASI_BASE_VALUE;
-    const change = value - previousClose;
-    const changePercent = previousClose !== 0 ? (change / previousClose) * 100 : 0;
-
-    return [{
-      id: "NSE:index:NASI",
-      code: "NASI",
-      name: "NSE All-Share Index",
-      exchange: "NSE",
-      value: Math.round(value * 100) / 100,
-      previousClose,
-      change: Math.round(change * 100) / 100,
-      changePercent: Math.round(changePercent * 100) / 100,
-      currency: "KES",
-      timestamp: new Date().toISOString(),
-      source: "delayed",
-    }];
+    return readPublishedNseIndices();
   }
 
   async getCandles(symbol: string, interval: Candle["interval"], from: string, to: string): Promise<Candle[]> {
@@ -94,15 +64,20 @@ export class NseAdapter implements IExchangeAdapter {
   }
 
   async getFundamentals(symbol: string): Promise<FundamentalsBundle | null> {
+    const history = await this.getFundamentalsHistory(symbol);
+    return history.at(-1) ?? null;
+  }
+
+  async getFundamentalsHistory(symbol: string): Promise<FundamentalsBundle[]> {
     const [securities, profile, periods] = await Promise.all([
       this.client.fetchSecurities(),
       this.client.fetchCompanyProfile(symbol),
       this.client.fetchFinancials(symbol),
     ]);
     const security = securities.find((s) => s.Symbol === symbol);
-    const latestPeriod = periods.sort((a, b) => b.FiscalYear - a.FiscalYear)[0];
-    if (!security || !latestPeriod) return null;
-    return mapFundamentalsBundle(security, profile, latestPeriod);
+    if (!security) return [];
+    return periods.map(period => mapFundamentalsBundle(security, profile, period))
+      .sort((a, b) => a.period.periodEnd.localeCompare(b.period.periodEnd));
   }
 
   async getCorporateActions(symbol: string | null, since: string): Promise<CorporateAction[]> {

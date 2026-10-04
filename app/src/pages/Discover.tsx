@@ -205,8 +205,8 @@ export default function Discover() {
               onClick={() => navigate(`/stock/${s.symbol}`)}
             >
               <span className="text-xs font-bold">${s.symbol}</span>
-              <span className="text-[10px] text-muted-foreground">{s.price}</span>
-              <span className={`text-[10px] font-semibold ${s.isUp ? 'text-bull' : 'text-bear'}`}>
+              <span className="text-[0.625rem] text-muted-foreground">{s.price}</span>
+              <span className={`text-[0.625rem] font-semibold ${s.isUp ? 'text-bull' : 'text-bear'}`}>
                 {s.change}
               </span>
             </button>
@@ -468,7 +468,7 @@ export default function Discover() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       <h4 className="font-semibold text-sm">{course.title}</h4>
-                      <Badge variant="outline" className="text-[10px] px-1.5 rounded-full">{course.level}</Badge>
+                      <Badge variant="outline" className="text-[0.625rem] px-1.5 rounded-full">{course.level}</Badge>
                     </div>
                     <div className="flex items-center space-x-1">
                       {course.type === 'video' && <Play className="h-3 w-3" />}

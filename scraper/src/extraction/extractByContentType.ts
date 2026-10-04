@@ -16,6 +16,7 @@ import { extractPdfText } from "./pdfText.js";
 import { extractArticleBodyText } from "./articleBodyText.js";
 import type { ExtractionMethod } from "../types.js";
 import { extractHtmlFinancialTables } from "./htmlFinancialTables.js";
+import { extractNseIndexSummary } from "./nseIndexSummary.js";
 
 const MIN_USABLE_HTML_TEXT_LENGTH = 100;
 
@@ -46,14 +47,15 @@ export async function extractByContentType(
 
   if (type.includes("text/html")) {
     const tables = extractHtmlFinancialTables(body.toString("utf-8"));
+    const indices = extractNseIndexSummary(body.toString("utf-8"));
     const text = extractArticleBodyText(body.toString("utf-8"));
     const looksUsable = text.length >= MIN_USABLE_HTML_TEXT_LENGTH;
     return {
       method: "html",
       confidence: looksUsable ? 0.6 : 0.1,
       text: looksUsable ? text : null,
-      tables,
-      needsReview: tables.length > 0 || !looksUsable,
+      tables: [...tables, ...indices],
+      needsReview: tables.length > 0 || (!looksUsable && indices.length === 0),
     };
   }
 

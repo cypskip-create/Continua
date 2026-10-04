@@ -30,21 +30,21 @@ export function OwnershipSection({ ownership, topShareholders, isLoading }: Prop
     <ReportSection number={8} title="Ownership" intro="Who are the major shareholders and have insiders been buying or selling?">
       <SubWidget number="8.1" title="Recent Insider Transactions" description="Continua has no insider-trading disclosure feed yet — shown honestly at zero rather than invented.">
         <div className="rounded-xl overflow-hidden border border-border/50">
-          <div className="grid grid-cols-3 bg-muted/30 text-[10px] font-semibold uppercase tracking-wide">
+          <div className="grid grid-cols-3 bg-muted/30 text-[0.625rem] font-semibold uppercase tracking-wide">
             <span className="p-2">Period</span>
             <span className="p-2 text-right text-bear">Shares sold</span>
             <span className="p-2 text-right text-bull">Shares bought</span>
           </div>
           {WINDOWS.map((w) => (
             <div key={w} className="grid grid-cols-3 border-t border-border/40">
-              <span className="p-2 text-[11px] text-muted-foreground">{w}</span>
+              <span className="p-2 text-[0.6875rem] text-muted-foreground">{w}</span>
               <div className="p-2 flex items-center justify-end">
                 <div className="h-2 w-0 bg-bear/40 rounded-full mr-2" />
-                <span className="text-[11px] tabular">0</span>
+                <span className="text-[0.6875rem] tabular">0</span>
               </div>
               <div className="p-2 flex items-center justify-end">
                 <div className="h-2 w-0 bg-bull/40 rounded-full mr-2" />
-                <span className="text-[11px] tabular">0</span>
+                <span className="text-[0.6875rem] tabular">0</span>
               </div>
             </div>
           ))}
@@ -125,7 +125,7 @@ export function OwnershipSection({ ownership, topShareholders, isLoading }: Prop
               <div key={s.name} className="flex items-center justify-between py-2">
                 <div className="min-w-0">
                   <p className="text-xs font-medium truncate">{s.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{s.type}</p>
+                  <p className="text-[0.625rem] text-muted-foreground">{s.type}</p>
                 </div>
                 <span className="text-xs font-bold tabular shrink-0">{s.pct.toFixed(2)}%</span>
               </div>

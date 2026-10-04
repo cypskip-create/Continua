@@ -79,7 +79,7 @@ export function MoomooProfileCard({
               </span>
               {isVerified && <Verified className="h-3.5 w-3.5 text-primary fill-primary shrink-0" />}
               {badge && (
-                <Badge className={`text-[9px] px-1.5 py-0 ${getBadgeStyle(badge)}`}>
+                <Badge className={`text-[0.5625rem] px-1.5 py-0 ${getBadgeStyle(badge)}`}>
                   {badge}
                 </Badge>
               )}

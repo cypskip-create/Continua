@@ -37,13 +37,14 @@ async function fetchQuotes(baseUrl: string, apiKey: string, exchange: string, sy
   const url = new URL('/api/v1/quotes', baseUrl);
   url.searchParams.set('exchange', exchange);
   url.searchParams.set('symbols', symbols.join(','));
-  const res = await fetch(url.toString(), { headers: { 'x-api-key': apiKey } });
+  const res = await fetch(url.toString(), { headers: { 'x-api-key': apiKey }, signal: AbortSignal.timeout(10000) });
   if (!res.ok) {
     console.error(`Batch quote fetch failed for ${exchange}:`, res.status, await res.text().catch(() => ''));
     return out;
   }
-  const rows = (await res.json()) as QuoteRow[];
-  for (const r of rows) out.set(r.symbol.toUpperCase(), r.lastPrice);
+  const body = await res.json();
+  const rows = (Array.isArray(body.data) ? body.data : []) as QuoteRow[];
+  for (const r of rows) if (Number.isFinite(r.lastPrice) && r.lastPrice > 0) out.set(r.symbol.toUpperCase(), r.lastPrice);
   return out;
 }
 
@@ -52,7 +53,7 @@ async function fetchIndicatorSeries(baseUrl: string, apiKey: string, symbol: str
   url.searchParams.set('exchange', exchange);
   url.searchParams.set('type', type);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-  const res = await fetch(url.toString(), { headers: { 'x-api-key': apiKey } });
+  const res = await fetch(url.toString(), { headers: { 'x-api-key': apiKey }, signal: AbortSignal.timeout(10000) });
   if (!res.ok) return null;
   const body = (await res.json()) as IndicatorApiResponse;
   return Array.isArray(body.data.values) ? body.data.values : null;
@@ -124,16 +125,15 @@ Deno.serve(async (req: Request) => {
         (alert.alert_type === 'price_below' && price <= alert.target_value);
       if (!isTriggered) continue;
 
-      await supabaseAdmin.from('price_alerts').update({ triggered_at: new Date().toISOString() }).eq('id', alert.id);
       const direction = alert.alert_type === 'price_above' ? 'risen above' : 'fallen below';
       const currency = alert.currency ?? 'KES';
-      await supabaseAdmin.from('notifications').insert({
-        user_id: alert.user_id, type: 'alert', feature: 'alerts',
-        title: `${alert.symbol} alert triggered`,
-        message: `${alert.symbol} has ${direction} ${currency} ${alert.target_value} (now ${currency} ${price.toFixed(2)})`,
-        action_url: `/stock/${alert.symbol}`, entity_id: alert.id, entity_type: 'price_alert',
+      const { data: delivered, error: deliveryError } = await supabaseAdmin.rpc('deliver_alert_notification', {
+        p_alert_id: alert.id, p_updated_at: alert.updated_at,
+        p_title: `${alert.symbol} alert triggered`,
+        p_message: `${alert.symbol} has ${direction} ${currency} ${alert.target_value} (now ${currency} ${price.toFixed(2)})`,
       });
-      triggered++;
+      if (deliveryError) throw deliveryError;
+      if (delivered) triggered++;
     }
 
     // ── Indicator alerts: one request per (symbol, exchange, indicator, period) ──
@@ -184,14 +184,13 @@ Deno.serve(async (req: Request) => {
       }
 
       if (!isTriggered) continue;
-      await supabaseAdmin.from('price_alerts').update({ triggered_at: new Date().toISOString() }).eq('id', alert.id);
-      await supabaseAdmin.from('notifications').insert({
-        user_id: alert.user_id, type: 'alert', feature: 'alerts',
-        title: `${alert.symbol} indicator alert triggered`,
-        message: detail || `${alert.symbol}'s ${alert.indicator} condition was met.`,
-        action_url: `/stock/${alert.symbol}`, entity_id: alert.id, entity_type: 'price_alert',
+      const { data: delivered, error: deliveryError } = await supabaseAdmin.rpc('deliver_alert_notification', {
+        p_alert_id: alert.id, p_updated_at: alert.updated_at,
+        p_title: `${alert.symbol} indicator alert triggered`,
+        p_message: detail || `${alert.symbol}'s ${alert.indicator} condition was met.`,
       });
-      triggered++;
+      if (deliveryError) throw deliveryError;
+      if (delivered) triggered++;
     }
 
     console.log(`Alert sweep: ${priceChecked} price alerts, ${indicatorChecked} indicator alerts, ${triggered} triggered`);

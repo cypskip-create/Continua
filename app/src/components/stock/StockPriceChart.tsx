@@ -831,7 +831,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "area",
 
   const VolumePanel = () => (
     <div className="shrink-0 border-t border-border/30 pt-1 relative" style={{ height: VOLUME_PANEL_HEIGHT }}>
-      <span className="absolute top-0.5 left-1 text-[9px] font-bold text-muted-foreground tracking-wide z-10">VOL</span>
+      <span className="absolute top-0.5 left-1 text-[0.5625rem] font-bold text-muted-foreground tracking-wide z-10">VOL</span>
       {renderVolumePanel()}
     </div>
   );

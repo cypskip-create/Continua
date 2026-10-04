@@ -85,7 +85,7 @@ export function BarChartBlock({
   return (
     <div>
       <div className="flex items-center justify-between gap-2 mb-2">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{title}</p>
+        <p className="text-[0.625rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{title}</p>
         <div className="flex items-center gap-1.5">
           {right}
           {/* Shown whenever the caller opts in, not just once quarterly
@@ -95,12 +95,12 @@ export function BarChartBlock({
               yet" for this one stock. */}
           {allowQuarterly && (
             <Select value={period} onValueChange={(v) => { setPeriod(v as ChartPeriod); setActive(null); }}>
-              <SelectTrigger className="h-6 w-[92px] text-[10px] px-2 rounded-md border-border/70" aria-label="Reporting period">
+              <SelectTrigger className="h-6 w-[92px] text-[0.625rem] px-2 rounded-md border-border/70" aria-label="Reporting period">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="annual" className="text-[11px]">Annual</SelectItem>
-                <SelectItem value="quarterly" className="text-[11px]">Quarterly</SelectItem>
+                <SelectItem value="annual" className="text-[0.6875rem]">Annual</SelectItem>
+                <SelectItem value="quarterly" className="text-[0.6875rem]">Quarterly</SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -110,7 +110,7 @@ export function BarChartBlock({
       <div className="border-t border-border/60 pt-3" style={{ height }}>
         {showingEmptyQuarterly ? (
           <div className="h-full flex items-center justify-center">
-            <p className="text-[11px] text-muted-foreground text-center px-6">No quarterly figures on file for this stock yet — try Annual.</p>
+            <p className="text-[0.6875rem] text-muted-foreground text-center px-6">No quarterly figures on file for this stock yet — try Annual.</p>
           </div>
         ) : (
         <ResponsiveContainer width="100%" height="100%">
@@ -155,13 +155,13 @@ export function BarChartBlock({
       {/* Value readout — below the chart, above the key (Moomoo pattern) */}
       {row && !showingEmptyQuarterly && (
         <div className="mt-2 pt-2 border-t border-border/40">
-          <p className="text-[10px] font-semibold text-muted-foreground mb-1">{String(row[xKey])}</p>
+          <p className="text-[0.625rem] font-semibold text-muted-foreground mb-1">{String(row[xKey])}</p>
           <div className="space-y-0.5">
             {series.map(s => (
               <div key={s.key} className="flex items-baseline justify-between gap-3">
-                <span className="text-[10px]" style={{ color: colorFor ? colorFor(row, s) : s.color }}>{s.label}</span>
+                <span className="text-[0.625rem]" style={{ color: colorFor ? colorFor(row, s) : s.color }}>{s.label}</span>
                 <span
-                  className="text-[12px] font-semibold tabular"
+                  className="text-[0.75rem] font-semibold tabular"
                   style={{ color: colorFor ? colorFor(row, s) : s.color }}
                 >
                   {fmt(row[s.key], s)}
@@ -175,14 +175,14 @@ export function BarChartBlock({
       {/* Colour key */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
         {series.map(s => (
-          <span key={s.key} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <span key={s.key} className="flex items-center gap-1.5 text-[0.625rem] text-muted-foreground">
             <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: s.color }} />
             {s.label}
           </span>
         ))}
       </div>
 
-      {note && <p className="text-[10px] text-muted-foreground mt-1.5">{note}</p>}
+      {note && <p className="text-[0.625rem] text-muted-foreground mt-1.5">{note}</p>}
     </div>
   );
 }

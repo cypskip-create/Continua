@@ -122,7 +122,7 @@ export function CommunityPolls() {
               <div className="flex items-start justify-between gap-2 mb-1">
                 <h4 className="text-sm font-medium leading-tight">{poll.question}</h4>
                 {poll.stockMention && (
-                  <Badge variant="outline" className="text-[10px] shrink-0">
+                  <Badge variant="outline" className="text-[0.625rem] shrink-0">
                     ${poll.stockMention}
                   </Badge>
                 )}

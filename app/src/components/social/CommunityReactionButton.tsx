@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
  */
 export type CommunityReaction =
   | "bullish" | "bearish" | "strong_hold" | "insightful" | "watch" | "fire" | "laugh" | "love"
-  | "thumbs_up" | "thumbs_down"
+  | "thumbs_up" | "thumbs_down" | "rocket" | "diamond_hands" | "agree" | "question" | "warning" | "thank_you" | "sad" | "angry"
   | "celebrate" | "trophy" | "heartbreak" | "shocked" | "thinking" | "cant_look" | "hopeful" | "mind_blown" | "cool" | "shark"
   // legacy
   | "cautious" | "support" | "disagree";
@@ -17,6 +17,14 @@ export type CommunityReaction =
 export interface ReactionMeta { id: CommunityReaction; emoji: string; label: string }
 
 export const COMMUNITY_REACTIONS: ReactionMeta[] = [
+  { id: "rocket", emoji: "🚀", label: "To the moon" },
+  { id: "diamond_hands", emoji: "💎", label: "Diamond hands" },
+  { id: "agree", emoji: "✅", label: "Agree" },
+  { id: "question", emoji: "❓", label: "Question" },
+  { id: "warning", emoji: "⚠️", label: "Warning" },
+  { id: "thank_you", emoji: "🙌", label: "Thank you" },
+  { id: "sad", emoji: "😢", label: "Sad" },
+  { id: "angry", emoji: "😠", label: "Angry" },
   { id: "bullish", emoji: "📈", label: "Bullish" },
   { id: "bearish", emoji: "📉", label: "Bearish" },
   { id: "fire", emoji: "🔥", label: "Fire" },
@@ -101,13 +109,13 @@ export function CommunityReactionButton({ counts, selected, onSelect, compact, h
           data-small-target
         >
           {winner ? (
-            <span className="text-[15px] leading-none">{winner.meta.emoji}</span>
+            <span className="text-[0.9375rem] leading-none">{winner.meta.emoji}</span>
           ) : active ? (
-            <span className="text-[15px] leading-none">{active.emoji}</span>
+            <span className="text-[0.9375rem] leading-none">{active.emoji}</span>
           ) : (
-            <ThumbsUp className="h-[15px] w-[15px]" strokeWidth={2} />
+            <span className="text-lg leading-none" aria-hidden="true">🙂</span>
           )}
-          {!hideTotal && <span className="text-[11px] font-medium tabular-nums">{total > 0 ? total : "React"}</span>}
+          {!hideTotal && <span className="text-[0.6875rem] font-medium tabular-nums">{total > 0 ? total : ""}</span>}
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -130,7 +138,7 @@ export function CommunityReactionButton({ counts, selected, onSelect, compact, h
                   selected === item.id && "bg-primary/10"
                 )}
               >
-                <span className="text-[20px] leading-none">{item.emoji}</span>
+                <span className="text-[1.25rem] leading-none">{item.emoji}</span>
               </button>
             ))}
             <button
@@ -157,7 +165,7 @@ export function CommunityReactionButton({ counts, selected, onSelect, compact, h
                   selected === item.id && "bg-primary/10"
                 )}
               >
-                <span className="text-[20px] leading-none">{item.emoji}</span>
+                <span className="text-[1.25rem] leading-none">{item.emoji}</span>
               </button>
             ))}
           </div>
@@ -181,12 +189,12 @@ export function ReactionChips({
           type="button"
           onClick={e => { e.stopPropagation(); onSelect?.(r.meta.id); }}
           className={cn(
-            "flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-muted/50 text-[11px] font-medium tabular-nums transition-colors hover:bg-muted",
+            "flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-muted/50 text-[0.6875rem] font-medium tabular-nums transition-colors hover:bg-muted",
             selected === r.meta.id && "bg-primary/15 text-foreground"
           )}
           data-small-target
         >
-          <span className="text-[13px] leading-none">{r.meta.emoji}</span>
+          <span className="text-[0.8125rem] leading-none">{r.meta.emoji}</span>
           <span className="text-muted-foreground">{r.count}</span>
         </button>
       ))}

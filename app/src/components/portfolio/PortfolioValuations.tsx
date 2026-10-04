@@ -147,17 +147,17 @@ export function PortfolioValuations({
             <InfoTip>Compares current value against fair value from the model assigned to each holding — coverage shows how many holdings have a model assigned.</InfoTip>
           </h3>
         </div>
-        <p className="text-[11px] text-muted-foreground mb-3">
+        <p className="text-[0.6875rem] text-muted-foreground mb-3">
           Value & Fair Value reflect {coverage} holdings so far.
         </p>
         <div className="flex gap-6">
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Portfolio Value</p>
+            <p className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">Portfolio Value</p>
             <p className="text-xl font-bold tabular mt-0.5">{fmtMoney(totalValue, currencyLabel, showValues)}</p>
           </div>
           <div className="w-px bg-border/60" />
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Fair Value · estimate</p>
+            <p className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">Fair Value · estimate</p>
             <p className="text-xl font-bold tabular mt-0.5">
               {assignedRows.length > 0 ? fmtMoney(totalFairValue, currencyLabel, showValues) : "—"}
             </p>
@@ -169,7 +169,7 @@ export function PortfolioValuations({
             const overall = diffPct < -10 ? "Overvalued" : diffPct > 10 ? "Undervalued" : "Fairly valued";
             const color = diffPct < -10 ? "text-bear" : diffPct > 10 ? "text-bull" : "text-muted-foreground";
             return (
-              <p className={`text-[12px] font-semibold mt-3 ${color}`}>
+              <p className={`text-[0.75rem] font-semibold mt-3 ${color}`}>
                 {overall} · {diffPct >= 0 ? "+" : ""}{diffPct.toFixed(1)}% vs current value
                 <span className="text-muted-foreground font-normal"> (based on assigned models, {assignedRows.length} of {holdings.length} holdings)</span>
               </p>
@@ -184,15 +184,15 @@ export function PortfolioValuations({
         label="Unlock Consensus Valuation"
         locked={
           <div className="card-gradient rounded-2xl p-4 mt-3">
-            <p className="text-[11px] text-muted-foreground mb-3">Value &amp; Consensus reflect {consensusCoverage} holdings so far.</p>
+            <p className="text-[0.6875rem] text-muted-foreground mb-3">Value &amp; Consensus reflect {consensusCoverage} holdings so far.</p>
             <div className="flex gap-6">
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Portfolio Value</p>
+                <p className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">Portfolio Value</p>
                 <p className="text-xl font-bold tabular mt-0.5">{fmtMoney(totalValue, currencyLabel, showValues)}</p>
               </div>
               <div className="w-px bg-border/60" />
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Consensus Fair Value</p>
+                <p className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">Consensus Fair Value</p>
                 <p className="text-xl font-bold tabular mt-0.5">
                   {consensusAssigned.length > 0 ? fmtMoney(consensusTotalFairValue, currencyLabel, showValues) : "—"}
                 </p>
@@ -202,20 +202,20 @@ export function PortfolioValuations({
               {consensusRows.filter((r) => r.available.length > 0).map((r) => (
                 <div key={r.holding.id} className="py-2.5">
                   <div className="flex items-center justify-between">
-                    <p className="text-[12.5px] font-bold">{r.holding.symbol}</p>
-                    <p className="text-[12.5px] font-bold tabular">
+                    <p className="text-[0.78125rem] font-bold">{r.holding.symbol}</p>
+                    <p className="text-[0.78125rem] font-bold tabular">
                       {r.consensusFairValue != null ? fmtMoney(r.consensusFairValue, currencyLabel, showValues) : "—"}
                     </p>
                   </div>
                   <div className="flex gap-3 mt-1">
                     {r.perModel.map((m) => (
-                      <span key={m.key} className="text-[10px] text-muted-foreground">
+                      <span key={m.key} className="text-[0.625rem] text-muted-foreground">
                         {m.label}: {m.fairValue != null ? fmtMoney(m.fairValue, currencyLabel, showValues) : "—"}
                       </span>
                     ))}
                   </div>
                   {r.available.length > 1 && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                    <p className="text-[0.625rem] text-muted-foreground mt-0.5">
                       Model agreement: {r.spread === 0 ? "exact" : `±${fmtMoney(r.spread / 2, currencyLabel, showValues)} spread`}
                     </p>
                   )}
@@ -230,14 +230,14 @@ export function PortfolioValuations({
             Consensus Fair Value
             <InfoTip>Premium: averages every holding's fair value across all three real models it has data for (Sector P/E, Graham Number, Dividend Model), instead of the single model you manually assign below.</InfoTip>
           </h3>
-          <p className="text-[11px] text-muted-foreground mt-1">Multi-model average — no single model picked by hand.</p>
+          <p className="text-[0.6875rem] text-muted-foreground mt-1">Multi-model average — no single model picked by hand.</p>
         </div>
       </LockedPreview>
 
       {/* ── QUICK-ASSIGN ── */}
       <div className="card-gradient rounded-2xl p-4">
-        <p className="text-[13px] font-bold">Assign a model to each stock.</p>
-        <p className="text-[11px] text-muted-foreground mt-1 mb-3">
+        <p className="text-[0.8125rem] font-bold">Assign a model to each stock.</p>
+        <p className="text-[0.6875rem] text-muted-foreground mt-1 mb-3">
           Pick which of Continua's real valuation models should stand in for each holding's fair value.
         </p>
         <p className="section-eyebrow mb-2">Quick-assign all</p>
@@ -247,7 +247,7 @@ export function PortfolioValuations({
               key={m.key}
               data-small-target
               onClick={() => assignAll(m.key)}
-              className="flex-1 h-9 rounded-full text-[11px] font-semibold bg-muted/60 hover:bg-muted transition-colors active:opacity-70"
+              className="flex-1 h-9 rounded-full text-[0.6875rem] font-semibold bg-muted/60 hover:bg-muted transition-colors active:opacity-70"
             >
               {m.label}
             </button>
@@ -332,12 +332,12 @@ function BucketSection({
       <button data-small-target onClick={onToggle} className="w-full flex items-center justify-between text-left">
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${dotColor}`} />
-          <span className="text-[13px] font-bold">{title}</span>
-          <span className="text-[11px] text-muted-foreground bg-muted rounded-full w-5 h-5 inline-flex items-center justify-center">{count}</span>
+          <span className="text-[0.8125rem] font-bold">{title}</span>
+          <span className="text-[0.6875rem] text-muted-foreground bg-muted rounded-full w-5 h-5 inline-flex items-center justify-center">{count}</span>
         </div>
         <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
       </button>
-      <p className="text-[11px] text-muted-foreground mt-1">{subtitle}</p>
+      <p className="text-[0.6875rem] text-muted-foreground mt-1">{subtitle}</p>
       {expanded && <div className="mt-3 divide-y divide-border/40">{children}</div>}
     </div>
   );
@@ -358,17 +358,17 @@ function ValuationRow({
     <div className="py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[13px] font-bold">{holding.symbol}</p>
-          <p className="text-[10.5px] text-muted-foreground truncate max-w-[140px]">{holding.name || holding.symbol}</p>
+          <p className="text-[0.8125rem] font-bold">{holding.symbol}</p>
+          <p className="text-[0.65625rem] text-muted-foreground truncate max-w-[140px]">{holding.name || holding.symbol}</p>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-[13px] font-bold tabular">{fmtMoney(holding.price, currencyLabel, showValues)}</p>
+          <p className="text-[0.8125rem] font-bold tabular">{fmtMoney(holding.price, currencyLabel, showValues)}</p>
           {fairValue != null && upsidePercent != null ? (
-            <p className={`text-[10.5px] font-semibold tabular ${upsidePercent < -10 ? "text-bear" : upsidePercent > 10 ? "text-bull" : "text-muted-foreground"}`}>
+            <p className={`text-[0.65625rem] font-semibold tabular ${upsidePercent < -10 ? "text-bear" : upsidePercent > 10 ? "text-bull" : "text-muted-foreground"}`}>
               {Math.abs(upsidePercent).toFixed(1)}% {upsidePercent < 0 ? "overvalued" : "undervalued"}
             </p>
           ) : (
-            <p className="text-[10.5px] text-muted-foreground">—</p>
+            <p className="text-[0.65625rem] text-muted-foreground">—</p>
           )}
         </div>
       </div>
@@ -376,7 +376,7 @@ function ValuationRow({
       {(!modelKey || fairValue == null) && (
         <div className="mt-2">
           {modelKey && unavailableReason && (
-            <p className="text-[10px] text-muted-foreground mb-2 flex items-start gap-1">
+            <p className="text-[0.625rem] text-muted-foreground mb-2 flex items-start gap-1">
               <Info className="h-2.5 w-2.5 mt-0.5 shrink-0" />{unavailableReason}
             </p>
           )}
@@ -386,7 +386,7 @@ function ValuationRow({
                 key={m.key}
                 data-small-target
                 onClick={() => onAssign(m.key)}
-                className={`flex-1 h-7 rounded-full text-[10px] font-semibold transition-colors ${
+                className={`flex-1 h-7 rounded-full text-[0.625rem] font-semibold transition-colors ${
                   modelKey === m.key ? "contrast-active" : "bg-muted/60 hover:bg-muted"
                 }`}
               >

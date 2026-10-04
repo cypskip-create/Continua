@@ -129,7 +129,7 @@ export function StockAlertDialog({ open, onOpenChange, symbol, currentPrice }: S
     <div className="space-y-3 rounded-xl border border-border p-3 bg-muted/20">
       <div className="grid grid-cols-2 gap-2">
         <Select value={draft.mode} onValueChange={(v: Mode) => setDraft(d => ({ ...d, mode: v }))}>
-          <SelectTrigger className="h-9 text-[13px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-9 text-[0.8125rem]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="price">Price alert</SelectItem>
             <SelectItem value="indicator">Indicator alert</SelectItem>
@@ -137,7 +137,7 @@ export function StockAlertDialog({ open, onOpenChange, symbol, currentPrice }: S
         </Select>
         {draft.mode === "price" ? (
           <Select value={draft.alert_type} onValueChange={(v: any) => setDraft(d => ({ ...d, alert_type: v }))}>
-            <SelectTrigger className="h-9 text-[13px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 text-[0.8125rem]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="price_above">Above target</SelectItem>
               <SelectItem value="price_below">Below target</SelectItem>
@@ -145,7 +145,7 @@ export function StockAlertDialog({ open, onOpenChange, symbol, currentPrice }: S
           </Select>
         ) : (
           <Select value={draft.indicator} onValueChange={(v: any) => setDraft(d => ({ ...d, indicator: v }))}>
-            <SelectTrigger className="h-9 text-[13px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 text-[0.8125rem]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="RSI">RSI</SelectItem>
               <SelectItem value="SMA_CROSS">SMA Crossover</SelectItem>
@@ -159,30 +159,30 @@ export function StockAlertDialog({ open, onOpenChange, symbol, currentPrice }: S
         <Input
           type="number" inputMode="decimal" placeholder={`Target ${exchangeMeta.currency}`}
           value={draft.target_value} onChange={e => setDraft(d => ({ ...d, target_value: e.target.value }))}
-          className="h-9 text-[13px]"
+          className="h-9 text-[0.8125rem]"
         />
       )}
 
       {draft.mode === "indicator" && draft.indicator === "RSI" && (
         <div className="grid grid-cols-3 gap-2">
           <Select value={draft.alert_type === "rsi_below" ? "rsi_below" : "rsi_above"} onValueChange={(v: any) => setDraft(d => ({ ...d, alert_type: v }))}>
-            <SelectTrigger className="h-9 text-[12px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 text-[0.75rem]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="rsi_above">Above</SelectItem>
               <SelectItem value="rsi_below">Below</SelectItem>
             </SelectContent>
           </Select>
-          <Input type="number" placeholder="Period" value={draft.rsi_period} onChange={e => setDraft(d => ({ ...d, rsi_period: e.target.value }))} className="h-9 text-[13px]" />
-          <Input type="number" placeholder="Threshold" value={draft.rsi_threshold} onChange={e => setDraft(d => ({ ...d, rsi_threshold: e.target.value }))} className="h-9 text-[13px]" />
+          <Input type="number" placeholder="Period" value={draft.rsi_period} onChange={e => setDraft(d => ({ ...d, rsi_period: e.target.value }))} className="h-9 text-[0.8125rem]" />
+          <Input type="number" placeholder="Threshold" value={draft.rsi_threshold} onChange={e => setDraft(d => ({ ...d, rsi_threshold: e.target.value }))} className="h-9 text-[0.8125rem]" />
         </div>
       )}
 
       {draft.mode === "indicator" && draft.indicator !== "RSI" && (
         <div className="grid grid-cols-3 gap-2">
-          <Input type="number" placeholder="Fast period" value={draft.fast_period} onChange={e => setDraft(d => ({ ...d, fast_period: e.target.value }))} className="h-9 text-[13px]" />
-          <Input type="number" placeholder="Slow period" value={draft.slow_period} onChange={e => setDraft(d => ({ ...d, slow_period: e.target.value }))} className="h-9 text-[13px]" />
+          <Input type="number" placeholder="Fast period" value={draft.fast_period} onChange={e => setDraft(d => ({ ...d, fast_period: e.target.value }))} className="h-9 text-[0.8125rem]" />
+          <Input type="number" placeholder="Slow period" value={draft.slow_period} onChange={e => setDraft(d => ({ ...d, slow_period: e.target.value }))} className="h-9 text-[0.8125rem]" />
           <Select value={draft.direction} onValueChange={(v: any) => setDraft(d => ({ ...d, direction: v }))}>
-            <SelectTrigger className="h-9 text-[12px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 text-[0.75rem]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="bullish">Bullish cross</SelectItem>
               <SelectItem value="bearish">Bearish cross</SelectItem>
@@ -192,10 +192,10 @@ export function StockAlertDialog({ open, onOpenChange, symbol, currentPrice }: S
       )}
 
       <div className="flex gap-2">
-        <Button size="sm" className="flex-1 h-8 text-[12.5px]" onClick={save}>
+        <Button size="sm" className="flex-1 h-8 text-[0.78125rem]" onClick={save}>
           <Check className="h-3.5 w-3.5 mr-1" />{editingId ? "Save changes" : "Create alert"}
         </Button>
-        <Button size="sm" variant="ghost" className="h-8 text-[12.5px]" onClick={cancel}>
+        <Button size="sm" variant="ghost" className="h-8 text-[0.78125rem]" onClick={cancel}>
           <X className="h-3.5 w-3.5 mr-1" />Cancel
         </Button>
       </div>
@@ -206,14 +206,14 @@ export function StockAlertDialog({ open, onOpenChange, symbol, currentPrice }: S
     <Dialog open={open} onOpenChange={v => { onOpenChange(v); if (!v) cancel(); }}>
       <DialogContent className="max-w-sm rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-[15px]">
+          <DialogTitle className="flex items-center gap-2 text-[0.9375rem]">
             <Bell className="h-4 w-4" /> {symbol} alerts
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-2.5 max-h-[60vh] overflow-y-auto">
           {symbolAlerts.length === 0 && !creating && (
-            <p className="text-[13px] text-muted-foreground py-2">
+            <p className="text-[0.8125rem] text-muted-foreground py-2">
               No alerts set for {symbol} yet. Create one to get notified on a price target or a technical signal.
             </p>
           )}
@@ -227,8 +227,8 @@ export function StockAlertDialog({ open, onOpenChange, symbol, currentPrice }: S
                   {alert.indicator ? <Activity className="h-4 w-4 text-primary shrink-0" /> :
                     alert.alert_type === "price_above" ? <TrendingUp className="h-4 w-4 text-bull shrink-0" /> : <TrendingDown className="h-4 w-4 text-bear shrink-0" />}
                   <div className="min-w-0">
-                    <p className="text-[13px] font-semibold tabular-nums truncate">{describeAlertRow(alert)}</p>
-                    {alert.triggered_at && <p className="text-[10px] text-bull">Triggered</p>}
+                    <p className="text-[0.8125rem] font-semibold tabular-nums truncate">{describeAlertRow(alert)}</p>
+                    {alert.triggered_at && <p className="text-[0.625rem] text-bull">Triggered</p>}
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">

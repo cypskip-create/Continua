@@ -133,15 +133,15 @@ export function LiveConferencePlayer({ conference, open, onClose }: LiveConferen
 
             {/* Top badges */}
             <div className="absolute top-3 left-3 flex items-center gap-2">
-              <Badge className="bg-red-500 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+              <Badge className="bg-red-500 text-white text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-full">
                 <span className="w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse inline-block" />
                 LIVE
               </Badge>
-              <Badge variant="secondary" className="bg-black/60 text-white text-[11px] backdrop-blur-sm border-0">
+              <Badge variant="secondary" className="bg-black/60 text-white text-[0.6875rem] backdrop-blur-sm border-0">
                 <Users className="h-3 w-3 mr-1" />
                 {viewers.toLocaleString()}
               </Badge>
-              <Badge variant="secondary" className="bg-black/60 text-white text-[10px] backdrop-blur-sm border-0 hidden sm:flex">
+              <Badge variant="secondary" className="bg-black/60 text-white text-[0.625rem] backdrop-blur-sm border-0 hidden sm:flex">
                 {quality} · {speed}×
               </Badge>
             </div>
@@ -180,7 +180,7 @@ export function LiveConferencePlayer({ conference, open, onClose }: LiveConferen
                     <Slider value={isMuted ? [0] : volume} onValueChange={setVolume} max={100} step={1} className="w-16 hidden sm:flex" />
                   </div>
 
-                  <span className="text-white text-[11px] font-medium flex items-center gap-1 ml-1">
+                  <span className="text-white text-[0.6875rem] font-medium flex items-center gap-1 ml-1">
                     <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
                     LIVE
                   </span>
@@ -206,14 +206,14 @@ export function LiveConferencePlayer({ conference, open, onClose }: LiveConferen
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuLabel className="text-[11px]">Quality</DropdownMenuLabel>
+                      <DropdownMenuLabel className="text-[0.6875rem]">Quality</DropdownMenuLabel>
                       {QUALITY_OPTIONS.map(q => (
                         <DropdownMenuItem key={q} onClick={() => setQuality(q)} className="text-xs">
                           {quality === q ? "✓ " : "  "}{q}
                         </DropdownMenuItem>
                       ))}
                       <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-[11px]">Speed</DropdownMenuLabel>
+                      <DropdownMenuLabel className="text-[0.6875rem]">Speed</DropdownMenuLabel>
                       {SPEED_OPTIONS.map(s => (
                         <DropdownMenuItem key={s} onClick={() => setSpeed(s)} className="text-xs">
                           {speed === s ? "✓ " : "  "}{s}×
@@ -280,7 +280,7 @@ export function LiveConferencePlayer({ conference, open, onClose }: LiveConferen
                   <h3 className="font-semibold text-sm flex items-center gap-2">
                     <MessageCircle className="h-4 w-4" /> Live Chat
                   </h3>
-                  <Badge variant="secondary" className="text-[10px]">{viewers.toLocaleString()} viewers</Badge>
+                  <Badge variant="secondary" className="text-[0.625rem]">{viewers.toLocaleString()} viewers</Badge>
                 </div>
 
                 <ScrollArea className="flex-1 p-3">
@@ -288,12 +288,12 @@ export function LiveConferencePlayer({ conference, open, onClose }: LiveConferen
                     {comments.map(c => (
                       <div key={c.id} className="flex gap-2">
                         <Avatar className="h-6 w-6">
-                          <AvatarFallback className="text-[10px] bg-primary/20">{c.user.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          <AvatarFallback className="text-[0.625rem] bg-primary/20">{c.user.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-medium">{c.user}</span>
-                            <span className="text-[10px] text-muted-foreground">{c.time}</span>
+                            <span className="text-[0.625rem] text-muted-foreground">{c.time}</span>
                           </div>
                           <p className="text-xs text-muted-foreground break-words">{c.message}</p>
                         </div>

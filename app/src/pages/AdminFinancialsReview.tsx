@@ -159,18 +159,18 @@ function CandidateReviewForm({ candidateId, onDone }: { candidateId: string; onD
         <div className="flex items-start justify-between gap-2">
           <div>
             <p className="text-xs font-semibold">{candidate.documentTitle ?? "Untitled document"}</p>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-[0.625rem] text-muted-foreground">
               {candidate.rawCompanyName ?? "Unresolved company"} · confidence {candidate.detectionConfidence ?? "n/a"}
             </p>
           </div>
-          <a href={candidate.documentUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 shrink-0">
+          <a href={candidate.documentUrl} target="_blank" rel="noopener noreferrer" className="text-[0.625rem] text-primary flex items-center gap-1 shrink-0">
             Source <ExternalLink className="h-3 w-3" />
           </a>
         </div>
 
         <div>
-          <p className="text-[10px] font-semibold text-muted-foreground mb-1">Detected table</p>
-          <div className="border rounded-lg overflow-hidden text-[11px]">
+          <p className="text-[0.625rem] font-semibold text-muted-foreground mb-1">Detected table</p>
+          <div className="border rounded-lg overflow-hidden text-[0.6875rem]">
             {candidate.detectedTable.rows.map((row, i) => (
               <div key={i} className="flex justify-between px-2 py-1 odd:bg-muted/30">
                 <span className="truncate pr-2">{row.label}</span>
@@ -182,7 +182,7 @@ function CandidateReviewForm({ candidateId, onDone }: { candidateId: string; onD
 
         {!candidate.securityId && (
           <div>
-            <Label className="text-[10px]">Security (unresolved — pick one)</Label>
+            <Label className="text-[0.625rem]">Security (unresolved — pick one)</Label>
             <Select value={securityId} onValueChange={setSecurityId}>
               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select security" /></SelectTrigger>
               <SelectContent>
@@ -193,7 +193,7 @@ function CandidateReviewForm({ candidateId, onDone }: { candidateId: string; onD
         )}
 
         <div>
-          <Label className="text-[10px]">Statement type</Label>
+          <Label className="text-[0.625rem]">Statement type</Label>
           <Select value={statementType} onValueChange={(v) => setStatementType(v as typeof statementType)}>
             <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -206,7 +206,7 @@ function CandidateReviewForm({ candidateId, onDone }: { candidateId: string; onD
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <Label className="text-[10px]">Period type</Label>
+            <Label className="text-[0.625rem]">Period type</Label>
             <Select value={periodType} onValueChange={(v) => setPeriodType(v as typeof periodType)}>
               <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -217,36 +217,36 @@ function CandidateReviewForm({ candidateId, onDone }: { candidateId: string; onD
           </div>
           {periodType === "quarterly" && (
             <div>
-              <Label className="text-[10px]">Fiscal quarter (1-4)</Label>
+              <Label className="text-[0.625rem]">Fiscal quarter (1-4)</Label>
               <Input className="h-8 text-xs" value={fiscalQuarter} onChange={(e) => setFiscalQuarter(e.target.value)} />
             </div>
           )}
           <div>
-            <Label className="text-[10px]">Fiscal year</Label>
+            <Label className="text-[0.625rem]">Fiscal year</Label>
             <Input className="h-8 text-xs" value={fiscalYear} onChange={(e) => setFiscalYear(e.target.value)} placeholder="2025" />
           </div>
           <div>
-            <Label className="text-[10px]">Currency</Label>
+            <Label className="text-[0.625rem]">Currency</Label>
             <Input className="h-8 text-xs" value={currency} onChange={(e) => setCurrency(e.target.value)} />
           </div>
           <div>
-            <Label className="text-[10px]">Period end (read from source doc)</Label>
+            <Label className="text-[0.625rem]">Period end (read from source doc)</Label>
             <Input className="h-8 text-xs" placeholder="2025-12-31" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} />
           </div>
           <div>
-            <Label className="text-[10px]">Reported/filed date</Label>
+            <Label className="text-[0.625rem]">Reported/filed date</Label>
             <Input className="h-8 text-xs" placeholder="2026-03-02" value={reportedAt} onChange={(e) => setReportedAt(e.target.value)} />
           </div>
         </div>
 
         <div>
-          <p className="text-[10px] font-semibold text-muted-foreground mb-1">
+          <p className="text-[0.625rem] font-semibold text-muted-foreground mb-1">
             {statementType} fields — pre-filled from the detected table, verify every number against the source before confirming
           </p>
           <div className="grid grid-cols-2 gap-2">
             {STATEMENT_FIELDS[statementType].map((f) => (
               <div key={f}>
-                <Label className="text-[10px] flex items-center gap-1">
+                <Label className="text-[0.625rem] flex items-center gap-1">
                   {f}{REQUIRED_FIELDS[statementType].includes(f) && <span className="text-destructive">*</span>}
                 </Label>
                 <Input className="h-8 text-xs" value={fields[f] ?? ""} onChange={(e) => setFields((prev) => ({ ...prev, [f]: e.target.value }))} />
@@ -254,18 +254,18 @@ function CandidateReviewForm({ candidateId, onDone }: { candidateId: string; onD
             ))}
           </div>
           {data.draft.unmapped.length > 0 && (
-            <p className="text-[10px] text-muted-foreground mt-2">
+            <p className="text-[0.625rem] text-muted-foreground mt-2">
               {data.draft.unmapped.length} detected row(s) not auto-mapped: {data.draft.unmapped.map((r) => r.label).join(", ")}
             </p>
           )}
         </div>
 
         <div>
-          <Label className="text-[10px]">Note (optional)</Label>
+          <Label className="text-[0.625rem]">Note (optional)</Label>
           <Textarea className="text-xs" rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Confirmed against FY2025 annual report, page 42" />
         </div>
 
-        {submitError && <p className="text-[11px] text-destructive">{submitError}</p>}
+        {submitError && <p className="text-[0.6875rem] text-destructive">{submitError}</p>}
 
         <div className="flex gap-2">
           <Button className="flex-1" disabled={!canSubmit || submitting} onClick={submit}>
@@ -295,11 +295,11 @@ function CandidateList({ onSelect }: { onSelect: (id: string) => void }) {
           <CardContent className="p-3 flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="text-xs font-medium truncate">{c.documentTitle ?? `Candidate #${c.id}`}</p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[0.625rem] text-muted-foreground">
                 {c.rawCompanyName ?? "Unresolved"} · {c.exchange} · {new Date(c.createdAt).toLocaleDateString()}
               </p>
             </div>
-            {!c.securityId && <Badge variant="outline" className="text-[9px] shrink-0">unresolved</Badge>}
+            {!c.securityId && <Badge variant="outline" className="text-[0.5625rem] shrink-0">unresolved</Badge>}
           </CardContent>
         </Card>
       ))}

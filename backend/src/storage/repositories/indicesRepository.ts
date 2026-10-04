@@ -10,7 +10,8 @@ export const indicesRepository = {
        ON CONFLICT (exchange, code) DO UPDATE SET
          value = EXCLUDED.value, previous_close = EXCLUDED.previous_close, change = EXCLUDED.change,
          change_percent = EXCLUDED.change_percent, event_timestamp = EXCLUDED.event_timestamp,
-         source = EXCLUDED.source, updated_at = now()`,
+         source = EXCLUDED.source, updated_at = now()
+       WHERE EXCLUDED.event_timestamp >= market.indices.event_timestamp OR market.indices.source <> 'eod'`,
       [idx.id, idx.code, idx.name, idx.exchange, idx.value, idx.previousClose, idx.change,
        idx.changePercent, idx.currency, idx.timestamp, idx.source]
     );
@@ -24,7 +25,7 @@ export const indicesRepository = {
     const res = await query<any>(
       `SELECT id, code, name, exchange, value, previous_close as "previousClose", change,
               change_percent as "changePercent", currency, event_timestamp as "timestamp", source
-       FROM market.indices WHERE exchange = $1 ORDER BY code`,
+       FROM market.indices WHERE exchange = $1 AND (exchange <> 'NSE' OR source = 'eod') ORDER BY code`,
       [exchange]
     );
     return res.rows;

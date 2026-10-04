@@ -28,8 +28,8 @@ export function PriceCell({
 }: PriceCellProps) {
   const live = isLive ?? (price != null && changePercent != null);
   const isUp = (changePercent ?? 0) >= 0;
-  const priceCls = size === "md" ? "text-sm font-bold" : "text-[13.5px] font-bold";
-  const changeCls = size === "md" ? "text-xs font-semibold" : "text-[11px] font-semibold";
+  const priceCls = size === "md" ? "text-sm font-bold" : "text-[0.84375rem] font-bold";
+  const changeCls = size === "md" ? "text-xs font-semibold" : "text-[0.6875rem] font-semibold";
 
   if (!live) {
     return (

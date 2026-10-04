@@ -26,7 +26,7 @@ function Donut({ pct, label, color }: { pct: number | null; label: string; color
           <span className="text-xl font-bold">{pct != null ? `${pct.toFixed(0)}%` : "N/A"}</span>
         </div>
       </div>
-      <p className="text-[11px] text-muted-foreground mt-2">{label}</p>
+      <p className="text-[0.6875rem] text-muted-foreground mt-2">{label}</p>
     </div>
   );
 }
@@ -82,7 +82,7 @@ export function DividendsSection({ symbol, currency, divYield, annualDividend }:
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1">{divLoading ? "Loading…" : sorted.length === 0 ? `No dividend history on file for ${symbol} yet.` : !stable ? "Insufficient years on file to determine long-term stability." : "Real, confirmed payout history."}</p>
+        <p className="text-[0.625rem] text-muted-foreground mt-1">{divLoading ? "Loading…" : sorted.length === 0 ? `No dividend history on file for ${symbol} yet.` : !stable ? "Insufficient years on file to determine long-term stability." : "Real, confirmed payout history."}</p>
       </SubWidget>
 
       <SubWidget number="6.2" title="Dividend Yield vs Market" description="Company yield against the same NSE market-cap sample used across Continua's benchmarks.">
@@ -102,11 +102,11 @@ export function DividendsSection({ symbol, currency, divYield, annualDividend }:
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <SubWidget number="6.3" title="Earnings Payout to Shareholders">
           <Donut pct={payout} label="Paid as dividend" color={payout != null && payout > 90 ? "hsl(var(--bear))" : "hsl(var(--bull))"} />
-          {payout == null && <p className="text-[10px] text-muted-foreground text-center mt-2">No payout ratio on file.</p>}
+          {payout == null && <p className="text-[0.625rem] text-muted-foreground text-center mt-2">No payout ratio on file.</p>}
         </SubWidget>
         <SubWidget number="6.4" title="Cash Payout to Shareholders">
           <Donut pct={cashPayout} label="Of free cash flow" color={cashPayout != null && cashPayout > 90 ? "hsl(var(--bear))" : "hsl(var(--bull))"} />
-          {cashPayout == null && <p className="text-[10px] text-muted-foreground text-center mt-2">{sorted.length === 0 ? "Does not pay a dividend." : "Not enough cash flow data on file to compute this."}</p>}
+          {cashPayout == null && <p className="text-[0.625rem] text-muted-foreground text-center mt-2">{sorted.length === 0 ? "Does not pay a dividend." : "Not enough cash flow data on file to compute this."}</p>}
         </SubWidget>
       </div>
     </ReportSection>

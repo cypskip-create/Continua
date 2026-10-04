@@ -139,7 +139,7 @@ export default function Upgrade() {
               {upgrading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upgrade to Premium"}
             </Button>
             {paymentMethods.length === 0 && (
-              <p className="text-[11px] text-muted-foreground text-center -mt-4">You'll be asked to add M-Pesa or a card first.</p>
+              <p className="text-[0.6875rem] text-muted-foreground text-center -mt-4">You'll be asked to add M-Pesa or a card first.</p>
             )}
           </>
         )}
@@ -155,7 +155,7 @@ export default function Upgrade() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-semibold">{f.label}</p>
-                  {f.detail && <p className="text-[11px] text-muted-foreground mt-0.5">{f.detail}</p>}
+                  {f.detail && <p className="text-[0.6875rem] text-muted-foreground mt-0.5">{f.detail}</p>}
                 </div>
               </div>
             ))}
@@ -180,7 +180,7 @@ export default function Upgrade() {
           </Button>
         )}
 
-        <p className="text-[10px] text-muted-foreground text-center flex items-center justify-center gap-1">
+        <p className="text-[0.625rem] text-muted-foreground text-center flex items-center justify-center gap-1">
           <Users className="h-3 w-3" />
           Priced for the Kenyan market — cancel anytime from Account.
         </p>

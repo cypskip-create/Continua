@@ -10,7 +10,7 @@ import type { BacktestStrategy } from "@/api/backtestApi";
 import { fx } from "@/lib/chartPalette";
 
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-2">{children}</p>
+  <p className="text-[0.625rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-2">{children}</p>
 );
 
 interface Props {
@@ -60,18 +60,18 @@ function IndicatorReadouts({ symbol }: { symbol: string }) {
           <div className="flex items-center justify-between py-3">
             <div>
               <p className="text-xs font-semibold">RSI (14)</p>
-              <p className="text-[10px] text-muted-foreground">Relative Strength Index</p>
+              <p className="text-[0.625rem] text-muted-foreground">Relative Strength Index</p>
             </div>
             <div className="text-right">
               <p className="text-sm font-bold tabular">{rsiValue != null ? rsiValue.toFixed(1) : "—"}</p>
-              {rsiState && <Badge variant="outline" className="text-[9px]" style={{ color: rsiColor, borderColor: `${rsiColor}55` }}>{rsiState}</Badge>}
+              {rsiState && <Badge variant="outline" className="text-[0.5625rem]" style={{ color: rsiColor, borderColor: `${rsiColor}55` }}>{rsiState}</Badge>}
             </div>
           </div>
 
           <div className="flex items-center justify-between py-3">
             <div>
               <p className="text-xs font-semibold">SMA 20 vs SMA 50</p>
-              <p className="text-[10px] text-muted-foreground">Trend crossover</p>
+              <p className="text-[0.625rem] text-muted-foreground">Trend crossover</p>
             </div>
             <div className="text-right flex items-center gap-1.5">
               {smaCross === "bullish" && <><TrendingUp className="h-3.5 w-3.5" style={{ color: fx.strong }} /><span className="text-xs font-semibold" style={{ color: fx.strong }}>Bullish</span></>}
@@ -84,12 +84,12 @@ function IndicatorReadouts({ symbol }: { symbol: string }) {
           <div className="flex items-center justify-between py-3">
             <div>
               <p className="text-xs font-semibold">MACD (12, 26, 9)</p>
-              <p className="text-[10px] text-muted-foreground">Histogram: signal minus MACD line</p>
+              <p className="text-[0.625rem] text-muted-foreground">Histogram: signal minus MACD line</p>
             </div>
             <div className="text-right">
               <p className="text-sm font-bold tabular">{macdLatest?.histogram != null ? macdLatest.histogram.toFixed(3) : "—"}</p>
               {macdLatest?.histogram != null && (
-                <Badge variant="outline" className="text-[9px]" style={{ color: macdLatest.histogram >= 0 ? fx.strong : fx.weak, borderColor: `${macdLatest.histogram >= 0 ? fx.strong : fx.weak}55` }}>
+                <Badge variant="outline" className="text-[0.5625rem]" style={{ color: macdLatest.histogram >= 0 ? fx.strong : fx.weak, borderColor: `${macdLatest.histogram >= 0 ? fx.strong : fx.weak}55` }}>
                   {macdLatest.histogram >= 0 ? "Bullish" : "Bearish"}
                 </Badge>
               )}
@@ -133,7 +133,7 @@ function VolumeProfileSection({ symbol, currency }: { symbol: string; currency: 
     <div>
       <Eyebrow>Volume Profile (90 days)</Eyebrow>
       <div className="border-t border-border/60 pt-3">
-        <div className="flex items-center justify-between mb-3 text-[10px] text-muted-foreground">
+        <div className="flex items-center justify-between mb-3 text-[0.625rem] text-muted-foreground">
           <span>Point of control: <span className="font-semibold text-foreground tabular">{currency} {profile.pointOfControl.toFixed(2)}</span></span>
           <span>Value area: <span className="font-semibold text-foreground tabular">{currency} {profile.valueAreaLow.toFixed(2)}–{profile.valueAreaHigh.toFixed(2)}</span></span>
         </div>
@@ -144,7 +144,7 @@ function VolumeProfileSection({ symbol, currency }: { symbol: string; currency: 
             const isPoc = Math.abs(b.priceMid - profile.pointOfControl) < 1e-6;
             return (
               <div key={`${b.priceLow}-${b.priceHigh}`} className="flex items-center gap-2 h-4">
-                <span className="text-[9px] tabular text-muted-foreground w-14 text-right shrink-0">{b.priceMid.toFixed(1)}</span>
+                <span className="text-[0.5625rem] tabular text-muted-foreground w-14 text-right shrink-0">{b.priceMid.toFixed(1)}</span>
                 <div className="flex-1 h-full bg-muted/30 rounded-sm overflow-hidden">
                   <div
                     className="h-full rounded-sm"
@@ -158,7 +158,7 @@ function VolumeProfileSection({ symbol, currency }: { symbol: string; currency: 
             );
           })}
         </div>
-        <p className="text-[10px] text-muted-foreground mt-3">{profile.caveat}</p>
+        <p className="text-[0.625rem] text-muted-foreground mt-3">{profile.caveat}</p>
       </div>
     </div>
   );
@@ -218,13 +218,13 @@ function BacktesterSection({ symbol }: { symbol: string }) {
               <StatBox label="Win Rate" value={result.metrics.winRate != null ? `${result.metrics.winRate.toFixed(0)}%` : "—"} />
               <StatBox label="Max Drawdown" value={`-${result.metrics.maxDrawdownPercent.toFixed(1)}%`} positive={false} />
             </div>
-            <p className="text-[10px] text-muted-foreground">{result.metrics.totalTrades} trade{result.metrics.totalTrades === 1 ? "" : "s"} · {result.caveat}</p>
+            <p className="text-[0.625rem] text-muted-foreground">{result.metrics.totalTrades} trade{result.metrics.totalTrades === 1 ? "" : "s"} · {result.caveat}</p>
 
             {result.trades.length > 0 && (
               <div className="border-t border-border/40 divide-y divide-border/30">
                 {result.trades.slice(-5).reverse().map((t, i) => (
                   <div key={i} className="flex items-center justify-between py-2">
-                    <span className="text-[10px] text-muted-foreground">{new Date(t.entryDate).toLocaleDateString()} → {new Date(t.exitDate).toLocaleDateString()}</span>
+                    <span className="text-[0.625rem] text-muted-foreground">{new Date(t.entryDate).toLocaleDateString()} → {new Date(t.exitDate).toLocaleDateString()}</span>
                     <span className={`text-xs font-semibold tabular ${t.returnPercent >= 0 ? "text-bull" : "text-bear"}`}>{t.returnPercent >= 0 ? "+" : ""}{t.returnPercent.toFixed(1)}%</span>
                   </div>
                 ))}
@@ -241,7 +241,7 @@ function StatBox({ label, value, positive }: { label: string; value: string; pos
   const color = positive === undefined ? undefined : positive ? fx.strong : fx.weak;
   return (
     <div className="bg-muted/30 rounded-lg p-2.5">
-      <p className="text-[9px] text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-[0.5625rem] text-muted-foreground mb-0.5">{label}</p>
       <p className="text-sm font-bold tabular" style={color ? { color } : undefined}>{value}</p>
     </div>
   );

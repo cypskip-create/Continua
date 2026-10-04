@@ -228,14 +228,14 @@ export function StockScreener() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-sm">{stock.symbol}</span>
-                <Badge variant="outline" className="text-[9px] py-0 px-1 hidden sm:inline-flex">
+                <Badge variant="outline" className="text-[0.5625rem] py-0 px-1 hidden sm:inline-flex">
                   {stock.sector}
                 </Badge>
               </div>
               <div className="text-xs text-muted-foreground truncate">{stock.name}</div>
               <div className="flex gap-3 mt-1">
-                <span className="text-[10px] text-muted-foreground">Vol: {formatMagnitude(stock.volume)}</span>
-                <span className="text-[10px] text-muted-foreground">P/E: {stock.pe}</span>
+                <span className="text-[0.625rem] text-muted-foreground">Vol: {formatMagnitude(stock.volume)}</span>
+                <span className="text-[0.625rem] text-muted-foreground">P/E: {stock.pe}</span>
               </div>
             </div>
 

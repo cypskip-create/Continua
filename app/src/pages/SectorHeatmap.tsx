@@ -80,7 +80,7 @@ export default function SectorHeatmap() {
           </Button>
           <div>
             <h1 className="text-base font-semibold">Sector Heatmap</h1>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[0.6875rem] text-muted-foreground">
               NSE · size = market cap · colour = today's performance
             </p>
           </div>
@@ -119,7 +119,7 @@ export default function SectorHeatmap() {
               disabled={!available}
               title={available ? undefined : "Coming soon — needs a real historical performance source"}
               onClick={() => available && setRange(r)}
-              className={`px-3 py-1 text-[11px] font-semibold rounded-full transition-colors ${
+              className={`px-3 py-1 text-[0.6875rem] font-semibold rounded-full transition-colors ${
                 range === r ? 'brand-active' : available ? 'text-muted-foreground hover:text-foreground border border-border/60' : 'text-muted-foreground/40 border border-border/30 cursor-not-allowed'
               }`}
             >{r}</button>
@@ -127,7 +127,7 @@ export default function SectorHeatmap() {
         </div>
 
         {flowMode && (
-          <p className="text-[11px] text-muted-foreground -mt-3">
+          <p className="text-[0.6875rem] text-muted-foreground -mt-3">
             Tile size reflects net capital moving in or out of each stock over {range}, not company size — spot where the money's going, not just who's biggest.
           </p>
         )}
@@ -148,7 +148,7 @@ export default function SectorHeatmap() {
                   {s.change >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
                   {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{s.count} stocks</p>
+                <p className="text-[0.625rem] text-muted-foreground mt-0.5">{s.count} stocks</p>
               </button>
             ))}
           </div>

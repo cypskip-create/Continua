@@ -45,9 +45,9 @@ export interface CrawlSummary {
 }
 
 /** Seeds a source's crawl_state with its configured seed URLs, if not already present. */
-async function seedIfNeeded(sourceId: string, seeds: string[]): Promise<void> {
+async function seedIfNeeded(sourceId: string, seeds: string[], revisitAfterMinutes?: number): Promise<void> {
   for (const seed of seeds) {
-    await recordDiscovered({ sourceId, url: seed, canonicalUrl: canonicalizeUrl(seed), depth: 0 });
+    await recordDiscovered({ sourceId, url: seed, canonicalUrl: canonicalizeUrl(seed), depth: 0, revisitAfterMinutes });
   }
 }
 
@@ -61,7 +61,7 @@ export async function crawlSource(sourceId: string, batchSize = 20): Promise<Cra
   const maxDepth = source.config.maxDepth ?? 3;
   const requestsPerSecond = source.config.requestsPerSecond ?? env.DEFAULT_REQUESTS_PER_SECOND;
 
-  await seedIfNeeded(sourceId, seeds);
+  await seedIfNeeded(sourceId, seeds, source.config.revisitAfterMinutes);
 
   const batch = await claimNextBatch(sourceId, batchSize);
   const summary: CrawlSummary = { sourceId, visited: 0, discovered: 0, stored: 0, failed: 0 };

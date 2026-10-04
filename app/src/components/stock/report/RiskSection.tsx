@@ -99,7 +99,7 @@ export function RiskSection({ symbol }: Props) {
               </ResponsiveContainer>
             </div>
             {omittedCount > 0 && (
-              <p className="text-[10px] text-muted-foreground text-center mt-1">{omittedCount} factor{omittedCount > 1 ? "s" : ""} omitted — no data on file yet.</p>
+              <p className="text-[0.625rem] text-muted-foreground text-center mt-1">{omittedCount} factor{omittedCount > 1 ? "s" : ""} omitted — no data on file yet.</p>
             )}
           </>
         )}
@@ -111,7 +111,7 @@ export function RiskSection({ symbol }: Props) {
         ) : (
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-[10px] text-muted-foreground mb-1">Annualized volatility</p>
+              <p className="text-[0.625rem] text-muted-foreground mb-1">Annualized volatility</p>
               {volatility == null ? (
                 <p className="text-xs text-muted-foreground">Not enough history yet</p>
               ) : (
@@ -119,7 +119,7 @@ export function RiskSection({ symbol }: Props) {
               )}
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground mb-1">Max drawdown (180d)</p>
+              <p className="text-[0.625rem] text-muted-foreground mb-1">Max drawdown (180d)</p>
               {drawdown == null ? (
                 <p className="text-xs text-muted-foreground">Not enough history yet</p>
               ) : (
@@ -136,9 +136,9 @@ export function RiskSection({ symbol }: Props) {
             <div key={r.label} className="flex items-start justify-between gap-3 py-3">
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium">{r.label}</p>
-                <p className="text-[10px] text-muted-foreground">{r.note}</p>
+                <p className="text-[0.625rem] text-muted-foreground">{r.note}</p>
               </div>
-              <Badge variant="outline" className="text-[10px] shrink-0" style={{ color: levelColor(r.level), borderColor: `${levelColor(r.level)}55` }}>{r.level}</Badge>
+              <Badge variant="outline" className="text-[0.625rem] shrink-0" style={{ color: levelColor(r.level), borderColor: `${levelColor(r.level)}55` }}>{r.level}</Badge>
             </div>
           ))}
         </div>

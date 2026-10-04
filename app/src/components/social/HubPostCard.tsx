@@ -1,3 +1,4 @@
+import { PostAttachments } from "./PostAttachments";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageSquare, Bookmark, BookmarkCheck, Share2, MoreHorizontal, Trash2, Pencil, Link2, Flag, EyeOff, Verified } from "lucide-react";
@@ -95,16 +96,16 @@ export function HubPostCard({
           onClick={e => { e.stopPropagation(); navigate(`/profile/${post.user_id}`); }}
         >
           <AvatarImage src={author?.avatar_url || ""} className="object-cover" />
-          <AvatarFallback className="bg-primary/10 text-primary text-[11px] font-bold">{getInitials(author?.full_name)}</AvatarFallback>
+          <AvatarFallback className="bg-primary/10 text-primary text-[0.6875rem] font-bold">{getInitials(author?.full_name)}</AvatarFallback>
         </Avatar>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 min-w-0">
-            <span className="font-bold text-[13px] truncate max-w-[45%]">{author?.full_name || "Investor"}</span>
+            <span className="font-bold text-[0.8125rem] truncate max-w-[45%]">{author?.full_name || "Investor"}</span>
             <Verified className="h-3 w-3 text-primary fill-primary shrink-0" />
-            <span className="text-[12px] text-muted-foreground truncate">{atHandle({ handle })}</span>
+            <span className="text-[0.75rem] text-muted-foreground truncate">{atHandle({ handle })}</span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-[0.6875rem] text-muted-foreground mt-0.5">
             {formatPostDate(post.created_at)}
             {post.edited_at ? " · edited" : ""}
           </p>
@@ -116,7 +117,7 @@ export function HubPostCard({
             type="button"
             data-small-target
             onClick={e => { e.stopPropagation(); onFollow(post.user_id); }}
-            className="shrink-0 h-7 px-2.5 rounded-full text-[12px] font-bold text-primary hover:bg-primary/10 transition-colors"
+            className="shrink-0 h-7 px-2.5 rounded-full text-[0.75rem] font-bold text-primary hover:bg-primary/10 transition-colors"
           >
             + Follow
           </button>
@@ -125,20 +126,16 @@ export function HubPostCard({
 
       {/* Body */}
       <div className="mt-2">
-        <h3 className="text-[15px] font-bold leading-snug break-words">{renderRichText(title, navigate)}</h3>
+        <h3 className="text-[0.9375rem] font-bold leading-snug break-words">{renderRichText(title, navigate)}</h3>
         {body && (
-          <p className="mt-1 text-[13px] leading-[1.55] text-muted-foreground line-clamp-3 whitespace-pre-wrap break-words">
+          <p className="mt-1 text-[0.8125rem] leading-[1.55] text-muted-foreground line-clamp-3 whitespace-pre-wrap break-words">
             {renderRichText(body, navigate)}
           </p>
         )}
       </div>
 
       {/* Media */}
-      {post.image_url && (
-        <div className="mt-2.5 rounded-xl overflow-hidden bg-muted/40">
-          <img src={post.image_url} alt="Post attachment" loading="lazy" className="w-full max-h-[260px] object-cover" />
-        </div>
-      )}
+      <PostAttachments post={post} />
 
       {/* Quoted post */}
       {post.quoted_post && (
@@ -146,12 +143,12 @@ export function HubPostCard({
           className="mt-2.5 rounded-xl border border-border/60 p-2.5"
           onClick={e => { e.stopPropagation(); navigate(`/traders-hub/post/${post.quoted_post!.id}`); }}
         >
-          <div className="flex items-center gap-1.5 text-[11px]">
-            <Avatar className="h-4 w-4"><AvatarImage src={post.quoted_post.author?.avatar_url || ""} /><AvatarFallback className="text-[8px]">{getInitials(post.quoted_post.author?.full_name)}</AvatarFallback></Avatar>
+          <div className="flex items-center gap-1.5 text-[0.6875rem]">
+            <Avatar className="h-4 w-4"><AvatarImage src={post.quoted_post.author?.avatar_url || ""} /><AvatarFallback className="text-[0.5rem]">{getInitials(post.quoted_post.author?.full_name)}</AvatarFallback></Avatar>
             <span className="font-bold truncate">{post.quoted_post.author?.full_name || "Investor"}</span>
             <span className="text-muted-foreground">{atHandle(post.quoted_post.author as any)}</span>
           </div>
-          <p className="text-[12px] mt-1 line-clamp-3 text-muted-foreground">{post.quoted_post.content}</p>
+          <p className="text-[0.75rem] mt-1 line-clamp-3 text-muted-foreground">{post.quoted_post.content}</p>
         </div>
       )}
 
@@ -161,7 +158,7 @@ export function HubPostCard({
           type="button"
           data-small-target
           onClick={e => { e.stopPropagation(); navigate(`/traders-hub?search=${encodeURIComponent(topic)}`); }}
-          className="mt-2.5 w-full flex items-center gap-2 h-9 px-3 rounded-lg bg-muted/40 text-[12px] text-left"
+          className="mt-2.5 w-full flex items-center gap-2 h-9 px-3 rounded-lg bg-muted/40 text-[0.75rem] text-left"
         >
           <span className="text-primary font-bold">{topic.startsWith("#") ? "#" : "$"}</span>
           <span className="truncate text-muted-foreground">{topic.replace(/^[#$]/, "")} discussion</span>
@@ -182,7 +179,7 @@ export function HubPostCard({
           className="flex items-center gap-1.5 h-8 px-1.5 text-muted-foreground hover:text-foreground transition-colors"
         >
           <MessageSquare className="h-[17px] w-[17px]" />
-          <span className="text-[11px] font-medium tabular-nums">{post.comments_count || 0}</span>
+          <span className="text-[0.6875rem] font-medium tabular-nums">{post.comments_count || 0}</span>
         </button>
         <button
           type="button"
@@ -234,7 +231,7 @@ export function HubPostCard({
       {post.comment_previews && post.comment_previews.length > 0 && (
         <div className="mt-1.5 space-y-0.5">
           {post.comment_previews.map(c => (
-            <p key={c.id} className="text-[12px] leading-snug truncate">
+            <p key={c.id} className="text-[0.75rem] leading-snug truncate">
               <span className="font-bold">{c.author_name}</span>
               <span className="text-muted-foreground">: {c.content}</span>
             </p>
@@ -244,7 +241,7 @@ export function HubPostCard({
               type="button"
               data-small-target
               onClick={e => { e.stopPropagation(); onComment(post); }}
-              className="text-[12px] text-muted-foreground"
+              className="text-[0.75rem] text-muted-foreground"
             >
               View more comments...
             </button>

@@ -75,7 +75,7 @@ export function TrendingStocks() {
           <div
             key={stock.symbol}
             onClick={() => navigate(`/stock/${stock.symbol}`)}
-            className="p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all cursor-pointer border border-transparent hover:border-primary/20 group"
+            className="flat-section p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all cursor-pointer border border-transparent hover:border-primary/20 group"
           >
             <div className="flex items-center gap-3">
               {/* Rank */}

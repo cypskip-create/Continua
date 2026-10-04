@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { Post } from "@/hooks/usePosts";
-import { ImageViewer } from "./ImageViewer";
+import { PostAttachments } from "./PostAttachments";
 import { formatTimestamp } from "@/lib/formatTimestamp";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,7 +50,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
   const { quotes: mentionQuotes } = useLiveQuotes(mentionedSymbols);
 
   const { toast } = useToast();
-  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+
   const [editOpen, setEditOpen] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
 
@@ -106,7 +106,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
               {part}
             </span>
             {priceData && (
-              <span className={`ml-1 text-[11px] font-medium ${priceData.change >= 0 ? "text-bull" : "text-bear"}`}>
+              <span className={`ml-1 text-[0.6875rem] font-medium ${priceData.change >= 0 ? "text-bull" : "text-bear"}`}>
                 KES {priceData.price.toFixed(2)}
                 <span className="ml-0.5">{priceData.change >= 0 ? "↑" : "↓"}{Math.abs(priceData.change).toFixed(1)}%</span>
               </span>
@@ -144,12 +144,12 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
                 <span className="text-muted-foreground text-sm">·</span>
                 <span className="text-muted-foreground text-sm shrink-0">{formatTimeAgo(post.created_at)}</span>
                 {(post as any).edited_at && (
-                  <span className="text-muted-foreground text-[11px] italic ml-0.5">(edited)</span>
+                  <span className="text-muted-foreground text-[0.6875rem] italic ml-0.5">(edited)</span>
                 )}
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 {currentUserId !== post.user_id && onFollow && (
-                  <Button variant={isFollowing ? "ghost" : "outline"} size="sm" className="h-7 px-3 rounded-full text-[11px] font-semibold" onClick={(e) => { e.stopPropagation(); onFollow(post.user_id); }}>
+                  <Button variant={isFollowing ? "ghost" : "outline"} size="sm" className="h-7 px-3 rounded-full text-[0.6875rem] font-semibold" onClick={(e) => { e.stopPropagation(); onFollow(post.user_id); }}>
                     {isFollowing ? "Following" : "Follow"}
                   </Button>
                 )}
@@ -189,7 +189,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
               </div>
             </div>
 
-            <p className="text-[15px] leading-[1.5] mt-1 whitespace-pre-wrap break-words">{renderContent(post.content)}</p>
+            <p className="text-[0.9375rem] leading-[1.5] mt-1 whitespace-pre-wrap break-words">{renderContent(post.content)}</p>
 
             {post.stock_mentions && post.stock_mentions.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -198,7 +198,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
                   const isRealTicker = NSE_TICKER_SET.has(upper) || !!ALIAS_OF[upper];
                   const change = isRealTicker ? mentionQuotes[upper]?.changePercent ?? null : null;
                   return (
-                    <Badge key={stock} variant="secondary" className="text-[11px] px-2 py-0.5 cursor-pointer hover:bg-primary/10 rounded-full gap-1 border-0" onClick={(e) => { e.stopPropagation(); navigate(`/stock/${stock}`); }}>
+                    <Badge key={stock} variant="secondary" className="text-[0.6875rem] px-2 py-0.5 cursor-pointer hover:bg-primary/10 rounded-full gap-1 border-0" onClick={(e) => { e.stopPropagation(); navigate(`/stock/${stock}`); }}>
                       ${stock}
                       {change !== null && <span className={change >= 0 ? "text-bull" : "text-bear"}>{change >= 0 ? "+" : ""}{change.toFixed(1)}%</span>}
                     </Badge>
@@ -207,11 +207,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
               </div>
             )}
 
-            {post.image_url && (
-              <div className="mt-3 rounded-2xl overflow-hidden border border-border/50" onClick={(e) => { e.stopPropagation(); setImageViewerOpen(true); }}>
-                <img src={post.image_url} alt="Post" className="w-full max-h-[350px] object-cover cursor-pointer hover:opacity-95 transition-opacity" loading="lazy" />
-              </div>
-            )}
+            <PostAttachments post={post} />
 
             {/* Quoted post embed (X-style) */}
             {post.quoted_post && (
@@ -219,17 +215,17 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
                 className="mt-3 rounded-2xl border border-border/60 p-3 hover:bg-muted/30 transition-colors"
                 onClick={(e) => { e.stopPropagation(); navigate(`/traders-hub?post=${post.quoted_post!.id}`); }}
               >
-                <div className="flex items-center gap-1.5 text-[12px]">
-                  <Avatar className="h-5 w-5"><AvatarImage src={post.quoted_post.author?.avatar_url || ""} /><AvatarFallback className="text-[9px]">{getInitials(post.quoted_post.author?.full_name)}</AvatarFallback></Avatar>
+                <div className="flex items-center gap-1.5 text-[0.75rem]">
+                  <Avatar className="h-5 w-5"><AvatarImage src={post.quoted_post.author?.avatar_url || ""} /><AvatarFallback className="text-[0.5625rem]">{getInitials(post.quoted_post.author?.full_name)}</AvatarFallback></Avatar>
                   <span className="font-bold truncate">{post.quoted_post.author?.full_name || "User"}</span>
                   <Verified className="h-3 w-3 text-primary fill-primary shrink-0" />
                   <span className="text-muted-foreground">· {formatTimeAgo(post.quoted_post.created_at)}</span>
                 </div>
-                <p className="text-[13px] mt-1 line-clamp-4 whitespace-pre-wrap">{post.quoted_post.content}</p>
+                <p className="text-[0.8125rem] mt-1 line-clamp-4 whitespace-pre-wrap">{post.quoted_post.content}</p>
               </div>
             )}
 
-            {expanded && <p className="mt-3 text-[11px] text-muted-foreground tabular">{formatNumber(viewCount || 1)} views</p>}
+            {expanded && <p className="mt-3 text-[0.6875rem] text-muted-foreground tabular">{formatNumber(viewCount || 1)} views</p>}
             {/* Community action bar: reactions, replies, bookmark */}
             <div className="flex items-center justify-between mt-3 -ml-2 max-w-[425px] border-t border-border/40 pt-1">
               <CommunityReactionButton counts={post.reaction_counts || {}} selected={post.my_reaction} onSelect={reaction => onReact?.(post.id, reaction)} />
@@ -246,9 +242,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
       </article>
 
       {/* Image viewer */}
-      {post.image_url && (
-        <ImageViewer open={imageViewerOpen} onOpenChange={setImageViewerOpen} images={[post.image_url]} />
-      )}
+
 
       {/* Edit dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -261,7 +255,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="w-full bg-transparent border-0 outline-none resize-none text-[15px] leading-[1.5] min-h-[120px]"
+              className="w-full bg-transparent border-0 outline-none resize-none text-[0.9375rem] leading-[1.5] min-h-[120px]"
               maxLength={500}
             />
             <p className="text-xs text-muted-foreground mt-2">You can edit posts within 30 minutes of posting.</p>

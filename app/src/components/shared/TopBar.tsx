@@ -86,7 +86,7 @@ export function TopBar({
             <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full relative" aria-label="Open notifications" onClick={() => navigate('/notifications')}>
               <Bell className="h-[18px] w-[18px]" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1.5 min-w-[16px] h-[16px] px-1 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute top-1 right-1.5 min-w-[16px] h-[16px] px-1 bg-primary text-primary-foreground text-[0.5625rem] font-bold rounded-full flex items-center justify-center">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}

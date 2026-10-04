@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { usePageState } from "@/hooks/usePageState";
 import { Button } from "@/components/ui/button";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { AddInvestmentDialog } from "@/components/portfolio/AddInvestmentDialog";
@@ -77,7 +78,7 @@ export default function TrackInvestments() {
   const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
   const [privacyPanelOpen, setPrivacyPanelOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<PortfolioTab>("holdings");
+  const [activeTab, setActiveTab] = usePageState<PortfolioTab>("portfolio:tab", "holdings");
 
   // Live Continua Data Layer quotes — the SAME quotes HoldingsList (rendered further
   // down) uses internally, so this page's total balance / allocation chart can't disagree
@@ -222,7 +223,7 @@ export default function TrackInvestments() {
         {/* ── HERO — canvas, no card ── */}
         <div>
           <p className="section-eyebrow">Total Value</p>
-          <h2 className="mt-1 text-[40px] leading-none font-semibold tabular tracking-tight">
+          <h2 className="mt-1 text-[2.5rem] leading-none font-semibold tabular tracking-tight">
             {showBalance
               ? `KES ${stats.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : '••••••'}
@@ -239,25 +240,25 @@ export default function TrackInvestments() {
           </div>
           <div className="mt-4 grid grid-cols-3 gap-4 hairline-t pt-4">
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Today</p>
+              <p className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">Today</p>
               <p className={`mt-0.5 text-sm font-semibold tabular ${stats.todayGain >= 0 ? 'text-bull' : 'text-bear'}`}>
                 {showBalance ? `${stats.todayGain >= 0 ? '+' : '−'}${Math.abs(stats.todayGain).toFixed(0)}` : '••'}
               </p>
-              <p className={`text-[10px] tabular ${stats.todayPct >= 0 ? 'text-bull' : 'text-bear'}`}>{stats.todayPct >= 0 ? '+' : ''}{stats.todayPct.toFixed(2)}%</p>
+              <p className={`text-[0.625rem] tabular ${stats.todayPct >= 0 ? 'text-bull' : 'text-bear'}`}>{stats.todayPct >= 0 ? '+' : ''}{stats.todayPct.toFixed(2)}%</p>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Invested</p>
+              <p className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">Invested</p>
               <p className="mt-0.5 text-sm font-semibold tabular">{showBalance ? `KES ${stats.totalCost.toFixed(0)}` : '••'}</p>
-              <p className="text-[10px] text-muted-foreground">{holdings.length} stocks</p>
+              <p className="text-[0.625rem] text-muted-foreground">{holdings.length} stocks</p>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Diversification</p>
+              <p className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">Diversification</p>
               <p className="mt-0.5 text-sm font-semibold tabular">{diversificationScore}/10</p>
-              <p className="text-[10px] text-muted-foreground">{sectorAlloc.length} sectors</p>
+              <p className="text-[0.625rem] text-muted-foreground">{sectorAlloc.length} sectors</p>
             </div>
           </div>
           {pricingCount > 0 && (
-            <p className="mt-3 text-[10px] text-muted-foreground text-center">
+            <p className="mt-3 text-[0.625rem] text-muted-foreground text-center">
               Pricing {pricingCount} more position{pricingCount === 1 ? "" : "s"}…
             </p>
           )}
@@ -269,12 +270,12 @@ export default function TrackInvestments() {
             <div className="flex items-center gap-1 bg-muted/50 rounded-full p-0.5">
               <button
                 data-small-target
-                className={`text-[10px] rounded-full h-6 px-3 font-semibold transition-colors ${chartMode === 'value' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                className={`text-[0.625rem] rounded-full h-6 px-3 font-semibold transition-colors ${chartMode === 'value' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
                 onClick={() => setChartMode('value')}
               >Value</button>
               <button
                 data-small-target
-                className={`text-[10px] rounded-full h-6 px-3 font-semibold transition-colors ${chartMode === 'performance' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                className={`text-[0.625rem] rounded-full h-6 px-3 font-semibold transition-colors ${chartMode === 'performance' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
                 onClick={() => setChartMode('performance')}
               >Performance</button>
             </div>
@@ -541,17 +542,17 @@ export default function TrackInvestments() {
                     if (sel) {
                       return (
                         <>
-                          <p className="text-[11px] font-medium text-muted-foreground truncate max-w-[104px] mx-auto">{sel.name}</p>
+                          <p className="text-[0.6875rem] font-medium text-muted-foreground truncate max-w-[104px] mx-auto">{sel.name}</p>
                           <p className="mt-0.5 text-base font-bold tabular">
                             {showBalance ? `KES ${sel.value.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '••••'}
                           </p>
-                          <p className="text-[11px] text-muted-foreground tabular">{sel.pct.toFixed(1)}%</p>
+                          <p className="text-[0.6875rem] text-muted-foreground tabular">{sel.pct.toFixed(1)}%</p>
                         </>
                       );
                     }
                     return (
                       <>
-                        <p className="text-[11px] font-medium text-muted-foreground">Total</p>
+                        <p className="text-[0.6875rem] font-medium text-muted-foreground">Total</p>
                         <p className="mt-0.5 text-base font-bold tabular">
                           {showBalance ? `KES ${stats.totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '••••'}
                         </p>
@@ -575,11 +576,11 @@ export default function TrackInvestments() {
                       className="w-2.5 h-2.5 rounded-sm shrink-0"
                       style={{ background: ALLOC_COLORS[i % ALLOC_COLORS.length], boxShadow: isSelected ? `0 0 6px ${ALLOC_COLORS[i % ALLOC_COLORS.length]}` : undefined }}
                     />
-                    <span className={`text-[12px] flex-1 truncate ${isSelected ? "font-semibold" : ""}`}>{s.name}</span>
-                    <span className="text-[11px] text-muted-foreground tabular">
+                    <span className={`text-[0.75rem] flex-1 truncate ${isSelected ? "font-semibold" : ""}`}>{s.name}</span>
+                    <span className="text-[0.6875rem] text-muted-foreground tabular">
                       {showBalance ? `KES ${s.value.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '••••'}
                     </span>
-                    <span className="text-[12px] font-semibold tabular w-14 text-right">{s.pct.toFixed(1)}%</span>
+                    <span className="text-[0.75rem] font-semibold tabular w-14 text-right">{s.pct.toFixed(1)}%</span>
                   </button>
                 );
               })}
@@ -597,7 +598,7 @@ export default function TrackInvestments() {
                 <button
                   key={key}
                   data-small-target
-                  className={`text-[10px] font-semibold px-2.5 h-6 rounded-full transition-colors ${sortBy === key ? 'brand-active' : 'text-muted-foreground'}`}
+                  className={`text-[0.625rem] font-semibold px-2.5 h-6 rounded-full transition-colors ${sortBy === key ? 'brand-active' : 'text-muted-foreground'}`}
                   onClick={() => toggleSort(key)}
                 >
                   {label}
@@ -625,8 +626,8 @@ export default function TrackInvestments() {
                   className="w-full flex items-center justify-between text-left"
                 >
                   <div>
-                    <p className="text-[12px] font-semibold">Sharing & privacy</p>
-                    <p className="text-[10.5px] text-muted-foreground mt-0.5">
+                    <p className="text-[0.75rem] font-semibold">Sharing & privacy</p>
+                    <p className="text-[0.65625rem] text-muted-foreground mt-0.5">
                       {profile?.portfolio_public ? "Your portfolio is visible to others" : "Your portfolio is private"}
                     </p>
                   </div>
@@ -692,8 +693,8 @@ export default function TrackInvestments() {
               <div className="mt-2">
                 {topMovers.map(m => (
                   <div key={m.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-                    <span className="text-[12px] font-semibold">{m.symbol}</span>
-                    <span className={`text-[12px] font-semibold tabular ${m.gain >= 0 ? 'text-bull' : 'text-bear'}`}>
+                    <span className="text-[0.75rem] font-semibold">{m.symbol}</span>
+                    <span className={`text-[0.75rem] font-semibold tabular ${m.gain >= 0 ? 'text-bull' : 'text-bear'}`}>
                       {m.gain >= 0 ? '+' : ''}{m.gainPct.toFixed(1)}%
                     </span>
                   </div>
@@ -704,13 +705,13 @@ export default function TrackInvestments() {
             <div>
               <p className="section-eyebrow">Diversification</p>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-[28px] leading-none font-semibold tabular">{diversificationScore}</span>
-                <span className="text-[11px] text-muted-foreground">/10</span>
+                <span className="text-[1.75rem] leading-none font-semibold tabular">{diversificationScore}</span>
+                <span className="text-[0.6875rem] text-muted-foreground">/10</span>
               </div>
               <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
                 <div className="h-full bg-foreground/70" style={{ width: `${diversificationScore * 10}%` }} />
               </div>
-              <p className="text-[11px] text-muted-foreground mt-2">
+              <p className="text-[0.6875rem] text-muted-foreground mt-2">
                 {diversificationScore >= 7 ? 'Well balanced across sectors' : diversificationScore >= 4 ? 'Moderately diversified' : 'Concentrated — consider spreading risk'}
               </p>
             </div>

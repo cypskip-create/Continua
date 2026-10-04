@@ -65,7 +65,7 @@ export function PortfolioSnowflake({ holdings, totalValue, totalCost, gainPct }:
           <Sparkles className="h-4 w-4 text-primary" />
           Portfolio Health
         </h3>
-        <span className="text-[10px] text-muted-foreground font-medium">{hasHoldings ? `IRR · ${irr >= 0 ? '+' : ''}${irr.toFixed(1)}%/yr` : "No holdings yet"}</span>
+        <span className="text-[0.625rem] text-muted-foreground font-medium">{hasHoldings ? `IRR · ${irr >= 0 ? '+' : ''}${irr.toFixed(1)}%/yr` : "No holdings yet"}</span>
       </div>
 
       <div className="grid grid-cols-5 gap-3 items-center">
@@ -85,7 +85,7 @@ export function PortfolioSnowflake({ holdings, totalValue, totalCost, gainPct }:
           <Metric label="Winners" value={hasHoldings ? `${winners}/${holdings.length}` : "—"} positive={hasHoldings && winners >= holdings.length / 2} />
         </div>
       </div>
-      {!hasHoldings && <p className="text-[10px] text-muted-foreground mt-3">Add a holding to see your portfolio health scored here.</p>}
+      {!hasHoldings && <p className="text-[0.625rem] text-muted-foreground mt-3">Add a holding to see your portfolio health scored here.</p>}
     </Card>
   );
 }
@@ -94,7 +94,7 @@ function Metric({ label, value, positive, negative }: { label: string; value: st
   const tone = positive ? "text-bull" : negative ? "text-bear" : "text-foreground";
   return (
     <div className="bg-background/60 rounded-xl px-2.5 py-1.5 border border-border/30">
-      <p className="text-[9px] text-muted-foreground font-medium leading-none">{label}</p>
+      <p className="text-[0.5625rem] text-muted-foreground font-medium leading-none">{label}</p>
       <p className={`text-xs font-bold mt-0.5 ${tone}`}>{value}</p>
     </div>
   );

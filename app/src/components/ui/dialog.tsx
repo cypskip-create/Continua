@@ -34,13 +34,14 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { hideClose?: boolean; fullScreen?: boolean }
->(({ className, children, hideClose, fullScreen, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { hideClose?: boolean; fullScreen?: boolean; centered?: boolean }
+>(({ className, children, hideClose, fullScreen, centered, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
       data-fullscreen={fullScreen || undefined}
+      data-centered={centered || undefined}
       className={cn(
         "dialog-panel panel-motion fixed left-1/2 top-1/2 z-[101] grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-2xl border bg-background p-6 shadow-lg max-h-[92dvh] overflow-y-auto overscroll-contain",
         className

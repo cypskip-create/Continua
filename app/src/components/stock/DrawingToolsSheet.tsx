@@ -92,7 +92,7 @@ export function DrawingToolsSheet({ open, onOpenChange, onSelectTool, hasDrawing
                     className="shrink-0 w-[108px] h-[92px] rounded-2xl bg-secondary/70 active:bg-secondary flex flex-col items-center justify-center gap-2 px-2 text-center transition-colors"
                   >
                     <Icon className="h-5 w-5 text-foreground/90" />
-                    <span className="text-[11px] leading-tight text-foreground/90">{tool.label}</span>
+                    <span className="text-[0.6875rem] leading-tight text-foreground/90">{tool.label}</span>
                   </button>
                 );
               })}

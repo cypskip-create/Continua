@@ -192,8 +192,8 @@ export function AllStocksList({ initialSector, onlySymbols }: AllStocksListProps
             </button>
 
             <div className="min-w-0 flex-1">
-              <p className="text-[13.5px] font-bold leading-tight">{stock.symbol}</p>
-              <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">{stock.name} · {stock.sector}</p>
+              <p className="text-[0.84375rem] font-bold leading-tight">{stock.symbol}</p>
+              <p className="text-[0.6875rem] text-muted-foreground truncate leading-tight mt-0.5">{stock.name} · {stock.sector}</p>
             </div>
 
             <SparklineChart isPositive={stock.isUp} width={48} height={20} data={getSparkline(stock.symbol)} isLoading={!stock.isLive} />
@@ -201,10 +201,10 @@ export function AllStocksList({ initialSector, onlySymbols }: AllStocksListProps
             <div className="text-right shrink-0 w-[84px]">
               {stock.isLive ? (
                 <>
-                  <p className="text-[13.5px] font-bold tabular-nums leading-tight">KES {stock.price!.toFixed(2)}</p>
+                  <p className="text-[0.84375rem] font-bold tabular-nums leading-tight">KES {stock.price!.toFixed(2)}</p>
                   <div className={`flex items-center justify-end gap-0.5 mt-0.5 ${stock.isUp ? 'text-bull' : 'text-bear'}`}>
                     {stock.isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    <span className="text-[11px] font-semibold tabular-nums">{stock.isUp ? '+' : ''}{stock.change!.toFixed(2)}%</span>
+                    <span className="text-[0.6875rem] font-semibold tabular-nums">{stock.isUp ? '+' : ''}{stock.change!.toFixed(2)}%</span>
                   </div>
                 </>
               ) : (

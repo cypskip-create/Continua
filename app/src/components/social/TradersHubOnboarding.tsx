@@ -327,7 +327,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
             <p className="text-sm text-muted-foreground leading-relaxed">
               Posts here are personal opinions, not financial advice. Always do your own research before making investment decisions.
             </p>
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-[0.75rem] text-muted-foreground">
               Next, let's set up your TradersHub identity — it takes about a minute.
             </p>
             <Button className="w-full h-12 rounded-full font-bold text-base" onClick={() => goTo("handle")}>
@@ -346,7 +346,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 <AtSign className="h-7 w-7 text-primary" />
               </div>
               <h2 className="text-lg font-extrabold">Choose your handle</h2>
-              <p className="text-[12.5px] text-muted-foreground">This is how other investors will find and mention you.</p>
+              <p className="text-[0.78125rem] text-muted-foreground">This is how other investors will find and mention you.</p>
             </div>
             <div>
               <div className="relative">
@@ -355,12 +355,12 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                   autoFocus
                   value={handle}
                   onChange={e => { setHandleTouched(true); setHandle(e.target.value); }}
-                  className="h-12 pl-8 rounded-2xl text-[15px] font-semibold"
+                  className="h-12 pl-8 rounded-2xl text-[0.9375rem] font-semibold"
                   maxLength={20}
                   placeholder="yourhandle"
                 />
               </div>
-              <div className="h-5 mt-1.5 px-1 flex items-center gap-1 text-[11.5px]">
+              <div className="h-5 mt-1.5 px-1 flex items-center gap-1 text-[0.71875rem]">
                 {handleStatus === "checking" && <><Loader2 className="h-3 w-3 animate-spin text-muted-foreground" /><span className="text-muted-foreground">Checking availability…</span></>}
                 {handleStatus === "available" && <><Check className="h-3 w-3 text-bull" /><span className="text-bull font-medium">@{cleanHandle} is available</span></>}
                 {handleStatus === "taken" && <span className="text-destructive font-medium">@{cleanHandle} is already taken</span>}
@@ -380,7 +380,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
             </button>
             <div className="text-center space-y-1.5">
               <h2 className="text-lg font-extrabold">Add a profile photo</h2>
-              <p className="text-[12.5px] text-muted-foreground">Posts with a real photo get more trust — and more replies.</p>
+              <p className="text-[0.78125rem] text-muted-foreground">Posts with a real photo get more trust — and more replies.</p>
             </div>
             <div className="flex flex-col items-center gap-3">
               <div className="relative group">
@@ -420,7 +420,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 <PenLine className="h-7 w-7 text-primary" />
               </div>
               <h2 className="text-lg font-extrabold">Tell people about you</h2>
-              <p className="text-[12.5px] text-muted-foreground">A short bio helps other traders know who they're following.</p>
+              <p className="text-[0.78125rem] text-muted-foreground">A short bio helps other traders know who they're following.</p>
             </div>
             <div>
               <Textarea
@@ -431,7 +431,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 className="min-h-[90px] resize-none rounded-2xl"
                 maxLength={160}
               />
-              <p className="text-[11px] text-muted-foreground text-right mt-1">{bio.length}/160</p>
+              <p className="text-[0.6875rem] text-muted-foreground text-right mt-1">{bio.length}/160</p>
             </div>
             <Button className="w-full h-12 rounded-full font-bold text-base" onClick={() => goTo("about")}>
               {bio.trim() ? "Continue" : "Skip for now"}
@@ -449,18 +449,18 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 <Users className="h-7 w-7 text-primary" />
               </div>
               <h2 className="text-lg font-extrabold">A couple quick questions</h2>
-              <p className="text-[12.5px] text-muted-foreground">Both optional — this just helps us tailor TradersHub.</p>
+              <p className="text-[0.78125rem] text-muted-foreground">Both optional — this just helps us tailor TradersHub.</p>
             </div>
 
             <div className="space-y-2.5">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Trading experience</p>
-              <p className="text-[11px] text-muted-foreground -mt-1.5">Shown on your profile as a badge.</p>
+              <p className="text-[0.6875rem] text-muted-foreground -mt-1.5">Shown on your profile as a badge.</p>
               <div className="flex flex-wrap gap-2">
                 {EXPERIENCE_OPTIONS.map(opt => (
                   <button
                     key={opt.id}
                     onClick={() => setExperience(prev => prev === opt.id ? null : opt.id)}
-                    className={`h-9 px-3.5 rounded-full text-[13px] font-semibold border transition-colors ${
+                    className={`h-9 px-3.5 rounded-full text-[0.8125rem] font-semibold border transition-colors ${
                       experience === opt.id ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 text-foreground border-border"
                     }`}
                   >
@@ -472,13 +472,13 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
 
             <div className="space-y-2.5">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Gender</p>
-              <p className="text-[11px] text-muted-foreground -mt-1.5">Used only for aggregate analysis of the TradersHub community — never shown on your profile or to other users.</p>
+              <p className="text-[0.6875rem] text-muted-foreground -mt-1.5">Used only for aggregate analysis of the TradersHub community — never shown on your profile or to other users.</p>
               <div className="flex flex-wrap gap-2">
                 {GENDER_OPTIONS.map(opt => (
                   <button
                     key={opt.id}
                     onClick={() => setGender(prev => prev === opt.id ? null : opt.id)}
-                    className={`h-9 px-3.5 rounded-full text-[13px] font-semibold border transition-colors ${
+                    className={`h-9 px-3.5 rounded-full text-[0.8125rem] font-semibold border transition-colors ${
                       gender === opt.id ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 text-foreground border-border"
                     }`}
                   >
@@ -504,7 +504,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 <Sparkles className="h-7 w-7 text-primary" />
               </div>
               <h2 className="text-lg font-extrabold">What are you into?</h2>
-              <p className="text-[12.5px] text-muted-foreground">Pick a few — this shapes your For You feed and who we suggest you follow. You can change these later in Settings.</p>
+              <p className="text-[0.78125rem] text-muted-foreground">Pick a few — this shapes your For You feed and who we suggest you follow. You can change these later in Settings.</p>
             </div>
             <div className="flex flex-wrap gap-2 justify-center">
               {INTEREST_OPTIONS.map(opt => {
@@ -513,7 +513,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                   <button
                     key={opt.id}
                     onClick={() => toggleInterest(opt.id)}
-                    className={`h-9 px-3.5 rounded-full text-[13px] font-semibold border transition-colors ${
+                    className={`h-9 px-3.5 rounded-full text-[0.8125rem] font-semibold border transition-colors ${
                       active ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 text-foreground border-border"
                     }`}
                   >
@@ -538,7 +538,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 <ShieldCheck className="h-7 w-7 text-primary" />
               </div>
               <h2 className="text-lg font-extrabold">Your portfolio, your call</h2>
-              <p className="text-[12.5px] text-muted-foreground">Choose who can see your holdings. You can change this anytime in Settings.</p>
+              <p className="text-[0.78125rem] text-muted-foreground">Choose who can see your holdings. You can change this anytime in Settings.</p>
             </div>
             <div className="max-h-[280px] overflow-y-auto pr-0.5">
               <PortfolioVisibilityToggles value={privacy} onChange={setPrivacy} />
@@ -559,7 +559,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 <UserPlus className="h-7 w-7 text-primary" />
               </div>
               <h2 className="text-lg font-extrabold">Follow a few traders</h2>
-              <p className="text-[12.5px] text-muted-foreground">Your feed works better once you're following someone. Optional.</p>
+              <p className="text-[0.78125rem] text-muted-foreground">Your feed works better once you're following someone. Optional.</p>
             </div>
 
             <div className="max-h-[300px] overflow-y-auto space-y-1 -mx-2 px-2">
@@ -567,7 +567,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
               )}
               {!suggestedLoading && suggested.length === 0 && (
-                <p className="text-center text-[12.5px] text-muted-foreground py-6">No one to suggest yet — you can find people from Discover later.</p>
+                <p className="text-center text-[0.78125rem] text-muted-foreground py-6">No one to suggest yet — you can find people from Discover later.</p>
               )}
               {!suggestedLoading && suggested.slice(0, 8).map(p => {
                 const selected = toFollow.has(p.user_id);
@@ -575,11 +575,11 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                   <div key={p.user_id} className="flex items-center gap-2.5 py-2">
                     <Avatar className="h-10 w-10 shrink-0">
                       <AvatarImage src={p.avatar_url || ""} className="object-cover" />
-                      <AvatarFallback className="text-[12px] font-bold bg-primary/10 text-primary">{getInitials(p.full_name)}</AvatarFallback>
+                      <AvatarFallback className="text-[0.75rem] font-bold bg-primary/10 text-primary">{getInitials(p.full_name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13.5px] font-bold truncate">{p.full_name || atHandle(p)}</p>
-                      <p className="text-[12px] text-muted-foreground truncate">{atHandle(p)}</p>
+                      <p className="text-[0.84375rem] font-bold truncate">{p.full_name || atHandle(p)}</p>
+                      <p className="text-[0.75rem] text-muted-foreground truncate">{atHandle(p)}</p>
                     </div>
                     <Button
                       size="sm"
@@ -607,7 +607,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 <Loader2 className="h-10 w-10 text-primary animate-spin" />
                 <div className="space-y-1.5">
                   <h2 className="text-lg font-extrabold">Setting up your TradersHub account…</h2>
-                  <p className="text-[12.5px] text-muted-foreground min-h-[16px]">{CREATING_MESSAGES[creatingMessageIdx]}</p>
+                  <p className="text-[0.78125rem] text-muted-foreground min-h-[16px]">{CREATING_MESSAGES[creatingMessageIdx]}</p>
                 </div>
               </>
             )}
@@ -626,7 +626,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 </div>
                 <div className="space-y-1.5">
                   <h2 className="text-lg font-extrabold">Something went wrong</h2>
-                  <p className="text-[12.5px] text-muted-foreground">We couldn't finish setting up your account. Please try again.</p>
+                  <p className="text-[0.78125rem] text-muted-foreground">We couldn't finish setting up your account. Please try again.</p>
                 </div>
                 <Button className="w-full h-12 rounded-full font-bold text-base" onClick={finish}>
                   Try again

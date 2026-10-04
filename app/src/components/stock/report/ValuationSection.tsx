@@ -31,11 +31,11 @@ function FairValueBar({ price, fair, currency }: { price: number; fair: number |
       </p>
       <div className="relative h-16 mt-3 rounded-lg overflow-hidden" style={{ background: hasFair ? "linear-gradient(90deg, #10b981 0%, #10b981 55%, #eab308 75%, #7f1d1d 100%)" : "hsl(var(--muted))" }}>
         <div className="absolute top-0 bottom-0 border-l-2 border-white/80" style={{ left: `${Math.min(98, priceX)}%` }}>
-          <span className="absolute -top-1 left-1 text-[10px] font-bold text-white bg-black/40 px-1 rounded">Current {currency}{price.toFixed(2)}</span>
+          <span className="absolute -top-1 left-1 text-[0.625rem] font-bold text-white bg-black/40 px-1 rounded">Current {currency}{price.toFixed(2)}</span>
         </div>
         {hasFair && (
           <div className="absolute top-0 bottom-0 border-l-2 border-white" style={{ left: `${Math.min(98, fairX!)}%` }}>
-            <span className="absolute bottom-1 left-1 text-[10px] font-bold text-white bg-black/40 px-1 rounded">Fair Value {currency}{fair!.toFixed(2)}</span>
+            <span className="absolute bottom-1 left-1 text-[0.625rem] font-bold text-white bg-black/40 px-1 rounded">Fair Value {currency}{fair!.toFixed(2)}</span>
           </div>
         )}
       </div>
@@ -77,7 +77,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
 
       <SubWidget number="1.1" title="Share Price vs Fair Value" description={`What is the fair price of ${symbol} based on Continua's real valuation models?`}>
         <FairValueBar price={price} fair={bestModel?.fairValue ?? null} currency={currency} />
-        <p className="text-[10px] text-muted-foreground mt-2">Model: {bestModel?.model ?? "None available yet"} — Continua doesn't run a discounted cash flow model.</p>
+        <p className="text-[0.625rem] text-muted-foreground mt-2">Model: {bestModel?.model ?? "None available yet"} — Continua doesn't run a discounted cash flow model.</p>
       </SubWidget>
 
       <SubWidget number="1.2" title="Key Valuation Metric" description={`Which real metric is available for ${symbol}?`}>
@@ -94,14 +94,14 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
           </div>
           <div>
             <p className="text-3xl font-bold tabular">{ratios?.pe != null ? `${ratios.pe.toFixed(1)}x` : "—"}</p>
-            <p className="text-[11px] text-muted-foreground">P/E Ratio — used since {symbol} is profitable</p>
-            <p className="text-[11px] text-muted-foreground mt-1">P/B Ratio: {ratios?.pb != null ? `${ratios.pb.toFixed(2)}x` : "—"}</p>
+            <p className="text-[0.6875rem] text-muted-foreground">P/E Ratio — used since {symbol} is profitable</p>
+            <p className="text-[0.6875rem] text-muted-foreground mt-1">P/B Ratio: {ratios?.pb != null ? `${ratios.pb.toFixed(2)}x` : "—"}</p>
           </div>
         </div>
       </SubWidget>
 
       <SubWidget number="1.3" title="Price to Earnings Ratio vs Peers" description={`How does ${symbol}'s P/E compare to its real NSE sector peers?`}>
-        {peerAvg != null && <p className="text-[10.5px] text-muted-foreground mb-1">Peer average: {peerAvg.toFixed(1)}x</p>}
+        {peerAvg != null && <p className="text-[0.65625rem] text-muted-foreground mb-1">Peer average: {peerAvg.toFixed(1)}x</p>}
         <div style={{ height: CHART_H_MEDIUM }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={peerChartData} layout="vertical" margin={{ left: 8, right: 16 }}>
@@ -115,7 +115,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
             </BarChart>
           </ResponsiveContainer>
         </div>
-        {!peersLoading && peerChartData.length === 0 && <p className="text-[10px] text-muted-foreground mt-1">No sector peers with a P/E on file yet.</p>}
+        {!peersLoading && peerChartData.length === 0 && <p className="text-[0.625rem] text-muted-foreground mt-1">No sector peers with a P/E on file yet.</p>}
       </SubWidget>
 
       <SubWidget number="1.4" title="Historical Price to Earnings Ratio" description="Compares a stock's price to its earnings over time.">
@@ -129,7 +129,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1">Only the current ratio is plotted — Continua doesn't have a historical P/E time series yet.</p>
+        <p className="text-[0.625rem] text-muted-foreground mt-1">Only the current ratio is plotted — Continua doesn't have a historical P/E time series yet.</p>
       </SubWidget>
 
       <SubWidget number="1.5" title="Price to Earnings Ratio vs Industry Average" description={`How does ${symbol}'s P/E compare to its NSE sector's average? (Peer-by-peer detail is in 1.3 above.)`}>
@@ -138,11 +138,11 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
             <div className="flex items-center justify-center gap-8 mb-2">
               <div className="text-center">
                 <p className="text-2xl font-bold tabular" style={{ color: "hsl(217 91% 60%)" }}>{ratios.pe.toFixed(1)}x</p>
-                <p className="text-[10.5px] text-muted-foreground mt-0.5">{symbol}</p>
+                <p className="text-[0.65625rem] text-muted-foreground mt-0.5">{symbol}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold tabular text-muted-foreground">{peerAvg.toFixed(1)}x</p>
-                <p className="text-[10.5px] text-muted-foreground mt-0.5">Industry Average</p>
+                <p className="text-[0.65625rem] text-muted-foreground mt-0.5">Industry Average</p>
               </div>
             </div>
             <div style={{ height: 90 }}>
@@ -158,7 +158,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-1 text-center">
+            <p className="text-[0.6875rem] text-muted-foreground mt-1 text-center">
               {symbol} trades at {Math.abs(((ratios.pe - peerAvg) / peerAvg) * 100).toFixed(0)}% {ratios.pe <= peerAvg ? "below" : "above"} its sector's average P/E of {peerAvg.toFixed(1)}x.
             </p>
           </>
@@ -197,11 +197,11 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
           <p className="text-xs text-muted-foreground mt-1">{priceHistoryQuery.isLoading ? "Loading price history…" : `No price history on file for ${symbol} yet.`}</p>
         )}
         <div className="grid grid-cols-3 gap-2 mt-2 text-center">
-          <div><p className="text-[9.5px] text-muted-foreground">Analysts</p><p className="text-sm font-bold tabular">0</p></div>
-          <div><p className="text-[9.5px] text-muted-foreground">Avg 1Y Target</p><p className="text-sm font-bold tabular">N/A</p></div>
-          <div><p className="text-[9.5px] text-muted-foreground">Agreement</p><p className="text-sm font-bold tabular">N/A</p></div>
+          <div><p className="text-[0.59375rem] text-muted-foreground">Analysts</p><p className="text-sm font-bold tabular">0</p></div>
+          <div><p className="text-[0.59375rem] text-muted-foreground">Avg 1Y Target</p><p className="text-sm font-bold tabular">N/A</p></div>
+          <div><p className="text-[0.59375rem] text-muted-foreground">Agreement</p><p className="text-sm font-bold tabular">N/A</p></div>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-2">The line above is real historical price — Continua has no analyst 12-month forecast feed, so no forecast cone is drawn.</p>
+        <p className="text-[0.625rem] text-muted-foreground mt-2">The line above is real historical price — Continua has no analyst 12-month forecast feed, so no forecast cone is drawn.</p>
       </SubWidget>
     </ReportSection>
   );

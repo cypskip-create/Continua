@@ -83,7 +83,7 @@ export function PortfolioScorecard({ holdings, research, valuations, benchmark, 
           and which hold it back.
         </InfoTip>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-4">
+      <p className="text-[0.6875rem] text-muted-foreground mb-4">
         Your portfolio scored out of 6 on five measures at once. Select a measure below to see the detail.
       </p>
 
@@ -107,18 +107,18 @@ export function PortfolioScorecard({ holdings, research, valuations, benchmark, 
             key={axis}
             data-small-target
             onClick={() => setSelected(axis)}
-            className={`shrink-0 h-8 px-3 rounded-full text-[11px] font-semibold ${selected === axis ? "contrast-active" : "bg-muted/60"}`}
+            className={`shrink-0 h-8 px-3 rounded-full text-[0.6875rem] font-semibold ${selected === axis ? "contrast-active" : "bg-muted/60"}`}
           >
             {axis}
           </button>
         ))}
       </div>
 
-      <p className="text-[15px] font-bold font-serif">{selected} <span className="text-muted-foreground font-sans text-[13px] font-normal">{axisAverage(selected) != null ? `${axisAverage(selected)!.toFixed(2)} / 6` : "No data"}</span></p>
-      <p className="text-[11px] text-muted-foreground mb-3">{AXIS_DESCRIPTIONS[selected]}</p>
+      <p className="text-[0.9375rem] font-bold font-serif">{selected} <span className="text-muted-foreground font-sans text-[0.8125rem] font-normal">{axisAverage(selected) != null ? `${axisAverage(selected)!.toFixed(2)} / 6` : "No data"}</span></p>
+      <p className="text-[0.6875rem] text-muted-foreground mb-3">{AXIS_DESCRIPTIONS[selected]}</p>
 
       {ranked.length === 0 ? (
-        <p className="text-[11px] text-muted-foreground py-4 text-center">Not enough data on file yet for this measure.</p>
+        <p className="text-[0.6875rem] text-muted-foreground py-4 text-center">Not enough data on file yet for this measure.</p>
       ) : (
         <>
           {lifting.length > 0 && (
@@ -144,14 +144,14 @@ function ScoreRow({ h, axis }: { h: { symbol: string; name: string; weight: numb
   return (
     <div className="py-2">
       <div className="flex items-center justify-between">
-        <span className="text-[12.5px] font-bold underline decoration-dotted underline-offset-2">{h.name}</span>
-        <span className="text-[12px] font-bold tabular">{score.toFixed(0)}/6</span>
+        <span className="text-[0.78125rem] font-bold underline decoration-dotted underline-offset-2">{h.name}</span>
+        <span className="text-[0.75rem] font-bold tabular">{score.toFixed(0)}/6</span>
       </div>
       <div className="flex items-center gap-2 mt-1">
         <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
           <div className="h-full rounded-full bg-bull" style={{ width: `${(score / 6) * 100}%` }} />
         </div>
-        <span className="text-[10.5px] text-muted-foreground w-10 text-right">{h.weight.toFixed(1)}%</span>
+        <span className="text-[0.65625rem] text-muted-foreground w-10 text-right">{h.weight.toFixed(1)}%</span>
       </div>
     </div>
   );

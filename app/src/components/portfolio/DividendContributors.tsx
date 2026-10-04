@@ -21,13 +21,13 @@ function ContributorRow({ row, maxAbs, currencyLabel, showValues }: { row: Row; 
     <div className="py-2.5">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 w-16 shrink-0">
-          <p className="text-[13px] font-bold">{row.symbol}</p>
-          <p className="text-[10px] text-muted-foreground truncate">{row.name}</p>
+          <p className="text-[0.8125rem] font-bold">{row.symbol}</p>
+          <p className="text-[0.625rem] text-muted-foreground truncate">{row.name}</p>
         </div>
         <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
           <div className="h-full rounded-full bg-bull" style={{ width: `${widthPct}%` }} />
         </div>
-        <p className="text-[13px] font-bold tabular shrink-0">
+        <p className="text-[0.8125rem] font-bold tabular shrink-0">
           {showValues ? `${currencyLabel}${row.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••"}
         </p>
       </div>
@@ -52,10 +52,10 @@ export function DividendContributors({ holdings, dividendData, isPremium = false
           Dividend Contributors (Last 12M)
           <InfoTip>Which holdings drive — or drag — your portfolio's trailing 12-month dividend income, ranked by actual payout on file.</InfoTip>
         </h3>
-        <p className="text-[11px] text-muted-foreground mb-2">
+        <p className="text-[0.6875rem] text-muted-foreground mb-2">
           See which holdings drive — or drag — your portfolio's income.
         </p>
-        <p className="text-[11px] text-muted-foreground py-6 text-center">No confirmed dividend income on file for this portfolio yet.</p>
+        <p className="text-[0.6875rem] text-muted-foreground py-6 text-center">No confirmed dividend income on file for this portfolio yet.</p>
       </div>
     );
   }
@@ -73,7 +73,7 @@ export function DividendContributors({ holdings, dividendData, isPremium = false
         Dividend Contributors (Last 12M)
         <InfoTip>Which holdings drive — or drag — your portfolio's trailing 12-month dividend income, ranked by actual payout on file.</InfoTip>
       </h3>
-      <p className="text-[11px] text-muted-foreground mb-2">
+      <p className="text-[0.6875rem] text-muted-foreground mb-2">
         See which holdings drive — or drag — your portfolio's income.
       </p>
 

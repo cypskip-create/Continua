@@ -237,28 +237,28 @@ export default function Learn() {
             <CardContent className="p-3 text-center">
               <GraduationCap className="h-5 w-5 mx-auto mb-1 text-primary" />
               <div className="text-lg font-bold">6</div>
-              <div className="text-[10px] text-muted-foreground">Courses</div>
+              <div className="text-[0.625rem] text-muted-foreground">Courses</div>
             </CardContent>
           </Card>
           <Card className="card-gradient">
             <CardContent className="p-3 text-center">
               <Clock className="h-5 w-5 mx-auto mb-1 text-accent" />
               <div className="text-lg font-bold">12h</div>
-              <div className="text-[10px] text-muted-foreground">Learned</div>
+              <div className="text-[0.625rem] text-muted-foreground">Learned</div>
             </CardContent>
           </Card>
           <Card className="card-gradient">
             <CardContent className="p-3 text-center">
               <Trophy className="h-5 w-5 mx-auto mb-1 text-yellow-500" />
               <div className="text-lg font-bold">2</div>
-              <div className="text-[10px] text-muted-foreground">Certificates</div>
+              <div className="text-[0.625rem] text-muted-foreground">Certificates</div>
             </CardContent>
           </Card>
           <Card className="card-gradient">
             <CardContent className="p-3 text-center">
               <Star className="h-5 w-5 mx-auto mb-1 text-orange-500" />
               <div className="text-lg font-bold">850</div>
-              <div className="text-[10px] text-muted-foreground">XP Points</div>
+              <div className="text-[0.625rem] text-muted-foreground">XP Points</div>
             </CardContent>
           </Card>
         </div>
@@ -308,7 +308,7 @@ export default function Learn() {
                       <Award className={`h-6 w-6 ${cert.badge === 'gold' ? 'text-yellow-500' : 'text-gray-400'}`} />
                     </div>
                     <p className="text-xs font-medium">{cert.title}</p>
-                    <p className="text-[10px] text-muted-foreground">{cert.date}</p>
+                    <p className="text-[0.625rem] text-muted-foreground">{cert.date}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -387,7 +387,7 @@ export default function Learn() {
                         />
                         <div>
                           <p className="text-xs font-medium">{course.instructor}</p>
-                          <p className="text-[10px] text-muted-foreground">Instructor</p>
+                          <p className="text-[0.625rem] text-muted-foreground">Instructor</p>
                         </div>
                       </div>
                       
@@ -408,7 +408,7 @@ export default function Learn() {
                               )}
                               <div>
                                 <p className="text-xs font-medium">{module.title}</p>
-                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                <div className="flex items-center gap-2 text-[0.625rem] text-muted-foreground">
                                   {getTypeIcon(module.type)}
                                   <span>{module.duration}</span>
                                 </div>

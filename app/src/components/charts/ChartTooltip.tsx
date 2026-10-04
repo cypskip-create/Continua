@@ -33,7 +33,7 @@ export function ColorTooltip({ active, payload, label, format, colorFor, footer 
   return (
     <div className="rounded-lg border border-border bg-popover/95 text-popover-foreground backdrop-blur-md px-2.5 py-2 shadow-xl ring-1 ring-border/60 min-w-[120px]">
       {label !== undefined && label !== null && (
-        <p className="text-[10px] font-semibold text-foreground mb-1.5">{String(label)}</p>
+        <p className="text-[0.625rem] font-semibold text-foreground mb-1.5">{String(label)}</p>
       )}
       <div className="space-y-1">
         {payload.map((entry, i) => {
@@ -44,7 +44,7 @@ export function ColorTooltip({ active, payload, label, format, colorFor, footer 
             "hsl(var(--foreground))";
           const value = format ? format(entry.value, entry) : entry.value;
           return (
-            <div key={i} className="flex items-center gap-2 text-[11px] whitespace-nowrap">
+            <div key={i} className="flex items-center gap-2 text-[0.6875rem] whitespace-nowrap">
               <span className="h-2 w-2 rounded-sm shrink-0" style={{ background: color }} />
               {entry.name && <span className="text-muted-foreground">{entry.name}</span>}
               <span className="font-semibold tabular ml-auto" style={{ color }}>
@@ -54,7 +54,7 @@ export function ColorTooltip({ active, payload, label, format, colorFor, footer 
           );
         })}
       </div>
-      {footer && <p className="text-[9px] text-muted-foreground mt-1.5">{footer}</p>}
+      {footer && <p className="text-[0.5625rem] text-muted-foreground mt-1.5">{footer}</p>}
     </div>
   );
 }
@@ -64,7 +64,7 @@ export function ChartKey({ items }: { items: { label: string; color: string }[] 
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
       {items.map((it) => (
-        <span key={it.label} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+        <span key={it.label} className="flex items-center gap-1.5 text-[0.625rem] text-muted-foreground">
           <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: it.color }} />
           {it.label}
         </span>

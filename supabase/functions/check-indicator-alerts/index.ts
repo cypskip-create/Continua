@@ -139,14 +139,13 @@ Deno.serve(async (req: Request) => {
       }
 
       if (triggered) {
-        await supabaseAdmin.from('price_alerts').update({ triggered_at: new Date().toISOString() }).eq('id', alert.id).eq('user_id', userId);
-        await supabaseAdmin.from('notifications').insert({
-          user_id: userId, type: 'alert', feature: 'alerts',
-          title: `${alert.symbol} indicator alert triggered`,
-          message: detail || `${alert.symbol}'s ${alert.indicator} condition was met.`,
-          action_url: `/stock/${alert.symbol}`, entity_id: alert.id, entity_type: 'price_alert',
+        const { data: delivered, error: deliveryError } = await supabaseAdmin.rpc('deliver_alert_notification', {
+          p_alert_id: alert.id, p_updated_at: alert.updated_at,
+          p_title: `${alert.symbol} indicator alert triggered`,
+          p_message: detail || `${alert.symbol}'s ${alert.indicator} condition was met.`,
         });
-        triggeredAlerts.push(alert);
+        if (deliveryError) throw deliveryError;
+        if (delivered) triggeredAlerts.push(alert);
       }
     }
 

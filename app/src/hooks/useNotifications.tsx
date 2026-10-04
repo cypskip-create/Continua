@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { usePageRefresh } from './usePageRefresh';
+import { useEffect, useId } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -43,61 +44,59 @@ async function attachActors(rows: AppNotification[]): Promise<AppNotification[]>
 
 export function useNotifications() {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetch = useCallback(async () => {
-    if (!user) { setNotifications([]); setLoading(false); return; }
-    setLoading(true);
-    const { data } = await supabase
-      .from('notifications' as any)
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(100);
-    setNotifications(await attachActors((data as any) || []));
-    setLoading(false);
-  }, [user]);
-
-  usePageRefresh(fetch);
-  useEffect(() => { fetch(); }, [fetch]);
-
-  // Realtime
+  const client = useQueryClient();
+  const instanceId = useId();
+  const key = ['continua', 'notifications', user?.id];
+  const result = useQuery({
+    queryKey: key, enabled: !!user, staleTime: 30000,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.from('notifications' as any).select('*')
+        .eq('user_id', user!.id).order('created_at', { ascending: false }).limit(100).abortSignal(signal);
+      if (error) throw error;
+      return attachActors((data ?? []) as unknown as AppNotification[]);
+    },
+  });
+  const notifications = user ? result.data ?? [] : [];
+  const loading = !!user && result.isLoading;
+  const fetch = () => result.refetch();
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel(`notifications-${user.id}`)
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        async (payload) => {
-          const [withActor] = await attachActors([payload.new as AppNotification]);
-          setNotifications(prev => [withActor, ...prev]);
-        }
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user]);
+    const channel = supabase.channel(`notifications-${user.id}-${instanceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => { void client.invalidateQueries({ queryKey: ['continua', 'notifications', user.id] }); }).subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [user?.id, instanceId, client]);
 
-  const markAsRead = async (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    await supabase.from('notifications' as any).update({ read: true }).eq('id', id);
+  // Update every mounted inbox/badge together, only after persistence succeeds.
+  const persist = async (request: PromiseLike<{ error: unknown }>, update: (rows: AppNotification[]) => AppNotification[]) => {
+    try {
+      const { error } = await request;
+      if (error) throw error;
+      await client.cancelQueries({ queryKey: key });
+      client.setQueryData<AppNotification[]>(key, rows => update(rows ?? []));
+      void client.invalidateQueries({ queryKey: key });
+    } catch {
+      toast.error("Couldn't update notifications. Please try again.");
+    }
   };
-
+  const markAsRead = async (id: string) => {
+    if (!user) return;
+    await persist(supabase.from('notifications' as any).update({ read: true }).eq('id', id).eq('user_id', user.id),
+      rows => rows.map(n => n.id === id ? { ...n, read: true } : n));
+  };
   const markAllAsRead = async () => {
     if (!user) return;
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    await supabase.from('notifications' as any).update({ read: true }).eq('user_id', user.id).eq('read', false);
+    await persist(supabase.from('notifications' as any).update({ read: true }).eq('user_id', user.id).eq('read', false),
+      rows => rows.map(n => ({ ...n, read: true })));
   };
-
   const remove = async (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-    await supabase.from('notifications' as any).delete().eq('id', id);
+    if (!user) return;
+    await persist(supabase.from('notifications' as any).delete().eq('id', id).eq('user_id', user.id),
+      rows => rows.filter(n => n.id !== id));
   };
-
   const clearAll = async () => {
     if (!user) return;
-    setNotifications([]);
-    await supabase.from('notifications' as any).delete().eq('user_id', user.id);
+    await persist(supabase.from('notifications' as any).delete().eq('user_id', user.id), () => []);
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;

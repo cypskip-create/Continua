@@ -149,9 +149,9 @@ function CommentNode({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 flex-wrap min-w-0">
-              <span className="font-bold text-[13px] truncate">{comment.author?.full_name || "User"}</span>
+              <span className="font-bold text-[0.8125rem] truncate">{comment.author?.full_name || "User"}</span>
               <Verified className="h-3 w-3 text-primary fill-primary shrink-0" />
-              <span className="text-[11px] text-muted-foreground shrink-0">· {formatTimeAgo(comment.created_at)}{comment.edited_at ? " · edited" : ""}</span>
+              <span className="text-[0.6875rem] text-muted-foreground shrink-0">· {formatTimeAgo(comment.created_at)}{comment.edited_at ? " · edited" : ""}</span>
             </div>
             {isOwn && (onEditComment || onDeleteComment) && !isEditing && (
               <DropdownMenu>
@@ -184,24 +184,24 @@ function CommentNode({
                 value={editDraft}
                 onChange={e => setEditDraft(e.target.value)}
                 maxLength={500}
-                className="w-full min-h-[64px] text-[13px] leading-relaxed bg-muted/40 rounded-lg p-2 outline-none resize-none border border-border/60 focus:border-primary/50"
+                className="w-full min-h-[64px] text-[0.8125rem] leading-relaxed bg-muted/40 rounded-lg p-2 outline-none resize-none border border-border/60 focus:border-primary/50"
               />
               <div className="flex items-center justify-end gap-2 mt-1.5">
-                <Button variant="ghost" size="sm" className="h-7 rounded-full text-[11px] px-3" onClick={() => { setIsEditing(false); setEditDraft(comment.content); }}>
+                <Button variant="ghost" size="sm" className="h-7 rounded-full text-[0.6875rem] px-3" onClick={() => { setIsEditing(false); setEditDraft(comment.content); }}>
                   Cancel
                 </Button>
-                <Button size="sm" className="h-7 rounded-full text-[11px] px-3" disabled={!editDraft.trim() || saving} onClick={saveEdit}>
+                <Button size="sm" className="h-7 rounded-full text-[0.6875rem] px-3" disabled={!editDraft.trim() || saving} onClick={saveEdit}>
                   {saving ? "Saving…" : "Save"}
                 </Button>
               </div>
             </div>
           ) : (
-            <p className="text-[13px] mt-0.5 leading-relaxed break-words">{renderContent(comment.content)}</p>
+            <p className="text-[0.8125rem] mt-0.5 leading-relaxed break-words">{renderContent(comment.content)}</p>
           )}
 
           <div className="flex items-center gap-3 mt-1.5 -ml-1.5">
             <CommunityReactionButton compact counts={reactionCounts} selected={reaction} onSelect={handleReaction} />
-            <button onClick={(e) => { e.stopPropagation(); onReply(comment); }} className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary p-1 rounded-full" data-small-target>
+            <button onClick={(e) => { e.stopPropagation(); onReply(comment); }} className="flex items-center gap-1 text-[0.6875rem] text-muted-foreground hover:text-primary p-1 rounded-full" data-small-target>
               <MessageCircle className="h-3.5 w-3.5" />
               <span>Reply</span>
             </button>
@@ -211,7 +211,7 @@ function CommentNode({
           {hasReplies && (
             <button
               onClick={(e) => { e.stopPropagation(); setExpanded(v => !v); }}
-              className="relative mt-3 inline-flex items-center gap-1.5 text-[12px] font-bold text-primary hover:underline"
+              className="relative mt-3 inline-flex items-center gap-1.5 text-[0.75rem] font-bold text-primary hover:underline"
               data-small-target
             >
               {!expanded && (
@@ -396,7 +396,7 @@ export function XCommentSheet({
         {currentUserId && (
           <div className="border-t border-border/60 bg-card shrink-0">
             {replyingTo && (
-              <div className="flex items-center justify-between px-4 py-2 bg-muted/40 text-[12px]">
+              <div className="flex items-center justify-between px-4 py-2 bg-muted/40 text-[0.75rem]">
                 <span className="text-muted-foreground">
                   Replying to <span className="text-primary font-semibold">@{replyingTo.author?.full_name || "user"}</span>
                 </span>

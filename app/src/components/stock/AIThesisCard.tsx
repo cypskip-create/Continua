@@ -83,9 +83,9 @@ export function AIThesisCard(props: Props) {
         ) : error ? (
           <p className="text-xs text-bear">{error}</p>
         ) : (
-          <p className="text-[13px] leading-relaxed whitespace-pre-line text-foreground/90">{text}</p>
+          <p className="text-[0.8125rem] leading-relaxed whitespace-pre-line text-foreground/90">{text}</p>
         )}
-        <p className="text-[10px] text-muted-foreground mt-2">AI-generated. Not investment advice.</p>
+        <p className="text-[0.625rem] text-muted-foreground mt-2">AI-generated. Not investment advice.</p>
       </CardContent>
     </Card>
   );

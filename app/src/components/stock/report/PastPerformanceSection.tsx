@@ -102,7 +102,7 @@ export function PastPerformanceSection({ symbol, currency }: Props) {
             />
           </ResponsiveContainer>
         </div>
-        {!latest && <p className="text-[10px] text-muted-foreground mt-1">No income statement on file yet — shown with placeholder proportions until one arrives.</p>}
+        {!latest && <p className="text-[0.625rem] text-muted-foreground mt-1">No income statement on file yet — shown with placeholder proportions until one arrives.</p>}
       </SubWidget>
 
       <SubWidget number="3.2" title="Earnings and Revenue History" description="Real revenue and earnings from Continua's financial statements — annual (last 3 years) or quarterly (last 5 quarters).">
@@ -157,7 +157,7 @@ export function PastPerformanceSection({ symbol, currency }: Props) {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1">No real sector-average growth figure yet — the comparison bar shows 0 rather than a guess.</p>
+        <p className="text-[0.625rem] text-muted-foreground mt-1">No real sector-average growth figure yet — the comparison bar shows 0 rather than a guess.</p>
       </SubWidget>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -165,7 +165,7 @@ export function PastPerformanceSection({ symbol, currency }: Props) {
         <SubWidget number="3.6" title="ROA"><SemiGauge label="ROA" value={ratios?.roa ?? null} industryValue={null} max={20} /></SubWidget>
         <SubWidget number="3.7" title="ROCE">
           <SemiGauge label="ROCE" value={null} industryValue={null} max={30} />
-          <p className="text-[10px] text-muted-foreground text-center mt-1">Not currently computed for NSE holdings.</p>
+          <p className="text-[0.625rem] text-muted-foreground text-center mt-1">Not currently computed for NSE holdings.</p>
         </SubWidget>
       </div>
     </ReportSection>

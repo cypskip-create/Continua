@@ -136,19 +136,19 @@ export const PortfolioShareCard = forwardRef<HTMLDivElement, PortfolioShareCardP
         <div className="p-5 pb-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-1.5">
-              <div className="h-6 w-6 rounded-md flex items-center justify-center text-[12px] font-bold" style={{ background: rgb(primaryRgb), color: rgb(primaryForegroundRgb) }}>C</div>
-              <span className="text-[13px] font-bold tracking-tight">Continua</span>
+              <div className="h-6 w-6 rounded-md flex items-center justify-center text-[0.75rem] font-bold" style={{ background: rgb(primaryRgb), color: rgb(primaryForegroundRgb) }}>C</div>
+              <span className="text-[0.8125rem] font-bold tracking-tight">Continua</span>
             </div>
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">NSE Portfolio</span>
+            <span className="text-[0.625rem] font-mono text-muted-foreground uppercase tracking-wider">NSE Portfolio</span>
           </div>
 
-          <p className="text-[11px] text-muted-foreground truncate">{displayName}'s portfolio</p>
-          <p className="text-[26px] font-bold tabular leading-tight mt-0.5">
+          <p className="text-[0.6875rem] text-muted-foreground truncate">{displayName}'s portfolio</p>
+          <p className="text-[1.625rem] font-bold tabular leading-tight mt-0.5">
             {hideAmounts ? "KES ••••••" : `KES ${kes(totalValue)}`}
           </p>
 
           {!hideGains && (
-            <div className={`inline-flex items-center gap-1 mt-1.5 text-[13px] font-semibold ${primaryGain >= 0 ? "text-bull" : "text-bear"}`}>
+            <div className={`inline-flex items-center gap-1 mt-1.5 text-[0.8125rem] font-semibold ${primaryGain >= 0 ? "text-bull" : "text-bear"}`}>
               {primaryGain >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
               {hideAmounts ? "" : `${primaryGain >= 0 ? "+" : "−"}KES ${kes(Math.abs(primaryGain))} `}
               ({primaryGain >= 0 ? "+" : ""}{primaryPct.toFixed(2)}%) {showDayChange ? "today" : "all-time"}
@@ -161,16 +161,16 @@ export const PortfolioShareCard = forwardRef<HTMLDivElement, PortfolioShareCardP
             {shown.map((h) => (
               <div key={h.symbol} className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="h-7 w-7 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0" style={{ background: rgb(mutedRgb) }}>
+                  <div className="h-7 w-7 rounded-full flex items-center justify-center text-[0.5625rem] font-bold shrink-0" style={{ background: rgb(mutedRgb) }}>
                     {h.symbol.slice(0, 2)}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[12px] font-semibold truncate">{h.symbol}</p>
-                    {!hideAmounts && <p className="text-[10px] text-muted-foreground">{h.shares} sh</p>}
+                    <p className="text-[0.75rem] font-semibold truncate">{h.symbol}</p>
+                    {!hideAmounts && <p className="text-[0.625rem] text-muted-foreground">{h.shares} sh</p>}
                   </div>
                 </div>
                 {!hideGains && (
-                  <span className={`text-[12px] font-semibold tabular ${(showDayChange ? h.dayChangePct : h.gainPct) >= 0 ? "text-bull" : "text-bear"}`}>
+                  <span className={`text-[0.75rem] font-semibold tabular ${(showDayChange ? h.dayChangePct : h.gainPct) >= 0 ? "text-bull" : "text-bear"}`}>
                     {(showDayChange ? h.dayChangePct : h.gainPct) >= 0 ? "+" : ""}
                     {(showDayChange ? h.dayChangePct : h.gainPct).toFixed(2)}%
                   </span>
@@ -181,7 +181,7 @@ export const PortfolioShareCard = forwardRef<HTMLDivElement, PortfolioShareCardP
         )}
 
         <div className="px-5 py-3" style={{ borderTop: `1px solid ${rgb(borderOnCardRgb)}`, background: rgb(footerBgRgb) }}>
-          <p className="text-[9.5px] text-center text-muted-foreground">Track NSE stocks on Continua</p>
+          <p className="text-[0.59375rem] text-center text-muted-foreground">Track NSE stocks on Continua</p>
         </div>
       </div>
     );

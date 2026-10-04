@@ -21,6 +21,7 @@ export async function runFundamentalsIngestion(adapter: IExchangeAdapter, symbol
   const startedAt = new Date().toISOString();
   const errors: string[] = [];
   let stored = 0;
+  const changedSecurities = new Map<string, import("../../types/market.js").Security>();
 
   const { bundles, failures } = await fundamentalsCollector.collectForSymbols(adapter, symbols);
 
@@ -57,21 +58,27 @@ export async function runFundamentalsIngestion(adapter: IExchangeAdapter, symbol
       await financialsRepository.upsertPeriodBundle(bundle.period, income, bundle.balance, cashFlow);
       stored++;
 
-      // Fundamentals just changed — the cached ratios/AfriScore for this
-      // symbol are now stale, so recompute and re-cache immediately rather
-      // than waiting for the next request to trigger it.
-      const quote = await pricesRepository.getQuote(security.id);
-      if (quote) {
-        await researchService.recomputeAndStore(security.id, quote.lastPrice);
-        await cache.del(CacheKeys.ratios(security.exchange, security.symbol));
-        await cache.del(CacheKeys.afriScore(security.exchange, security.symbol));
-      }
+      changedSecurities.set(security.id, security);
     } catch (err) {
       errors.push(`${bundle.security.symbol}: ${String(err)}`);
       await deadLetterRepository.record({
         exchange: adapter.exchange, dataset: "financials", symbol: bundle.security.symbol,
         payload: bundle, error: String(err),
       });
+    }
+  }
+
+  // Recompute once per security after all historical periods have been saved.
+  // Recomputing after each old period wastes work and temporarily exposes
+  // incomplete history to the research cache.
+  for (const security of changedSecurities.values()) {
+    try {
+      const quote = await pricesRepository.getQuote(security.id);
+      if (quote) await researchService.recomputeAndStore(security.id, quote.lastPrice);
+      await cache.del(CacheKeys.ratios(security.exchange, security.symbol));
+      await cache.del(CacheKeys.afriScore(security.exchange, security.symbol));
+    } catch (err) {
+      errors.push(`${security.symbol}: research recompute failed: ${String(err)}`);
     }
   }
 

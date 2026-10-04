@@ -26,7 +26,7 @@ const Eyebrow = ({ children, action, onAction }: { children: React.ReactNode; ac
   <div className="flex items-center justify-between mb-2">
     <p className="section-eyebrow">{children}</p>
     {action && (
-      <button data-small-target onClick={onAction} className="text-[11px] text-primary font-semibold flex items-center">
+      <button data-small-target onClick={onAction} className="text-[0.6875rem] text-primary font-semibold flex items-center">
         {action} <ChevronRight className="h-3 w-3" />
       </button>
     )}
@@ -135,7 +135,7 @@ export default function Home() {
       <div className="px-4 pt-3 space-y-6">
         {/* Auth CTA — non-users */}
         {!user && (
-          <div className="border border-primary/25 bg-primary/5 rounded-2xl p-5 text-center">
+          <div className="flat-section border border-primary/25 bg-primary/5 rounded-2xl p-5 text-center">
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
               <LogIn className="h-5 w-5 text-primary" />
             </div>
@@ -148,7 +148,7 @@ export default function Home() {
         {/* Greeting line + status */}
         {user && (
           <div className="flex items-center justify-between pb-1">
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[0.6875rem] text-muted-foreground">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </p>
             <MarketStatusIndicator />
@@ -196,9 +196,9 @@ export default function Home() {
           <div className="grid grid-cols-3 gap-3 border-t border-border/60 pt-3">
             {nseIndices.map(idx => (
               <div key={idx.name} className="cursor-pointer" onClick={() => navigate('/markets')}>
-                <p className="text-[10px] text-muted-foreground">{idx.name}</p>
+                <p className="text-[0.625rem] text-muted-foreground">{idx.name}</p>
                 <p className="text-sm font-semibold tabular mt-0.5">{idx.value}</p>
-                <p className={`text-[10px] font-semibold flex items-center gap-0.5 tabular ${idx.isUp ? 'text-bull' : 'text-bear'}`}>
+                <p className={`text-[0.625rem] font-semibold flex items-center gap-0.5 tabular ${idx.isUp ? 'text-bull' : 'text-bear'}`}>
                   {idx.isUp ? <ArrowUpRight className="h-2.5 w-2.5" /> : <ArrowDownRight className="h-2.5 w-2.5" />}
                   {idx.isUp ? '+' : ''}{idx.change}%
                 </p>
@@ -231,11 +231,11 @@ export default function Home() {
                 type="button"
                 data-small-target
                 onClick={() => navigate(tool.route)}
-                className="min-h-[88px] rounded-2xl border border-border/70 bg-card p-3 text-left hover:border-primary/40 hover:bg-primary/[0.03] active:scale-[0.98] transition-all"
+                className="flat-section min-h-[88px] rounded-2xl border border-border/70 bg-card p-3 text-left hover:border-primary/40 hover:bg-primary/[0.03] active:scale-[0.98] transition-all"
               >
                 <tool.icon className="h-4 w-4 text-primary mb-3" />
                 <p className="text-xs font-bold">{tool.label}</p>
-                <p className="text-[10px] leading-snug text-muted-foreground mt-0.5">{tool.detail}</p>
+                <p className="text-[0.625rem] leading-snug text-muted-foreground mt-0.5">{tool.detail}</p>
               </button>
             ))}
           </div>
@@ -267,7 +267,7 @@ export default function Home() {
               <div className="border-t border-border/60 py-6 text-center">
                 <Binoculars className="h-7 w-7 mx-auto mb-2 text-muted-foreground/30" />
                 <p className="text-xs font-semibold">Your watchlist is empty</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5 mb-3">Add stocks to track their moves here.</p>
+                <p className="text-[0.6875rem] text-muted-foreground mt-0.5 mb-3">Add stocks to track their moves here.</p>
                 <Button variant="outline" size="sm" className="h-8 rounded-full text-xs" onClick={() => navigate('/markets')}>
                   Browse stocks
                 </Button>
@@ -283,11 +283,11 @@ export default function Home() {
                   >
                     <div className="text-left">
                       <p className="text-xs font-semibold">{s.symbol}</p>
-                      <p className="text-[10px] text-muted-foreground">{s.name}</p>
+                      <p className="text-[0.625rem] text-muted-foreground">{s.name}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs font-semibold tabular">KES {s.price.toFixed(2)}</p>
-                      <p className={`text-[10px] font-semibold tabular ${s.changePct >= 0 ? 'text-bull' : 'text-bear'}`}>
+                      <p className={`text-[0.625rem] font-semibold tabular ${s.changePct >= 0 ? 'text-bull' : 'text-bear'}`}>
                         {s.changePct >= 0 ? '+' : ''}{s.changePct.toFixed(2)}%
                       </p>
                     </div>
@@ -312,7 +312,7 @@ export default function Home() {
                 >
                   <Avatar className="h-7 w-7 shrink-0">
                     <AvatarImage src={post.author?.avatar_url || ""} />
-                    <AvatarFallback className="bg-muted text-foreground text-[10px]">
+                    <AvatarFallback className="bg-muted text-foreground text-[0.625rem]">
                       {post.author?.full_name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "U"}
                     </AvatarFallback>
                   </Avatar>
@@ -320,9 +320,9 @@ export default function Home() {
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className="text-xs font-semibold truncate">{post.author?.full_name || "User"}</span>
                       {getAuthorHandle(post.author) && (
-                        <span className="text-[10px] text-muted-foreground truncate">@{getAuthorHandle(post.author)}</span>
+                        <span className="text-[0.625rem] text-muted-foreground truncate">@{getAuthorHandle(post.author)}</span>
                       )}
-                      <span className="text-[10px] text-muted-foreground shrink-0">
+                      <span className="text-[0.625rem] text-muted-foreground shrink-0">
                         · {formatPostDate(post.created_at)}
                       </span>
                     </div>
@@ -349,7 +349,7 @@ export default function Home() {
               <Crown className="h-4 w-4 text-primary shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs font-semibold">Unlock Premium</p>
-                <p className="text-[10px] text-muted-foreground truncate">Advanced insights & real-time prices</p>
+                <p className="text-[0.625rem] text-muted-foreground truncate">Advanced insights & real-time prices</p>
               </div>
             </div>
             <span className="text-xs font-bold text-primary shrink-0 whitespace-nowrap">KES 800/mo →</span>

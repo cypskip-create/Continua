@@ -18,7 +18,7 @@ export function CompanyInfoSection({ symbol, exchange, marketCap }: Props) {
     <ReportSection number={9} title={`${company?.name ?? symbol} Company Information`} intro="Employee count, exchange listing, and where Continua's data comes from.">
       <SubWidget number="9.1" title="Key Information">
         {isLoading ? <p className="text-xs text-muted-foreground py-4">Loading…</p> : (
-          <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-[12px]">
+          <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-[0.75rem]">
             <Row label="Name" value={company?.name ?? symbol} />
             <Row label="Ticker" value={symbol} />
             <Row label="Exchange" value={exchange} />
@@ -35,7 +35,7 @@ export function CompanyInfoSection({ symbol, exchange, marketCap }: Props) {
             )}
           </div>
         )}
-        {company?.description && <p className="text-[11.5px] text-muted-foreground mt-4 leading-relaxed">{company.description}</p>}
+        {company?.description && <p className="text-[0.71875rem] text-muted-foreground mt-4 leading-relaxed">{company.description}</p>}
       </SubWidget>
 
       <SubWidget number="9.2" title="Number of Employees" description="Continua's data layer gives a current employee count, not a multi-year history yet — chart currently plots one real point.">
@@ -53,7 +53,7 @@ export function CompanyInfoSection({ symbol, exchange, marketCap }: Props) {
       </SubWidget>
 
       <SubWidget number="9.3" title="Data Sources" description="Where Continua's numbers in this report actually come from.">
-        <div className="space-y-2 text-[12px]">
+        <div className="space-y-2 text-[0.75rem]">
           <SourceRow pkg="Market Prices" data="NSE end-of-day feed" note="Live and historical daily candles" />
           <SourceRow pkg="Company Financials" data="Continua's NSE announcement scraper" note="Income statement, balance sheet, cash flow — from scraped and parsed PDF filings" />
           <SourceRow pkg="Dividends & Corporate Actions" data="Continua's NSE announcement scraper" note="Dividends, splits, bonus/rights issues, buybacks, M&A" />
@@ -68,7 +68,7 @@ export function CompanyInfoSection({ symbol, exchange, marketCap }: Props) {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className="text-[0.625rem] text-muted-foreground">{label}</p>
       <p className="font-semibold">{value}</p>
     </div>
   );

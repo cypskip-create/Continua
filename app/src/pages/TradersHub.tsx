@@ -324,7 +324,7 @@ export default function TradersHub() {
             onClick={() => user ? navigate(`/profile/${user.id}`) : navigate("/auth")}
           >
             <AvatarImage src={profile?.avatar_url || ""} className="object-cover" />
-            <AvatarFallback className="text-[12px] font-bold bg-primary/10 text-primary">{getInitials(profile?.full_name)}</AvatarFallback>
+            <AvatarFallback className="text-[0.75rem] font-bold bg-primary/10 text-primary">{getInitials(profile?.full_name)}</AvatarFallback>
           </Avatar>
 
           <div className="relative flex-1 min-w-0">
@@ -333,7 +333,7 @@ export default function TradersHub() {
               placeholder="Search people, tickers, #topics, posts"
               value={searchQuery}
               onChange={e => setSearch(e.target.value)}
-              className="h-10 pl-10 pr-9 rounded-full bg-muted/50 border-0 text-[13.5px]"
+              className="h-10 pl-10 pr-9 rounded-full bg-muted/50 border-0 text-[0.84375rem]"
             />
             {searching && (
               <button onClick={clearSearch} data-small-target aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -361,7 +361,7 @@ export default function TradersHub() {
             <DropdownMenuTrigger asChild>
               <button
                 data-small-target
-                className={`relative flex items-center justify-center gap-1 pb-2 pt-0.5 text-[14px] transition-colors ${isFeedTab(activeTab) ? "font-bold text-foreground" : "text-muted-foreground"}`}
+                className={`relative flex items-center justify-center gap-1 pb-2 pt-0.5 text-[0.875rem] transition-colors ${isFeedTab(activeTab) ? "font-bold text-foreground" : "text-muted-foreground"}`}
               >
                 {currentFeedLabel}
                 <ChevronDown className="h-3.5 w-3.5" />
@@ -373,7 +373,7 @@ export default function TradersHub() {
                 <DropdownMenuItem
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  className="flex items-center justify-between text-[13px]"
+                  className="flex items-center justify-between text-[0.8125rem]"
                 >
                   {tab.label}
                   {activeTab === tab.id && <Check className="h-3.5 w-3.5 text-foreground" />}
@@ -385,7 +385,7 @@ export default function TradersHub() {
           <button
             data-small-target
             onClick={() => handleTabChange("media")}
-            className={`relative flex items-center justify-center gap-1.5 pb-2 pt-0.5 text-[14px] transition-colors ${activeTab === "media" ? "font-bold text-foreground" : "text-muted-foreground"}`}
+            className={`relative flex items-center justify-center gap-1.5 pb-2 pt-0.5 text-[0.875rem] transition-colors ${activeTab === "media" ? "font-bold text-foreground" : "text-muted-foreground"}`}
           >
             <Newspaper className="h-3.5 w-3.5" />
             Media
@@ -402,7 +402,7 @@ export default function TradersHub() {
               key={t.symbol}
               data-small-target
               onClick={() => setSearch(`$${t.symbol}`)}
-              className="shrink-0 flex items-center gap-1.5 h-6 px-2.5 rounded-full bg-muted/50 text-[11px] font-semibold text-muted-foreground"
+              className="shrink-0 flex items-center gap-1.5 h-6 px-2.5 rounded-full bg-muted/50 text-[0.6875rem] font-semibold text-muted-foreground"
             >
               <span className="text-primary">${t.symbol}</span>
               <span className="opacity-70 tabular-nums">{t.count}</span>
@@ -416,13 +416,13 @@ export default function TradersHub() {
         <div className="border-b border-border/50">
           {people.length > 0 && (
             <div className="px-4 py-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">People</p>
+              <p className="text-[0.625rem] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">People</p>
               {people.map(p => (
                 <button key={p.user_id} onClick={() => navigate(`/profile/${p.user_id}`)} className="w-full flex items-center gap-2.5 py-1.5 text-left">
-                  <Avatar className="h-7 w-7"><AvatarImage src={p.avatar_url || ""} /><AvatarFallback className="text-[10px]">{getInitials(p.full_name)}</AvatarFallback></Avatar>
+                  <Avatar className="h-7 w-7"><AvatarImage src={p.avatar_url || ""} /><AvatarFallback className="text-[0.625rem]">{getInitials(p.full_name)}</AvatarFallback></Avatar>
                   <div className="min-w-0">
-                    <p className="text-[12.5px] font-bold truncate">{p.full_name || "Investor"}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{atHandle(p as any)}</p>
+                    <p className="text-[0.78125rem] font-bold truncate">{p.full_name || "Investor"}</p>
+                    <p className="text-[0.6875rem] text-muted-foreground truncate">{atHandle(p as any)}</p>
                   </div>
                 </button>
               ))}
@@ -430,17 +430,17 @@ export default function TradersHub() {
           )}
           {(tickerMatches.length > 0 || hashtagMatches.length > 0) && (
             <div className="px-4 py-2 border-t border-border/40">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Companies & topics</p>
+              <p className="text-[0.625rem] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Companies & topics</p>
               <div className="flex flex-wrap gap-1.5">
                 {tickerMatches.map(sym => (
-                  <button key={sym} data-small-target onClick={() => navigate(`/stock/${sym}`)} className="flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-muted/50 text-[11px]">
+                  <button key={sym} data-small-target onClick={() => navigate(`/stock/${sym}`)} className="flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-muted/50 text-[0.6875rem]">
                     <Building2 className="h-3 w-3 text-primary" />
                     <span className="font-semibold text-primary">${sym}</span>
                     <span className="text-muted-foreground truncate max-w-[110px]">{NSE_NAMES[sym]}</span>
                   </button>
                 ))}
                 {hashtagMatches.map(tag => (
-                  <button key={tag} data-small-target onClick={() => setSearch(tag)} className="flex items-center gap-1 h-7 px-2.5 rounded-full bg-muted/50 text-[11px] text-primary font-semibold">
+                  <button key={tag} data-small-target onClick={() => setSearch(tag)} className="flex items-center gap-1 h-7 px-2.5 rounded-full bg-muted/50 text-[0.6875rem] text-primary font-semibold">
                     <Hash className="h-3 w-3" />{tag.slice(1)}
                   </button>
                 ))}
@@ -448,8 +448,8 @@ export default function TradersHub() {
             </div>
           )}
           <div className="flex items-center justify-between px-4 py-1.5 bg-muted/20">
-            <p className="text-[11px] text-muted-foreground">Posts matching <span className="font-bold text-foreground">"{searchQuery}"</span></p>
-            <Button variant="ghost" size="sm" className="h-6 text-[11px]" onClick={clearSearch}>Clear</Button>
+            <p className="text-[0.6875rem] text-muted-foreground">Posts matching <span className="font-bold text-foreground">"{searchQuery}"</span></p>
+            <Button variant="ghost" size="sm" className="h-6 text-[0.6875rem]" onClick={clearSearch}>Clear</Button>
           </div>
         </div>
       )}
@@ -475,20 +475,20 @@ export default function TradersHub() {
             <>
               <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
               <p className="text-sm font-bold">Nothing here yet</p>
-              <p className="text-[12px] text-muted-foreground mt-1">Follow investors to build this timeline.</p>
+              <p className="text-[0.75rem] text-muted-foreground mt-1">Follow investors to build this timeline.</p>
               <Button variant="outline" size="sm" className="mt-4 rounded-full" onClick={() => handleTabChange("for-you")}>Discover investors</Button>
             </>
           ) : activeTab === "trending" ? (
             <>
               <Flame className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
               <p className="text-sm font-bold">No active discussions</p>
-              <p className="text-[12px] text-muted-foreground mt-1">The most discussed posts show up here.</p>
+              <p className="text-[0.75rem] text-muted-foreground mt-1">The most discussed posts show up here.</p>
             </>
           ) : (
             <>
               <MessageSquare className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
               <p className="text-sm font-bold">{searching ? "No matches" : "Start the conversation"}</p>
-              <p className="text-[12px] text-muted-foreground mt-1">{searching ? "Try a different ticker, person or topic." : "Share your first idea with the community."}</p>
+              <p className="text-[0.75rem] text-muted-foreground mt-1">{searching ? "Try a different ticker, person or topic." : "Share your first idea with the community."}</p>
             </>
           )}
         </div>
@@ -512,7 +512,7 @@ export default function TradersHub() {
               onHide={id => hidePost(id)}
             />
           ))}
-          <div className="flex items-center justify-center gap-2 py-8 text-[11px] text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 py-8 text-[0.6875rem] text-muted-foreground">
             <TrendingUp className="h-3.5 w-3.5" />You're all caught up
           </div>
         </div>
@@ -534,8 +534,8 @@ export default function TradersHub() {
         user={user}
         profile={profile}
         sharePreset={sharePreset}
-        onPost={async (content, imageUrl, quotedPostId) => {
-          const { error } = await createPost(content, imageUrl, quotedPostId);
+        onPost={async (content, imageUrl, quotedPostId, poll) => {
+          const { error } = await createPost(content, imageUrl, quotedPostId, poll);
           if (error) { toast({ title: "Could not publish", variant: "destructive" }); return { error }; }
           toast({ title: "Posted to TradersHub" });
           return { error: null };
@@ -568,9 +568,9 @@ export default function TradersHub() {
               value={editDraft}
               onChange={e => setEditDraft(e.target.value)}
               maxLength={500}
-              className="w-full min-h-[130px] bg-transparent text-[13.5px] leading-relaxed outline-none resize-none"
+              className="w-full min-h-[130px] bg-transparent text-[0.84375rem] leading-relaxed outline-none resize-none"
             />
-            <p className="text-[11px] text-muted-foreground">Posts can be edited within 30 minutes of publishing.</p>
+            <p className="text-[0.6875rem] text-muted-foreground">Posts can be edited within 30 minutes of publishing.</p>
           </div>
         </div>
       )}

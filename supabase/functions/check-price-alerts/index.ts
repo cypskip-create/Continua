@@ -49,7 +49,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Parse and validate input
-    const { symbol, currentPrice, exchange } = await req.json();
+    const { symbol, exchange } = await req.json();
     const exch = typeof exchange === 'string' && exchange.length > 0 ? exchange.toUpperCase() : 'NSE';
     
     if (!symbol || typeof symbol !== 'string' || symbol.length > 20) {
@@ -59,17 +59,22 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (typeof currentPrice !== 'number' || isNaN(currentPrice) || currentPrice < 0) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid currentPrice - must be a positive number' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     // Sanitize symbol (uppercase, alphanumeric only)
     const sanitizedSymbol = symbol.toUpperCase().replace(/[^A-Z0-9]/g, '');
     
-    console.log('Checking alerts for authenticated user:', { userId, symbol: sanitizedSymbol, exchange: exch, currentPrice });
+    const baseUrl = Deno.env.get('CONTINUA_DATA_BASE_URL');
+    const apiKey = Deno.env.get('CONTINUA_DATA_API_KEY');
+    if (!baseUrl || !apiKey) throw new Error('Data layer not configured');
+    const quoteUrl = new URL('/api/v1/quotes', baseUrl);
+    quoteUrl.searchParams.set('exchange', exch);
+    quoteUrl.searchParams.set('symbols', sanitizedSymbol);
+    const response = await fetch(quoteUrl, { headers: { 'x-api-key': apiKey }, signal: AbortSignal.timeout(10000) });
+    if (!response.ok) throw new Error('Verified quote unavailable');
+    const body = await response.json();
+    const quotes = body.data;
+    const quote = Array.isArray(quotes) ? quotes.find(q => q.symbol === sanitizedSymbol && q.exchange === exch) : null;
+    const currentPrice = quote?.lastPrice;
+    if (!Number.isFinite(currentPrice) || currentPrice <= 0) throw new Error('Verified quote unavailable');
 
     // Use service role client for database operations (to update alerts)
     const supabaseAdmin = createClient(
@@ -108,30 +113,15 @@ Deno.serve(async (req: Request) => {
       }
 
       if (triggered) {
-        // Mark alert as triggered
-        await supabaseAdmin
-          .from('price_alerts')
-          .update({ triggered_at: new Date().toISOString() })
-          .eq('id', alert.id)
-          .eq('user_id', userId); // Extra safety: ensure user owns the alert
-
-        // Record a notification so it shows up under the Alerts tab —
-        // client code can't insert into notifications directly (RLS), but this
-        // function runs with the service role which can.
         const direction = alert.alert_type === 'price_above' ? 'risen above' : 'fallen below';
-        const currency = alert.currency ?? 'KES'; // fallback covers rows from before the currency column existed
-        await supabaseAdmin.from('notifications').insert({
-          user_id: userId,
-          type: 'alert',
-          feature: 'alerts',
-          title: `${alert.symbol} alert triggered`,
-          message: `${alert.symbol} has ${direction} ${currency} ${alert.target_value} (now ${currency} ${currentPrice})`,
-          action_url: `/stock/${alert.symbol}`,
-          entity_id: alert.id,
-          entity_type: 'price_alert',
+        const currency = alert.currency ?? 'KES';
+        const { data: delivered, error: deliveryError } = await supabaseAdmin.rpc('deliver_alert_notification', {
+          p_alert_id: alert.id, p_updated_at: alert.updated_at,
+          p_title: `${alert.symbol} alert triggered`,
+          p_message: `${alert.symbol} has ${direction} ${currency} ${alert.target_value} (now ${currency} ${currentPrice})`,
         });
-
-        triggeredAlerts.push(alert);
+        if (deliveryError) throw deliveryError;
+        if (delivered) triggeredAlerts.push(alert);
         console.log('Alert triggered:', alert.id);
       }
     }

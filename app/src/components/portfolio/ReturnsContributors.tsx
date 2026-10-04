@@ -39,8 +39,8 @@ export function ReturnsContributors({
       <div key={h.symbol} className="py-2.5">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[13px] font-bold">{h.symbol}</p>
-            <p className="text-[10.5px] text-muted-foreground truncate max-w-[140px]">{h.name || h.symbol}</p>
+            <p className="text-[0.8125rem] font-bold">{h.symbol}</p>
+            <p className="text-[0.65625rem] text-muted-foreground truncate max-w-[140px]">{h.name || h.symbol}</p>
           </div>
           <div className="flex-1 mx-2 h-1.5 rounded-full bg-muted overflow-hidden">
             <div
@@ -49,10 +49,10 @@ export function ReturnsContributors({
             />
           </div>
           <div className="text-right shrink-0">
-            <p className={`text-[13px] font-bold tabular ${positive ? "text-bull" : "text-bear"}`}>
+            <p className={`text-[0.8125rem] font-bold tabular ${positive ? "text-bull" : "text-bear"}`}>
               {showValues ? `${positive ? "" : "−"}${currencyLabel}${Math.abs(h.amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••"}
             </p>
-            <p className={`text-[10.5px] tabular ${positive ? "text-bull" : "text-bear"}`}>
+            <p className={`text-[0.65625rem] tabular ${positive ? "text-bull" : "text-bear"}`}>
               {positive ? "+" : ""}{h.gainPct.toFixed(1)}%
             </p>
           </div>
@@ -90,7 +90,7 @@ export function ReturnsContributors({
         <button
           data-small-target
           onClick={onSeeAll}
-          className="w-full mt-3 h-10 rounded-full bg-muted/50 text-[12px] font-semibold text-foreground active:opacity-70 transition-opacity"
+          className="w-full mt-3 h-10 rounded-full bg-muted/50 text-[0.75rem] font-semibold text-foreground active:opacity-70 transition-opacity"
         >
           See all {holdings.length} holdings
         </button>

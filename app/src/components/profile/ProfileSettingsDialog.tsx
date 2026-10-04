@@ -250,7 +250,7 @@ export function ProfileSettingsDialog({ open, onOpenChange, currentHandle, portf
                   <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground"><s.icon className="h-4 w-4" /></div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold">{s.label}</div>
-                    <div className="text-[11px] text-muted-foreground truncate">{s.desc}</div>
+                    <div className="text-[0.6875rem] text-muted-foreground truncate">{s.desc}</div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </button>
@@ -277,7 +277,7 @@ export function ProfileSettingsDialog({ open, onOpenChange, currentHandle, portf
                     {!checking && available === false && <X className="h-4 w-4 text-destructive" />}
                   </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground">3–20 chars. Letters, numbers, underscores only.</p>
+                <p className="text-[0.6875rem] text-muted-foreground">3–20 chars. Letters, numbers, underscores only.</p>
               </div>
               <div>
                 <Label className="text-xs font-semibold flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" />Email</Label>
@@ -451,7 +451,7 @@ export function ProfileSettingsDialog({ open, onOpenChange, currentHandle, portf
                         {m.label}
                         {m.is_default && <Star className="h-3 w-3 fill-current text-foreground shrink-0" />}
                       </div>
-                      <div className="text-[11px] text-muted-foreground truncate">{m.detail}</div>
+                      <div className="text-[0.6875rem] text-muted-foreground truncate">{m.detail}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
@@ -533,7 +533,7 @@ export function ProfileSettingsDialog({ open, onOpenChange, currentHandle, portf
                 <p className="text-xs font-semibold text-muted-foreground mb-1">PRIVACY POLICY</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">We collect your profile, portfolio, and activity data to run the app and personalize your feed. We never sell your data. Payment method details are stored as masked references only. You can download or delete your data anytime from Settings → Your data.</p>
               </div>
-              <p className="text-[11px] text-muted-foreground">Last updated August 2026</p>
+              <p className="text-[0.6875rem] text-muted-foreground">Last updated August 2026</p>
             </div>
           )}
 
@@ -565,7 +565,7 @@ function Row(props: any) {
         <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground shrink-0">{icon}</div>
         <div className="min-w-0">
           <div className="text-sm font-medium truncate">{title}</div>
-          <div className="text-[11px] text-muted-foreground truncate">{desc}</div>
+          <div className="text-[0.6875rem] text-muted-foreground truncate">{desc}</div>
         </div>
       </div>
       <Switch checked={checked} onCheckedChange={onChange} disabled={disabled} />

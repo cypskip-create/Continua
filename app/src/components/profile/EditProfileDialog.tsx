@@ -309,7 +309,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                     <div className="flex flex-wrap gap-1.5">
                       {suggestions.map(s => (
                         <button key={s} type="button" onClick={() => setHandle(s)}
-                          className="text-[11px] px-2 py-1 rounded-full bg-muted hover:bg-muted/70 font-medium">
+                          className="text-[0.6875rem] px-2 py-1 rounded-full bg-muted hover:bg-muted/70 font-medium">
                           @{s}
                         </button>
                       ))}

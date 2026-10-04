@@ -48,9 +48,9 @@ export function NewsEventsTab(props: Props) {
             <InfoTip>Real NSE announcements bridged from Continua's scraper — not a predicted events calendar, since Continua doesn't have a reliable forward corporate-calendar source yet.</InfoTip>
           </div>
           {filingsQuery.isLoading ? (
-            <p className="text-[11px] text-muted-foreground py-2">Loading…</p>
+            <p className="text-[0.6875rem] text-muted-foreground py-2">Loading…</p>
           ) : filings.length === 0 ? (
-            <p className="text-[11px] text-muted-foreground py-2">No filings on file for {symbol} yet.</p>
+            <p className="text-[0.6875rem] text-muted-foreground py-2">No filings on file for {symbol} yet.</p>
           ) : (
             <div className="space-y-2">
               {filings.map((f) => (
@@ -59,11 +59,11 @@ export function NewsEventsTab(props: Props) {
                   href={f.documentUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-start gap-3 p-2 rounded-xl bg-muted/30"
+                  className="flat-section flex items-start gap-3 p-2 rounded-xl bg-muted/30"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium line-clamp-2">{f.title}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{f.publishedAt ? formatTimestamp(f.publishedAt) : "Date unknown"}</p>
+                    <p className="text-[0.625rem] text-muted-foreground mt-0.5">{f.publishedAt ? formatTimestamp(f.publishedAt) : "Date unknown"}</p>
                   </div>
                   <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
                 </a>
@@ -80,11 +80,11 @@ export function NewsEventsTab(props: Props) {
         </div>
         {newsLoading ? (
           <Card className="soft-card">
-            <CardContent className="p-4 text-center text-[11px] text-muted-foreground">Loading…</CardContent>
+            <CardContent className="p-4 text-center text-[0.6875rem] text-muted-foreground">Loading…</CardContent>
           </Card>
         ) : news.length === 0 ? (
           <Card className="soft-card">
-            <CardContent className="p-4 text-center text-[11px] text-muted-foreground">
+            <CardContent className="p-4 text-center text-[0.6875rem] text-muted-foreground">
               No recent headlines for {symbol} yet.
             </CardContent>
           </Card>
@@ -98,7 +98,7 @@ export function NewsEventsTab(props: Props) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold line-clamp-2">{n.headline}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{n.sourceName} · {n.publishedAt ? formatTimestamp(n.publishedAt) : "Date unknown"}</p>
+                    <p className="text-[0.625rem] text-muted-foreground mt-0.5">{n.sourceName} · {n.publishedAt ? formatTimestamp(n.publishedAt) : "Date unknown"}</p>
                   </div>
                   <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
                 </CardContent>

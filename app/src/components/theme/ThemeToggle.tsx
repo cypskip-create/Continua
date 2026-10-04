@@ -22,7 +22,7 @@ export function ThemeToggle() {
             data-small-target
             onClick={() => setTheme(opt.value)}
             className={cn(
-              "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors",
+              "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold transition-colors",
               active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
             aria-selected={active}

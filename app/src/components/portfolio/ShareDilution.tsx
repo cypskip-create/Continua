@@ -59,20 +59,20 @@ export function ShareDilution({ holdings }: ShareDilutionProps) {
           figure, not a direct company disclosure.
         </InfoTip>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-4">How much each holding's implied share count grew or shrank year over year.</p>
+      <p className="text-[0.6875rem] text-muted-foreground mb-4">How much each holding's implied share count grew or shrank year over year.</p>
 
       {isLoading ? (
-        <p className="text-[11px] text-muted-foreground py-6 text-center">Loading financial history…</p>
+        <p className="text-[0.6875rem] text-muted-foreground py-6 text-center">Loading financial history…</p>
       ) : withData.length === 0 ? (
-        <p className="text-[11px] text-muted-foreground py-6 text-center">
+        <p className="text-[0.6875rem] text-muted-foreground py-6 text-center">
           No holdings have two full annual periods with usable EPS data on file yet.
         </p>
       ) : (
         <>
           {portfolioDilution != null && (
-            <div className="rounded-xl bg-muted/30 p-3 mb-3 flex items-center justify-between">
-              <span className="text-[12px] font-bold">Portfolio (weighted)</span>
-              <span className={`text-[13px] font-bold tabular ${portfolioDilution <= 0.5 ? "text-bull" : "text-bear"}`}>
+            <div className="flat-section rounded-xl bg-muted/30 p-3 mb-3 flex items-center justify-between">
+              <span className="text-[0.75rem] font-bold">Portfolio (weighted)</span>
+              <span className={`text-[0.8125rem] font-bold tabular ${portfolioDilution <= 0.5 ? "text-bull" : "text-bear"}`}>
                 {portfolioDilution >= 0 ? "+" : ""}{portfolioDilution.toFixed(2)}%
               </span>
             </div>
@@ -83,17 +83,17 @@ export function ShareDilution({ holdings }: ShareDilutionProps) {
               const positive = r.dilutionPct <= 0.5; // flat-to-shrinking share count is favorable
               return (
                 <div key={r.symbol} className="flex items-center gap-3">
-                  <span className="text-[11px] font-bold w-14 shrink-0">{r.symbol}</span>
+                  <span className="text-[0.6875rem] font-bold w-14 shrink-0">{r.symbol}</span>
                   <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                     <div className={`h-full rounded-full ${positive ? "bg-bull" : "bg-bear"}`} style={{ width: `${widthPct}%` }} />
                   </div>
-                  <span className="text-[11px] font-semibold tabular w-16 text-right">{r.dilutionPct >= 0 ? "+" : ""}{r.dilutionPct.toFixed(2)}%</span>
+                  <span className="text-[0.6875rem] font-semibold tabular w-16 text-right">{r.dilutionPct >= 0 ? "+" : ""}{r.dilutionPct.toFixed(2)}%</span>
                 </div>
               );
             })}
           </div>
           {rows.length > withData.length && (
-            <p className="text-[10px] text-muted-foreground mt-3">
+            <p className="text-[0.625rem] text-muted-foreground mt-3">
               {rows.length - withData.length} holding{rows.length - withData.length === 1 ? "" : "s"} don't have a value for this metric.
             </p>
           )}

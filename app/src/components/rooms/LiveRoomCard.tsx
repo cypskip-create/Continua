@@ -32,11 +32,11 @@ export function LiveRoomCard({ room, onJoin }: LiveRoomCardProps) {
       <CardContent className="p-4">
         {/* Live Badge Row */}
         <div className="flex items-center gap-2 mb-3">
-          <Badge className="bg-red-500 text-white text-[10px] font-bold px-2.5 py-0.5">
+          <Badge className="bg-red-500 text-white text-[0.625rem] font-bold px-2.5 py-0.5">
             <span className="w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse" />
             LIVE
           </Badge>
-          <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
+          <Badge variant="secondary" className="text-[0.625rem] px-2 py-0.5">
             {room.category}
           </Badge>
         </div>
@@ -67,7 +67,7 @@ export function LiveRoomCard({ room, onJoin }: LiveRoomCardProps) {
               )}
             </div>
             {room.hosts.length > 1 && (
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-[0.625rem] text-muted-foreground">
                 +{room.hosts.length - 1} more speaking
               </span>
             )}

@@ -113,7 +113,7 @@ export function CreateRoomDialog({ open, onOpenChange, onCreate }: Props) {
           <div className="flex items-center justify-between p-3 rounded-xl border border-border">
             <div>
               <div className="text-sm font-semibold">Private room</div>
-              <div className="text-[11px] text-muted-foreground">Only invited members can join</div>
+              <div className="text-[0.6875rem] text-muted-foreground">Only invited members can join</div>
             </div>
             <Switch checked={isPrivate} onCheckedChange={setIsPrivate} />
           </div>

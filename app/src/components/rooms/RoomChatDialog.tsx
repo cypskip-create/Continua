@@ -74,8 +74,8 @@ export function RoomChatDialog({ open, onOpenChange, room }: Props) {
               {room.room_type === "live" ? <Radio className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-bold truncate flex items-center gap-1.5">{room.name}{room.is_live && <span className="text-[10px] bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded font-bold">LIVE</span>}</div>
-              <div className="text-[11px] text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" />{room.member_count} members</div>
+              <div className="text-sm font-bold truncate flex items-center gap-1.5">{room.name}{room.is_live && <span className="text-[0.625rem] bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded font-bold">LIVE</span>}</div>
+              <div className="text-[0.6875rem] text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" />{room.member_count} members</div>
             </div>
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onOpenChange(false)}><X className="h-4 w-4" /></Button>
@@ -94,10 +94,10 @@ export function RoomChatDialog({ open, onOpenChange, room }: Props) {
                   <div key={m.id} className={`flex gap-2 ${own ? "flex-row-reverse" : ""}`}>
                     <Avatar className="h-7 w-7 shrink-0">
                       <AvatarImage src={m.author?.avatar_url || ""} />
-                      <AvatarFallback className="text-[10px]">{(m.author?.full_name || "U").slice(0, 1).toUpperCase()}</AvatarFallback>
+                      <AvatarFallback className="text-[0.625rem]">{(m.author?.full_name || "U").slice(0, 1).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className={`max-w-[75%] ${own ? "items-end" : "items-start"} flex flex-col`}>
-                      <div className="text-[10px] text-muted-foreground px-1">{m.author?.full_name || "User"}</div>
+                      <div className="text-[0.625rem] text-muted-foreground px-1">{m.author?.full_name || "User"}</div>
                       <div className={`px-3 py-2 rounded-2xl text-sm ${own ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted rounded-bl-sm"}`}>{m.content}</div>
                     </div>
                   </div>

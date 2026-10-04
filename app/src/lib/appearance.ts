@@ -14,8 +14,9 @@ export const FONT_SCALE_KEY = "app_font_scale";
 
 /** Apply a raw numeric scale (e.g. "1.1") and persist it. */
 export function applyFontScale(scale: string) {
-  const value = scale && !Number.isNaN(Number(scale)) ? scale : "1";
+  const value = Object.values(FONT_SCALES).includes(scale) ? scale : "1";
   document.documentElement.style.setProperty("--app-font-scale", value);
+  document.documentElement.style.fontSize = `${16 * Number(value)}px`;
   try { localStorage.setItem(FONT_SCALE_KEY, value); } catch {}
 }
 

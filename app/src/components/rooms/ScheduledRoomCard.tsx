@@ -27,27 +27,27 @@ export function ScheduledRoomCard({ room, onRemind }: ScheduledRoomCardProps) {
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold text-xs line-clamp-1 mb-0.5">{room.title}</h4>
-            <p className="text-[10px] text-muted-foreground">{room.host}</p>
+            <p className="text-[0.625rem] text-muted-foreground">{room.host}</p>
           </div>
         </div>
         
-        <Badge variant="secondary" className="text-[10px] mb-2 w-full justify-center py-1">
+        <Badge variant="secondary" className="text-[0.625rem] mb-2 w-full justify-center py-1">
           {room.time}
         </Badge>
         
-        <p className="text-[10px] text-muted-foreground line-clamp-2 mb-3">
+        <p className="text-[0.625rem] text-muted-foreground line-clamp-2 mb-3">
           {room.topic}
         </p>
         
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+          <span className="text-[0.625rem] text-muted-foreground flex items-center gap-1">
             <Users className="h-3 w-3" />
             {room.attendees} interested
           </span>
           <Button 
             size="sm" 
             variant="outline" 
-            className="h-6 text-[10px] px-2"
+            className="h-6 text-[0.625rem] px-2"
             onClick={onRemind}
           >
             <Bell className="h-2.5 w-2.5 mr-1" />

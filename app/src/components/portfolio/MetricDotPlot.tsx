@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { layoutMetricBubbles } from "@/lib/metricLayout";
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTouchClick } from "@/hooks/useTouchClick";
 
 interface DotPoint { symbol: string; name?: string; value: number; weight?: number; good?: boolean }
 
@@ -26,6 +27,7 @@ const median = (values: number[]) => {
  * prevent collisions and carry no analytical meaning. */
 export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel = "Market", fmt, unavailableCount }: MetricDotPlotProps) {
   const navigate = useNavigate();
+  const bubbleTap = useTouchClick<HTMLButtonElement>();
   const plotRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(280);
   const hasPlot = points.length > 0 || portfolioValue != null;
@@ -78,7 +80,7 @@ export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel
         {portfolioValue != null && <span className="rounded-full border border-sky-500/70 px-3 py-1 text-xs font-bold text-sky-500">Portfolio {fmt(portfolioValue)}</span>}
         {marketValue != null && <span className="rounded-full border border-muted-foreground/70 px-3 py-1 text-xs font-bold text-foreground">{marketLabel} {fmt(marketValue)}</span>}
         {outliers.size > 0 && (
-          <label className="ml-auto flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-muted-foreground">
+          <label className="ml-auto flex cursor-pointer items-center gap-2 text-[0.6875rem] font-semibold text-muted-foreground">
             <button type="button" role="switch" aria-checked={hideOutliers} onClick={() => setHideOutliers((value) => !value)} className={`relative h-5 w-9 rounded-full transition-colors ${hideOutliers ? "bg-primary" : "bg-muted"}`}>
               <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-background shadow transition-transform ${hideOutliers ? "translate-x-[18px]" : "translate-x-0.5"}`} />
             </button>
@@ -87,8 +89,8 @@ export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel
         )}
       </div>
 
-      <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
-        <div ref={plotRef} className="relative overflow-hidden rounded-lg" style={{ height: plotHeight, background: higherIsBetter ? "linear-gradient(90deg, hsl(var(--bear)/.10), hsl(var(--bull)/.10))" : "linear-gradient(90deg, hsl(var(--bull)/.10), hsl(var(--bear)/.10))" }}>
+      <div className="py-3" data-testid="metric-plot">
+        <div ref={plotRef} className="relative overflow-hidden" style={{ height: plotHeight, background: higherIsBetter ? "linear-gradient(90deg, hsl(var(--bear)/.10), hsl(var(--bull)/.10))" : "linear-gradient(90deg, hsl(var(--bull)/.10), hsl(var(--bear)/.10))" }}>
           {ticks.map((tick, index) => <span key={index} className="absolute inset-y-0 border-l border-border/50" style={{ left: pixelX(tick) }} />)}
           {marketValue != null && <span className="absolute inset-y-0 z-[1] border-l-2 border-dashed border-foreground/65" style={{ left: pixelX(marketValue) }} />}
           {portfolioValue != null && <span className="absolute inset-y-0 z-[1] border-l-[3px] border-sky-500" style={{ left: pixelX(portfolioValue) }} />}
@@ -98,27 +100,32 @@ export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel
             return (
               <button
                 key={point.symbol}
+                {...bubbleTap}
                 type="button"
                 aria-label={`${point.symbol}: ${fmt(point.value)}`}
+                aria-pressed={selectedSymbol === point.symbol}
                 onClick={() => setSelectedSymbol(point.symbol)}
-                className={`absolute z-[2] grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-background text-[10px] font-bold text-white shadow-md transition-transform active:scale-95 ${point.good === false ? "bg-bear" : point.good === true ? "bg-bull" : "bg-muted-foreground"} ${selectedSymbol === point.symbol ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
+                className={`absolute z-[2] grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-background text-[0.625rem] font-bold text-white shadow-md transition-transform active:scale-95 ${point.good === false ? "bg-bear" : point.good === true ? "bg-bull" : "bg-muted-foreground"} ${selectedSymbol === point.symbol ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
                 style={{ left: point.x, top: 55 + point.lane * 80, width: size, height: size }}
               >
-                {point.symbol}
+                <span className="flex flex-col items-center leading-tight">
+                  <span>{point.symbol}</span>
+                  {selectedSymbol === point.symbol && <span className="mt-0.5 text-[0.625rem] tabular-nums" data-testid="selected-metric-value">{fmt(point.value)}</span>}
+                </span>
               </button>
             );
           })}
         </div>
-        <div className="relative mt-2 h-5 text-[10px] tabular-nums text-muted-foreground">{ticks.map((tick, index) => <span className="absolute -translate-x-1/2" style={{ left: pixelX(tick) }} key={index}>{fmt(tick)}</span>)}</div>
+        <div className="relative mt-2 h-5 text-[0.625rem] tabular-nums text-muted-foreground">{ticks.map((tick, index) => <span className="absolute -translate-x-1/2" style={{ left: pixelX(tick) }} key={index}>{fmt(tick)}</span>)}</div>
       </div>
 
-      {outliers.size > 0 && hideOutliers && <p className="text-[11px] text-muted-foreground">Hiding {[...outliers].join(", ")}, which sit far outside the range of the other holdings. Portfolio and market reference lines still use the complete dataset.</p>}
-      {!!unavailableCount && <p className="text-[11px] text-muted-foreground">{unavailableCount} holding{unavailableCount === 1 ? "" : "s"} do{unavailableCount === 1 ? "es" : ""} not have a verified value for this metric.</p>}
+      {outliers.size > 0 && hideOutliers && <p className="text-[0.6875rem] text-muted-foreground">Hiding {[...outliers].join(", ")}, which sit far outside the range of the other holdings. Portfolio and market reference lines still use the complete dataset.</p>}
+      {!!unavailableCount && <p className="text-[0.6875rem] text-muted-foreground">{unavailableCount} holding{unavailableCount === 1 ? "" : "s"} do{unavailableCount === 1 ? "es" : ""} not have a verified value for this metric.</p>}
 
       {selected && (
-        <button type="button" onClick={() => navigate(`/stock/${selected.symbol}`)} className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 text-left">
+        <button type="button" onClick={() => navigate(`/stock/${selected.symbol}`)} className="flex w-full items-center gap-3 border-t border-border/60 py-3 text-left">
           <div className={`grid h-10 w-10 place-items-center rounded-full text-xs font-bold text-white ${selected.good === false ? "bg-bear" : selected.good === true ? "bg-bull" : "bg-muted-foreground"}`}>{selected.symbol.slice(0, 3)}</div>
-          <div className="min-w-0 flex-1"><p className="truncate text-xs font-bold">{selected.name || selected.symbol}</p><p className="text-[11px] text-muted-foreground">{fmt(selected.value)} · {(selected.weight ?? 0).toFixed(1)}% portfolio weight</p></div>
+          <div className="min-w-0 flex-1" aria-live="polite"><p className="truncate text-xs font-bold">{selected.name || selected.symbol}</p><p className="text-[0.6875rem] text-muted-foreground">{fmt(selected.value)} · {(selected.weight ?? 0).toFixed(1)}% portfolio weight</p></div>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </button>
       )}

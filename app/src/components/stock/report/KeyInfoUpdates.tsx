@@ -34,12 +34,12 @@ export function KeyInfoUpdates({ rows, updates, updatesTitle = "Recent updates" 
               {r.highlight ? (
                 <>
                   <p className="text-lg font-bold tabular">{r.value}</p>
-                  <p className="text-[10.5px] text-muted-foreground">{r.label}</p>
+                  <p className="text-[0.65625rem] text-muted-foreground">{r.label}</p>
                 </>
               ) : (
                 <div className="flex items-center justify-between">
-                  <span className="text-[11.5px] text-muted-foreground underline decoration-dotted underline-offset-2">{r.label}</span>
-                  <span className="text-[12px] font-semibold tabular">{r.value}</span>
+                  <span className="text-[0.71875rem] text-muted-foreground underline decoration-dotted underline-offset-2">{r.label}</span>
+                  <span className="text-[0.75rem] font-semibold tabular">{r.value}</span>
                 </div>
               )}
             </div>
@@ -50,7 +50,7 @@ export function KeyInfoUpdates({ rows, updates, updatesTitle = "Recent updates" 
       <div className="card-gradient rounded-2xl p-4">
         <p className="section-eyebrow mb-3">{updatesTitle}</p>
         {updates.length === 0 ? (
-          <p className="text-[11.5px] text-muted-foreground py-4 text-center">No updates on file yet.</p>
+          <p className="text-[0.71875rem] text-muted-foreground py-4 text-center">No updates on file yet.</p>
         ) : (
           <div className="divide-y divide-border/40">
             {updates.slice(0, 4).map((u) => (
@@ -61,9 +61,9 @@ export function KeyInfoUpdates({ rows, updates, updatesTitle = "Recent updates" 
                 rel={u.url ? "noopener noreferrer" : undefined}
                 className={`block py-2.5 ${u.url ? "active:opacity-70" : ""}`}
               >
-                <p className="text-[10px] text-muted-foreground">{u.date}</p>
-                <p className="text-[12px] font-semibold mt-0.5 leading-snug">{u.title}</p>
-                {u.detail && <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{u.detail}</p>}
+                <p className="text-[0.625rem] text-muted-foreground">{u.date}</p>
+                <p className="text-[0.75rem] font-semibold mt-0.5 leading-snug">{u.title}</p>
+                {u.detail && <p className="text-[0.6875rem] text-muted-foreground mt-0.5 line-clamp-2">{u.detail}</p>}
               </a>
             ))}
           </div>

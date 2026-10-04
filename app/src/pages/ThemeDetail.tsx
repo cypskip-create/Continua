@@ -60,7 +60,7 @@ export default function ThemeDetail() {
             <span className="text-xl">{theme.icon}</span>
             <div className="min-w-0">
               <h1 className="text-base font-semibold truncate">{theme.title}</h1>
-              <p className="text-[11px] text-muted-foreground truncate">Investment Theme</p>
+              <p className="text-[0.6875rem] text-muted-foreground truncate">Investment Theme</p>
             </div>
           </div>
         </div>
@@ -85,7 +85,7 @@ export default function ThemeDetail() {
           </div>
           <div className="flex gap-1.5 mt-3 flex-wrap">
             {theme.stocks.map(s => (
-              <Badge key={s} variant="secondary" className="text-[10px] py-0 px-1.5 border-0">{s}</Badge>
+              <Badge key={s} variant="secondary" className="text-[0.625rem] py-0 px-1.5 border-0">{s}</Badge>
             ))}
           </div>
         </Card>

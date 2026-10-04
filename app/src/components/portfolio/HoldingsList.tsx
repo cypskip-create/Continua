@@ -70,7 +70,7 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
   return (
     <div>
       {/* Column headers */}
-      <div className="grid grid-cols-12 gap-2 pb-2 hairline text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+      <div className="grid grid-cols-12 gap-2 pb-2 hairline text-[0.625rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
         <span className="col-span-5">Position</span>
         <span className="col-span-3 text-right">Market value</span>
         <span className="col-span-4 text-right">Total return</span>
@@ -89,15 +89,15 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
                 className="w-full grid grid-cols-12 gap-2 items-center py-3 text-left active:bg-muted/20 transition-colors"
               >
                 <div className="col-span-5 flex items-center gap-2.5 min-w-0">
-                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold shrink-0">
+                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-[0.625rem] font-semibold shrink-0">
                     {r.symbol.slice(0, 2)}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1">
-                      <p className="text-[13px] font-semibold truncate">{r.symbol}</p>
+                      <p className="text-[0.8125rem] font-semibold truncate">{r.symbol}</p>
                       <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
                     </div>
-                    <p className="text-[10px] text-muted-foreground truncate">
+                    <p className="text-[0.625rem] text-muted-foreground truncate">
                       {r.shares} sh · avg {kes(r.avg_cost)}
                     </p>
                   </div>
@@ -106,8 +106,8 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
                 <div className="col-span-3 text-right">
                   {r.isLive ? (
                     <>
-                      <p className="text-[13px] font-semibold tabular">{showValues ? kes(r.value, 0) : "••••"}</p>
-                      <p className={cn("text-[10px] tabular", r.day.pct >= 0 ? "text-bull" : "text-bear")}>
+                      <p className="text-[0.8125rem] font-semibold tabular">{showValues ? kes(r.value, 0) : "••••"}</p>
+                      <p className={cn("text-[0.625rem] tabular", r.day.pct >= 0 ? "text-bull" : "text-bear")}>
                         {r.day.pct >= 0 ? "+" : ""}{r.day.pct.toFixed(2)}% today
                       </p>
                     </>
@@ -127,15 +127,15 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
                     </div>
                   ) : showGains ? (
                     <>
-                      <p className={cn("text-[13px] font-semibold tabular", r.gain >= 0 ? "text-bull" : "text-bear")}>
+                      <p className={cn("text-[0.8125rem] font-semibold tabular", r.gain >= 0 ? "text-bull" : "text-bear")}>
                         {r.gain >= 0 ? "+" : ""}{r.gainPct.toFixed(2)}%
                       </p>
-                      <p className={cn("text-[10px] tabular", r.gain >= 0 ? "text-bull" : "text-bear")}>
+                      <p className={cn("text-[0.625rem] tabular", r.gain >= 0 ? "text-bull" : "text-bear")}>
                         {showValues ? `${r.gain >= 0 ? "+" : "−"}KES ${kes(Math.abs(r.gain), 0)}` : "••••"}
                       </p>
                     </>
                   ) : (
-                    <p className="text-[11px] text-muted-foreground">Hidden</p>
+                    <p className="text-[0.6875rem] text-muted-foreground">Hidden</p>
                   )}
                 </div>
               </button>
@@ -169,7 +169,7 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
                   <div className="mt-3 flex items-center gap-4">
                     <button
                       data-small-target
-                      className="text-[11px] font-semibold text-primary"
+                      className="text-[0.6875rem] font-semibold text-primary"
                       onClick={() => navigate(`/stock/${r.symbol}`)}
                     >
                       Open {r.symbol} research
@@ -177,7 +177,7 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
                     {onRemove && r.id && (
                       <button
                         data-small-target
-                        className="text-[11px] font-semibold text-destructive inline-flex items-center gap-1"
+                        className="text-[0.6875rem] font-semibold text-destructive inline-flex items-center gap-1"
                         onClick={() => onRemove(r.id!)}
                       >
                         <Trash2 className="h-3 w-3" /> Remove
@@ -197,8 +197,8 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
 function Metric({ label, value, tone }: { label: string; value: string; tone?: "bull" | "bear" }) {
   return (
     <div>
-      <p className="text-[9.5px] uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
-      <p className={cn("text-[12px] font-semibold tabular mt-0.5", tone === "bull" && "text-bull", tone === "bear" && "text-bear")}>
+      <p className="text-[0.59375rem] uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
+      <p className={cn("text-[0.75rem] font-semibold tabular mt-0.5", tone === "bull" && "text-bull", tone === "bear" && "text-bear")}>
         {value}
       </p>
     </div>

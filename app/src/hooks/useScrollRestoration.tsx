@@ -8,6 +8,7 @@ import { useLocation, useNavigationType } from "react-router-dom";
  * page reload, which is fine since browser history resets then too.
  */
 const scrollPositions = new Map<string, number>();
+const tabPositions = new Map<string, number>();
 
 /**
  * Restores scroll position when navigating back (or forward) to a page you'd
@@ -38,7 +39,10 @@ export function useScrollRestoration() {
   // position, regardless of what triggered the navigation away from it.
   useEffect(() => {
     const key = location.key;
-    const onScroll = () => scrollPositions.set(key, window.scrollY);
+    const onScroll = () => {
+      scrollPositions.set(key, window.scrollY);
+      tabPositions.set(location.pathname + location.search, window.scrollY);
+    };
 
     // Only set an initial value if we don't already have a saved position.
     // This prevents overwriting a previously saved scroll position when
@@ -49,12 +53,13 @@ export function useScrollRestoration() {
 
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [location.key]);
+  }, [location.key, location.pathname, location.search]);
 
   // Restore before paint. Re-apply while async content grows, but never hide
   // the page or use smooth scrolling: back navigation should feel instant.
   useLayoutEffect(() => {
-    const target = navigationType === "POP" ? (scrollPositions.get(location.key) ?? 0) : 0;
+    const target = navigationType === "POP" ? (scrollPositions.get(location.key) ?? 0)
+      : location.state?.resumeTab ? (tabPositions.get(location.pathname + location.search) ?? 0) : 0;
     const root = document.documentElement;
     const previousBehavior = root.style.scrollBehavior;
     root.style.scrollBehavior = "auto";
@@ -70,5 +75,5 @@ export function useScrollRestoration() {
       clearTimeout(stop);
       root.style.scrollBehavior = previousBehavior;
     };
-  }, [location.key, navigationType]);
+  }, [location.key, location.pathname, location.search, location.state, navigationType]);
 }

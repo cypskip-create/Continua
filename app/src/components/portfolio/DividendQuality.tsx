@@ -96,12 +96,12 @@ export function DividendQuality({ holdings, dividendData, isPremium = false, sho
             No forecast or analyst opinion is involved.
           </InfoTip>
         </h3>
-        <p className="text-[11px] text-muted-foreground mb-4">
+        <p className="text-[0.6875rem] text-muted-foreground mb-4">
           Built from real, confirmed payouts on file — reliability and growth, not a forecast.
         </p>
 
-        <div className="rounded-xl bg-muted/40 p-3 mb-4">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Trailing 12m Income</p>
+        <div className="flat-section rounded-xl bg-muted/40 p-3 mb-4">
+          <p className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">Trailing 12m Income</p>
           <p className="text-xl font-bold tabular mt-0.5">{fmtMoney(totalIncome, currencyLabel, showValues)}</p>
         </div>
 
@@ -116,13 +116,13 @@ export function DividendQuality({ holdings, dividendData, isPremium = false, sho
                     <div className="flex items-center gap-2 min-w-0">
                       <span className={`w-2 h-2 rounded-full shrink-0 ${t.dot}`} />
                       <div className="min-w-0">
-                        <p className="text-[12.5px] font-semibold">{t.label}</p>
-                        <p className="text-[10.5px] text-muted-foreground">{t.count} holding{t.count === 1 ? "" : "s"}</p>
+                        <p className="text-[0.78125rem] font-semibold">{t.label}</p>
+                        <p className="text-[0.65625rem] text-muted-foreground">{t.count} holding{t.count === 1 ? "" : "s"}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-[13px] font-bold tabular">{fmtMoney(t.income, currencyLabel, showValues)}</p>
-                      <p className="text-[10.5px] text-muted-foreground">{t.pct.toFixed(1)}%</p>
+                      <p className="text-[0.8125rem] font-bold tabular">{fmtMoney(t.income, currencyLabel, showValues)}</p>
+                      <p className="text-[0.65625rem] text-muted-foreground">{t.pct.toFixed(1)}%</p>
                     </div>
                   </div>
                 ))}
@@ -134,7 +134,7 @@ export function DividendQuality({ holdings, dividendData, isPremium = false, sho
                   t.pct > 0 && <div key={t.key} className={t.dot} style={{ width: `${t.pct}%` }} />
                 ))}
               </div>
-              <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+              <div className="flex justify-between text-[0.625rem] text-muted-foreground mt-1">
                 <span>0%</span><span>50%</span><span>100%</span>
               </div>
             </div>
@@ -151,7 +151,7 @@ export function DividendQuality({ holdings, dividendData, isPremium = false, sho
           <div className="card-gradient rounded-2xl p-4 overflow-x-auto">
             <p className="section-eyebrow mb-3">Yield &amp; growth by holding</p>
             <div className="min-w-[420px]">
-              <div className="grid grid-cols-[1fr_1fr_0.8fr_0.9fr] gap-2 text-[10px] text-muted-foreground uppercase tracking-wide pb-2 border-b border-border/50">
+              <div className="grid grid-cols-[1fr_1fr_0.8fr_0.9fr] gap-2 text-[0.625rem] text-muted-foreground uppercase tracking-wide pb-2 border-b border-border/50">
                 <span>Symbol</span>
                 <span className="text-right">12m Payment</span>
                 <span className="text-right">Yield / Cost</span>
@@ -161,16 +161,16 @@ export function DividendQuality({ holdings, dividendData, isPremium = false, sho
                 {rows.sort((a, b) => b.annualIncome - a.annualIncome).map((r) => (
                   <div key={r.holding.id} className="grid grid-cols-[1fr_1fr_0.8fr_0.9fr] gap-2 py-2.5 items-center">
                     <div className="min-w-0">
-                      <p className="text-[12.5px] font-bold">{r.holding.symbol}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">{r.holding.name || r.holding.symbol}</p>
+                      <p className="text-[0.78125rem] font-bold">{r.holding.symbol}</p>
+                      <p className="text-[0.625rem] text-muted-foreground truncate">{r.holding.name || r.holding.symbol}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[12px] font-semibold tabular">{fmtMoney(r.annualIncome, currencyLabel, showValues)}<span className="text-[10px] text-muted-foreground">/yr</span></p>
-                      <p className="text-[10px] text-muted-foreground">{totalIncome > 0 ? ((r.annualIncome / totalIncome) * 100).toFixed(1) : "0.0"}%</p>
+                      <p className="text-[0.75rem] font-semibold tabular">{fmtMoney(r.annualIncome, currencyLabel, showValues)}<span className="text-[0.625rem] text-muted-foreground">/yr</span></p>
+                      <p className="text-[0.625rem] text-muted-foreground">{totalIncome > 0 ? ((r.annualIncome / totalIncome) * 100).toFixed(1) : "0.0"}%</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[12px] font-semibold tabular">{r.yieldOnPrice.toFixed(1)}%</p>
-                      <p className="text-[10px] text-muted-foreground">{r.yieldOnCost.toFixed(1)}% on cost</p>
+                      <p className="text-[0.75rem] font-semibold tabular">{r.yieldOnPrice.toFixed(1)}%</p>
+                      <p className="text-[0.625rem] text-muted-foreground">{r.yieldOnCost.toFixed(1)}% on cost</p>
                     </div>
                     <div className="flex items-center justify-end gap-1">
                       {r.score >= 5 ? (
@@ -180,7 +180,7 @@ export function DividendQuality({ holdings, dividendData, isPremium = false, sho
                       ) : (
                         <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
                       )}
-                      <span className="text-[11px] font-semibold tabular">{r.score}/6</span>
+                      <span className="text-[0.6875rem] font-semibold tabular">{r.score}/6</span>
                     </div>
                   </div>
                 ))}

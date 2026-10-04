@@ -79,13 +79,13 @@ export function DividendHistory({ holdings, dividendData, isPremium = false, sho
         <button
           data-small-target
           onClick={() => setView((v) => (v === "monthly" ? "annual" : "monthly"))}
-          className="flex items-center gap-1.5 h-7 px-1 rounded-full bg-muted/60 text-[10px] font-semibold"
+          className="flex items-center gap-1.5 h-7 px-1 rounded-full bg-muted/60 text-[0.625rem] font-semibold"
         >
           <span className={`px-2 py-0.5 rounded-full transition-colors ${view === "monthly" ? "bg-background" : ""}`}>Monthly</span>
           <span className={`px-2 py-0.5 rounded-full transition-colors ${view === "annual" ? "bg-background" : ""}`}>Annual</span>
         </button>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-3">
+      <p className="text-[0.6875rem] text-muted-foreground mb-3">
         Track how much income your portfolio has paid out, month by month.
       </p>
 
@@ -93,8 +93,8 @@ export function DividendHistory({ holdings, dividendData, isPremium = false, sho
           already zero-filled placeholders regardless of data, so a portfolio
           with nothing paid yet still shows the tool (an empty timeline),
           not a text box in its place. */}
-      <div className="rounded-xl bg-muted/40 p-3 mb-3">
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+      <div className="flat-section rounded-xl bg-muted/40 p-3 mb-3">
+        <p className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">
           {latestPaid.label}{view === "monthly" ? ` ${new Date().getFullYear()}` : ""} (Realised)
         </p>
         <p className="text-lg font-bold tabular mt-0.5">
@@ -115,10 +115,10 @@ export function DividendHistory({ holdings, dividendData, isPremium = false, sho
         </ResponsiveContainer>
       </div>
       {paidEvents.length === 0 && (
-        <p className="text-[10px] text-muted-foreground text-center -mt-1 mb-2">No dividends paid to this portfolio yet.</p>
+        <p className="text-[0.625rem] text-muted-foreground text-center -mt-1 mb-2">No dividends paid to this portfolio yet.</p>
       )}
       {paidEvents.length > 0 && !isPremium && (
-        <p className="text-[10px] text-muted-foreground text-center -mt-1 mb-2">
+        <p className="text-[0.625rem] text-muted-foreground text-center -mt-1 mb-2">
           Showing the last {FREE_MONTHS === 2 ? "two" : FREE_MONTHS} months · full history is a premium feature
         </p>
       )}
@@ -126,25 +126,25 @@ export function DividendHistory({ holdings, dividendData, isPremium = false, sho
       <p className="section-eyebrow mt-2 mb-1">
         {format(new Date(), "MMM yyyy")} <span className="text-muted-foreground font-normal">· {thisMonthEvents.length} paid</span>
       </p>
-      <div className="grid grid-cols-2 text-[10px] text-muted-foreground uppercase tracking-wide pb-1 border-b border-border/50">
+      <div className="grid grid-cols-2 text-[0.625rem] text-muted-foreground uppercase tracking-wide pb-1 border-b border-border/50">
         <span>Symbol</span><span className="text-right">Amount</span>
       </div>
       <div className="flex items-center justify-between py-2 rounded-lg bg-bull/10 px-2 -mx-2 mt-1">
-        <span className="text-[12px] font-bold">Paid payments</span>
-        <span className="text-[12px] font-bold tabular">{showValues ? `${currencyLabel}${totalThisMonth.toFixed(2)}` : "••••"}</span>
+        <span className="text-[0.75rem] font-bold">Paid payments</span>
+        <span className="text-[0.75rem] font-bold tabular">{showValues ? `${currencyLabel}${totalThisMonth.toFixed(2)}` : "••••"}</span>
       </div>
       <div className="divide-y divide-border/40">
         {thisMonthEvents.map((e, i) => (
           <div key={i} className="flex items-center justify-between py-2">
             <div>
-              <span className="text-[12px] font-bold text-primary">{e.symbol}</span>
-              <span className="text-[11px] text-muted-foreground ml-1.5 truncate">{e.name}</span>
+              <span className="text-[0.75rem] font-bold text-primary">{e.symbol}</span>
+              <span className="text-[0.6875rem] text-muted-foreground ml-1.5 truncate">{e.name}</span>
             </div>
-            <span className="text-[12px] font-semibold tabular">{showValues ? `${currencyLabel}${e.amount.toFixed(2)}` : "••••"}</span>
+            <span className="text-[0.75rem] font-semibold tabular">{showValues ? `${currencyLabel}${e.amount.toFixed(2)}` : "••••"}</span>
           </div>
         ))}
         {thisMonthEvents.length === 0 && (
-          <p className="text-[11px] text-muted-foreground py-2">No dividends paid this month.</p>
+          <p className="text-[0.6875rem] text-muted-foreground py-2">No dividends paid this month.</p>
         )}
       </div>
     </div>

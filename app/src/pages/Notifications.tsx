@@ -1,3 +1,4 @@
+import { PriceAlertsManager } from "@/components/alerts/PriceAlertsManager";
 import { useState, useMemo, useEffect } from "react";
 import {
   Bell, Heart, MessageCircle, Repeat2, UserPlus, TrendingUp, TrendingDown,
@@ -47,6 +48,7 @@ const typeIcon: Record<string, any> = {
 
 const filters = [
   { id: "all", label: "All" },
+  { id: "mentions", label: "Mentions" },
   { id: "tradershub", label: "TradersHub" },
   { id: "social", label: "Social" },
   { id: "alerts", label: "Alerts" },
@@ -110,6 +112,7 @@ export default function Notifications() {
 
   const filtered = useMemo(() => {
     if (activeFilter === "all") return notifications;
+    if (activeFilter === "mentions") return notifications.filter(n => n.type === "mention");
     return notifications.filter(n => n.feature === activeFilter);
   }, [notifications, activeFilter]);
 
@@ -150,7 +153,7 @@ export default function Notifications() {
             </Button>
             <h1 className="text-base font-bold flex items-center gap-2">
               Notifications
-              {unreadCount > 0 && <Badge className="h-5 min-w-5 text-[10px] bg-primary rounded-full">{unreadCount}</Badge>}
+              {unreadCount > 0 && <Badge className="h-5 min-w-5 text-[0.625rem] bg-primary rounded-full">{unreadCount}</Badge>}
             </h1>
           </div>
           <div className="flex items-center gap-1">
@@ -181,8 +184,8 @@ export default function Notifications() {
               key={f.id}
               onClick={() => setActiveFilter(f.id)}
               data-small-target
-              className={`py-1.5 px-3.5 text-xs font-semibold whitespace-nowrap rounded-full transition-all ${
-                activeFilter === f.id ? 'contrast-active' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+              className={`py-3 px-3.5 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                activeFilter === f.id ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:bg-muted'
               }`}
             >
               {f.label}
@@ -192,6 +195,7 @@ export default function Notifications() {
       </header>
 
       <div className="pb-4">
+        {activeFilter === "alerts" && <section className="px-4 py-4 border-b"><PriceAlertsManager /><h2 className="text-sm font-semibold mt-4">Alert activity</h2></section>}
         {loading ? (
           <div className="flex justify-center py-16">
             <div className="animate-spin rounded-full h-7 w-7 border-2 border-primary/30 border-t-primary" />
@@ -201,15 +205,15 @@ export default function Notifications() {
             <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
               <Bell className="h-7 w-7 text-muted-foreground/50" />
             </div>
-            <h3 className="font-semibold text-[15px] mb-1">All caught up</h3>
-            <p className="text-[13px] text-muted-foreground">Nothing here {activeFilter !== "all" ? `in ${filters.find(f => f.id === activeFilter)?.label}` : "right now"}.</p>
+            <h3 className="font-semibold text-[0.9375rem] mb-1">All caught up</h3>
+            <p className="text-[0.8125rem] text-muted-foreground">Nothing here {activeFilter !== "all" ? `in ${filters.find(f => f.id === activeFilter)?.label}` : "right now"}.</p>
           </div>
         ) : (
           <div>
             {grouped.map(([bucket, items]) => (
               <div key={bucket}>
                 <div className="px-4 pt-4 pb-1.5">
-                  <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{bucket}</h2>
+                  <h2 className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted-foreground">{bucket}</h2>
                 </div>
                 <div>
                   {items.map(n => {
@@ -232,7 +236,7 @@ export default function Notifications() {
                           <div className="relative shrink-0">
                             <Avatar className="h-10 w-10">
                               <AvatarImage src={n.actor?.avatar_url || ""} className="object-cover" />
-                              <AvatarFallback className="text-[11px] font-bold bg-primary/10 text-primary">{getInitials(n.actor?.full_name || n.actor?.handle)}</AvatarFallback>
+                              <AvatarFallback className="text-[0.6875rem] font-bold bg-primary/10 text-primary">{getInitials(n.actor?.full_name || n.actor?.handle)}</AvatarFallback>
                             </Avatar>
                             <span className={`absolute -bottom-0.5 -right-0.5 h-4.5 w-4.5 rounded-full flex items-center justify-center ring-2 ring-background ${badge.className}`}>
                               <badge.icon className="h-2.5 w-2.5" fill={n.type === "like" ? "currentColor" : "none"} />
@@ -246,14 +250,14 @@ export default function Notifications() {
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 min-w-0">
-                            <h3 className="font-semibold text-[13px] truncate">{n.title}</h3>
+                            <h3 className="font-semibold text-[0.8125rem] truncate">{n.title}</h3>
                             {!n.read && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
                           </div>
-                          <p className="text-[12px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">{n.message}</p>
+                          <p className="text-[0.75rem] text-muted-foreground leading-snug mt-0.5 line-clamp-2">{n.message}</p>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] text-muted-foreground tabular">{formatTime(n.created_at)}</span>
+                            <span className="text-[0.625rem] text-muted-foreground tabular">{formatTime(n.created_at)}</span>
                             {n.action_url && (
-                              <span className="text-[11px] text-primary font-medium inline-flex items-center gap-0.5">
+                              <span className="text-[0.6875rem] text-primary font-medium inline-flex items-center gap-0.5">
                                 View <ChevronRight className="h-3 w-3" />
                               </span>
                             )}
@@ -294,13 +298,13 @@ export default function Notifications() {
           </SheetHeader>
 
           <div className="mt-2">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">TradersHub</p>
+            <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted-foreground mb-1">TradersHub</p>
             <div className="divide-y divide-border/40">
               {NOTIF_PREF_ROWS.map(row => (
                 <div key={row.key} className="flex items-center justify-between py-3.5">
                   <div className="min-w-0 pr-3">
                     <div className="text-sm font-medium">{row.label}</div>
-                    <div className="text-[11px] text-muted-foreground">{row.desc}</div>
+                    <div className="text-[0.6875rem] text-muted-foreground">{row.desc}</div>
                   </div>
                   <Switch checked={prefs[row.key]} onCheckedChange={c => togglePref(row.key, c)} />
                 </div>
@@ -309,7 +313,7 @@ export default function Notifications() {
           </div>
 
           <div className="mt-5">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Always on</p>
+            <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted-foreground mb-1">Always on</p>
             <div className="divide-y divide-border/40">
               {[
                 { icon: Target, label: "Price alerts", desc: "You'll get these because you set the alert yourself" },
@@ -320,12 +324,12 @@ export default function Notifications() {
                   <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0"><row.icon className="h-3.5 w-3.5 text-muted-foreground" /></div>
                   <div className="min-w-0">
                     <div className="text-sm font-medium">{row.label}</div>
-                    <div className="text-[11px] text-muted-foreground">{row.desc}</div>
+                    <div className="text-[0.6875rem] text-muted-foreground">{row.desc}</div>
                   </div>
                 </div>
               ))}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-2">These aren't things to mute individually — remove a price alert or a stock from your watchlist/portfolio to stop getting them.</p>
+            <p className="text-[0.6875rem] text-muted-foreground mt-2">These aren't things to mute individually — remove a price alert or a stock from your watchlist/portfolio to stop getting them.</p>
           </div>
         </SheetContent>
       </Sheet>

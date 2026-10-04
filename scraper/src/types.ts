@@ -9,6 +9,7 @@ export interface SourceConfig {
   maxDepth?: number;
   /** Case-insensitive URL path fragments allowed during link discovery. Seeds are explicit. */
   discoveryPaths?: string[];
+  revisitAfterMinutes?: number;
   /** Explicit publisher identity for first-party issuer archives, not inferred from article mentions. */
   issuerName?: string;
   concurrency?: number;

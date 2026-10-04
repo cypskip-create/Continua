@@ -1,3 +1,4 @@
+import { usePageState } from "@/hooks/usePageState";
 import { useMemo, useState } from "react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Newspaper } from "lucide-react";
@@ -35,9 +36,9 @@ const CATEGORIES: { id: NewsItem["category"] | "all"; label: string }[] = [
  */
 export function MediaFeed({ searchQuery }: MediaFeedProps) {
   const navigate = useNavigate();
-  const [category, setCategory] = useState<NewsItem["category"] | "all">("all");
+  const [category, setCategory] = usePageState<NewsItem["category"] | "all">("media:category", "all");
   const [readerItem, setReaderItem] = useState<NewsItem | null>(null);
-  const { news, isLoading } = useMarketNews(category === "all" ? undefined : category);
+  const { news, isLoading, isError, refetch } = useMarketNews(category === "all" ? undefined : category);
 
   const filtered = useMemo(() => {
     const unique = dedupeNews(news);
@@ -69,6 +70,7 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
 
+      {isError && <div role="status" className="text-sm text-muted-foreground">News could not refresh. {news.length ? 'Showing saved stories.' : 'Check your connection.'} <button className="underline" onClick={()=>void refetch()}>Retry</button></div>}
       {isLoading ? (
         <div className="px-6 py-16 text-center">
           <p className="text-xs text-muted-foreground">Loading…</p>
@@ -76,8 +78,8 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
       ) : filtered.length === 0 ? (
         <div className="px-6 py-16 text-center">
           <Newspaper className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-          <p className="text-sm font-bold">No stories yet</p>
-          <p className="text-[12px] text-muted-foreground mt-1">
+          <p className="text-sm font-bold">{isError ? "News temporarily unavailable" : "No stories yet"}</p>
+          <p className="text-[0.75rem] text-muted-foreground mt-1">
             {searchQuery ? "Try a different company, topic, ticker, or category." : "No verified financial stories in this category yet — check back soon."}
           </p>
         </div>

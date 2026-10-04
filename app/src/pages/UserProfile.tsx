@@ -458,9 +458,9 @@ export default function UserProfile() {
           </Avatar>
           <div className="flex gap-1.5 mb-1.5">
             {isOwnProfile ? (
-              <Button variant="outline" size="sm" className="h-9 rounded-full font-semibold text-[13.5px] px-4" onClick={() => setEditProfileOpen(true)}>Edit profile</Button>
+              <Button variant="outline" size="sm" className="h-9 rounded-full font-semibold text-[0.84375rem] px-4" onClick={() => setEditProfileOpen(true)}>Edit profile</Button>
             ) : (
-              <Button variant={userIsFollowing ? "outline" : "default"} size="sm" onClick={handleFollow} className="h-9 rounded-full font-semibold text-[13.5px] px-4">
+              <Button variant={userIsFollowing ? "outline" : "default"} size="sm" onClick={handleFollow} className="h-9 rounded-full font-semibold text-[0.84375rem] px-4">
                 {userIsFollowing ? "Following" : followsMe ? "Follow back" : "Follow"}
               </Button>
             )}
@@ -469,33 +469,33 @@ export default function UserProfile() {
 
         {/* Name + bio */}
         <div className="mt-2.5">
-          <h2 className="text-[19px] font-extrabold leading-tight flex items-center gap-1">
+          <h2 className="text-[1.1875rem] font-extrabold leading-tight flex items-center gap-1">
             {profileData.full_name || "User"}
             <Verified className="h-4 w-4 text-primary fill-primary" />
           </h2>
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-[13.5px] text-muted-foreground leading-tight">{atHandle(profileData)}</p>
+            <p className="text-[0.84375rem] text-muted-foreground leading-tight">{atHandle(profileData)}</p>
             {profileData.trading_experience && (
-              <span className="text-[10.5px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+              <span className="text-[0.65625rem] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                 {EXPERIENCE_LABELS[profileData.trading_experience] || profileData.trading_experience}
               </span>
             )}
           </div>
 
-          {profileData.bio && <p className="mt-2 text-[14px] leading-snug">{profileData.bio}</p>}
+          {profileData.bio && <p className="mt-2 text-[0.875rem] leading-snug">{profileData.bio}</p>}
 
           {/* Location + join date — X-sized */}
-          <div className="flex items-center gap-3 mt-2 text-[13px] text-muted-foreground flex-wrap">
+          <div className="flex items-center gap-3 mt-2 text-[0.8125rem] text-muted-foreground flex-wrap">
             <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />Kenya</span>
             <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />Joined {formatDate(profileData.created_at)}</span>
           </div>
 
           {/* Following/Followers */}
           <div className="flex gap-4 mt-2">
-            <button className="hover:underline text-[13px]" onClick={() => { setDialogTab("following"); setFollowersDialogOpen(true); }}>
+            <button className="hover:underline text-[0.8125rem]" onClick={() => { setDialogTab("following"); setFollowersDialogOpen(true); }}>
               <span className="font-bold">{followingCount}</span> <span className="text-muted-foreground">Following</span>
             </button>
-            <button className="hover:underline text-[13px]" onClick={() => { setDialogTab("followers"); setFollowersDialogOpen(true); }}>
+            <button className="hover:underline text-[0.8125rem]" onClick={() => { setDialogTab("followers"); setFollowersDialogOpen(true); }}>
               <span className="font-bold">{followersCount}</span> <span className="text-muted-foreground">Followers</span>
             </button>
           </div>
@@ -691,11 +691,11 @@ export default function UserProfile() {
               {portfolioSummary && (
                 <div>
                   <p className="section-eyebrow">Portfolio value</p>
-                  <div className="mt-1 text-[28px] leading-none font-semibold tabular">
+                  <div className="mt-1 text-[1.75rem] leading-none font-semibold tabular">
                     {maskAmounts ? "••••••" : `KES ${portfolioSummary.totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
                   </div>
                   {!maskGains && (
-                    <div className={`text-[12px] font-semibold mt-1.5 flex items-center gap-1 tabular ${portfolioSummary.totalGain >= 0 ? "text-bull" : "text-bear"}`}>
+                    <div className={`text-[0.75rem] font-semibold mt-1.5 flex items-center gap-1 tabular ${portfolioSummary.totalGain >= 0 ? "text-bull" : "text-bear"}`}>
                       {portfolioSummary.totalGain >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
                       {maskAmounts
                         ? `${portfolioSummary.totalGain >= 0 ? "+" : "−"}${Math.abs(portfolioSummary.gainPercent).toFixed(2)}%`
@@ -718,7 +718,7 @@ export default function UserProfile() {
                 showGains={!maskGains}
               />
               {!isOwnProfile && profileData?.portfolio_top_holdings_only && (portfolioSummary?.holdings?.length || 0) > visibleHoldings.length && (
-                <p className="text-[11px] text-muted-foreground text-center">Showing top {visibleHoldings.length} holdings only</p>
+                <p className="text-[0.6875rem] text-muted-foreground text-center">Showing top {visibleHoldings.length} holdings only</p>
               )}
 
               {/* Share portfolio button */}

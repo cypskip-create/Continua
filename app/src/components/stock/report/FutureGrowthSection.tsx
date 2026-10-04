@@ -97,15 +97,15 @@ export function FutureGrowthSection({ symbol }: Props) {
           note={isLoading ? "Loading financial history…" : chartData.length === 0 ? `No financial history on file for ${symbol} yet.` : undefined}
           right={
             <ToggleGroup type="single" size="sm" value={metric} onValueChange={(v) => v && setMetric(v as Metric)}>
-              <ToggleGroupItem value="revenue" className="h-6 text-[10px] px-2">Revenue</ToggleGroupItem>
-              <ToggleGroupItem value="earnings" className="h-6 text-[10px] px-2">Earnings</ToggleGroupItem>
-              <ToggleGroupItem value="eps" className="h-6 text-[10px] px-2">EPS</ToggleGroupItem>
+              <ToggleGroupItem value="revenue" className="h-6 text-[0.625rem] px-2">Revenue</ToggleGroupItem>
+              <ToggleGroupItem value="earnings" className="h-6 text-[0.625rem] px-2">Earnings</ToggleGroupItem>
+              <ToggleGroupItem value="eps" className="h-6 text-[0.625rem] px-2">EPS</ToggleGroupItem>
             </ToggleGroup>
           }
         />
       </SubWidget>
 
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-[0.6875rem] text-muted-foreground">
         In this section Simply Wall St presents revenue and earnings growth projections based on consensus
         analyst estimates. Continua doesn't ingest an analyst-estimates feed, so this section honestly shows
         real trailing growth instead of an invented forecast.

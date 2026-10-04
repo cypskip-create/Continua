@@ -156,7 +156,7 @@ export default function StockCompare() {
                 <GitCompare className="h-4 w-4 text-primary" />
                 Compare
               </h1>
-              <p className="text-[10px] text-muted-foreground">Side-by-side analysis</p>
+              <p className="text-[0.625rem] text-muted-foreground">Side-by-side analysis</p>
             </div>
           </div>
           {selectedStocks.length > 0 && (
@@ -191,12 +191,12 @@ export default function StockCompare() {
                       className="w-full flex items-center justify-between py-2.5 border-b border-border/40 hover:bg-muted/30 -mx-4 px-4 transition-colors"
                     >
                       <div className="flex items-center gap-2.5 text-left">
-                        <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center text-[10px] font-bold text-primary">
+                        <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center text-[0.625rem] font-bold text-primary">
                           {stock.symbol.slice(0, 2)}
                         </div>
                         <div>
                           <div className="text-sm font-semibold">{stock.symbol}</div>
-                          <div className="text-[10px] text-muted-foreground">{stock.name}</div>
+                          <div className="text-[0.625rem] text-muted-foreground">{stock.name}</div>
                         </div>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -232,16 +232,16 @@ export default function StockCompare() {
                     <X className="h-3.5 w-3.5" />
                   </button>
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center text-[10px] font-bold text-primary">
+                    <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center text-[0.625rem] font-bold text-primary">
                       {stock.symbol.slice(0, 2)}
                     </div>
                     <div>
                       <div className="text-sm font-semibold">{stock.symbol}</div>
-                      <div className="text-[9px] text-muted-foreground">{stock.sector}</div>
+                      <div className="text-[0.5625rem] text-muted-foreground">{stock.sector}</div>
                     </div>
                   </div>
                   <div className="text-sm font-semibold tabular">KES {stock.price.toFixed(2)}</div>
-                  <div className={`text-[11px] flex items-center gap-0.5 tabular ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>
+                  <div className={`text-[0.6875rem] flex items-center gap-0.5 tabular ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>
                     {stock.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                     {stock.change >= 0 ? '+' : ''}{stock.change}%
                   </div>

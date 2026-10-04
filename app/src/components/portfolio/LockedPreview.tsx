@@ -34,7 +34,7 @@ export function LockedPreview({ unlocked, children, locked, label = "Upgrade" }:
           <button
             data-small-target
             onClick={() => navigate("/upgrade")}
-            className="h-8 px-4 rounded-full bg-primary text-primary-foreground text-[11px] font-bold active:opacity-80 transition-opacity"
+            className="h-8 px-4 rounded-full bg-primary text-primary-foreground text-[0.6875rem] font-bold active:opacity-80 transition-opacity"
           >
             {label}
           </button>

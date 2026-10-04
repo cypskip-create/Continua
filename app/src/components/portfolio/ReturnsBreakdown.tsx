@@ -69,7 +69,7 @@ export function ReturnsBreakdown({
           <InfoTip>Unrealized is live price vs. your average cost. Realized and Currency show "No Data" — Continua doesn't track closed lots or multi-currency positions yet.</InfoTip>
         </h3>
         {hasLimitedData && (
-          <span className="text-[9px] font-bold tracking-wider uppercase px-2 py-1 rounded-full bg-muted text-muted-foreground">
+          <span className="text-[0.5625rem] font-bold tracking-wider uppercase px-2 py-1 rounded-full bg-muted text-muted-foreground">
             Limited Data
           </span>
         )}
@@ -80,7 +80,7 @@ export function ReturnsBreakdown({
         {figures.map((f) => (
           <div key={f.label} className="min-w-0">
             <p
-              className={`text-[11px] font-semibold tabular truncate ${
+              className={`text-[0.6875rem] font-semibold tabular truncate ${
                 f.value === null
                   ? "text-muted-foreground/60"
                   : f.value >= 0
@@ -119,7 +119,7 @@ export function ReturnsBreakdown({
 
       <div className="grid grid-cols-5 gap-1 mt-1 pt-2 border-t border-border/50 text-center">
         {figures.map((f) => (
-          <p key={f.label} className={`text-[10px] truncate ${f.label === "Total" ? "font-bold" : "text-muted-foreground"}`}>
+          <p key={f.label} className={`text-[0.625rem] truncate ${f.label === "Total" ? "font-bold" : "text-muted-foreground"}`}>
             {f.label}
           </p>
         ))}

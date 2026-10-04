@@ -24,7 +24,7 @@ export function FullLock({ title, description }: FullLockProps) {
       <button
         data-small-target
         onClick={() => navigate("/upgrade")}
-        className="h-9 px-5 rounded-full bg-primary text-primary-foreground text-[12px] font-bold active:opacity-80 transition-opacity mt-1"
+        className="h-9 px-5 rounded-full bg-primary text-primary-foreground text-[0.75rem] font-bold active:opacity-80 transition-opacity mt-1"
       >
         Upgrade to Premium
       </button>

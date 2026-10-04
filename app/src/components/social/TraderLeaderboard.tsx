@@ -86,7 +86,7 @@ export function TraderLeaderboard() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-sm truncate">{entry.name}</span>
-                <Badge className={`text-[10px] px-1.5 py-0 ${getBadgeColor(entry.badge)}`}>
+                <Badge className={`text-[0.625rem] px-1.5 py-0 ${getBadgeColor(entry.badge)}`}>
                   {entry.badge}
                 </Badge>
               </div>
@@ -107,7 +107,7 @@ export function TraderLeaderboard() {
             
             <div className="text-right">
               <div className="text-sm font-bold text-bull">+{entry.percentGain}%</div>
-              <div className="text-[10px] text-muted-foreground">MTD</div>
+              <div className="text-[0.625rem] text-muted-foreground">MTD</div>
             </div>
           </div>
         ))}

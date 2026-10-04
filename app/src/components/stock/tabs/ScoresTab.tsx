@@ -7,7 +7,7 @@ import { BarChartBlock } from "@/components/charts/BarChartBlock";
 
 
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-2">{children}</p>
+  <p className="text-[0.625rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-2">{children}</p>
 );
 
 
@@ -28,11 +28,11 @@ function ScoreDial({ score, max, label, sub, color }: { score: number; max: numb
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-lg font-bold tabular" style={{ color }}>{score.toFixed(score % 1 === 0 ? 0 : 1)}</span>
-          <span className="text-[9px] text-muted-foreground">/ {max}</span>
+          <span className="text-[0.5625rem] text-muted-foreground">/ {max}</span>
         </div>
       </div>
-      <p className="text-[11px] font-semibold mt-1">{label}</p>
-      {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
+      <p className="text-[0.6875rem] font-semibold mt-1">{label}</p>
+      {sub && <p className="text-[0.625rem] text-muted-foreground">{sub}</p>}
     </div>
   );
 }
@@ -63,9 +63,9 @@ export function ScoresTab({ fundamentals }: { fundamentals: Fundamentals }) {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-start gap-2 rounded-xl bg-muted/40 p-3">
+      <div className="flat-section flex items-start gap-2 rounded-xl bg-muted/40 p-3">
         <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-        <p className="text-[10.5px] text-muted-foreground leading-snug">
+        <p className="text-[0.65625rem] text-muted-foreground leading-snug">
           <span className="font-semibold text-foreground">Demonstration data.</span> Piotroski F-Score,
           Altman Z-Score, and the composite dials below need multiple years of full balance-sheet
           history — Continua's data layer currently gives one real current-period snapshot per
@@ -105,7 +105,7 @@ export function ScoresTab({ fundamentals }: { fundamentals: Fundamentals }) {
       <div>
         <div className="flex items-center justify-between">
           <Eyebrow>Return on Capital — 6yr Trend</Eyebrow>
-          <span className="text-[10px] font-semibold tabular flex items-center gap-1" style={{ color: returnTrend >= 0 ? fx.positive : fx.negative }}>
+          <span className="text-[0.625rem] font-semibold tabular flex items-center gap-1" style={{ color: returnTrend >= 0 ? fx.positive : fx.negative }}>
             {returnTrend >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
             ROE {returnTrend >= 0 ? "+" : ""}{returnTrend.toFixed(1)}pp YoY
           </span>

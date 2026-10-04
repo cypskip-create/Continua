@@ -107,7 +107,7 @@ export function StockHeatmap({ stocks }: StockHeatmapProps) {
                   {stock.symbol}
                 </div>
                 {(isLarge || isMedium) && (
-                  <div className={`text-[10px] opacity-80 ${Math.abs(stock.change) > 1.5 ? 'text-white/70' : 'text-muted-foreground'}`}>
+                  <div className={`text-[0.625rem] opacity-80 ${Math.abs(stock.change) > 1.5 ? 'text-white/70' : 'text-muted-foreground'}`}>
                     {stock.name}
                   </div>
                 )}

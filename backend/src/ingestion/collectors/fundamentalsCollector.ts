@@ -13,13 +13,17 @@ export const fundamentalsCollector = {
    *  visible instead of just quietly missing from the next screener run. */
   async collectForSymbols(adapter: IExchangeAdapter, symbols: string[]): Promise<FundamentalsCollectionResult> {
     const results = await Promise.allSettled(
-      symbols.map((s) => withRetry(() => adapter.getFundamentals(s), { label: `${adapter.exchange}.getFundamentals(${s})` }))
+      symbols.map((s) => withRetry(async () => {
+        if (adapter.getFundamentalsHistory) return adapter.getFundamentalsHistory(s);
+        const latest = await adapter.getFundamentals(s);
+        return latest ? [latest] : [];
+      }, { label: `${adapter.exchange}.getFundamentals(${s})` }))
     );
     const bundles: FundamentalsBundle[] = [];
     const failures: { symbol: string; error: string }[] = [];
     results.forEach((r, i) => {
       if (r.status === "fulfilled") {
-        if (r.value) bundles.push(r.value);
+        bundles.push(...r.value);
       } else {
         failures.push({ symbol: symbols[i]!, error: String(r.reason) });
       }

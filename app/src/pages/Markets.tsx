@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { usePageState } from "@/hooks/usePageState";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,6 @@ import { TopBar } from "@/components/shared/TopBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SparklineChart } from "@/components/shared/SparklineChart";
 import { MarketStatusIndicator } from "@/components/shared/MarketStatusIndicator";
-import { AfricaMap } from "@/components/shared/AfricaMap";
 import { AllStocksList } from "@/components/markets/AllStocksList";
 import { StockHeatmap } from "@/components/home/StockHeatmap";
 import { CANONICAL_SYMBOLS, STOCK_META, getDivYield, relativeDate } from "@/lib/stockPrices";
@@ -28,18 +28,6 @@ import {
 
 const tabs = ["Overview", "Discover", "Calendars", "Heatmap", "All Stocks"] as const;
 type Tab = typeof tabs[number];
-
-// Static fallback — used only while live index data is loading, or if the
-// Continua Data API is unreachable, and ONLY when NSE is the selected
-// exchange (see the isLoading/isError fallback logic below Markets()).
-// Showing this under an "NGX"/"JSE" label on an API error would show
-// invented Kenyan-index numbers for a market they don't apply to.
-const staticNseIndicesFallback = [
-  { name: "NSE 20", value: "1,847.23", change: 1.2, isUp: true, points: "+22.1" },
-  { name: "NSE 25", value: "3,542.87", change: 0.8, isUp: true, points: "+28.3" },
-  { name: "NASI", value: "112.45", change: -0.3, isUp: false, points: "-0.34" },
-  { name: "FTSE Kenya", value: "1,234.56", change: 2.1, isUp: true, points: "+25.9" },
-];
 
 // Reference universe (name/sector only — no price/change here anymore).
 // Sector rollups, gainers/losers, and every price shown below are computed
@@ -130,10 +118,10 @@ function StockRow({ stock, onTap }: { stock: { symbol: string; name: string; pri
 
 export default function Markets() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Tab>("Overview");
-  const [nseFilter, setNseFilter] = useState<string>("All");
+  const [activeTab, setActiveTab] = usePageState<Tab>("markets:tab", "Overview");
+  const [nseFilter, setNseFilter] = usePageState<string>("markets:filter", "All");
   const [listFilter, setListFilter] = useState<{ label: string; symbols: string[] } | null>(null);
-  const [divSortBy, setDivSortBy] = useState<string>("yield");
+  const [divSortBy, setDivSortBy] = usePageState<string>("markets:dividend-sort", "yield");
 
   // Live from the Continua Data Layer (backend/src/services/marketData/moversService.ts) —
   // falls back to the static, client-derived list above only while loading or if unreachable.
@@ -144,20 +132,17 @@ export default function Markets() {
   const { dividends: upcomingDividends, isLoading: dividendsLoading } = useUpcomingDividends();
   const { earnings: recentEarnings, isLoading: earningsLoading } = useRecentEarnings();
 
-  // Live from market.indices (backend/src/services/marketData/indexService.ts,
-  // populated by workers/indexWorker.ts) — falls back to the static Kenya
-  // demo list only while loading AND only when NSE is actually selected;
-  // any other exchange with no live indices yet just shows nothing rather
-  // than mislabeled Kenyan index values.
+  // Only published, dated observations: no synthetic fallback levels.
   const indices = liveIndices.length > 0
     ? liveIndices.map(idx => ({
         name: idx.code,
+        asOf: new Date(idx.timestamp).toLocaleDateString(),
         value: idx.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         change: idx.changePercent,
         isUp: idx.change >= 0,
         points: `${idx.change >= 0 ? "+" : ""}${idx.change.toFixed(2)}`,
       }))
-    : (exchange === "NSE" && !indicesLoading ? staticNseIndicesFallback : []);
+    : [];
 
   const topGainers = liveGainers.map(q => ({ symbol: q.symbol, name: STOCK_META[q.symbol]?.name ?? q.symbol, sector: STOCK_META[q.symbol]?.sector ?? "Other", price: q.lastPrice, change: q.changePercent }));
   const topLosers = liveLosers.map(q => ({ symbol: q.symbol, name: STOCK_META[q.symbol]?.name ?? q.symbol, sector: STOCK_META[q.symbol]?.sector ?? "Other", price: q.lastPrice, change: q.changePercent }));
@@ -174,6 +159,10 @@ export default function Markets() {
     [liveQuotes]
   );
   const sectors = useMemo(() => computeSectors(liveUniverse), [liveUniverse]);
+  const [ranking, setRanking] = usePageState<'gainers' | 'losers' | 'volume'>('markets:ranking', 'gainers');
+  const breadth = { up: liveUniverse.filter(q => q.change > 0).length, down: liveUniverse.filter(q => q.change < 0).length, flat: liveUniverse.filter(q => q.change === 0).length };
+  const rankedQuotes = Object.values(liveQuotes).filter(q => Number.isFinite(q.lastPrice) && q.lastPrice > 0)
+    .sort((a, b) => ranking === 'volume' ? b.volume - a.volume : ranking === 'gainers' ? b.changePercent - a.changePercent : a.changePercent - b.changePercent).slice(0, 10);
 
   const themesWithChange = useMemo(() => investmentThemes.map(theme => {
     const memberChanges = theme.stocks
@@ -236,7 +225,7 @@ export default function Markets() {
                   <tool.icon className="h-3.5 w-3.5" />
                 </div>
                 <p className="text-xs font-bold leading-tight">{tool.title}</p>
-                <p className="text-[9px] text-muted-foreground leading-tight mt-0.5">{tool.desc}</p>
+                <p className="text-[0.5625rem] text-muted-foreground leading-tight mt-0.5">{tool.desc}</p>
               </Card>
             ))}
           </div>
@@ -245,20 +234,13 @@ export default function Markets() {
 
         {activeTab === "Overview" && (
           <>
-            {/* Continua brand strip — dotted Africa globe, centered, theme-matched */}
-            <Card className="soft-card overflow-hidden">
-              <div className="w-full max-w-[220px] mx-auto py-4">
-                <AfricaMap variant="compact" />
-              </div>
-            </Card>
-
             {/* Market Status */}
             <div className="flex items-center justify-between">
               <MarketStatusIndicator />
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Clock className="h-3 w-3" />
-                <span>Live</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-bull animate-pulse" />
+                <span>Published market data</span>
+
               </div>
             </div>
 
@@ -273,9 +255,9 @@ export default function Markets() {
                   <p className="text-xs text-muted-foreground">No index data available yet for {exchangeMeta.name}.</p>
                 </Card>
               ) : (
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="flex gap-6 overflow-x-auto border-b pb-4">
                 {indices.map(idx => (
-                  <Card key={idx.name} className="soft-card p-3 active:scale-[0.98] transition-transform cursor-pointer" onClick={() => navigate('/markets')}>
+                  <Card key={idx.name} className="min-w-[140px] py-2">
                     <p className="text-xs font-medium text-muted-foreground">{idx.name}</p>
                     <p className="text-lg font-bold mt-0.5">{idx.value}</p>
                     <div className="flex items-center gap-1.5 mt-1">
@@ -287,15 +269,39 @@ export default function Markets() {
                         ({idx.isUp ? '+' : ''}{idx.change.toFixed(1)}%)
                       </span>
                     </div>
-                    <div className="mt-2">
-                      <SparklineChart isPositive={idx.isUp} width={120} height={28} />
-                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">As of {idx.asOf} · points</p>
                   </Card>
                 ))}
               </div>
               )}
             </div>
 
+            <section className="border-b pb-4 space-y-3" aria-label="Market breadth">
+              <h2 className="text-sm font-bold">Market breadth</h2>
+              <div className="flex justify-between text-xs"><span className="text-bull">{breadth.up} advancing</span><span>{breadth.flat} unchanged</span><span className="text-bear">{breadth.down} declining</span></div>
+              <div className="flex h-2 bg-muted" aria-hidden="true">
+                <div className="bg-bull" style={{ width: `${breadth.up / (liveUniverse.length || 1) * 100}%` }} />
+                <div className="bg-muted" style={{ width: `${breadth.flat / (liveUniverse.length || 1) * 100}%` }} />
+                <div className="bg-bear" style={{ width: `${breadth.down / (liveUniverse.length || 1) * 100}%` }} />
+              </div>
+              <p className="text-xs text-muted-foreground">Coverage: {liveUniverse.length} quoted companies. Changes use each provider's latest available session.</p>
+              <div className="flex gap-4 overflow-x-auto">
+                <Button variant="ghost" onClick={() => navigate('/screener')}>Screener</Button>
+                <Button variant="ghost" onClick={() => setActiveTab('Heatmap')}>Heatmap</Button>
+                <Button variant="ghost" onClick={() => setActiveTab('Calendars')}>Calendar</Button>
+                <Button variant="ghost" onClick={() => navigate('/notifications?tab=alerts')}>Alerts</Button>
+              </div>
+            </section>
+            <section aria-label="Market rankings" className="border-b pb-4">
+              <div className="flex gap-4 mb-3" role="tablist" aria-label="Rankings">
+                {(['gainers', 'losers', 'volume'] as const).map(value => <button key={value} role="tab" aria-selected={ranking === value} onClick={() => setRanking(value)} className={`py-2 text-sm capitalize border-b-2 ${ranking === value ? 'border-primary font-semibold' : 'border-transparent text-muted-foreground'}`}>{value === 'volume' ? 'Most active' : value}</button>)}
+              </div>
+              {rankedQuotes.map(q => <button key={q.symbol} onClick={() => navigate(`/stock/${q.symbol}`)} className="flex w-full justify-between items-center py-3 border-b text-left">
+                <span><span className="font-semibold text-sm">{q.symbol}</span><span className="block text-xs text-muted-foreground">{STOCK_META[q.symbol]?.name ?? q.symbol}</span></span>
+                <span className="text-right"><span className="block text-sm tabular-nums">{q.lastPrice.toFixed(2)}</span><span className={`text-xs tabular-nums ${q.changePercent >= 0 ? 'text-bull' : 'text-bear'}`}>{ranking === 'volume' ? `${q.volume.toLocaleString()} shares` : `${q.changePercent >= 0 ? '+' : ''}${q.changePercent.toFixed(2)}%`}</span></span>
+              </button>)}
+              {!rankedQuotes.length && <p className="text-sm text-muted-foreground">Quotes are not available yet. Pull to refresh.</p>}
+            </section>
             {/* Investment Themes */}
             <div>
               <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
@@ -324,10 +330,10 @@ export default function Markets() {
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{theme.desc}</p>
                     <div className="flex gap-1 mt-2">
                       {theme.stocks.map(s => (
-                        <Badge key={s} variant="secondary" className="text-[10px] py-0 px-1.5 border-0">{s}</Badge>
+                        <Badge key={s} variant="secondary" className="text-[0.625rem] py-0 px-1.5 border-0">{s}</Badge>
                       ))}
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-2 leading-snug">{theme.why}</p>
+                    <p className="text-[0.625rem] text-muted-foreground mt-2 leading-snug">{theme.why}</p>
                   </div>
                 ))}
               </div>
@@ -547,7 +553,7 @@ export default function Markets() {
                         <p className="text-sm font-bold text-bull">KES {details.amountPerShare.toFixed(2)}</p>
                       )}
                       {details.dividendType && (
-                        <Badge variant="secondary" className="text-[10px] py-0 px-1.5 capitalize">{details.dividendType}</Badge>
+                        <Badge variant="secondary" className="text-[0.625rem] py-0 px-1.5 capitalize">{details.dividendType}</Badge>
                       )}
                     </div>
                   </div>

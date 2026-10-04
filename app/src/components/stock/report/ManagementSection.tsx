@@ -52,7 +52,7 @@ export function ManagementSection({ symbol }: Props) {
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1">No executive compensation data on file for {symbol} yet — chart is ready to populate once a source exists.</p>
+        <p className="text-[0.625rem] text-muted-foreground mt-1">No executive compensation data on file for {symbol} yet — chart is ready to populate once a source exists.</p>
       </SubWidget>
     </ReportSection>
   );

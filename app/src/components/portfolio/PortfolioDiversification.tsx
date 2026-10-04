@@ -100,7 +100,7 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
           Diversification across Industries
           <InfoTip>How your portfolio value flows from sector into individual holdings, based on each position's current market value.</InfoTip>
         </h3>
-        <p className="text-[11px] text-muted-foreground mb-3">
+        <p className="text-[0.6875rem] text-muted-foreground mb-3">
           How your value flows from sector into individual holdings.
         </p>
         <div className="h-[380px] -mx-2">
@@ -122,7 +122,7 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
             </Sankey>
           </ResponsiveContainer>
         </div>
-        {!hasHoldings && <p className="text-[10px] text-muted-foreground mt-1">Add a holding to see how your value flows across sectors.</p>}
+        {!hasHoldings && <p className="text-[0.625rem] text-muted-foreground mt-1">Add a holding to see how your value flows across sectors.</p>}
       </div>
 
       <div className="card-gradient rounded-2xl p-4">
@@ -130,7 +130,7 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
           Diversification across Holdings
           <InfoTip>Each holding's share of your total portfolio value — a concentration check, not a performance measure. Tap a slice to see its detail.</InfoTip>
         </h3>
-        <p className="text-[11px] text-muted-foreground mb-3">How much of your portfolio each holding represents.</p>
+        <p className="text-[0.6875rem] text-muted-foreground mb-3">How much of your portfolio each holding represents.</p>
         <div className="h-[280px] relative mx-auto max-w-sm">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -159,21 +159,21 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
           </ResponsiveContainer>
           {selected && (
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-1 text-center">
-              <p className="text-[12.5px] font-bold leading-tight" style={{ color: hasHoldings ? (selected.isOther ? "hsl(var(--muted-foreground))" : colorFor(selected.name)) : "hsl(var(--muted-foreground))" }}>
+              <p className="text-[0.78125rem] font-bold leading-tight" style={{ color: hasHoldings ? (selected.isOther ? "hsl(var(--muted-foreground))" : colorFor(selected.name)) : "hsl(var(--muted-foreground))" }}>
                 {selected.name}
               </p>
-              {hasHoldings && <p className="text-[15px] font-bold tabular leading-tight">{selected.pct.toFixed(1)}%</p>}
+              {hasHoldings && <p className="text-[0.9375rem] font-bold tabular leading-tight">{selected.pct.toFixed(1)}%</p>}
               {hasHoldings && !selected.isOther && (
                 <div className="mt-1 w-[88px] space-y-px">
-                  <div className="flex items-center justify-between text-[9px] leading-tight">
+                  <div className="flex items-center justify-between text-[0.5625rem] leading-tight">
                     <span className="text-muted-foreground">Value</span>
                     <span className="font-semibold tabular">{showValues ? `${currencyLabel}${selected.value.toLocaleString("en-US", { maximumFractionDigits: 0 })}` : "••••"}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[9px] leading-tight">
+                  <div className="flex items-center justify-between text-[0.5625rem] leading-tight">
                     <span className="text-muted-foreground">1Y</span>
                     <span className="font-semibold tabular">{oneYear.isLoading ? "···" : yearPct === null ? "n/a" : `${yearPct >= 0 ? "+" : ""}${yearPct.toFixed(1)}%`}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[9px] leading-tight">
+                  <div className="flex items-center justify-between text-[0.5625rem] leading-tight">
                     <span className="text-muted-foreground">7D</span>
                     <span className={`font-semibold tabular ${weekPct !== null ? (weekPct >= 0 ? "text-bull" : "text-bear") : ""}`}>
                       {oneWeek.isLoading ? "···" : weekPct === null ? "n/a" : `${weekPct >= 0 ? "+" : ""}${weekPct.toFixed(1)}%`}
@@ -197,7 +197,7 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
                   key={d.name}
                   type="button"
                   onClick={() => setSelectedTicker(d.name)}
-                  className={`flex w-full items-center gap-2 py-2.5 text-left text-[12px] transition-colors ${isSelected ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`flex w-full items-center gap-2 py-2.5 text-left text-[0.75rem] transition-colors ${isSelected ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <span className="h-2 w-2 rounded-full shrink-0" style={{ background: colorFor(d.name) }} />
                   <span className="min-w-0 flex-1 truncate"><strong className="text-foreground">{d.name}</strong> · {d.fullName}</span>
@@ -219,7 +219,7 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
             honestly yet — shown here so the tool is visibly present rather than silently missing.
           </InfoTip>
         </h3>
-        <p className="text-[11px] text-muted-foreground mb-4">Where your holdings actually earn their revenue.</p>
+        <p className="text-[0.6875rem] text-muted-foreground mb-4">Where your holdings actually earn their revenue.</p>
         <div className="h-56 relative">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -230,7 +230,7 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-8 text-center">
             <p className="text-sm font-bold">Not Reported</p>
-            <p className="text-[10.5px] text-muted-foreground mt-1">Geographic revenue data isn't tracked for NSE issuers yet</p>
+            <p className="text-[0.65625rem] text-muted-foreground mt-1">Geographic revenue data isn't tracked for NSE issuers yet</p>
           </div>
         </div>
       </div>

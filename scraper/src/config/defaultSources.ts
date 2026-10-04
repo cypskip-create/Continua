@@ -6,6 +6,15 @@ import { insertSourceIfMissing } from "../storage/sourcesRepository.js";
  * articles. Operators can disable or edit any seeded row and that choice is
  * preserved because startup only inserts missing IDs. */
 export const DEFAULT_SOURCES: SourceDefinition[] = [
+  {
+    id: 'nse-index-summary', name: 'NSE Official Index Summary', adapter: 'web', enabled: true,
+    config: { seeds: ['https://www.nse.co.ke/'], allowedDomains: ['www.nse.co.ke', 'nse.co.ke'], maxDepth: 0,
+      requestsPerSecond: 0.2, concurrency: 1, revisitAfterMinutes: 15, schedule: '*/15 * * * *',
+      documents: { pdf: false, ocr: false, tables: true } },
+    termsUrl: 'https://www.nse.co.ke/data/', robotsUrl: 'https://www.nse.co.ke/robots.txt',
+    license: null, redistributionAllowed: null, attributionRequired: true,
+    allowedUsage: 'Public end-of-day index observations with NSE attribution and observation date; no claim of licensed realtime index access.',
+  },
   ...[
     { id: "safaricom-filings", name: "Safaricom PLC", domain: "safaricom.co.ke", seeds: ["https://www.safaricom.co.ke/investor-relations-landing/reports/financial-report/financial-results"], paths: ["/investor-relations", "/annualreport", "/images/downloads/"] },
     { id: "kcb-filings", name: "KCB Group PLC", domain: "kcbgroup.com", seeds: ["https://kcbgroup.com/investor-relations/", "https://kcbgroup.com/financial-statements"], paths: ["/investor", "/financial", "/annual", ".pdf"] },

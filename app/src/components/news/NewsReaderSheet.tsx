@@ -49,7 +49,7 @@ function NewsReaderContent({ item, open, onOpenChange, navigate }: NewsReaderShe
             </button>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{article.sourceName}</p>
-              <p className="text-[11px] text-muted-foreground">{formatTimestamp(article.publishedAt)}</p>
+              <p className="text-[0.6875rem] text-muted-foreground">{formatTimestamp(article.publishedAt)}</p>
             </div>
           </header>
           <div
@@ -74,13 +74,13 @@ function NewsReaderContent({ item, open, onOpenChange, navigate }: NewsReaderShe
 
             {article.symbols.length > 0 && (
               <div className="mb-5 space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Affected stocks</p>
+                <p className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground">Affected stocks</p>
                 <div className="flex flex-wrap gap-2">
                 {article.symbols.map((s) => {
                   const quote = quotes[s.toUpperCase()];
                   return <button key={s} data-small-target onClick={() => { onOpenChange(false); navigate(`/stock/${s}`); }} className="flex items-center gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2 text-left">
-                    <Badge variant="outline" className="rounded-full text-[10px]">${s}</Badge>
-                    {quote && <div><p className="text-xs font-bold tabular-nums">KES {quote.lastPrice.toFixed(2)}</p><p className={`text-[10px] font-semibold ${quote.changePercent >= 0 ? "text-bull" : "text-bear"}`}>{quote.changePercent >= 0 ? "+" : ""}{quote.changePercent.toFixed(2)}%</p></div>}
+                    <Badge variant="outline" className="rounded-full text-[0.625rem]">${s}</Badge>
+                    {quote && <div><p className="text-xs font-bold tabular-nums">KES {quote.lastPrice.toFixed(2)}</p><p className={`text-[0.625rem] font-semibold ${quote.changePercent >= 0 ? "text-bull" : "text-bear"}`}>{quote.changePercent >= 0 ? "+" : ""}{quote.changePercent.toFixed(2)}%</p></div>}
                   </button>
                 })}
                 </div>

@@ -285,8 +285,8 @@ export default function Settings() {
           <div className="space-y-5 pb-4">
             {menuGroups.map((group, gi) => (
               <div key={gi}>
-                {group.title && <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-1 mb-1.5">{group.title}</p>}
-                <div className="rounded-2xl border border-border/60 bg-card overflow-hidden divide-y divide-border/50">
+                {group.title && <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted-foreground px-1 mb-1.5">{group.title}</p>}
+                <div className="flat-section rounded-2xl border border-border/60 bg-card overflow-hidden divide-y divide-border/50">
                   {group.ids.map(id => {
                     const s = topSections.find(t => t.id === id)!;
                     return (
@@ -294,7 +294,7 @@ export default function Settings() {
                         <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground shrink-0"><s.icon className="h-4 w-4" /></div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-semibold">{s.label}</div>
-                          <div className="text-[11px] text-muted-foreground truncate">{s.desc}</div>
+                          <div className="text-[0.6875rem] text-muted-foreground truncate">{s.desc}</div>
                         </div>
                         <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                       </button>
@@ -305,7 +305,7 @@ export default function Settings() {
             ))}
 
             <div>
-              <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
+              <div className="flat-section rounded-2xl border border-border/60 bg-card overflow-hidden">
                 <button onClick={async () => { await signOut?.(); navigate('/auth'); }} className="w-full flex items-center gap-3 px-3.5 py-3 hover:bg-muted/40 active:bg-muted/60 transition text-left">
                   <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0"><KeyRound className="h-4 w-4 text-muted-foreground" /></div>
                   <div className="flex-1 text-sm font-semibold">Log out</div>
@@ -319,13 +319,13 @@ export default function Settings() {
                   <div className="h-9 w-9 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0"><Trash2 className="h-4 w-4" /></div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold">Delete account</div>
-                    <div className="text-[11px] text-destructive/70">Permanently erase your Continua account</div>
+                    <div className="text-[0.6875rem] text-destructive/70">Permanently erase your Continua account</div>
                   </div>
                 </button>
               </div>
             </div>
 
-            <p className="text-[11px] text-muted-foreground text-center pt-1">Continua v1.0 · Nairobi, Kenya</p>
+            <p className="text-[0.6875rem] text-muted-foreground text-center pt-1">Continua v1.0 · Nairobi, Kenya</p>
           </div>
         )}
 
@@ -333,11 +333,11 @@ export default function Settings() {
           <div className="space-y-1 pb-4">
             <Header title="TradersHub" />
             {tradersHubSections.map(s => (
-              <button key={s.id} onClick={() => setSection(s.id)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition text-left">
+              <button key={s.id} onClick={() => setSection(s.id)} className="flat-section w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition text-left">
                 <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground"><s.icon className="h-4 w-4" /></div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold">{s.label}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{s.desc}</div>
+                  <div className="text-[0.6875rem] text-muted-foreground truncate">{s.desc}</div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -371,15 +371,15 @@ export default function Settings() {
               }}
             />
             <Separator />
-            <button onClick={() => setSection("blocked")} className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-muted/50">
+            <button onClick={() => setSection("blocked")} className="flat-section w-full flex items-center justify-between p-3 rounded-xl hover:bg-muted/50">
               <span className="flex items-center gap-3 text-sm font-medium">Blocked accounts</span>
               <span className="text-xs text-muted-foreground">{blockedUsers.length} <ChevronRight className="h-4 w-4 inline" /></span>
             </button>
-            <button onClick={() => setSection("muted")} className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-muted/50">
+            <button onClick={() => setSection("muted")} className="flat-section w-full flex items-center justify-between p-3 rounded-xl hover:bg-muted/50">
               <span className="flex items-center gap-3 text-sm font-medium">Muted accounts & words</span>
               <span className="text-xs text-muted-foreground">{mutedUsers.length + mutedKeywords.length} <ChevronRight className="h-4 w-4 inline" /></span>
             </button>
-            <p className="text-[11px] text-muted-foreground pt-1">Blocking or muting someone hides their posts from your TradersHub feed.</p>
+            <p className="text-[0.6875rem] text-muted-foreground pt-1">Blocking or muting someone hides their posts from your TradersHub feed.</p>
           </div>
         )}
 
@@ -448,7 +448,7 @@ export default function Settings() {
                   {!checking && available === false && <X className="h-4 w-4 text-destructive" />}
                 </div>
               </div>
-              <p className="text-[11px] text-muted-foreground">3–20 chars. Letters, numbers, underscores only.</p>
+              <p className="text-[0.6875rem] text-muted-foreground">3–20 chars. Letters, numbers, underscores only.</p>
             </div>
             <div>
               <Label className="text-xs font-semibold flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" />Email</Label>
@@ -522,12 +522,12 @@ export default function Settings() {
             <Header title="Delete account" back="data" />
             <div className="flex items-start gap-3 p-3.5 rounded-xl bg-destructive/[0.06] border border-destructive/20">
               <ShieldAlert className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-              <p className="text-[12.5px] text-destructive leading-relaxed">This permanently deletes your Continua account. There's no undo, and no grace period to recover it afterward.</p>
+              <p className="text-[0.78125rem] text-destructive leading-relaxed">This permanently deletes your Continua account. There's no undo, and no grace period to recover it afterward.</p>
             </div>
 
             <div>
               <p className="text-xs font-semibold text-muted-foreground mb-2">This will remove:</p>
-              <ul className="space-y-1.5 text-[13px] text-muted-foreground">
+              <ul className="space-y-1.5 text-[0.8125rem] text-muted-foreground">
                 {[
                   "Your profile, handle, and TradersHub identity",
                   "Every post, comment, like, and repost you've made",
@@ -565,7 +565,7 @@ export default function Settings() {
               {deletingAccount ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
               Permanently delete my account
             </Button>
-            <p className="text-[11px] text-muted-foreground text-center">Changed your mind? Just go back — nothing happens until you tap the button above.</p>
+            <p className="text-[0.6875rem] text-muted-foreground text-center">Changed your mind? Just go back — nothing happens until you tap the button above.</p>
           </div>
         )}
 
@@ -584,7 +584,7 @@ export default function Settings() {
                       {m.label}
                       {m.is_default && <Star className="h-3 w-3 fill-current text-foreground shrink-0" />}
                     </div>
-                    <div className="text-[11px] text-muted-foreground truncate">{m.detail}</div>
+                    <div className="text-[0.6875rem] text-muted-foreground truncate">{m.detail}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
@@ -666,7 +666,7 @@ export default function Settings() {
               <p className="text-xs font-semibold text-muted-foreground mb-1">PRIVACY POLICY</p>
               <p className="text-sm text-muted-foreground leading-relaxed">We collect your profile, portfolio, and activity data to run the app and personalize your feed. We never sell your data. Payment method details are stored as masked references only. You can download or delete your data anytime from Settings → Your data.</p>
             </div>
-            <p className="text-[11px] text-muted-foreground">Last updated August 2026</p>
+            <p className="text-[0.6875rem] text-muted-foreground">Last updated August 2026</p>
           </div>
         )}
       </div>
@@ -681,7 +681,7 @@ function Row({ icon, title, desc, checked, onChange, disabled }: any) {
         <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground shrink-0">{icon}</div>
         <div className="min-w-0">
           <div className="text-sm font-medium truncate">{title}</div>
-          <div className="text-[11px] text-muted-foreground truncate">{desc}</div>
+          <div className="text-[0.6875rem] text-muted-foreground truncate">{desc}</div>
         </div>
       </div>
       <Switch checked={checked} onCheckedChange={onChange} disabled={disabled} />

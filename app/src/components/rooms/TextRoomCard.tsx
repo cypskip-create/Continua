@@ -39,7 +39,7 @@ export function TextRoomCard({ room, isJoined, onJoin, onLeave, onOpen }: TextRo
               )}
               <h4 className="font-semibold text-sm truncate">{room.name}</h4>
               {room.isPrivate && (
-                <Badge className="bg-accent/20 text-accent text-[10px] px-1.5 py-0 shrink-0">
+                <Badge className="bg-accent/20 text-accent text-[0.625rem] px-1.5 py-0 shrink-0">
                   <Crown className="h-2.5 w-2.5 mr-0.5" />
                   Premium
                 </Badge>
@@ -48,7 +48,7 @@ export function TextRoomCard({ room, isJoined, onJoin, onLeave, onOpen }: TextRo
             <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
               {room.description}
             </p>
-            <Badge variant="outline" className="text-[10px] px-2 py-0.5">
+            <Badge variant="outline" className="text-[0.625rem] px-2 py-0.5">
               {room.category}
             </Badge>
           </div>
@@ -63,7 +63,7 @@ export function TextRoomCard({ room, isJoined, onJoin, onLeave, onOpen }: TextRo
             <p className="text-xs text-muted-foreground line-clamp-1">
               {room.lastMessage}
             </p>
-            <span className="text-[10px] text-muted-foreground/70">
+            <span className="text-[0.625rem] text-muted-foreground/70">
               {room.lastMessageTime}
             </span>
           </div>

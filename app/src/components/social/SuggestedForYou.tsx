@@ -85,7 +85,7 @@ export function SuggestedForYou({ currentUserId, myInterests, followingIds, onFo
 
   return (
     <div className="border-b border-border/40 py-3">
-      <p className="px-4 text-[12px] font-bold text-muted-foreground uppercase tracking-wider mb-2.5">Suggested for you</p>
+      <p className="px-4 text-[0.75rem] font-bold text-muted-foreground uppercase tracking-wider mb-2.5">Suggested for you</p>
       <div className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-1">
         {ranked.map(c => {
           const justFollowed = followedJustNow.has(c.user_id);
@@ -94,20 +94,20 @@ export function SuggestedForYou({ currentUserId, myInterests, followingIds, onFo
               <button onClick={() => navigate(`/profile/${c.user_id}`)}>
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={c.avatar_url || ""} className="object-cover" />
-                  <AvatarFallback className="text-[13px] font-bold bg-primary/10 text-primary">{getInitials(c.full_name)}</AvatarFallback>
+                  <AvatarFallback className="text-[0.8125rem] font-bold bg-primary/10 text-primary">{getInitials(c.full_name)}</AvatarFallback>
                 </Avatar>
               </button>
               <div className="min-w-0 w-full">
-                <p className="text-[12px] font-bold truncate">{c.full_name || "Investor"}</p>
-                <p className="text-[10.5px] text-muted-foreground truncate">{atHandle(c)}</p>
+                <p className="text-[0.75rem] font-bold truncate">{c.full_name || "Investor"}</p>
+                <p className="text-[0.65625rem] text-muted-foreground truncate">{atHandle(c)}</p>
                 {c.sharedCount > 0 && (
-                  <p className="text-[9.5px] text-primary font-semibold mt-0.5">{c.sharedCount} shared interest{c.sharedCount > 1 ? "s" : ""}</p>
+                  <p className="text-[0.59375rem] text-primary font-semibold mt-0.5">{c.sharedCount} shared interest{c.sharedCount > 1 ? "s" : ""}</p>
                 )}
               </div>
               <Button
                 size="sm"
                 variant={justFollowed ? "secondary" : "outline"}
-                className="h-7 w-full rounded-full text-[11px] font-bold mt-1"
+                className="h-7 w-full rounded-full text-[0.6875rem] font-bold mt-1"
                 disabled={justFollowed}
                 onClick={() => handleFollow(c.user_id)}
               >

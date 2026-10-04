@@ -4,6 +4,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfile } from "@/hooks/useProfile";
 import { cn } from "@/lib/utils";
 import { useTouchClick } from "@/hooks/useTouchClick";
+import { useAuth } from "@/hooks/useAuth";
+
+const tabLocations = new Map<string, string>();
 
 const navItems = [
   { id: "home", label: "Home", icon: Home, path: "/" },
@@ -21,10 +24,12 @@ const MAIN_ROUTES = new Set(["/", "/markets", "/track-investments", "/traders-hu
 export function BottomNavigation() {
   const tap = useTouchClick<HTMLAnchorElement>();
   const location = useLocation();
+  const { user } = useAuth();
   const { profile } = useProfile();
   const isMainRoute = MAIN_ROUTES.has(location.pathname);
 
   if (!isMainRoute) return null;
+  tabLocations.set(`${user?.id}:${location.pathname}`, location.pathname + location.search);
 
   return (
     <nav className="bottom-nav safe-area-bottom">
@@ -39,7 +44,8 @@ export function BottomNavigation() {
             <NavLink
               key={item.id}
               {...tap}
-              to={item.path}
+              to={tabLocations.get(`${user?.id}:${item.path}`) ?? item.path}
+              state={{ resumeTab: true }}
               className={cn(
                 "tab-item relative flex flex-col items-center justify-center py-1.5",
                 isActive ? "active" : "inactive"
@@ -55,7 +61,7 @@ export function BottomNavigation() {
                     isActive && "ring-2 ring-foreground ring-offset-2"
                   )}>
                     <AvatarImage src={profile.avatar_url} className="object-cover" />
-                    <AvatarFallback className="text-[9px]">
+                    <AvatarFallback className="text-[0.5625rem]">
                       {profile?.full_name?.split(" ").map(n => n[0]).join("").slice(0, 2) || "U"}
                     </AvatarFallback>
                   </Avatar>
@@ -71,7 +77,7 @@ export function BottomNavigation() {
               </div>
               <span
                 className={cn(
-                  "text-[9.5px] mt-1 leading-none tracking-tight",
+                  "text-[0.59375rem] mt-1 leading-none tracking-tight",
                   isActive ? "font-semibold text-foreground" : "text-muted-foreground"
                 )}
               >

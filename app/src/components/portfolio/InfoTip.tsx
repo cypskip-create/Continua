@@ -22,7 +22,7 @@ export function InfoTip({ children, className }: InfoTipProps) {
           <Info className="h-3.5 w-3.5" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 text-[12px] leading-snug p-3" onClick={(e) => e.stopPropagation()}>
+      <PopoverContent className="w-64 text-[0.75rem] leading-snug p-3" onClick={(e) => e.stopPropagation()}>
         {children}
       </PopoverContent>
     </Popover>

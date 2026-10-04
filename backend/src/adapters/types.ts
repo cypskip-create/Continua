@@ -54,6 +54,9 @@ export interface IExchangeAdapter {
   /** Company + latest fundamentals bundle for a symbol. */
   getFundamentals(symbol: string): Promise<FundamentalsBundle | null>;
 
+  /** All provider reporting periods, oldest first; never synthesize gaps. */
+  getFundamentalsHistory?(symbol: string): Promise<FundamentalsBundle[]>;
+
   /** Corporate actions for a symbol (or all, if symbol omitted) since a given date. */
   getCorporateActions(symbol: string | null, since: string): Promise<CorporateAction[]>;
 

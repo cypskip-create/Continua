@@ -74,7 +74,7 @@ export function CommandCenterSections({ quotes }: CommandCenterSectionsProps) {
           <Icon className={`h-3 w-3 ${iconClass || "text-primary"}`} /> {title}
         </p>
         {actionLabel && (
-          <button data-small-target onClick={onAction} className="text-[11px] text-primary font-semibold flex items-center">
+          <button data-small-target onClick={onAction} className="text-[0.6875rem] text-primary font-semibold flex items-center">
             {actionLabel} <ChevronRight className="h-3 w-3" />
           </button>
         )}
@@ -100,8 +100,8 @@ export function CommandCenterSections({ quotes }: CommandCenterSectionsProps) {
         <Section title="Undervalued Picks" icon={Coins} iconClass="text-bull" actionLabel="More" onAction={() => navigate("/screener")}>
           {undervalued.map(s => (
             <Row key={s.symbol} onClick={() => navigate(`/stock/${s.symbol}`)}
-              left={<div><p className="text-xs font-semibold">{s.symbol} <span className="font-normal text-muted-foreground">· {s.name}</span></p><p className="text-[10px] text-muted-foreground tabular">KES {s.price.toFixed(2)}</p></div>}
-              right={<div className="text-right"><p className="text-xs font-semibold text-bull tabular flex items-center gap-0.5 justify-end"><ArrowUpRight className="h-3 w-3" />+{s.upside.toFixed(1)}%</p><p className="text-[10px] text-muted-foreground">upside</p></div>}
+              left={<div><p className="text-xs font-semibold">{s.symbol} <span className="font-normal text-muted-foreground">· {s.name}</span></p><p className="text-[0.625rem] text-muted-foreground tabular">KES {s.price.toFixed(2)}</p></div>}
+              right={<div className="text-right"><p className="text-xs font-semibold text-bull tabular flex items-center gap-0.5 justify-end"><ArrowUpRight className="h-3 w-3" />+{s.upside.toFixed(1)}%</p><p className="text-[0.625rem] text-muted-foreground">upside</p></div>}
             />
           ))}
         </Section>
@@ -110,7 +110,7 @@ export function CommandCenterSections({ quotes }: CommandCenterSectionsProps) {
       <Section title="High-Growth Stocks" icon={TrendingUp} iconClass="text-accent">
         {highGrowth.map(s => (
           <Row key={s.symbol} onClick={() => navigate(`/stock/${s.symbol}`)}
-            left={<div><p className="text-xs font-semibold">{s.symbol} <span className="font-normal text-muted-foreground">· {s.name}</span></p><p className="text-[10px] text-muted-foreground">3-yr revenue</p></div>}
+            left={<div><p className="text-xs font-semibold">{s.symbol} <span className="font-normal text-muted-foreground">· {s.name}</span></p><p className="text-[0.625rem] text-muted-foreground">3-yr revenue</p></div>}
             right={<p className="text-xs font-semibold text-accent tabular">+{s.growth.toFixed(1)}%</p>}
           />
         ))}
@@ -119,7 +119,7 @@ export function CommandCenterSections({ quotes }: CommandCenterSectionsProps) {
       <Section title="Strong Dividends" icon={Coins} iconClass="text-chart-3">
         {dividendStars.map(s => (
           <Row key={s.symbol} onClick={() => navigate(`/stock/${s.symbol}`)}
-            left={<div><p className="text-xs font-semibold">{s.symbol} <span className="font-normal text-muted-foreground">· {s.name}</span></p><p className="text-[10px] text-muted-foreground">forward yield</p></div>}
+            left={<div><p className="text-xs font-semibold">{s.symbol} <span className="font-normal text-muted-foreground">· {s.name}</span></p><p className="text-[0.625rem] text-muted-foreground">forward yield</p></div>}
             right={<p className="text-xs font-semibold text-chart-3 tabular">{s.yield.toFixed(1)}%</p>}
           />
         ))}
@@ -128,7 +128,7 @@ export function CommandCenterSections({ quotes }: CommandCenterSectionsProps) {
       <Section title="Upcoming Earnings" icon={Calendar} iconClass="text-primary">
         {upcomingEarnings.map(e => (
           <Row key={e.symbol} onClick={() => navigate(`/stock/${e.symbol}`)}
-            left={<div><p className="text-xs font-semibold">{e.symbol} <span className="font-normal text-muted-foreground">· {getStockName(e.symbol)}</span></p><p className="text-[10px] text-muted-foreground">{e.time}</p></div>}
+            left={<div><p className="text-xs font-semibold">{e.symbol} <span className="font-normal text-muted-foreground">· {getStockName(e.symbol)}</span></p><p className="text-[0.625rem] text-muted-foreground">{e.time}</p></div>}
             right={<p className="text-xs font-semibold text-primary tabular">{e.date}</p>}
           />
         ))}

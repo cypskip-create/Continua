@@ -23,7 +23,9 @@ export async function runIndexIngestionOnce(options: RunOnceOptions = {}): Promi
   const { respectTradingCalendar = true } = options;
   for (const adapter of getAllAdapters()) {
     try {
-      if (respectTradingCalendar && !isMarketOpen(adapter.exchange)) {
+      // NSE's published closing summary can arrive after trading ends. It is
+      // already dated by the publisher and must also be ingested on weekends.
+      if (respectTradingCalendar && adapter.exchange !== 'NSE' && !isMarketOpen(adapter.exchange)) {
         logger.debug({ exchange: adapter.exchange }, "Market closed — skipping index ingestion tick");
         continue;
       }

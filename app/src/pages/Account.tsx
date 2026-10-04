@@ -11,6 +11,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
 import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
 import { useToast } from "@/hooks/use-toast";
+import { applyFontScale, getFontScale } from "@/lib/appearance";
 
 export default function Account() {
   const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -19,11 +20,10 @@ export default function Account() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [portfolioPublic, setPortfolioPublic] = useState(true);
-  const [fontScale, setFontScale] = useState<string>(() => localStorage.getItem("app_font_scale") || "1");
+  const [fontScale, setFontScale] = useState<string>(getFontScale);
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--app-font-scale", fontScale);
-    localStorage.setItem("app_font_scale", fontScale);
+    applyFontScale(fontScale);
   }, [fontScale]);
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function Account() {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <h2 className="text-lg font-semibold truncate">{profile?.full_name || user?.email?.split('@')[0] || 'Guest'}</h2>
-              {isPremium && <Badge className="h-4 px-1.5 text-[9px] brand-active border-0"><Crown className="h-2.5 w-2.5 mr-0.5" />Premium</Badge>}
+              {isPremium && <Badge className="h-4 px-1.5 text-[0.5625rem] brand-active border-0"><Crown className="h-2.5 w-2.5 mr-0.5" />Premium</Badge>}
             </div>
             <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             <button
@@ -78,7 +78,7 @@ export default function Account() {
           <button
             data-small-target
             onClick={() => navigate('/upgrade')}
-            className="w-full flex items-center justify-between gap-3 p-4 rounded-xl border border-border/60 text-left hover:bg-muted/30 transition-colors"
+            className="flat-section w-full flex items-center justify-between gap-3 p-4 rounded-xl border border-border/60 text-left hover:bg-muted/30 transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${isPremium ? 'brand-active' : 'bg-muted'}`}>
@@ -86,7 +86,7 @@ export default function Account() {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold">{isPremium ? 'Premium' : 'Free plan'}</p>
-                <p className="text-[11px] text-muted-foreground truncate">
+                <p className="text-[0.6875rem] text-muted-foreground truncate">
                   {isPremium ? 'Real-time prices, unlimited AI, long-form posts' : 'Upgrade for real-time prices & more'}
                 </p>
               </div>
@@ -104,7 +104,7 @@ export default function Account() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">Theme</p>
-                <p className="text-[11px] text-muted-foreground">Light, Dark, or AMOLED for OLED screens</p>
+                <p className="text-[0.6875rem] text-muted-foreground">Light, Dark, or AMOLED for OLED screens</p>
               </div>
               <ThemeToggle />
             </div>
@@ -113,7 +113,7 @@ export default function Account() {
                 <Type className="h-4 w-4 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Text size</p>
-                  <p className="text-[11px] text-muted-foreground">Global scale</p>
+                  <p className="text-[0.6875rem] text-muted-foreground">Global scale</p>
                 </div>
               </div>
               <div className="grid grid-cols-4 gap-1.5">
@@ -140,7 +140,7 @@ export default function Account() {
               {portfolioPublic ? <Eye className="h-4 w-4 text-muted-foreground" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
               <div>
                 <p className="text-sm font-medium">Portfolio visibility</p>
-                <p className="text-[11px] text-muted-foreground">{portfolioPublic ? "Public — visible on your profile" : "Private — only you"}</p>
+                <p className="text-[0.6875rem] text-muted-foreground">{portfolioPublic ? "Public — visible on your profile" : "Private — only you"}</p>
               </div>
             </div>
             <Switch checked={portfolioPublic} onCheckedChange={async (checked) => {
@@ -156,7 +156,7 @@ export default function Account() {
           Sign out
         </Button>
 
-        <p className="text-center text-[10px] text-muted-foreground pb-4">Continua · v1.0</p>
+        <p className="text-center text-[0.625rem] text-muted-foreground pb-4">Continua · v1.0</p>
       </div>
     </div>
   );

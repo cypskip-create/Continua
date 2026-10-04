@@ -81,12 +81,12 @@ export function StockSnowflake({ symbol }: StockSnowflakeProps) {
           stronger, more balanced company.
         </InfoTip>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-4">
+      <p className="text-[0.6875rem] text-muted-foreground mb-4">
         {symbol} scored out of 6 on five measures at once — {totalScore.toFixed(0)}/30 total.
       </p>
 
       {isLoading ? (
-        <p className="text-[11px] text-muted-foreground py-10 text-center">Computing scores…</p>
+        <p className="text-[0.6875rem] text-muted-foreground py-10 text-center">Computing scores…</p>
       ) : (
         <>
           <div className="h-56">
@@ -105,7 +105,7 @@ export function StockSnowflake({ symbol }: StockSnowflakeProps) {
                 key={axis}
                 data-small-target
                 onClick={() => setSelected(axis)}
-                className={`shrink-0 h-8 px-3 rounded-full text-[11px] font-semibold ${selected === axis ? "contrast-active" : "bg-muted/60"}`}
+                className={`shrink-0 h-8 px-3 rounded-full text-[0.6875rem] font-semibold ${selected === axis ? "contrast-active" : "bg-muted/60"}`}
               >
                 {axis} {scoreFor(axis).toFixed(0)}/6
               </button>
@@ -122,8 +122,8 @@ export function StockSnowflake({ symbol }: StockSnowflakeProps) {
                 ) : (
                   <MinusCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
                 )}
-                <span className="text-[12.5px]">{c.label}</span>
-                {c.status === "unknown" && <span className="text-[10px] text-muted-foreground ml-auto">No data</span>}
+                <span className="text-[0.78125rem]">{c.label}</span>
+                {c.status === "unknown" && <span className="text-[0.625rem] text-muted-foreground ml-auto">No data</span>}
               </div>
             ))}
           </div>

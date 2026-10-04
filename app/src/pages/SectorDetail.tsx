@@ -66,7 +66,7 @@ export default function SectorDetail() {
           </Button>
           <div className="min-w-0">
             <h1 className="text-base font-semibold truncate">{sectorName}</h1>
-            <p className="text-[11px] text-muted-foreground truncate">Sector Performance</p>
+            <p className="text-[0.6875rem] text-muted-foreground truncate">Sector Performance</p>
           </div>
         </div>
       </header>

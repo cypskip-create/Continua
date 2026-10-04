@@ -1,3 +1,4 @@
+import { PostAttachments } from "./PostAttachments";
 import { Heart, MessageCircle, Repeat2, Share, Bookmark, BookmarkCheck, Trash2, MoreHorizontal, Verified } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -152,7 +153,7 @@ export function MoomooPostCard({
                   <Badge 
                     key={stock} 
                     variant="outline" 
-                    className="text-[10px] px-2 py-0.5 cursor-pointer hover:bg-primary/10 transition-colors"
+                    className="text-[0.625rem] px-2 py-0.5 cursor-pointer hover:bg-primary/10 transition-colors"
                     onClick={() => navigate(`/stock/${stock}`)}
                   >
                     ${stock}
@@ -162,16 +163,7 @@ export function MoomooPostCard({
             )}
 
             {/* Image */}
-            {post.image_url && (
-              <div className="mt-3 rounded-xl overflow-hidden border border-border">
-                <img 
-                  src={post.image_url} 
-                  alt="Post" 
-                  className="w-full max-h-72 object-cover"
-                  loading="lazy"
-                />
-              </div>
-            )}
+            <PostAttachments post={post} />
 
             {/* Actions */}
             <div className="flex items-center justify-between mt-3 -ml-2">

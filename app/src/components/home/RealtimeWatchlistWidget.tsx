@@ -91,7 +91,7 @@ export function RealtimeWatchlistWidget() {
                   </div>
                   <div className="min-w-0">
                     <div className="font-semibold text-sm truncate">{item.symbol}</div>
-                    <div className="text-[10px] text-muted-foreground truncate">{item.name}</div>
+                    <div className="text-[0.625rem] text-muted-foreground truncate">{item.name}</div>
                   </div>
                 </div>
                 
@@ -101,7 +101,7 @@ export function RealtimeWatchlistWidget() {
                     <div className="font-semibold text-sm">
                       KES {priceData?.price.toFixed(2) || '---'}
                     </div>
-                    <div className={`text-[10px] flex items-center justify-end gap-0.5 ${isUp ? 'text-bull' : 'text-bear'}`}>
+                    <div className={`text-[0.625rem] flex items-center justify-end gap-0.5 ${isUp ? 'text-bull' : 'text-bear'}`}>
                       {isUp ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
                       {priceData ? `${isUp ? '+' : ''}${priceData.changePercent.toFixed(2)}%` : '---'}
                     </div>

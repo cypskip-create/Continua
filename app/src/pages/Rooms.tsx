@@ -90,9 +90,9 @@ export default function Rooms() {
                     {scheduledRooms.map(r => (
                       <Card key={r.id} className="w-[230px] shrink-0 cursor-pointer hover:border-primary/40 transition" onClick={() => handleJoin(r)}>
                         <CardContent className="p-3">
-                          <Badge variant="outline" className="text-[10px] mb-2">{r.category}</Badge>
+                          <Badge variant="outline" className="text-[0.625rem] mb-2">{r.category}</Badge>
                           <div className="font-bold text-sm mb-1 truncate">{r.name}</div>
-                          {r.scheduled_at && <div className="text-[11px] text-muted-foreground">{new Date(r.scheduled_at).toLocaleString()}</div>}
+                          {r.scheduled_at && <div className="text-[0.6875rem] text-muted-foreground">{new Date(r.scheduled_at).toLocaleString()}</div>}
                           {r.topic && <div className="text-xs mt-2 line-clamp-2 text-muted-foreground">{r.topic}</div>}
                           <Button size="sm" variant="outline" className="w-full rounded-full mt-3 h-8 text-xs">{r.is_member ? "Reminder set" : "Set reminder"}</Button>
                         </CardContent>
@@ -169,8 +169,8 @@ function RoomRow({ room, onJoin, onLeave }: { room: Room; onJoin: () => void; on
             {room.is_private && <Lock className="h-3 w-3 text-muted-foreground shrink-0" />}
           </div>
           {room.description && <div className="text-xs text-muted-foreground truncate">{room.description}</div>}
-          <div className="text-[11px] text-muted-foreground flex items-center gap-2 mt-0.5">
-            <Badge variant="outline" className="text-[9px] px-1.5 py-0">{room.category}</Badge>
+          <div className="text-[0.6875rem] text-muted-foreground flex items-center gap-2 mt-0.5">
+            <Badge variant="outline" className="text-[0.5625rem] px-1.5 py-0">{room.category}</Badge>
             <span className="flex items-center gap-0.5"><Users className="h-3 w-3" />{room.member_count}</span>
             {room.is_live && <span className="text-destructive font-bold flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-destructive animate-pulse" />LIVE</span>}
           </div>

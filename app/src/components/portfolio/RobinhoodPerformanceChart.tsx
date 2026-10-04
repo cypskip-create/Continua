@@ -191,7 +191,7 @@ export function RobinhoodPerformanceChart({
           <div className="text-xl font-bold tracking-tight tabular-nums">
             {formatHero(displayValue)}
           </div>
-          <div className={`flex items-center gap-1 mt-0.5 text-[11px] ${isPositive ? 'text-bull' : 'text-bear'}`}>
+          <div className={`flex items-center gap-1 mt-0.5 text-[0.6875rem] ${isPositive ? 'text-bull' : 'text-bear'}`}>
             {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
             {mode === "value" ? (
               <>
@@ -267,7 +267,7 @@ export function RobinhoodPerformanceChart({
           )}
         </div>
 
-        <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+        <p className="mt-2 text-[0.625rem] leading-4 text-muted-foreground">
           {activeTimeframe === "1D"
             ? "Previous close to latest quote only; not an intraday price path."
             : "Historical closes at today's share counts. Excludes past trades, cash flows and dividends; not your account's historical return."}
@@ -280,7 +280,7 @@ export function RobinhoodPerformanceChart({
               variant="ghost"
               size="sm"
               onClick={() => { setActiveTimeframe(tf.label); haptic(5); }}
-              className={`text-[11px] px-2.5 py-1 h-auto font-semibold rounded-full border transition-all ${
+              className={`text-[0.6875rem] px-2.5 py-1 h-auto font-semibold rounded-full border transition-all ${
                 activeTimeframe === tf.label ? 'text-foreground border-foreground' : 'text-muted-foreground border-transparent hover:text-foreground'
               }`}
             >

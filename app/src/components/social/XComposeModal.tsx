@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import type { PostPoll } from "./PostAttachments";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,7 @@ interface XComposeModalProps {
   onOpenChange: (open: boolean) => void;
   user: { id: string; email?: string } | null;
   profile: { avatar_url?: string | null; full_name?: string | null } | null;
-  onPost: (content: string, imageUrl?: string, quotedPostId?: string) => Promise<{ error?: any }>;
+  onPost: (content: string, imageUrl?: string[], quotedPostId?: string, poll?: PostPoll) => Promise<{ error?: any }>;
   portfolioSnapshot?: PortfolioSnapshot | null;
   prefillContent?: string;
   quotedPost?: { id: string; content: string; author?: { full_name: string | null; avatar_url: string | null } | null; created_at: string } | null;
@@ -48,7 +49,24 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [content, setContent] = useState("");
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [pollOpen, setPollOpen] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+  const [pollHours, setPollHours] = useState(24);
+  const [viewport, setViewport] = useState({ top: window.innerHeight / 2, height: window.innerHeight - 32 });
+  useEffect(() => {
+    if (!open) return;
+    const update = () => {
+      const view = window.visualViewport;
+      setViewport({ top: (view?.offsetTop ?? 0) + (view?.height ?? window.innerHeight) / 2, height: Math.max(180, (view?.height ?? window.innerHeight) - 24) });
+    };
+    update();
+    window.visualViewport?.addEventListener('resize', update);
+    window.visualViewport?.addEventListener('scroll', update);
+    return () => { window.visualViewport?.removeEventListener('resize', update); window.visualViewport?.removeEventListener('scroll', update); };
+  }, [open]);
+  const pollValid = !pollOpen || (pollQuestion.trim().length > 0 && pollOptions.every(o => o.trim()) && new Set(pollOptions.map(o => o.trim().toLowerCase())).size === pollOptions.length);
   const [attachedPL, setAttachedPL] = useState(false);
   const [attachedPortfolio, setAttachedPortfolio] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
@@ -86,19 +104,19 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const { dataUrl, error } = await readPostImage(file);
-    if (error) {
-      toast({ title: "Image too large", description: error, variant: "destructive" });
-      e.target.value = "";
-      return;
+    const files = [...(e.target.files ?? [])];
+    e.target.value = "";
+    if (selectedImages.length + files.length > 5) {
+      toast({ title: "Choose up to five images", variant: "destructive" }); return;
     }
-    setSelectedImage(dataUrl!);
+    const results = await Promise.all(files.map(readPostImage));
+    const failure = results.find(r => r.error);
+    if (failure) { toast({ title: "Could not add image", description: failure.error, variant: "destructive" }); return; }
+    setSelectedImages(previous => [...previous, ...results.map(r => r.dataUrl!)].slice(0,5));
   };
 
   const handlePost = async () => {
-    if (!content.trim() && !selectedImage && !attachedPL && !attachedPortfolio) return;
+    if (isPosting || !pollValid || (!content.trim() && !selectedImages.length && !attachedPL && !attachedPortfolio && !pollOpen)) return;
     if (!user) { navigate("/auth"); return; }
 
     setIsPosting(true);
@@ -124,15 +142,18 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
       finalContent += pText;
     }
 
-    const { error } = await onPost(finalContent, selectedImage || undefined, quotedPost?.id);
+    try {
+    const { error } = await onPost(finalContent, selectedImages, quotedPost?.id, pollOpen ? { question: pollQuestion.trim(), options: pollOptions.map(o => o.trim()), durationHours: pollHours } : undefined);
     if (!error) {
       setContent("");
-      setSelectedImage(null);
+      setSelectedImages([]);
+      setPollOpen(false); setPollQuestion(""); setPollOptions(["",""]);
       setAttachedPL(false);
       setAttachedPortfolio(false);
       onOpenChange(false);
     }
-    setIsPosting(false);
+    } catch { toast({ title: "Could not publish. Your draft is kept.", variant: "destructive" }); }
+    finally { setIsPosting(false); }
   };
 
   const charCount = content.length;
@@ -144,7 +165,8 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg p-0 gap-0 rounded-2xl overflow-hidden border-border">
+      <DialogContent centered style={{ '--composer-top': `${viewport.top}px`, '--composer-height': `${viewport.height}px` } as React.CSSProperties} className="max-w-lg p-0 gap-0 rounded-2xl border-border">
+        <DialogTitle className="sr-only">Compose post</DialogTitle>
         {/* Header — Radix DialogContent renders its own close X, so we don't add one here */}
         <div className="h-3" />
 
@@ -163,7 +185,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                 placeholder={isPremium ? "What's happening in the markets? (Premium: write a full article)" : "What's happening in the markets?"}
                 value={content}
                 onChange={handleContentChange}
-                className={`w-full bg-transparent border-0 outline-none resize-none text-[17px] leading-[1.4] placeholder:text-muted-foreground/50 ${isPremium ? "min-h-[220px]" : "min-h-[120px]"}`}
+                className={`w-full bg-transparent border-0 outline-none resize-none text-[1.0625rem] leading-[1.4] placeholder:text-muted-foreground/50 ${isPremium ? "min-h-[220px]" : "min-h-[120px]"}`}
                 maxLength={maxChars}
               />
             </div>
@@ -175,20 +197,27 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                 onClick={() => { onOpenChange(false); navigate("/upgrade"); }}
                 className="mt-2 w-full flex items-center justify-between gap-2 p-2.5 rounded-xl border border-primary/25 bg-primary/5 text-left"
               >
-                <span className="text-[11px] font-medium">Free posts stop at {FREE_MAX_CHARS} characters. Go Premium for {PREMIUM_MAX_CHARS.toLocaleString()}-character, article-length posts.</span>
-                <span className="text-[11px] font-bold text-primary shrink-0 whitespace-nowrap">Upgrade →</span>
+                <span className="text-[0.6875rem] font-medium">Free posts stop at {FREE_MAX_CHARS} characters. Go Premium for {PREMIUM_MAX_CHARS.toLocaleString()}-character, article-length posts.</span>
+                <span className="text-[0.6875rem] font-bold text-primary shrink-0 whitespace-nowrap">Upgrade →</span>
               </button>
             )}
 
             {/* Preview image */}
-            {selectedImage && (
-              <div className="relative mt-2 rounded-2xl overflow-hidden border border-border">
-                <img src={selectedImage} alt="Selected" className="w-full max-h-60 object-cover" />
-                <Button variant="secondary" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 hover:bg-background" onClick={() => setSelectedImage(null)} data-small-target>
-                  <X className="h-4 w-4" />
-                </Button>
+            {!!selectedImages.length && <div className="grid grid-cols-2 gap-2 mt-2">
+              {selectedImages.map((image,index) => <div key={index} className="relative">
+                <img src={image} alt={`Selected image ${index + 1}`} className="w-full h-28 object-cover rounded-lg" />
+                <button aria-label={`Remove image ${index + 1}`} className="absolute top-1 right-1 bg-background rounded-full p-2" onClick={() => setSelectedImages(images => images.filter((_,i) => i !== index))}><X className="h-4 w-4" /></button>
+              </div>)}
+            </div>}
+            {pollOpen && <div className="space-y-2 mt-3" aria-label="Create poll">
+              <input aria-label="Poll question" placeholder="Ask a question" maxLength={180} value={pollQuestion} onChange={e=>setPollQuestion(e.target.value)} className="w-full border rounded-md bg-transparent p-2 text-sm" />
+              {pollOptions.map((option,index) => <input key={index} aria-label={`Poll option ${index+1}`} placeholder={`Option ${index+1}`} maxLength={80} value={option} onChange={e=>setPollOptions(options=>options.map((o,i)=>i===index?e.target.value:o))} className="w-full border rounded-md bg-transparent p-2 text-sm" />)}
+              <div className="flex justify-between items-center text-xs">
+                {pollOptions.length < 4 && <button onClick={()=>setPollOptions(options=>[...options,""])}>Add option</button>}
+                <select aria-label="Poll duration" value={pollHours} onChange={e=>setPollHours(Number(e.target.value))} className="bg-background border rounded p-2">{[1,24,72,168].map(h=><option key={h} value={h}>{h === 1 ? '1 hour' : `${h/24} days`}</option>)}</select>
+                <button onClick={()=>setPollOpen(false)}>Remove poll</button>
               </div>
-            )}
+            </div>}
 
             {/* P/L Card preview */}
             {attachedPL && portfolioSnapshot && (
@@ -244,11 +273,11 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
             {/* Quoted post preview */}
             {quotedPost && (
               <div className="mt-3 p-3 rounded-2xl border border-border bg-muted/20">
-                <div className="flex items-center gap-1.5 text-[12px]">
-                  <Avatar className="h-5 w-5"><AvatarImage src={quotedPost.author?.avatar_url || ""} /><AvatarFallback className="text-[9px]">{getInitials(quotedPost.author?.full_name)}</AvatarFallback></Avatar>
+                <div className="flex items-center gap-1.5 text-[0.75rem]">
+                  <Avatar className="h-5 w-5"><AvatarImage src={quotedPost.author?.avatar_url || ""} /><AvatarFallback className="text-[0.5625rem]">{getInitials(quotedPost.author?.full_name)}</AvatarFallback></Avatar>
                   <span className="font-bold truncate">{quotedPost.author?.full_name || "User"}</span>
                 </div>
-                <p className="text-[13px] mt-1 line-clamp-4 whitespace-pre-wrap">{quotedPost.content}</p>
+                <p className="text-[0.8125rem] mt-1 line-clamp-4 whitespace-pre-wrap">{quotedPost.content}</p>
               </div>
             )}
           </div>
@@ -265,16 +294,14 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
         {/* Toolbar */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-border ml-[52px]">
           <div className="flex items-center gap-0.5">
-            <input type="file" ref={fileInputRef} onChange={handleImageSelect} accept="image/*" className="hidden" />
-            <button className="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors" onClick={() => fileInputRef.current?.click()} data-small-target>
+            <input type="file" multiple ref={fileInputRef} onChange={handleImageSelect} accept="image/*" className="hidden" />
+            <button className="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors" onClick={() => fileInputRef.current?.click()} aria-label="Add images" disabled={selectedImages.length >= 5} data-small-target>
               <Image className="h-5 w-5" />
             </button>
-            <button className="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors" data-small-target>
+            <button className="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors" aria-label="Add poll" onClick={() => setPollOpen(v => !v)} data-small-target>
               <BarChart3 className="h-5 w-5" />
             </button>
-            <button className="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors" data-small-target>
-              <DollarSign className="h-5 w-5" />
-            </button>
+
             {portfolioSnapshot && (
               <>
                 <button
@@ -310,7 +337,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                   />
                 </svg>
                 {charCount > maxChars * 0.9 && (
-                  <span className={`absolute inset-0 flex items-center justify-center text-[9px] font-bold ${charCount > maxChars ? "text-destructive" : "text-muted-foreground"}`}>
+                  <span className={`absolute inset-0 flex items-center justify-center text-[0.5625rem] font-bold ${charCount > maxChars ? "text-destructive" : "text-muted-foreground"}`}>
                     {maxChars - charCount}
                   </span>
                 )}
@@ -319,7 +346,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
             <Button
               size="sm"
               className="rounded-full px-5 h-9 font-bold bg-primary text-primary-foreground hover:bg-primary/90"
-              disabled={(!content.trim() && !selectedImage && !attachedPL && !attachedPortfolio) || isPosting || charCount > maxChars}
+              disabled={(!content.trim() && !selectedImages.length && !attachedPL && !attachedPortfolio && !pollOpen) || !pollValid || isPosting || charCount > maxChars}
               onClick={handlePost}
             >
               {isPosting ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : "Post"}

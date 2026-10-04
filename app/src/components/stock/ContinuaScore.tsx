@@ -109,7 +109,7 @@ export function ContinuaScoreCard({ scores }: { scores: ContinuaScores }) {
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            <p className="text-[0.625rem] uppercase tracking-wider text-muted-foreground font-semibold">
               Continua Score
             </p>
             <div className="flex items-baseline gap-2 mt-0.5">
@@ -132,14 +132,14 @@ export function ContinuaScoreCard({ scores }: { scores: ContinuaScores }) {
 
         <div className="grid grid-cols-3 gap-2 mt-2">
           {items.map((it) => (
-            <div key={it.key} className="bg-muted/30 rounded-xl p-2">
+            <div key={it.key} className="flat-section bg-muted/30 rounded-xl p-2">
               <div className="flex items-center gap-1 mb-1">
                 <it.icon className={`h-3 w-3 ${scoreColor(it.v)}`} />
-                <span className="text-[10px] font-medium text-muted-foreground">{it.label}</span>
+                <span className="text-[0.625rem] font-medium text-muted-foreground">{it.label}</span>
               </div>
               <div className="flex items-baseline gap-1">
                 <span className={`text-sm font-bold ${scoreColor(it.v)}`}>{it.v}</span>
-                <span className="text-[9px] text-muted-foreground">/100</span>
+                <span className="text-[0.5625rem] text-muted-foreground">/100</span>
               </div>
               <div className="h-1 bg-muted rounded-full mt-1 overflow-hidden">
                 <div className={`h-full ${scoreBg(it.v)} rounded-full transition-all`} style={{ width: `${it.v}%` }} />

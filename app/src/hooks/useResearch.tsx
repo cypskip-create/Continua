@@ -12,7 +12,8 @@ export function useResearch(symbol: string | undefined) {
     queryKey: ["continua", "research", symbol],
     queryFn: () => researchApi.get(symbol as string),
     enabled: !!symbol,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 60 * 60_000,
     retry: (count, err) => !isNotFound(err) && count < 1,
   });
 

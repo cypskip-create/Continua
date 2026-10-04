@@ -110,7 +110,7 @@ export function AddInvestmentDialog({
   };
 
   const defaultTrigger = (
-    <Button size={size === "sm" ? "sm" : "default"} className={size === "sm" ? "h-7 px-2.5 rounded-full text-[11px] font-semibold gap-1" : "btn-primary"}>
+    <Button size={size === "sm" ? "sm" : "default"} className={size === "sm" ? "h-7 px-2.5 rounded-full text-[0.6875rem] font-semibold gap-1" : "btn-primary"}>
       {existing ? <Pencil className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
       <span>{existing ? "Update" : "Add"}</span>
     </Button>

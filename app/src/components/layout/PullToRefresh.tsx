@@ -4,6 +4,7 @@ import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { pullDistance, REFRESH_THRESHOLD } from "@/lib/pullGesture";
 import { refreshPageData } from "@/lib/pageRefresh";
+import { runRefreshTasks } from "@/lib/refreshTasks";
 
 /** DOM-scoped (not React bubbling): portal dialogs and bottom navigation are excluded. */
 export function PullToRefresh({ children }: { children: ReactNode }) {
@@ -54,15 +55,23 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
       setRefreshing(true);
       // Invalidate active shared queries, including portfolio. Never reload the page
       // or clear existing data; slow/offline requests must not lock navigation.
-      let timer: ReturnType<typeof setTimeout>;
-      void Promise.race([
-        Promise.all([
-          queryClient.invalidateQueries({ refetchType: "active" }, { throwOnError: true }),
-          refreshPageData(),
-        ]),
-        new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("Refresh timed out")), 12_000); }),
-      ]).catch(() => { if (!disposed) toast.error("Couldn't refresh everything. Your saved data is still available."); })
-        .finally(() => { clearTimeout(timer); busy.current = false; if (!disposed) setRefreshing(false); });
+      const queries = queryClient.getQueryCache().findAll({ type: 'active' }).filter((query) => !query.isDisabled());
+      void runRefreshTasks([
+        ...queries.map((query) => ({
+          label: String(query.queryKey[1] ?? query.queryKey[0] ?? 'Data'),
+          // No background retry chain outlasting the refresh indicator. Existing
+          // in-flight requests are shared instead of cancelled and restarted.
+          run: () => queryClient.fetchQuery({ ...query.options, queryKey: query.queryKey, staleTime: 0, retry: false }),
+        })),
+        { label: 'Social and account feeds', run: refreshPageData },
+      ]).then((results) => {
+        if (disposed) return;
+        const failed = [...new Set(results.filter((r) => r.status === 'failed').map((r) => r.label))];
+        const updated = results.filter((r) => r.status === 'updated').length;
+        if (failed.length) toast.warning(`${updated} sections refreshed. Couldn't update: ${failed.join(', ')}.`, {
+          description: 'Previously loaded data is kept. Check your connection or try again.',
+        });
+      }).finally(() => { busy.current = false; if (!disposed) setRefreshing(false); });
     };
     element.addEventListener("touchstart", onStart, { passive: true });
     element.addEventListener("touchmove", onMove, { passive: false });
