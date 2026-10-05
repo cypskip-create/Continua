@@ -62,7 +62,7 @@ export default function Auth() {
   const [success, setSuccess] = useState(false);
   const [taglineIndex, setTaglineIndex] = useState(0);
 
-  const { signUp, signIn, resetPassword } = useAuth();
+  const { signUp, signIn, resetPassword, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -75,6 +75,10 @@ export default function Auth() {
     }, 3200);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (success && user) navigate('/', { replace: true });
+  }, [success, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,8 +112,13 @@ export default function Auth() {
         toast({ title: 'Error', description: result.error.message, variant: 'destructive' });
         setLoading(false);
       } else {
-        setSuccess(true);
-        setTimeout(() => navigate('/'), 700);
+        if (isSignUp && !result.session) {
+          toast({ title: 'Check your email', description: 'Confirm your address, then sign in.' });
+          setMode('signin');
+        } else {
+          setSuccess(true);
+        }
+        setLoading(false);
       }
     } catch {
       toast({ title: 'Error', description: 'An unexpected error occurred', variant: 'destructive' });

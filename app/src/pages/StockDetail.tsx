@@ -20,7 +20,6 @@ import { usePortfolio } from "@/hooks/usePortfolio";
 import { AddInvestmentDialog } from "@/components/portfolio/AddInvestmentDialog";
 import { ContinuaScoreCard, computeScores } from "@/components/stock/ContinuaScore";
 import { AIThesisCard } from "@/components/stock/AIThesisCard";
-import { getFundamentals } from "@/data/stockFundamentals";
 import { STOCK_META, DIV_YIELD, getStockFundamentals } from "@/lib/stockPrices";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ValuationSection } from "@/components/stock/report/ValuationSection";
@@ -35,7 +34,6 @@ import { CompanyInfoSection } from "@/components/stock/report/CompanyInfoSection
 import { TechnicalsTab } from "@/components/stock/tabs/TechnicalsTab";
 import { NewsEventsTab } from "@/components/stock/tabs/NewsEventsTab";
 import { CommunityTab } from "@/components/stock/tabs/CommunityTab";
-import { ScoresTab } from "@/components/stock/tabs/ScoresTab";
 import { StockSnowflake } from "@/components/stock/tabs/StockSnowflake";
 import { StockFundamentals } from "@/components/stock/StockFundamentals";
 import { useSecurityNews } from "@/hooks/useSecurityNews";
@@ -67,18 +65,17 @@ const companyInfo: Record<string, { description: string; headquarters: string; c
   EABL:   { description: "East African Breweries produces and distributes beer and spirits including Tusker, Guinness and Bell across East Africa.", headquarters: "Nairobi, Kenya", ceo: "Jane Karuku", employees: "4,000+", founded: "1922" },
 };
 
-type SubSection = "overview" | "fundamentals" | "research" | "news" | "community" | "more";
+type SubSection = "overview" | "fundamentals" | "news" | "community" | "more";
 
 const SUB_NAV: { id: SubSection; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "fundamentals", label: "Fundamentals" },
-  { id: "research", label: "Research" },
   { id: "news", label: "News" },
   { id: "community", label: "Community" },
   { id: "more", label: "More" },
 ];
 
-// The nested jump-nav inside the Research section (Snowflake, then the
+// The nested jump-nav inside Fundamentals (Snowflake, then the
 // numbered report sections) — a level below SUB_NAV above.
 const REPORT_JUMP_NAV: { id: string; label: string }[] = [
   { id: "rpt-snowflake", label: "Snowflake" },
@@ -362,25 +359,7 @@ export default function StockDetail() {
         overall: liveResearch.score.afriScore,
       }
     : computeScores(scoreInputs);
-  const fundamentals = getFundamentals(symbol || "", stock.price);
-
-  // Overlay real Data Layer data onto specific fields of the (otherwise
-  // synthetic) fundamentals bundle, wherever the backend actually has a
-  // data source for that field. Fields the backend doesn't compute yet
-  // (analyst targets, insider trades, revenue segments, Piotroski/Altman Z,
-  // etc. — see docs/architecture/FRONTEND_INTEGRATION.md) are left as-is
-  // rather than fabricated, so the research tabs stay useful without
-  // silently mixing invented numbers into what looks like real disclosure.
-  const { history: liveDividendHistory } = useDividendHistory(upperSymbol || undefined);
   const { ownership: liveOwnership, topShareholders: liveTopShareholders, isLoading: ownershipLoading } = useOwnership(upperSymbol || undefined);
-  const liveFundamentals = {
-    ...fundamentals,
-    dividendHistory: liveDividendHistory.length > 0 ? liveDividendHistory : fundamentals.dividendHistory,
-    // ratios.payoutRatio from the Data Layer is a raw fraction (e.g. 0.42),
-    // but Fundamentals.payoutRatio is a whole-number percent — same unit
-    // mismatch as dividendYield above.
-    payoutRatio: liveResearch?.ratios.payoutRatio != null ? liveResearch.ratios.payoutRatio * 100 : fundamentals.payoutRatio,
-  };
   // "Recent News" preview + NewsEventsTab both use real scraped news for
   // this symbol now — see useSecurityNews.ts. Opens externally since only
   // an excerpt is stored, not the full article body (see NewsItem type).
@@ -390,7 +369,6 @@ export default function StockDetail() {
   const refs = {
     overview: useRef<HTMLDivElement>(null),
     fundamentals: useRef<HTMLDivElement>(null),
-    research: useRef<HTMLDivElement>(null),
     news: useRef<HTMLDivElement>(null),
     community: useRef<HTMLDivElement>(null),
     more: useRef<HTMLDivElement>(null),
@@ -941,13 +919,9 @@ export default function StockDetail() {
           )}
         </section>
 
-        <section ref={refs.fundamentals} data-section="fundamentals" className="scroll-mt-32">
+        <section ref={refs.fundamentals} data-section="fundamentals" className="space-y-4 scroll-mt-32">
+          <Eyebrow>Fundamentals</Eyebrow>
           <StockFundamentals symbol={upperSymbol} currency={exchangeMeta.currency} />
-        </section>
-
-        {/* RESEARCH */}
-        <section ref={refs.research} data-section="research" className="space-y-4 scroll-mt-32">
-          <Eyebrow>Research</Eyebrow>
           {!isPremium && quota && quota.limit != null && (
             <p className="text-[0.65625rem] text-muted-foreground -mt-2">
               {quota.remaining ?? 0} of {quota.limit} free stock research{quota.limit === 1 ? "" : "es"} left this month
@@ -995,11 +969,9 @@ export default function StockDetail() {
                 <div id="rpt-9" className="scroll-mt-40"><CompanyInfoSection symbol={symbol || ""} exchange={exchangeMeta.code} marketCap={stock.marketCap ?? "—"} /></div>
                 <div id="rpt-technicals" className="scroll-mt-40 space-y-2">
                   <p className="text-[0.6875rem] text-muted-foreground">
-                    Technicals and the Institutional Scorecard below aren't part of Simply Wall St's report —
-                    they're Continua-original tools kept from the existing research suite.
+                    Price technicals use the available historical quote series.
                   </p>
                   <TechnicalsTab symbol={symbol || ""} currency={exchangeMeta.currency} />
-                  <ScoresTab fundamentals={liveFundamentals} />
                 </div>
               </>
             )}

@@ -61,7 +61,6 @@ interface UpdatesFeedProps {
 
 export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState<UpdateType | "all">("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [readerItem, setReaderItem] = useState<NewsItem | null>(null);
 
@@ -118,12 +117,12 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
         description: e.epsActual != null ? `Reported EPS of ${e.epsActual.toFixed(2)}.` : "Results filed with the exchange.",
       }));
 
-    return [...newsEvents, ...dividendEvents, ...earningsEvents]
+    return newsEvents
       .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
       .slice(0, limit);
   }, [news, dividends, earnings, followedSymbols, limit]);
 
-  const filtered = filter === "all" ? events : events.filter((e) => e.type === filter);
+  const filtered = events;
 
   // Lightweight "new since last visit" count — purely a local UI nicety,
   // not a synced read-state, so it's fine to key off localStorage.
@@ -165,21 +164,6 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
         >
           All <ChevronRight className="h-3 w-3" />
         </button>
-      </div>
-
-      <div className="flex gap-1.5 pb-3 px-4 overflow-x-auto scrollbar-hide">
-        {FILTERS.map((f) => (
-          <button
-            key={f.id}
-            data-small-target
-            onClick={() => setFilter(f.id)}
-            className={`shrink-0 h-7 px-3 rounded-full text-[0.6875rem] font-semibold whitespace-nowrap transition-colors ${
-              filter === f.id ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/50 text-muted-foreground"
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
       </div>
 
       <div className="px-4 space-y-2">

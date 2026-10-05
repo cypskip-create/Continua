@@ -218,7 +218,7 @@ export default function Home() {
 
         {/* UPDATES — real scraped news, real upcoming dividends, and real
             reported earnings merged into one chronological feed. */}
-        <UpdatesFeed followedSymbols={followedSymbols} />
+        <UpdatesFeed followedSymbols={followedSymbols} limit={6} />
 
         {/* A compact research launchpad makes the analysis workflow visible
             from Home instead of hiding capable tools several screens deep. */}

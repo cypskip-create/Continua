@@ -8,6 +8,7 @@ import { useCorporateActions } from "@/hooks/useCorporateActions";
 import { useResearch } from "@/hooks/useResearch";
 import type { FinancialHistoryEntry, FiscalPeriodType } from "@/api/types";
 import { EarningsFundamentals } from "./EarningsFundamentals";
+import { FundamentalsInsights } from "./FundamentalsInsights";
 
 type Panel = "financials" | "shareholders" | "dividends" | "profile";
 type Metric = { label: string; get: (row: FinancialHistoryEntry) => number | null | undefined; percent?: boolean };
@@ -104,10 +105,11 @@ export function StockFundamentals({ symbol, currency }: { symbol: string; curren
       {recent && <section className="grid grid-cols-2 gap-4 pb-6 text-sm"><div><p className="text-muted-foreground">Revenue</p><p className="font-semibold">{compact(Number(recent.revenue), currency)}</p>{prior?.revenue && <p className="text-xs text-muted-foreground">{pct((Number(recent.revenue) / Number(prior.revenue) - 1) * 100)} vs prior</p>}</div><div><p className="text-muted-foreground">Net income</p><p className="font-semibold">{compact(Number(recent.netIncome), currency)}</p>{prior?.netIncome && <p className="text-xs text-muted-foreground">{pct((Number(recent.netIncome) / Math.abs(Number(prior.netIncome)) - 1) * 100)} vs prior</p>}</div></section>}
       <section className="border-t border-border/70 py-6"><h3 className="text-lg font-semibold">Valuation</h3><div className="grid grid-cols-3 gap-3 mt-4 text-center text-xs"><div><p className="text-muted-foreground">P/E</p><p className="text-lg font-semibold">{pe != null ? Number(pe).toFixed(2) : "—"}</p></div><div><p className="text-muted-foreground">P/S</p><p className="text-lg font-semibold">{ps != null ? Number(ps).toFixed(2) : "—"}</p></div><div><p className="text-muted-foreground">P/B</p><p className="text-lg font-semibold">{pb != null ? Number(pb).toFixed(2) : "—"}</p></div></div><p className="mt-3 text-xs text-muted-foreground">Based on the latest verified quote and reported statements. Analyst forecasts are shown only when sourced.</p></section>
       <MetricChart key={`income-${periodType}`} title="Income statement" metrics={income} history={sorted} currency={currency} periodType={periodType} />
-      <section className="border-t border-border/70 py-6"><h3 className="text-lg font-semibold">Revenue breakdown</h3><p className="mt-3 text-sm text-muted-foreground">Business and geographic segment figures are not available from a verified company filing yet.</p></section>
+      <section className="border-t border-border/70 py-6 space-y-5"><div><h3 className="text-lg font-semibold">Revenue by segment</h3><p className="mt-2 text-sm text-muted-foreground">No verified business-segment revenue figures are on file. A chart will appear when the company publishes a sourced breakdown.</p></div><div className="border-t border-border/60 pt-5"><h3 className="text-lg font-semibold">Geographic revenue</h3><p className="mt-2 text-sm text-muted-foreground">No verified revenue-by-region figures are on file. We do not infer these from the company’s operating locations.</p></div></section>
       <MetricChart key={`balance-${periodType}`} title="Balance sheet" metrics={balance} history={sorted} currency={currency} periodType={periodType} />
       <MetricChart key={`cash-${periodType}`} title="Cash flows" metrics={cashFlow} history={sorted} currency={currency} periodType={periodType} />
       <MetricChart key={`indicators-${periodType}`} title="Financial indicators" metrics={indicators} history={sorted} currency={currency} periodType={periodType} />
+      <FundamentalsInsights symbol={symbol} currency={currency} />
       <EarningsFundamentals symbol={symbol} currency={currency} />
       <section className="border-t border-border/70 py-6"><h3 className="text-lg font-semibold">Operational efficiency</h3><p className="mt-2 text-sm text-muted-foreground">{profile?.company.employees && recent?.revenue ? `Latest revenue per employee: ${compact(Number(recent.revenue) / Number(profile.company.employees.replace(/[^\d.]/g, "")), currency)}.` : "Employee history is not available for a verified trend yet."}</p></section>
     </>}
