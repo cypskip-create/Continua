@@ -44,6 +44,15 @@ export const corporateActionsController = {
     res.json({ data: earnings });
   },
 
+  async getEarningsForSymbol(req: Request, res: Response) {
+    const { symbol } = req.params;
+    const { exchange } = getQuery<z.infer<typeof ExchangeQuery>>(req);
+    const security = await securitiesRepository.getBySymbol(exchange, symbol!.toUpperCase());
+    if (!security) throw new ApiError(404, `Unknown symbol ${symbol}`);
+    const earnings = await corporateActionsRepository.getEarningsBySecurity(security.id);
+    res.json({ data: earnings });
+  },
+
   async getOwnership(req: Request, res: Response) {
     const { symbol } = req.params;
     const { exchange } = getQuery<z.infer<typeof ExchangeQuery>>(req);

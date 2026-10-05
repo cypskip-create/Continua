@@ -74,6 +74,20 @@ export const corporateActionsRepository = {
     return res.rows;
   },
 
+  async getEarningsBySecurity(securityId: string, limit = 12): Promise<EarningsEvent[]> {
+    const res = await query<any>(
+      `SELECT id, security_id as "securityId", period_id as "periodId",
+              fiscal_year as "fiscalYear", fiscal_quarter as "fiscalQuarter",
+              expected_date as "expectedDate", reported_date as "reportedDate",
+              eps_estimate as "epsEstimate", eps_actual as "epsActual",
+              revenue_estimate as "revenueEstimate", revenue_actual as "revenueActual"
+       FROM market.earnings_events WHERE security_id = $1
+       ORDER BY fiscal_year DESC, fiscal_quarter DESC NULLS LAST LIMIT $2`,
+      [securityId, limit]
+    );
+    return res.rows.reverse();
+  },
+
   async upsertEarningsEvent(e: EarningsEvent): Promise<void> {
     await query(
       `INSERT INTO market.earnings_events (id, security_id, period_id, fiscal_year, fiscal_quarter, expected_date, reported_date, eps_estimate, eps_actual, revenue_estimate, revenue_actual)

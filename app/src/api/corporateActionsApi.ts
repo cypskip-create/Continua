@@ -1,5 +1,5 @@
 import { continuaFetch } from "./client";
-import type { CorporateAction, OwnershipRecord, UpcomingDividend, RecentEarnings } from "./types";
+import type { CorporateAction, OwnershipRecord, UpcomingDividend, RecentEarnings, StockEarningsEvent } from "./types";
 
 export const corporateActionsApi = {
   getForSymbol(symbol: string, exchange = "NSE") {
@@ -18,6 +18,10 @@ export const corporateActionsApi = {
   /** Market-wide recent (already reported) earnings — never predicted. */
   getRecentEarnings(exchange = "NSE", limit = 20) {
     return continuaFetch<RecentEarnings[]>(`/earnings/recent`, { params: { exchange, limit } });
+  },
+
+  getEarningsForSymbol(symbol: string, exchange = "NSE") {
+    return continuaFetch<StockEarningsEvent[]>(`/earnings/${encodeURIComponent(symbol)}`, { params: { exchange } });
   },
 
   getOwnership(symbol: string, exchange = "NSE") {

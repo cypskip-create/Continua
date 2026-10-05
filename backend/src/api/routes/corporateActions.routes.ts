@@ -11,5 +11,6 @@ corporateActionsRoutes.get("/corporate-actions/:symbol", validateQuery(ExchangeQ
 // otherwise be swallowed as :symbol="upcoming".
 corporateActionsRoutes.get("/dividends/upcoming", asyncHandler(corporateActionsController.getUpcomingDividends));
 corporateActionsRoutes.get("/earnings/recent", asyncHandler(corporateActionsController.getRecentEarnings));
+corporateActionsRoutes.get("/earnings/:symbol", validateQuery(ExchangeQuery), asyncHandler(corporateActionsController.getEarningsForSymbol));
 corporateActionsRoutes.get("/dividends/:symbol", validateQuery(ExchangeQuery), asyncHandler(corporateActionsController.getDividends));
 corporateActionsRoutes.get("/ownership/:symbol", validateQuery(ExchangeQuery), asyncHandler(corporateActionsController.getOwnership));

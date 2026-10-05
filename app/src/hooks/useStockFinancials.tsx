@@ -2,12 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { financialsApi } from "@/api/financialsApi";
 import type { FiscalPeriodType } from "@/api/types";
 
-/** Real financial statements for one stock, used across the Growth,
- *  Performance, and Health research tabs. `history` only carries
- *  revenue/netIncome/eps per the backend's history endpoint — no
- *  balance-sheet or cash-flow time series is available, so those tabs show
- *  the `latest` full statement bundle as a current snapshot rather than
- *  inventing a multi-year trend.
+/** Real financial statements for one stock. History includes the stored
+ * income, balance-sheet, and cash-flow fields for each reported period.
+ * Missing source fields remain null; callers must not infer a zero value.
  *
  *  Defaults to the last 5 annual periods (unchanged for every existing
  *  caller). Pass `{ periodType: "quarterly", limit: 5 }` for a quarterly

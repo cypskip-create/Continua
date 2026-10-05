@@ -128,9 +128,28 @@ export interface FinancialPeriodBundle {
 export interface FinancialHistoryEntry {
   fiscalYear: number;
   fiscalQuarter?: number | null;
+  periodEnd?: string;
+  reportedAt?: string;
+  currency?: Currency;
   revenue: number;
   netIncome: number;
   eps: number;
+  grossProfit?: number | null;
+  operatingIncome?: number | null;
+  ebitda?: number | null;
+  totalAssets?: number | null;
+  totalLiabilities?: number | null;
+  totalEquity?: number | null;
+  cash?: number | null;
+  totalDebt?: number | null;
+  currentAssets?: number | null;
+  currentLiabilities?: number | null;
+  sharesOutstanding?: number | null;
+  operatingCashFlow?: number | null;
+  investingCashFlow?: number | null;
+  financingCashFlow?: number | null;
+  freeCashFlow?: number | null;
+  capex?: number | null;
 }
 
 export type CorporateActionType =
@@ -170,6 +189,18 @@ export interface RecentEarnings {
   revenueActual: number | null;
   symbol: string;
   companyName: string;
+}
+
+export interface StockEarningsEvent {
+  id: string;
+  fiscalYear: number;
+  fiscalQuarter: number | null;
+  expectedDate: string | null;
+  reportedDate: string | null;
+  epsEstimate: number | null;
+  epsActual: number | null;
+  revenueEstimate: number | null;
+  revenueActual: number | null;
 }
 
 /** Regulatory/company announcement, sourced by continua-scraper from NSE

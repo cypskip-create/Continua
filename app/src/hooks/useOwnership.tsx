@@ -32,11 +32,11 @@ export function useOwnership(symbol: string | undefined) {
   });
 
   const ownership = useMemo(
-    () => (query.data ?? []).map((r) => ({ name: r.holderName, value: r.percentHeld, color: colorFor(r.holderName) })),
+    () => (query.data ?? []).map((r) => ({ name: r.holderName, value: Number(r.percentHeld) || 0, color: colorFor(r.holderName) })),
     [query.data]
   );
   const topShareholders = useMemo(
-    () => (query.data ?? []).map((r) => ({ name: r.holderName, type: r.holderType, pct: r.percentHeld })),
+    () => (query.data ?? []).map((r) => ({ name: r.holderName, type: r.holderType, pct: Number(r.percentHeld) || 0 })),
     [query.data]
   );
 

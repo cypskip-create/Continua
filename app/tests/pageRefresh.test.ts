@@ -17,7 +17,7 @@ test('a failing feed does not prevent the other feeds from starting', async () =
   const off1 = registerPageRefresh(async () => { throw new Error('offline'); });
   const off2 = registerPageRefresh(async () => { refreshed = true; });
   try {
-    await assert.rejects(refreshPageData(), /offline/);
+    await refreshPageData();
     assert.equal(refreshed, true);
   } finally { off1(); off2(); }
 });

@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
-import { toast } from "sonner";
 import { pullDistance, REFRESH_THRESHOLD } from "@/lib/pullGesture";
 import { refreshPageData } from "@/lib/pageRefresh";
-import { runRefreshTasks } from "@/lib/refreshTasks";
 
 /** DOM-scoped (not React bubbling): portal dialogs and bottom navigation are excluded. */
 export function PullToRefresh({ children }: { children: ReactNode }) {
@@ -53,25 +51,14 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
       if (!commit || busy.current) return;
       busy.current = true;
       setRefreshing(true);
-      // Invalidate active shared queries, including portfolio. Never reload the page
-      // or clear existing data; slow/offline requests must not lock navigation.
-      const queries = queryClient.getQueryCache().findAll({ type: 'active' }).filter((query) => !query.isDisabled());
-      void runRefreshTasks([
-        ...queries.map((query) => ({
-          label: String(query.queryKey[1] ?? query.queryKey[0] ?? 'Data'),
-          // No background retry chain outlasting the refresh indicator. Existing
-          // in-flight requests are shared instead of cancelled and restarted.
-          run: () => queryClient.fetchQuery({ ...query.options, queryKey: query.queryKey, staleTime: 0, retry: false }),
-        })),
-        { label: 'Social and account feeds', run: refreshPageData },
-      ]).then((results) => {
-        if (disposed) return;
-        const failed = [...new Set(results.filter((r) => r.status === 'failed').map((r) => r.label))];
-        const updated = results.filter((r) => r.status === 'updated').length;
-        if (failed.length) toast.warning(`${updated} sections refreshed. Couldn't update: ${failed.join(', ')}.`, {
-          description: 'Previously loaded data is kept. Check your connection or try again.',
-        });
-      }).finally(() => { busy.current = false; if (!disposed) setRefreshing(false); });
+      // Invalidate every cached query so the next tab visit also sees fresh data.
+      // Active queries refetch now; existing results remain visible while loading.
+      // Local feeds participate independently, so an unavailable optional feed
+      // cannot stop prices, holdings, or another section from refreshing.
+      void Promise.allSettled([
+        queryClient.invalidateQueries({}, { cancelRefetch: false }),
+        refreshPageData(),
+      ]).finally(() => { busy.current = false; if (!disposed) setRefreshing(false); });
     };
     element.addEventListener("touchstart", onStart, { passive: true });
     element.addEventListener("touchmove", onMove, { passive: false });

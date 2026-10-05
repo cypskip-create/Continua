@@ -8,5 +8,5 @@ export function registerPageRefresh(refresh: Refresher) {
 }
 
 export async function refreshPageData() {
-  await Promise.all([...refreshers].map((refresh) => Promise.resolve().then(refresh)));
+  await Promise.allSettled([...refreshers].map((refresh) => Promise.resolve().then(refresh)));
 }

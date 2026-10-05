@@ -37,6 +37,7 @@ import { NewsEventsTab } from "@/components/stock/tabs/NewsEventsTab";
 import { CommunityTab } from "@/components/stock/tabs/CommunityTab";
 import { ScoresTab } from "@/components/stock/tabs/ScoresTab";
 import { StockSnowflake } from "@/components/stock/tabs/StockSnowflake";
+import { StockFundamentals } from "@/components/stock/StockFundamentals";
 import { useSecurityNews } from "@/hooks/useSecurityNews";
 import { formatTimestamp } from "@/lib/formatTimestamp";
 import { useLiveQuote } from "@/hooks/useLiveQuotes";
@@ -66,10 +67,11 @@ const companyInfo: Record<string, { description: string; headquarters: string; c
   EABL:   { description: "East African Breweries produces and distributes beer and spirits including Tusker, Guinness and Bell across East Africa.", headquarters: "Nairobi, Kenya", ceo: "Jane Karuku", employees: "4,000+", founded: "1922" },
 };
 
-type SubSection = "overview" | "research" | "news" | "community" | "more";
+type SubSection = "overview" | "fundamentals" | "research" | "news" | "community" | "more";
 
 const SUB_NAV: { id: SubSection; label: string }[] = [
   { id: "overview", label: "Overview" },
+  { id: "fundamentals", label: "Fundamentals" },
   { id: "research", label: "Research" },
   { id: "news", label: "News" },
   { id: "community", label: "Community" },
@@ -387,6 +389,7 @@ export default function StockDetail() {
   // Section refs — sticky sub-nav scrolls to them
   const refs = {
     overview: useRef<HTMLDivElement>(null),
+    fundamentals: useRef<HTMLDivElement>(null),
     research: useRef<HTMLDivElement>(null),
     news: useRef<HTMLDivElement>(null),
     community: useRef<HTMLDivElement>(null),
@@ -936,6 +939,10 @@ export default function StockDetail() {
               </div>
             </div>
           )}
+        </section>
+
+        <section ref={refs.fundamentals} data-section="fundamentals" className="scroll-mt-32">
+          <StockFundamentals symbol={upperSymbol} currency={exchangeMeta.currency} />
         </section>
 
         {/* RESEARCH */}
