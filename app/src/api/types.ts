@@ -359,6 +359,14 @@ export interface ResearchBundle {
 }
 
 export interface ScreenerRow {
+  pb?: number | null;
+  roe?: number | null;
+  roa?: number | null;
+  netMargin?: number | null;
+  debtToEquity?: number | null;
+  payoutRatio?: number | null;
+  currentRatio?: number | null;
+  ratiosAsOf?: string | null;
   symbol: string;
   securityId: string;
   companyName: string;

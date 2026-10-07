@@ -1,0 +1,219 @@
+.market-desk h1 {
+  font-size: 1.15rem;
+}
+.market-desk h2 {
+  font-size: 1.4rem;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+}
+.market-desk h3 {
+  font-size: 1rem;
+  font-weight: 550;
+}
+.market-desk small {
+  display: block;
+  font-size: 0.72rem;
+  color: hsl(var(--muted-foreground));
+  font-weight: 400;
+  margin-top: 0.3rem;
+}
+.market-section {
+  border-top: 1px solid hsl(var(--border));
+  padding-block: 1.75rem;
+}
+.market-section-heading {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  margin-bottom: 1.25rem;
+  min-height: 44px;
+}
+.market-choices,
+.market-tool-rail {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+}
+.market-choices button,
+.market-tool-rail button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.market-index-strip {
+  display: flex;
+  gap: 2rem;
+  padding-block: 1.5rem;
+  overflow-x: auto;
+}
+.market-index-strip > div {
+  min-width: 135px;
+  border-left: 2px solid hsl(var(--accent));
+  padding-left: 1rem;
+}
+.market-note {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.6;
+  margin-block: 0.65rem;
+}
+.market-empty {
+  padding-block: 1.4rem;
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.7;
+  max-width: 42rem;
+}
+.market-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 1rem;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.market-row.block {
+  display: block;
+}
+.market-table-scroll {
+  overflow-x: auto;
+  width: 100%;
+}
+.market-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+.market-table th,
+.market-table td {
+  padding: 1rem 0.8rem;
+  border-bottom: 1px solid hsl(var(--border));
+  white-space: nowrap;
+  text-align: right;
+  min-width: 100px;
+  font-weight: 400;
+}
+.market-table th:first-child {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: hsl(var(--background));
+  z-index: 1;
+  min-width: 145px;
+  max-width: 190px;
+}
+.market-table th:first-child button {
+  text-align: left;
+  min-height: 44px;
+}
+.market-table small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 170px;
+}
+.market-table thead th {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.75rem;
+}
+.market-definition {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  margin-block: 1rem;
+}
+.market-definition dt {
+  color: hsl(var(--muted-foreground));
+}
+.market-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+.market-theme {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  border-bottom: 1px solid hsl(var(--border));
+  padding-block: 1.5rem;
+}
+.market-theme-grid .market-theme {
+  display: block;
+}
+.market-theme-symbol {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+.market-theme-grid .market-theme > svg {
+  margin-top: 0.8rem;
+}
+.market-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 0.75rem;
+}
+.market-monitor-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 1fr;
+  gap: 0.75rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid hsl(var(--border));
+  align-items: center;
+  font-size: 0.85rem;
+}
+.market-monitor-row time {
+  font-size: 0.7rem;
+  color: hsl(var(--muted-foreground));
+  border-left: 1px solid hsl(var(--accent));
+  padding-left: 0.5rem;
+}
+.market-breadth {
+  display: flex;
+  gap: 0.4rem;
+  align-items: flex-end;
+}
+.market-breadth > div {
+  flex: 1;
+  text-align: center;
+  font-size: 0.7rem;
+  min-width: 0;
+}
+.market-breadth small {
+  font-size: 0.55rem;
+  white-space: nowrap;
+}
+.market-africa {
+  padding: 1.5rem 0;
+  color: hsl(var(--foreground));
+}
+.market-africa svg {
+  width: 100%;
+  max-height: 300px;
+}
+.market-error {
+  border-top: 1px solid hsl(var(--border));
+  padding: 1rem 0;
+  color: hsl(var(--bear));
+  font-size: 0.85rem;
+}
+@media (min-width: 760px) {
+  .market-desk main {
+    max-width: 1080px;
+    margin: auto;
+  }
+  .market-theme-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

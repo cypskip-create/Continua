@@ -19,6 +19,7 @@
     "worker:candles": "tsx src/workers/candlesWorker.ts",
     "worker:financial-candidates": "tsx scripts/runFinancialCandidatesBridgeOnce.ts",
     "worker:news": "tsx scripts/runNewsBridgeOnce.ts",
+    "research:import": "tsx scripts/importMarketResearch.ts",
     "news:revalidate": "tsx scripts/revalidateNews.ts",
     "source:remove": "tsx scripts/removeNewsSource.ts",
     "financials:review": "tsx scripts/listFinancialStatementCandidates.ts",

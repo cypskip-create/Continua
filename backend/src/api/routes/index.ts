@@ -18,6 +18,7 @@ import { volumeProfileRoutes } from "./volumeProfile.routes.js";
 import { valuationRoutes } from "./valuation.routes.js";
 import { engineWorkbenchRoutes } from "./engineWorkbench.routes.js";
 import { engineRoutes } from "./engine.routes.js";
+import { marketResearchRoutes } from "./marketResearch.routes.js";
 
 /** Every route is mounted under /api/v1. Versioning from day one — the app,
  *  TradersHub, and Media all consume this same v1 contract; a v2 later can
@@ -47,3 +48,4 @@ apiRouter.use(volumeProfileRoutes);
 apiRouter.use(valuationRoutes);
 apiRouter.use(engineWorkbenchRoutes);
 apiRouter.use(engineRoutes);
+apiRouter.use(marketResearchRoutes);

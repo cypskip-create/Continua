@@ -101,7 +101,16 @@ const handleRoute = async (route) => {
     if (path.startsWith('/earnings/') && !path.endsWith('/recent')) return json({ data: [2024,2025,2026].map((year,i) => ({id:`earn-${year}`,fiscalYear:year,fiscalQuarter:null,reportedDate:i<2 ? `${year}-03-01` : null,revenueActual:i<2 ? 1000000+i*100000 : null,revenueEstimate:1050000+i*100000,epsActual:i<2 ? 1+i : null,epsEstimate:1.1+i})) });
     if (path.startsWith('/research/')) return json({ data: { ratios: { pe: 10, pb: 1.5, ps: 2, roe: .15, roa: .05, debtToEquity: .3, dividendYield: .06, netMargin: .2 }, score: { afriScore: 70, afriValue: 60, afriGrowth: 65, afriHealth: 80, afriIncome: 70, afriRisk: 60, afriQuality: 70, afriMomentum: 50, inputs: {} } } });
     if (path.startsWith('/historical/')) return json({ data: Array.from({ length: 30 }, (_, i) => ({ securityId: 'NSE:KCB', interval: '1d', timestamp: new Date(Date.now() - (30 - i) * 86400000).toISOString(), open: 40 + i / 3, high: 41 + i / 3, low: 39 + i / 3, close: 40 + i / 3, volume: 10000 })) });
-    if (path.startsWith('/indices') || path.startsWith('/screener') || path.includes('/dividends') || path.includes('/announcements')) return json({ data: [] });
+    if (path === '/market-research/intelligence') return json({data:{coverage:2,advancing:1,declining:1,unchanged:0,distribution:[{label:'−3–0%',count:1},{label:'0–3%',count:1}],sectors:[{name:'Banking',changePercent:1,coverage:2,symbols:['KCB','EQTY']}],monitor:[{symbol:'KCB',changePercent:2,volume:10000,timestamp:new Date().toISOString(),signal:'Session movement'}],methodology:'Fixture snapshot analysis'}});
+    if (path === '/market-research/earnings') return json({data:[{id:'fixture-result',symbol:'KCB',companyName:'KCB Group',fiscalYear:2025,fiscalQuarter:null,reportedDate:'2026-03-01',expectedDate:null,epsActual:12,epsEstimate:10,revenueActual:2000000,revenueEstimate:1900000}]});
+    if (path === '/market-research/records') return json({data:{available:true,records:[
+      {id:'fixture-ipo',kind:'ipo',title:'Fixture NSE Offer',symbol:null,observedAt:'2026-10-01',sourceUrl:'https://www.nse.co.ke/',payload:{status:'To be Listed',date:'2026-10-20',price:10,shares:10000}},
+      ...[1,2,3].map(i=>({id:`fixture-macro-${i}`,kind:'macro',title:'Kenya Inflation',symbol:null,observedAt:`2026-0${i}-01`,sourceUrl:'https://www.knbs.or.ke/',payload:{indicator:'Inflation',actual:4+i/10,consensus:4.2,previous:4,unit:'%'}})),
+      {id:'fixture-bond',kind:'bond',title:'Fixture Kenya Bond',symbol:null,observedAt:'2026-10-01',sourceUrl:'https://www.centralbank.go.ke/',payload:{tenor:2,yield:10,coupon:9,maturity:'2028-10-01'}},
+      {id:'fixture-event',kind:'economic',title:'Fixture inflation release',symbol:null,observedAt:'2026-10-01',sourceUrl:'https://www.knbs.or.ke/',payload:{date:'2026-10-31',previous:4,actual:4.1,unit:'%'}}
+    ]}});
+    if (path.startsWith('/screener')) return json({data:['KCB','EQTY'].map(symbol=>({symbol,securityId:`NSE:${symbol}`,companyName:symbol==='KCB'?'KCB Group':'Equity Group',sector:'Banking',lastPrice:40,changePercent:2,marketCap:1000000000,pe:10,dividendYield:.06,afriScore:70,pb:1.2,roe:.15,netMargin:.2,debtToEquity:.5,payoutRatio:.4,ratiosAsOf:'2026-03-01'}))});
+    if (path.startsWith('/indices') || path.includes('/dividends') || path.includes('/announcements')) return json({ data: [] });
     unknown.add(path);
     return json({ error: 'Fixture data not provided' }, 404);
   }
@@ -301,12 +310,12 @@ try {
   await wait(700);
   const resumedMarketScroll = await page.evaluate(() => window.scrollY);
   assert.ok(Math.abs(resumedMarketScroll - savedMarketScroll) < 3, `Markets returns to saved scroll offset: expected ${savedMarketScroll}, got ${resumedMarketScroll}`);
-  const surfaces = await page.locator('.content-surface').evaluateAll(nodes => nodes.map(n => {
+  const surfaces = await page.locator('.market-section').evaluateAll(nodes => nodes.map(n => {
     const style = getComputedStyle(n);
     return { radius: style.borderRadius, shadow: style.boxShadow, border: style.borderTopWidth };
   }));
   assert.ok(surfaces.length > 0);
-  assert.ok(surfaces.every(s => s.radius === '0px' && s.shadow === 'none' && s.border === '0px'));
+  assert.ok(surfaces.every(s => s.radius === '0px' && s.shadow === 'none' && s.border === '1px'));
   await page.locator('.bottom-nav').getByText('Profile', { exact: true }).tap();
   await page.getByRole('button', { name: 'S', exact: true }).tap();
   const small = await page.getByText('Text size', { exact: true }).evaluate(el => parseFloat(getComputedStyle(el).fontSize));
@@ -533,6 +542,62 @@ try {
   } finally {profile.subscription_plan=savedPlan; await freeContext.close();}
   console.log('PASS free Engine lock prevents fetching paid analysis');
 
+  // Markets research: complete routes, aligned chart, horizontally scrollable tables and source links.
+  await page.goto('http://127.0.0.1:5188/markets');
+  await page.getByRole('heading',{name:'IPOs',exact:true}).waitFor();
+  assert.equal(await page.getByText('Crypto',{exact:true}).count(),0);
+  assert.equal(await page.getByText('Rating Changes',{exact:true}).count(),0);
+  await page.getByRole('button',{name:'IPOs',exact:true}).tap();
+  await page.waitForURL('**/markets/ipos');
+  await page.getByRole('heading',{name:'Fixture NSE Offer'}).waitFor();
+  await page.getByRole('button',{name:'Back to markets'}).tap();
+  await page.waitForURL('**/markets');
+  for(const detail of ['movers','earnings','earnings-beat','economic','themes','dividends','dividend-calendar','heatmap','trend','industry','monitor','macro']) {
+    await page.goto(`http://127.0.0.1:5188/markets/${detail}`);
+    await page.locator('.market-detail-header').waitFor();await wait(250);
+    assert.equal(await page.locator('.market-detail-header').count(),1);
+    assert.ok(await page.locator('main').innerText(),`Blank market detail ${detail}`);
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth+1),`Page overflow in ${detail}`);
+  }
+  await page.goto('http://127.0.0.1:5188/markets/earnings-beat');
+  await page.getByText('+20%',{exact:true}).waitFor();
+  assert.ok(await page.locator('.market-table-scroll').evaluate(el=>el.scrollWidth>el.clientWidth));
+  await page.goto('http://127.0.0.1:5188/markets/economic');
+  const download=page.waitForEvent('download');
+  await page.getByRole('button',{name:'Add Fixture inflation release to calendar'}).tap();
+  assert.equal((await download).suggestedFilename(),'continua-event.ics');
+  await page.goto('http://127.0.0.1:5188/markets');
+  await page.getByRole('button',{name:'Bonds',exact:true}).tap();
+  await page.getByRole('button',{name:'Treasury Bonds',exact:true}).tap();
+  await page.getByText('Fixture Kenya Bond',{exact:true}).waitFor();
+  await page.screenshot({path:fileURLToPath(new URL('markets-bonds-mobile.png',artifacts))});
+  await page.getByRole('button',{name:'Stocks',exact:true}).tap();
+  await page.screenshot({path:fileURLToPath(new URL('markets-desk-mobile.png',artifacts))});
+  await page.goto('http://127.0.0.1:5188/screener');
+  await page.getByRole('button',{name:'Income',exact:true}).first().tap();
+  await page.getByLabel('Screen name').fill('Income research');
+  await page.getByRole('button',{name:'Save',exact:true}).tap();
+  await page.getByRole('button',{name:'Income research',exact:true}).waitFor();
+  await page.reload();await page.getByRole('button',{name:'Income research',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Income research',exact:true}).tap();
+  await page.getByRole('button',{name:'Reset',exact:true}).tap();
+  await page.getByLabel('Max price · KES').fill('0');
+  await page.getByText('No matches. Widen or reset the filters.',{exact:true}).waitFor();
+  await page.goto('http://127.0.0.1:5188/compare?stocks=KCB,EQTY');
+  await page.getByRole('heading',{name:'Performance, aligned.'}).waitFor();
+  await page.getByRole('button',{name:'Remove EQTY from comparison'}).tap();
+  assert.equal(new URL(page.url()).searchParams.get('stocks'),'KCB');
+  await page.evaluate(()=>localStorage.setItem('app_font_scale','1.2'));
+  for(const width of [320,820]) {
+    await page.setViewportSize({width,height:844});
+    for(const path of ['/markets','/markets/economic','/markets/macro','/markets/industry','/screener','/compare?stocks=KCB,EQTY']) {
+      await page.goto(`http://127.0.0.1:5188${path}`);
+      await page.locator('.page-canvas').first().waitFor();await wait(450);
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`Markets XL overflow: ${width} ${path}`);
+    }
+  }
+  await page.setViewportSize({width:390,height:844});
+  console.log('PASS Markets routes, source records, earnings math, calendars, Kenyan bonds, saved filters and comparison URL');
   // Route smoke coverage exercises mounted empty/error states, not every mutation.
   for (const path of ['/markets', '/discover', '/account', '/upgrade', '/settings', '/stock/KCB', '/watchlist', '/sector/Banking', '/theme/dividends', '/featured/dividends', '/learn', '/notifications', '/sector-heatmap', '/track-investments', '/traders-hub', '/rooms', '/screener', '/compare', `/profile/${user.id}`, '/traders-hub/post/missing', '/not-a-route']) {
     await page.goto(`http://127.0.0.1:5188${path}`);

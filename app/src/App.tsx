@@ -79,6 +79,7 @@ const App = () => (
                   <Route path="/*" element={<MainLayout />}>
                     <Route index element={<Home />} />
                     <Route path="markets" element={<Markets />} />
+                    <Route path="markets/:section" element={<Markets />} />
                     <Route path="discover" element={<Discover />} />
 
                     <Route path="account" element={<Account />} />

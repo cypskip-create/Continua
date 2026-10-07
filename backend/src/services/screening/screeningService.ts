@@ -44,7 +44,9 @@ export const screeningService = {
     const res = await query<any>(
       `SELECT s.symbol, s.id as "securityId", co.name as "companyName", c.name as sector,
               q.last_price as "lastPrice", q.change_percent as "changePercent", q.market_cap as "marketCap",
-              r.pe, r.dividend_yield as "dividendYield", sc.afri_score as "afriScore"
+              r.pe, r.pb, r.roe, r.roa, r.net_margin as "netMargin", r.debt_to_equity as "debtToEquity",
+              r.payout_ratio as "payoutRatio", r.current_ratio as "currentRatio", r.as_of as "ratiosAsOf",
+              r.dividend_yield as "dividendYield", sc.afri_score as "afriScore"
        FROM market.securities s
        JOIN market.companies co ON co.id = s.company_id
        LEFT JOIN market.sectors c ON c.id = co.sector_id
