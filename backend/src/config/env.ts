@@ -26,6 +26,7 @@ const EnvSchema = z.object({
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  SUPABASE_URL: z.string().url().default("https://jjsetogmnumoudrovpzn.supabase.co"),
 
   CACHE_DRIVER: z.enum(["memory", "redis"]).default("memory"),
   REDIS_URL: z.string().optional(),

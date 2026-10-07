@@ -235,6 +235,7 @@ export interface CompanyAnnouncement {
  *  uncertain. List endpoints omit `content`; the detail endpoint includes
  *  extracted body text when the source permits it. */
 export interface NewsItem {
+  impact?: { topic: string; reason: string; symbols: string[]; methodology: string } | null;
   id: string;
   headline: string;
   excerpt: string | null;

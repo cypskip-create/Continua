@@ -16,9 +16,6 @@ import {
 } from "recharts";
 import { axisStyle, gridStyle } from "@/lib/chartPalette";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
   ChartPeriod, lastAnnual, lastQuarterly, ANNUAL_PERIODS, QUARTERLY_PERIODS,
 } from "@/lib/chartPeriods";
 
@@ -94,15 +91,7 @@ export function BarChartBlock({
               reads as the feature being broken rather than as "no data
               yet" for this one stock. */}
           {allowQuarterly && (
-            <Select value={period} onValueChange={(v) => { setPeriod(v as ChartPeriod); setActive(null); }}>
-              <SelectTrigger className="h-6 w-[92px] text-[0.625rem] px-2 rounded-md border-border/70" aria-label="Reporting period">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="annual" className="text-[0.6875rem]">Annual</SelectItem>
-                <SelectItem value="quarterly" className="text-[0.6875rem]">Quarterly</SelectItem>
-              </SelectContent>
-            </Select>
+            <div role="tablist" aria-label="Reporting period" className="flex gap-1">{(["annual", "quarterly"] as const).map(value => <button key={value} role="tab" aria-selected={period === value} onClick={() => { setPeriod(value); setActive(null); }} className={`px-3 py-1.5 text-xs font-semibold rounded-full ${period === value ? "contrast-active" : "text-muted-foreground"}`}>{value === "annual" ? "Annual" : "Quarterly"}</button>)}</div>
           )}
         </div>
       </div>

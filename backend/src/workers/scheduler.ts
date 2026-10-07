@@ -33,10 +33,11 @@ export async function startAllWorkers(): Promise<() => void> {
   void Promise.allSettled([
     runPriceIngestionOnce({ respectTradingCalendar: false }),
     runIndexIngestionOnce({ respectTradingCalendar: false }),
+    runNewsBridgeOnce(),
   ]).then((results) => {
     results.forEach((result, index) => {
       if (result.status === "rejected") {
-        logger.error({ err: result.reason, worker: index === 0 ? "prices" : "indices" }, "Initial live-data pass failed");
+        logger.error({ err: result.reason, worker: ["prices", "indices", "news"][index] }, "Initial live-data pass failed");
       }
     });
   });

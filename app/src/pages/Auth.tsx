@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { lovable } from '@/integrations/lovable';
+import { useTouchClick } from '@/hooks/useTouchClick';
 
 type Mode = 'signin' | 'signup' | 'reset';
 
@@ -62,8 +63,10 @@ export default function Auth() {
   const [success, setSuccess] = useState(false);
   const [taglineIndex, setTaglineIndex] = useState(0);
 
-  const { signUp, signIn, resetPassword, user } = useAuth();
+  const { signUp, signIn, resetPassword, user, loading: sessionLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const submitTap = useTouchClick<HTMLButtonElement>();
   const { toast } = useToast();
 
   const isSignUp = mode === 'signup';
@@ -77,11 +80,17 @@ export default function Auth() {
   }, []);
 
   useEffect(() => {
-    if (success && user) navigate('/', { replace: true });
-  }, [success, user, navigate]);
+    // AppLockGate remounts this screen when the account changes. Redirect
+    // from the shared session rather than local state lost by that remount.
+    if (!sessionLoading && user && mode !== 'reset') {
+      const from = location.state?.from;
+      navigate(from?.pathname?.startsWith('/') && from.pathname !== '/auth' ? `${from.pathname}${from.search ?? ''}${from.hash ?? ''}` : '/', { replace: true });
+    }
+  }, [sessionLoading, user, mode, navigate, location.state]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
 
     try {
@@ -390,6 +399,7 @@ export default function Auth() {
                     )}
 
                     <Button
+                      {...submitTap}
                       type="submit"
                       className="w-full h-12 text-[0.90625rem] font-semibold rounded-xl mt-1 transition-transform hover:-translate-y-0.5 active:scale-[0.97]"
                       disabled={loading}

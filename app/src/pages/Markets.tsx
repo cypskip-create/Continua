@@ -118,6 +118,7 @@ function StockRow({ stock, onTap }: { stock: { symbol: string; name: string; pri
 
 export default function Markets() {
   const navigate = useNavigate();
+  const [marketSearch, setMarketSearch] = useState("");
   const [activeTab, setActiveTab] = usePageState<Tab>("markets:tab", "Overview");
   const [nseFilter, setNseFilter] = usePageState<string>("markets:filter", "All");
   const [listFilter, setListFilter] = useState<{ label: string; symbols: string[] } | null>(null);
@@ -185,7 +186,7 @@ export default function Markets() {
 
   return (
     <div className="page-canvas min-h-screen bg-background pb-24">
-      <TopBar title="Markets" subtitle="Discover opportunities" showSearch showNotifications showExchangeSelector />
+      <TopBar title="Markets" subtitle="Discover opportunities · NSE" showSearch showNotifications onSearch={(query) => { setMarketSearch(query); if (query.trim()) { setActiveTab("All Stocks"); setNseFilter("All"); setListFilter(null); } }} />
 
       {/* Sticky editorial sub-nav */}
       <div className="sub-nav">
@@ -485,6 +486,7 @@ export default function Markets() {
               </div>
             )}
             <AllStocksList
+              search={marketSearch}
               initialSector={nseFilter === "All" ? undefined : nseFilter}
               onlySymbols={listFilter?.symbols}
             />

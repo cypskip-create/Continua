@@ -54,6 +54,16 @@ const GENERIC_CORE_NAME_BLOCKLIST = new Set([
  *  matching — short leftovers ("I&M" -> "i m", or a name that's almost
  *  entirely suffix words) are too collision-prone to match on safely. */
 const MIN_CORE_NAME_LENGTH = 4;
+// Narrow issuer/brand phrases: generic words such as "equity" still do
+// not match. Subsidiary coverage means relevance, not a price prediction.
+const ISSUER_PHRASES: Record<string, string[]> = {
+  SCOM: ["m-pesa", "mpesa", "safaricom"],
+  JUB: ["jubilee health", "jubilee insurance", "jubilee holdings"],
+  EQTY: ["equity bank", "equity group", "equity bcdc"],
+  KCB: ["kcb group", "kcb bank", "kenya commercial bank"],
+  TOTL: ["totalenergies", "total energies", "total kenya"],
+  COOP: ["co-operative bank", "cooperative bank", "co-op bank"],
+};
 
 function stripToCoreName(name: string): string {
   return name
@@ -103,6 +113,10 @@ export async function resolveStockMentions(headline: string, articleText: string
   const matched = new Set<string>();
 
   for (const entry of directory) {
+    if ((ISSUER_PHRASES[entry.symbol] ?? []).some(phrase => new RegExp(`\\b${escapeRegExp(phrase)}\\b`, "i").test(text))) {
+      matched.add(entry.securityId);
+      continue;
+    }
     // Ticker: standalone word, case-sensitive (lowercase "scom" in prose
     // isn't a confident ticker reference; NSE tickers are always written
     // in caps in practice).

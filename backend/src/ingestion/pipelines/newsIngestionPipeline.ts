@@ -60,7 +60,7 @@ async function fetchPendingExtractions(limit: number): Promise<PendingNewsRow[]>
            OR lower(regexp_replace(split_part(n.article_url, '?', 1), '/$', '')) =
               lower(regexp_replace(split_part(a.document_url, '?', 1), '/$', ''))
        )
-     ORDER BY e.extracted_at ASC
+     ORDER BY a.published_at DESC NULLS LAST, e.extracted_at DESC
      LIMIT $1`,
     [limit],
   );

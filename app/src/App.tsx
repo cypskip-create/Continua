@@ -39,6 +39,7 @@ const PostDetail = lazy(() => import("./pages/PostDetail"));
 const ThemeDetail = lazy(() => import("./pages/ThemeDetail"));
 const FeaturedListDetail = lazy(() => import("./pages/FeaturedListDetail"));
 const AdminFinancialsReview = lazy(() => import("./pages/AdminFinancialsReview"));
+const Engine = lazy(() => import("./pages/Engine"));
 
 const queryClient = new QueryClient();
 
@@ -82,6 +83,7 @@ const App = () => (
 
                     <Route path="account" element={<Account />} />
                     <Route path="upgrade" element={<Upgrade />} />
+                    <Route path="engine" element={<Engine />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="stock/:symbol" element={<StockDetail />} />
                     <Route path="watchlist" element={<Watchlist />} />

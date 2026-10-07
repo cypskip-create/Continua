@@ -18,6 +18,7 @@ import { scoresRepository } from "../../storage/repositories/scoresRepository.js
 import { securitiesRepository } from "../../storage/repositories/securitiesRepository.js";
 import { pricesRepository } from "../../storage/repositories/pricesRepository.js";
 import { corporateActionsRepository } from "../../storage/repositories/corporateActionsRepository.js";
+import { trailingDividendPerShare } from "../research/dividendMetrics.js";
 import type { ExchangeCode } from "../../config/index.js";
 
 export interface ValuationModel {
@@ -116,7 +117,7 @@ function grahamNumberModel(currentPrice: number, financials: Awaited<ReturnType<
   };
 }
 
-function dividendDiscountModel(currentPrice: number, dividends: Awaited<ReturnType<typeof corporateActionsRepository.getDividendsBySecurity>>): ValuationModel {
+export function dividendDiscountModel(currentPrice: number, dividends: Awaited<ReturnType<typeof corporateActionsRepository.getDividendsBySecurity>>, now = new Date()): ValuationModel {
   const methodology = "Single-stage Gordon Growth Model: Fair Value = D₁ / (r − g), where D₁ is next year's expected dividend (TTM dividend grown by the historical growth rate), r is an assumed required return, and g is the historical dividend growth rate, capped well below r to keep the formula stable. Assumes constant growth forever, which real companies never actually deliver — treat this as illustrative for income-focused comparison, not a target.";
   const REQUIRED_RETURN = 0.12; // a generic equity-risk-premium-based assumption, not security-specific
 
@@ -124,17 +125,14 @@ function dividendDiscountModel(currentPrice: number, dividends: Awaited<ReturnTy
     .filter((d): d is typeof d & { details: { type: "dividend" } } => d.details.type === "dividend")
     .sort((a, b) => new Date(b.exDate ?? b.announcedAt).getTime() - new Date(a.exDate ?? a.announcedAt).getTime());
 
-  if (payouts.length < 4) {
-    return { model: "Dividend Discount Model", fairValue: null, currentPrice, upsidePercent: null, inputs: {}, methodology, unavailableReason: `Requires at least 4 recorded dividend payments to estimate trailing-twelve-month dividend and a growth trend; only ${payouts.length} on file.` };
+  const priorEnd = new Date(now);
+  priorEnd.setUTCFullYear(priorEnd.getUTCFullYear() - 1);
+  const ttmDividend = trailingDividendPerShare(payouts, now);
+  const priorTtmDividend = trailingDividendPerShare(payouts, priorEnd);
+  if (ttmDividend == null || ttmDividend <= 0 || priorTtmDividend == null || priorTtmDividend <= 0 || currentPrice <= 0) {
+    return { model: "Dividend Discount Model", fairValue: null, currentPrice, upsidePercent: null, inputs: {}, methodology, unavailableReason: "Requires positive recorded dividends in two consecutive twelve-month windows and a positive market price. Annual and semiannual payers are supported; growth is not invented." };
   }
-
-  const ttmDividend = payouts.slice(0, 4).reduce((sum, d) => sum + d.details.amountPerShare, 0);
-  const priorTtmDividend = payouts.length >= 8 ? payouts.slice(4, 8).reduce((sum, d) => sum + d.details.amountPerShare, 0) : null;
-
-  let growthRate = 0.03; // conservative default if there isn't enough history for a measured growth rate
-  if (priorTtmDividend && priorTtmDividend > 0) {
-    growthRate = Math.max(-0.05, Math.min(0.08, (ttmDividend - priorTtmDividend) / priorTtmDividend)); // clamp to a sane range
-  }
+  const growthRate = Math.max(-0.05, Math.min(0.08, (ttmDividend - priorTtmDividend) / priorTtmDividend));
 
   if (growthRate >= REQUIRED_RETURN) {
     return { model: "Dividend Discount Model", fairValue: null, currentPrice, upsidePercent: null, inputs: { ttmDividend: round(ttmDividend), growthRate: round(growthRate * 100) }, methodology, unavailableReason: "Estimated dividend growth rate meets or exceeds the assumed required return — the formula is undefined/unstable in this case." };

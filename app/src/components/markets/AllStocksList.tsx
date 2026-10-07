@@ -24,15 +24,17 @@ import {
 const sectors = ["All Sectors", ...Array.from(new Set(CANONICAL_SYMBOLS.map(s => STOCK_META[s].sector))).sort()];
 
 interface AllStocksListProps {
+  search?: string;
   /** Pre-applied sector filter, e.g. from tapping a sector card elsewhere on Markets. */
   initialSector?: string;
   /** Restrict the list to just these symbols, e.g. for a "Featured list" drill-down. */
   onlySymbols?: string[];
 }
 
-export function AllStocksList({ initialSector, onlySymbols }: AllStocksListProps = {}) {
+export function AllStocksList({ initialSector, onlySymbols, search }: AllStocksListProps = {}) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  useEffect(() => { if (search !== undefined) setSearchQuery(search); }, [search]);
   const [selectedSector, setSelectedSector] = useState(initialSector || "All Sectors");
   const [sortBy, setSortBy] = useState<"name" | "change" | "price">("name");
   const { isInWatchlist, addToWatchlist, removeFromWatchlist, folders, foldersLoading } = useWatchlist();

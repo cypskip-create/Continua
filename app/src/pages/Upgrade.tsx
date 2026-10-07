@@ -20,11 +20,12 @@ const FREE_FEATURES = [
   "TradersHub — read & post (up to 500 characters)",
   "Basic charts (line, area, candlestick)",
   "3 AI theses / month",
-  "Full stock research on 5 different stocks / month",
+  "Fundamentals on 5 different stocks / month; revisit them anytime",
   "Basic portfolio valuation (pick one model per holding)",
 ];
 
 const PREMIUM_FEATURES = [
+  { icon: Zap, label: "Continua Engine", detail: "Company briefings, forecasts, valuation, ownership, technical backtesting and scenario tools" },
   { icon: LineChart, label: "Real-time NSE prices", detail: "No delay — prices update the moment they move" },
   { icon: Sparkles, label: "Unlimited AI investment theses", detail: "Free is capped at 3/month" },
   { icon: FileText, label: "Unlimited stock research", detail: "Free is capped at 5 different stocks/month" },

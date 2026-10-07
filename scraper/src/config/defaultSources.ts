@@ -6,6 +6,17 @@ import { insertSourceIfMissing } from "../storage/sourcesRepository.js";
  * articles. Operators can disable or edit any seeded row and that choice is
  * preserved because startup only inserts missing IDs. */
 export const DEFAULT_SOURCES: SourceDefinition[] = [
+  ...[
+    { id: "techtrendske-rss", name: "TechTrends Kenya", domain: "techtrendske.co.ke", feedUrl: "https://techtrendske.co.ke/feed/" },
+    { id: "soko-directory-rss", name: "Soko Directory", domain: "sokodirectory.com", feedUrl: "https://sokodirectory.com/feed/" },
+    { id: "business-daily-rss", name: "Business Daily Africa", domain: "www.businessdailyafrica.com", feedUrl: "https://www.businessdailyafrica.com/service/rss/bd/1939132/feed.rss" },
+  ].map((publisher): SourceDefinition => ({
+    id: publisher.id, name: publisher.name, adapter: "rss", enabled: true,
+    config: { feedUrl: publisher.feedUrl, schedule: "*/5 * * * *", requestsPerSecond: 0.25, concurrency: 1, maxItemsPerRun: 60 },
+    termsUrl: `https://${publisher.domain}/`, robotsUrl: `https://${publisher.domain}/robots.txt`,
+    license: "Publisher RSS feed", redistributionAllowed: null, attributionRequired: true,
+    allowedUsage: "Attributed headlines and short public feed summaries, subject to robots.txt and publisher terms. No paywall bypass or full-article republication.",
+  })),
   {
     id: 'nse-index-summary', name: 'NSE Official Index Summary', adapter: 'web', enabled: true,
     config: { seeds: ['https://www.nse.co.ke/'], allowedDomains: ['www.nse.co.ke', 'nse.co.ke'], maxDepth: 0,

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { financialsApi } from "@/api/financialsApi";
-import { announcementsApi } from "@/api/announcementsApi";
+import { newsApi } from "@/api/newsApi";
 import { usePortfolioDividends } from "./usePortfolioDividends";
 
 export type UpdateCategory = "earnings" | "dividends" | "filings";
@@ -19,17 +19,15 @@ export interface PortfolioUpdateItem {
 
 const RECENT_DAYS = 120;
 const isRecent = (iso: string | null | undefined) =>
-  !!iso && Date.now() - new Date(iso).getTime() <= RECENT_DAYS * 86_400_000;
+  !!iso && Number.isFinite(Date.parse(iso)) && Date.now() - Date.parse(iso) >= -86_400_000 && Date.now() - Date.parse(iso) <= RECENT_DAYS * 86_400_000;
 
 /** Real, dated updates for every holding in the portfolio, pulled from
  *  three independent structured sources and merged newest-first:
  *   · Earnings   — latest reported fiscal period (financialsApi)
  *   · Dividends  — real payouts on record (reuses usePortfolioDividends)
- *   · Filings    — raw NSE announcements bridged from the scraper
- *                  (announcementsApi) — intentionally NOT re-categorized
- *                  into Risk/Legal/People, since the ingestion pipeline
- *                  doesn't classify document type yet and guessing from
- *                  keywords would misrepresent confidence we don't have.
+ *   · News       — publisher headlines linked to each holding, with a
+ *                  short excerpt and explainable topic context. Corporate
+ *                  landing pages and undated filings are not news updates.
  */
 export function usePortfolioUpdates(symbols: string[]) {
   // Stabilize the symbol list by content, not array identity, so the
@@ -49,9 +47,10 @@ export function usePortfolioUpdates(symbols: string[]) {
 
   const filingsResults = useQueries({
     queries: uniqueSymbols.map((symbol) => ({
-      queryKey: ["continua", "announcements", symbol],
-      queryFn: () => announcementsApi.getForSymbol(symbol, { limit: 10 }),
-      staleTime: 15 * 60_000,
+      queryKey: ["continua", "news", "symbol", symbol],
+      queryFn: () => newsApi.getForSymbol(symbol, { limit: 20 }),
+      staleTime: 60_000,
+      refetchInterval: 60_000,
       retry: 1,
     })),
   });
@@ -93,21 +92,21 @@ export function usePortfolioUpdates(symbols: string[]) {
     });
 
     uniqueSymbols.forEach((symbol, i) => {
-      (filingsResults[i]?.data ?? []).forEach((a) => {
+      (filingsResults[i]?.data ?? []).filter(a => isRecent(a.publishedAt)).forEach((a) => {
         list.push({
-          id: `filing-${a.id}`,
+          id: `filing-${a.id}-${symbol}`,
           symbol,
           category: "filings",
-          title: a.title,
-          detail: a.excerpt,
-          date: a.publishedAt ?? a.id,
-          url: a.documentUrl,
+          title: a.headline,
+          detail: [a.excerpt, a.impact ? `${a.impact.topic}: ${a.impact.reason}` : null].filter(Boolean).join(" · "),
+          date: a.publishedAt!,
+          url: a.articleUrl,
           needsReview: a.needsReview,
         });
       });
     });
 
-    return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return list.filter(item => isRecent(item.date)).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [uniqueSymbols, earningsResults, dividendData, filingsResults]);
 
   const recentCounts = useMemo(() => {

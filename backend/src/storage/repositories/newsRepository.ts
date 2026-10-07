@@ -1,6 +1,7 @@
 import { query, withTransaction } from "../db.js";
 import type { NewsItem } from "../../types/market.js";
 import { cleanArticleContent, dedupeNewsItems, isFinancialNews } from "../../domain/newsQuality.js";
+import { newsImpact } from "../../services/research/newsImpact.js";
 
 interface NewsItemRow {
   id: string;
@@ -39,6 +40,7 @@ function mapRow(row: NewsItemRow): NewsItem {
     extractionConfidence: row.extractionConfidence !== null ? Number(row.extractionConfidence) : null,
     needsReview: row.needsReview,
     publishedAt: row.publishedAt,
+    impact: newsImpact(row.headline, row.excerpt, row.symbols ?? []),
   };
 }
 
@@ -109,9 +111,9 @@ export const newsRepository = {
         await client.query(
           `UPDATE market.news_items SET headline=$2, excerpt=$3, category=$4, image_url=$5,
            scraped_artifact_id=$6, scraped_extraction_id=$7, extraction_confidence=$8,
-           needs_review=$9, updated_at=now() WHERE id=$1`,
+           needs_review=$9, published_at=COALESCE($10, published_at), updated_at=now() WHERE id=$1`,
           [id, input.headline, input.excerpt, input.category, input.imageUrl, input.scrapedArtifactId,
-           input.scrapedExtractionId, input.extractionConfidence, input.needsReview],
+           input.scrapedExtractionId, input.extractionConfidence, input.needsReview, input.publishedAt],
         );
         await client.query(`DELETE FROM market.news_item_securities WHERE news_item_id=$1`, [id]);
         for (const securityId of input.securityIds) await client.query(

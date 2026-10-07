@@ -12,8 +12,7 @@ export function ReportSection({ number, title, intro, children }: ReportSectionP
   return (
     <div className="space-y-6">
       <div className="flex items-baseline gap-3">
-        <span className="text-2xl font-serif text-muted-foreground/50 shrink-0">{number}</span>
-        <h2 className="text-xl font-serif font-bold">{title}</h2>
+        <h2 className="text-lg font-semibold">{title}</h2>
       </div>
       {intro && <p className="text-[0.75rem] text-muted-foreground -mt-3">{intro}</p>}
       {children}
@@ -31,11 +30,10 @@ interface SubWidgetProps {
 
 export function SubWidget({ number, title, description, right, children }: SubWidgetProps) {
   return (
-    <div className="card-gradient rounded-2xl p-4">
+    <div className="border-t border-border/70 py-4">
       <div className="flex items-start justify-between gap-2 mb-1">
         <div className="flex items-baseline gap-2">
-          <span className="text-[0.8125rem] font-serif text-muted-foreground/50 shrink-0">{number}</span>
-          <h3 className="text-[0.9375rem] font-serif font-bold">{title}</h3>
+          <h3 className="text-[0.9375rem] font-semibold">{title}</h3>
         </div>
         {right}
       </div>

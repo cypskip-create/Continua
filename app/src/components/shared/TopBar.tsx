@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Logo } from "./Logo";
 import { useNotifications } from "@/hooks/useNotifications";
-import { ExchangeSelector } from "./ExchangeSelector";
 
 interface TopBarProps {
   title: string;
@@ -37,7 +36,6 @@ export function TopBar({
     e?.preventDefault();
     if (searchQuery.trim()) {
       if (onSearch) onSearch(searchQuery.trim());
-      else if (location.pathname !== '/traders-hub') navigate(`/traders-hub?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -50,11 +48,10 @@ export function TopBar({
             <h1 className="text-lg font-bold text-foreground truncate">{title}</h1>
             {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
           </div>
-          {showExchangeSelector && <ExchangeSelector className="ml-1 shrink-0" />}
         </div>
         
         <div className="flex items-center gap-1">
-          {showSearch && (
+          {showSearch && location.pathname === '/markets' && (
             <>
               {searchOpen ? (
                 <form onSubmit={handleSearchSubmit} className="flex items-center gap-1">
@@ -63,10 +60,10 @@ export function TopBar({
                     className="w-40 h-9 text-sm rounded-full bg-muted/50 border-0"
                     autoFocus
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => { setSearchQuery(e.target.value); onSearch?.(e.target.value); }}
                     onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
                   />
-                  <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full" aria-label="Close search" onClick={() => { setSearchQuery(""); setSearchOpen(false); }}>
+                  <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full" aria-label="Close search" onClick={() => { setSearchQuery(""); onSearch?.(""); setSearchOpen(false); }}>
                     <X className="h-4 w-4" />
                   </Button>
                 </form>

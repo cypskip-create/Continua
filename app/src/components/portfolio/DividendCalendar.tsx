@@ -28,6 +28,7 @@ const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 export function DividendCalendar({ holdings, dividendData, showValues = true, currencyLabel = "KSh" }: DividendCalendarProps) {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   const events = useMemo(() => {
     const list: CalendarEvent[] = [];
@@ -40,12 +41,11 @@ export function DividendCalendar({ holdings, dividendData, showValues = true, cu
           if (p.payDate) list.push({ date: new Date(p.payDate), symbol: h.symbol, kind: "payment", estimated, amount: estimated ? null : p.amountPerShare * h.shares });
         });
       };
-      // Only the most recent real payout plus anything on the horizon is
-      // relevant to a calendar view — no need to plot years of history.
-      push(d.payouts.slice(0, 2), false);
+      // Keep real history available when navigating to previous months.
+      push(d.payouts, false);
       push(d.projected, true);
     });
-    return list;
+    return list.filter(event => Number.isFinite(event.date.getTime()));
   }, [holdings, dividendData]);
 
   const gridStart = startOfWeek(startOfMonth(month));
@@ -55,7 +55,7 @@ export function DividendCalendar({ holdings, dividendData, showValues = true, cu
   const eventsOn = (day: Date) => events.filter((e) => isSameDay(e.date, day));
 
   const upcoming = events
-    .filter((e) => e.date.getTime() >= Date.now() - 86_400_000)
+    .filter((e) => selectedDay ? isSameDay(e.date, selectedDay) : isSameMonth(e.date, month))
     .sort((a, b) => a.date.getTime() - b.date.getTime())
     .slice(0, 8);
 
@@ -71,11 +71,11 @@ export function DividendCalendar({ holdings, dividendData, showValues = true, cu
           </InfoTip>
         </h3>
         <div className="flex items-center gap-2">
-          <button data-small-target onClick={() => setMonth((m) => subMonths(m, 1))} className="p-1 rounded-full hover:bg-muted active:opacity-70">
+          <button aria-label="Previous month" data-small-target onClick={() => { setMonth((m) => subMonths(m, 1)); setSelectedDay(null); }} className="p-1 rounded-full hover:bg-muted active:opacity-70">
             <ChevronLeft className="h-4 w-4" />
           </button>
           <span className="text-[0.75rem] font-semibold tabular w-20 text-center">{format(month, "MMM yyyy")}</span>
-          <button data-small-target onClick={() => setMonth((m) => addMonths(m, 1))} className="p-1 rounded-full hover:bg-muted active:opacity-70">
+          <button aria-label="Next month" data-small-target onClick={() => { setMonth((m) => addMonths(m, 1)); setSelectedDay(null); }} className="p-1 rounded-full hover:bg-muted active:opacity-70">
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -90,10 +90,14 @@ export function DividendCalendar({ holdings, dividendData, showValues = true, cu
           const dayEvents = eventsOn(day);
           const inMonth = isSameMonth(day, month);
           return (
-            <div
+            <button
+              type="button"
+              aria-label={`${format(day, "MMMM d, yyyy")}: ${dayEvents.length} events`}
+              aria-pressed={!!selectedDay && isSameDay(day, selectedDay)}
+              onClick={() => setSelectedDay(selectedDay && isSameDay(day, selectedDay) ? null : day)}
               key={day.toISOString()}
               className={`aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5 ${
-                isToday(day) ? "bg-primary/15" : inMonth ? "" : "opacity-30"
+                selectedDay && isSameDay(day, selectedDay) ? "ring-1 ring-primary bg-primary/15" : isToday(day) ? "bg-primary/15" : inMonth ? "" : "opacity-30"
               }`}
             >
               <span className="text-[0.6875rem] tabular">{format(day, "d")}</span>
@@ -111,7 +115,7 @@ export function DividendCalendar({ holdings, dividendData, showValues = true, cu
                   ))}
                 </div>
               )}
-            </div>
+            </button>
           );
         })}
       </div>
@@ -123,9 +127,9 @@ export function DividendCalendar({ holdings, dividendData, showValues = true, cu
         <Legend swatch={<Circle className="h-2 w-2 text-bull" />} label="Payment (Est.)" />
       </div>
 
-      <p className="section-eyebrow mt-4 mb-2">Upcoming Events</p>
+      <p className="section-eyebrow mt-4 mb-2">{selectedDay ? format(selectedDay, "MMM d") : format(month, "MMMM yyyy")} Events</p>
       {upcoming.length === 0 ? (
-        <p className="text-[0.6875rem] text-muted-foreground py-2">No upcoming dividend events on file yet.</p>
+        <p className="text-[0.6875rem] text-muted-foreground py-2">No dividend events on file for this selection.</p>
       ) : (
         <div className="divide-y divide-border/40">
           {upcoming.map((e, i) => (

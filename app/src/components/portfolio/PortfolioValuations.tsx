@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { Info, Loader2, ChevronDown, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { InfoTip } from "./InfoTip";
@@ -38,16 +39,17 @@ type ModelKey = (typeof MODEL_OPTIONS)[number]["key"];
 
 const STORAGE_KEY = "continua-valuation-model-assignments";
 
-function loadAssignments(): Record<string, ModelKey> {
+function loadAssignments(storageKey: string): Record<string, ModelKey> {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+    return Object.fromEntries(Object.entries(saved).filter(([, value]) => MODEL_OPTIONS.some(model => model.key === value))) as Record<string, ModelKey>;
   } catch {
     return {};
   }
 }
 
-function saveAssignments(map: Record<string, ModelKey>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+function saveAssignments(storageKey: string, map: Record<string, ModelKey>) {
+  localStorage.setItem(storageKey, JSON.stringify(map));
 }
 
 const fmtMoney = (v: number, currencyLabel: string, showValues: boolean) =>
@@ -61,20 +63,23 @@ export function PortfolioValuations({
   showValues = true,
   currencyLabel = "KSh",
 }: PortfolioValuationsProps) {
-  const [assignments, setAssignments] = useState<Record<string, ModelKey>>(loadAssignments);
+  const { user } = useAuth();
+  const storageKey = `${STORAGE_KEY}:${user?.id ?? "guest"}`;
+  const [assignments, setAssignments] = useState<Record<string, ModelKey>>(() => loadAssignments(storageKey));
+  useEffect(() => setAssignments(loadAssignments(storageKey)), [storageKey]);
   const [expanded, setExpanded] = useState<"overvalued" | "undervalued" | "needs" | null>("needs");
 
   const assignAll = (key: ModelKey) => {
     const next: Record<string, ModelKey> = {};
     holdings.forEach((h) => { next[h.symbol] = key; });
     setAssignments(next);
-    saveAssignments(next);
+    saveAssignments(storageKey, next);
   };
 
   const assignOne = (symbol: string, key: ModelKey) => {
     const next = { ...assignments, [symbol]: key };
     setAssignments(next);
-    saveAssignments(next);
+    saveAssignments(storageKey, next);
   };
 
   const rows = useMemo(() => {
@@ -101,7 +106,9 @@ export function PortfolioValuations({
   const undervalued = rows.filter((r) => r.bucket === "undervalued").sort((a, b) => (b.upsidePercent ?? 0) - (a.upsidePercent ?? 0));
 
   const assignedRows = rows.filter((r) => r.fairValue != null);
-  const totalValue = holdings.reduce((s, h) => s + h.value, 0);
+  // Compare the same covered positions on both sides, never a partial fair
+  // value against the whole portfolio (which falsely implied overvaluation).
+  const totalValue = assignedRows.reduce((s, r) => s + r.holding.value, 0);
   const totalFairValue = assignedRows.reduce((s, r) => s + (r.fairValue as number) * r.holding.shares, 0);
   const coverage = holdings.length > 0 ? `${assignedRows.length}/${holdings.length}` : "0/0";
 
@@ -127,6 +134,7 @@ export function PortfolioValuations({
   }, [holdings, valuations]);
   const consensusAssigned = consensusRows.filter((r) => r.consensusFairValue != null);
   const consensusTotalFairValue = consensusAssigned.reduce((s, r) => s + (r.consensusFairValue as number) * r.holding.shares, 0);
+  const consensusCoveredValue = consensusAssigned.reduce((s, r) => s + r.holding.value, 0);
   const consensusCoverage = holdings.length > 0 ? `${consensusAssigned.length}/${holdings.length}` : "0/0";
 
   if (isLoading) {
@@ -152,7 +160,7 @@ export function PortfolioValuations({
         </p>
         <div className="flex gap-6">
           <div>
-            <p className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">Portfolio Value</p>
+            <p className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">Covered holdings value</p>
             <p className="text-xl font-bold tabular mt-0.5">{fmtMoney(totalValue, currencyLabel, showValues)}</p>
           </div>
           <div className="w-px bg-border/60" />
@@ -187,8 +195,8 @@ export function PortfolioValuations({
             <p className="text-[0.6875rem] text-muted-foreground mb-3">Value &amp; Consensus reflect {consensusCoverage} holdings so far.</p>
             <div className="flex gap-6">
               <div>
-                <p className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">Portfolio Value</p>
-                <p className="text-xl font-bold tabular mt-0.5">{fmtMoney(totalValue, currencyLabel, showValues)}</p>
+                <p className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">Covered holdings value</p>
+                <p className="text-xl font-bold tabular mt-0.5">{fmtMoney(consensusCoveredValue, currencyLabel, showValues)}</p>
               </div>
               <div className="w-px bg-border/60" />
               <div>

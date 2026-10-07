@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
 /**
@@ -24,6 +24,7 @@ const tabPositions = new Map<string, number>();
 export function useScrollRestoration() {
   const location = useLocation();
   const navigationType = useNavigationType(); // "POP" | "PUSH" | "REPLACE"
+  const restoring = useRef(false);
 
   // Browser-native restoration fights with ours (it can jump the scroll
   // position around mid-transition) — take manual control once, up front.
@@ -37,9 +38,10 @@ export function useScrollRestoration() {
   // active. Recording on every scroll (rather than trying to capture a single
   // snapshot on the way out) means we always have an accurate last-known
   // position, regardless of what triggered the navigation away from it.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const key = location.key;
     const onScroll = () => {
+      if (restoring.current) return;
       scrollPositions.set(key, window.scrollY);
       tabPositions.set(location.pathname + location.search, window.scrollY);
     };
@@ -47,9 +49,8 @@ export function useScrollRestoration() {
     // Only set an initial value if we don't already have a saved position.
     // This prevents overwriting a previously saved scroll position when
     // returning to a page (e.g., navigating back).
-    if (!scrollPositions.has(key)) {
-      onScroll(); // record the initial position (usually 0)
-    }
+    // Do not sample the previous route's inherited offset on mount. The
+    // following layout effect restores this route before its first scroll.
 
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -62,17 +63,32 @@ export function useScrollRestoration() {
       : location.state?.resumeTab ? (tabPositions.get(location.pathname + location.search) ?? 0) : 0;
     const root = document.documentElement;
     const previousBehavior = root.style.scrollBehavior;
+    restoring.current = target > 0;
     root.style.scrollBehavior = "auto";
-    const restore = () => window.scrollTo({ top: target, behavior: "auto" });
+    const restore = () => {
+      window.scrollTo({ top: target, behavior: "auto" });
+      if (Math.abs(window.scrollY - target) < 1) restoring.current = false;
+    };
     restore();
     const frame = requestAnimationFrame(restore);
-    // One post-paint correction covers lazy route mounting without leaving a
-    // live observer that can fight the person's first swipe or tap.
-    const stop = window.setTimeout(() => { root.style.scrollBehavior = previousBehavior; }, 100);
+    // Lazy routes may still be shorter than the saved offset on the first
+    // frame. Retry on layout growth, but stop immediately on user input so
+    // restoration never fights a deliberate scroll or tap.
+    const observer = new ResizeObserver(() => { if (restoring.current) restore(); });
+    observer.observe(document.body);
+    const finish = () => {
+      observer.disconnect();
+      restoring.current = false;
+      root.style.scrollBehavior = previousBehavior;
+    };
+    for (const event of ["touchstart", "wheel", "keydown", "pointerdown"]) window.addEventListener(event, finish, { passive: true });
+    const stop = window.setTimeout(finish, 2500);
 
     return () => {
       cancelAnimationFrame(frame);
       clearTimeout(stop);
+      finish();
+      for (const event of ["touchstart", "wheel", "keydown", "pointerdown"]) window.removeEventListener(event, finish);
       root.style.scrollBehavior = previousBehavior;
     };
   }, [location.key, location.pathname, location.search, location.state, navigationType]);

@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { refreshPageData } from "@/lib/pageRefresh";
 import { usePageState } from "@/hooks/usePageState";
 import { Button } from "@/components/ui/button";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -66,6 +68,7 @@ export default function TrackInvestments() {
   const { portfolio, loading, removeFromPortfolio, refetch } = usePortfolio();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { profile, updateProfile } = useProfile();
   const isPremium = profile?.subscription_plan === "premium" || profile?.subscription_plan === "premium_plus";
   const [showBalance, setShowBalance] = useState(true);
@@ -159,7 +162,7 @@ export default function TrackInvestments() {
   }, [holdings, dividendData]);
   const { research, isLoading: researchLoading } = usePortfolioResearch(holdings.map(h => h.symbol));
   const { averages: marketBenchmark, isLoading: benchmarkLoading } = useMarketBenchmark();
-  const { items: updateItems, recentCounts: updateCounts, isLoading: updatesLoading } = usePortfolioUpdates(holdings.map(h => h.symbol));
+  const { items: updateItems, recentCounts: updateCounts, isLoading: updatesLoading } = usePortfolioUpdates(portfolio.map(h => h.symbol));
   const { growth } = usePortfolioGrowth(holdings.map(h => h.symbol));
   const riskAnalytics = usePortfolioRiskAnalytics(holdings.map(h => ({ symbol: h.symbol, weight: h.weight })));
 
@@ -185,9 +188,11 @@ export default function TrackInvestments() {
   };
 
   const handleRefresh = async () => {
+    if (isRefreshing) return;
     setIsRefreshing(true);
-    await refetch();
-    setTimeout(() => setIsRefreshing(false), 800);
+    try {
+      await Promise.allSettled([refetch(), refreshPageData(), queryClient.invalidateQueries({ queryKey: ["continua"], refetchType: "active" })]);
+    } finally { setIsRefreshing(false); }
   };
 
   const toggleSort = (key: SortKey) => {

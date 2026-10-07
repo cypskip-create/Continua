@@ -20,8 +20,12 @@ import type { Source } from "../types.js";
 import { ensureDefaultSources } from "../config/defaultSources.js";
 
 const scheduledTasks: ScheduledTask[] = [];
+const runningSources = new Set<string>();
 
 async function runSourceOnce(source: Source): Promise<void> {
+  // A slow publisher must not accumulate another crawl every cron tick.
+  if (runningSources.has(source.id)) return;
+  runningSources.add(source.id);
   try {
     if (hasRegisteredAdapter(source.adapter)) {
       const summary = await runRegisteredAdapter(source);
@@ -32,6 +36,8 @@ async function runSourceOnce(source: Source): Promise<void> {
     }
   } catch (err) {
     logger.error({ sourceId: source.id, err }, "Scheduled run failed");
+  } finally {
+    runningSources.delete(source.id);
   }
 }
 
@@ -68,7 +74,8 @@ export async function startScheduler(): Promise<ScheduledTask[]> {
   // at startup with bounded source-level concurrency; per-host throttling
   // and each adapter's document concurrency still apply underneath.
   void (async () => {
-    const pending = [...sources];
+    // Publish fresh news before spending minutes on historical PDFs/OCR.
+    const pending = [...sources].sort((a, b) => Number(b.adapter === "rss") - Number(a.adapter === "rss"));
     const workers = Array.from({ length: Math.min(2, pending.length) }, async () => {
       for (;;) {
         const source = pending.shift();

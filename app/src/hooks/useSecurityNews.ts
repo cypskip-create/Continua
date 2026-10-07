@@ -14,7 +14,8 @@ export function useSecurityNews(symbol: string | undefined) {
     queryKey: ["continua", "news", "symbol", symbol],
     queryFn: () => newsApi.getForSymbol(symbol as string),
     enabled: !!symbol,
-    staleTime: 5 * 60_000,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
     retry: (count, err) => !isNotFound(err) && count < 1,
   });
 

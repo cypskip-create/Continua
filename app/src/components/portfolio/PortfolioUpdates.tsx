@@ -13,7 +13,7 @@ const CATEGORIES: { key: UpdateCategory | "all"; label: string; icon: typeof Tre
   { key: "all", label: "All", icon: Info },
   { key: "earnings", label: "Earnings", icon: TrendingUp },
   { key: "dividends", label: "Dividends", icon: DollarSign },
-  { key: "filings", label: "Company Filings", icon: FileText },
+  { key: "filings", label: "Holdings News", icon: FileText },
 ];
 
 function timeAgo(iso: string) {
@@ -32,13 +32,13 @@ export function PortfolioUpdates({ items, recentCounts, isLoading }: PortfolioUp
   const filtered = filter === "all" ? items : items.filter((i) => i.category === filter);
 
   return (
-    <div className="card-gradient rounded-2xl p-4">
+    <div className="border-t border-border/70 py-4">
       <h3 className="font-serif text-lg flex items-center gap-1.5 mb-1">
         Updates
-        <InfoTip>Earnings and dividends come from Continua's structured data; filings are real NSE documents from the scraper that haven't been sorted by type yet.</InfoTip>
+        <InfoTip>Reported earnings, dividend events and short publisher summaries mentioning your holdings. A company mention identifies relevance, not a predicted price move.</InfoTip>
       </h3>
       <p className="text-[0.6875rem] text-muted-foreground mb-3">
-        Earnings and dividends are structured data; filings are real NSE documents Continua's scraper hasn't sorted by type yet.
+        News affecting your holdings, alongside reported earnings and dividends.
       </p>
 
       <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 mb-3">

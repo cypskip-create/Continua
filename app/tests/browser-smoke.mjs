@@ -30,7 +30,7 @@ let newsOffline = false;
 let quoteRequests = 0;
 let portfolioRequests = 0;
 const unknown = new Set();
-await context.route('**/*', async (route) => {
+const handleRoute = async (route) => {
   const url = new URL(route.request().url());
   const json = (body, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body), headers: { 'access-control-allow-origin': '*' } });
   if (url.pathname === '/test-image.svg') return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400"><rect width="800" height="400" fill="#7862df"/></svg>' });
@@ -52,6 +52,8 @@ await context.route('**/*', async (route) => {
       }
       return json(route.request().headers().accept?.includes('object') ? fixturePosts[0] ?? null : fixturePosts);
     }
+    if (url.pathname.endsWith('/auth/v1/token')) return json({ access_token: `e30.${btoa(JSON.stringify({sub:user.id,exp:4102444800,role:'authenticated'}))}.fixture`, refresh_token: 'fixture', expires_in: 3600, token_type: 'bearer', user });
+    if (url.pathname.endsWith('/rpc/record_research_view') || url.pathname.endsWith('/rpc/get_research_quota')) return json({ allowed: true, is_premium: true, already_counted: true, limit: null, remaining: null });
     if (url.pathname.includes('/auth/')) return json(user);
     if (url.pathname.includes('/profiles')) return json(route.request().headers().accept?.includes('object') ? profile : [profile]);
     if (url.pathname.includes('/watchlist_folders')) return json([{ id: 'fixture-folder', user_id: user.id, name: 'Watchlist', is_default: true }]);
@@ -67,6 +69,8 @@ await context.route('**/*', async (route) => {
       return json({ data: path === '/quotes' ? quotes : quotes[0] });
     }
     if (path.startsWith('/news')) return newsOffline ? json({error:'Fixture offline'},503) : json({ data: path.includes('/item/') ? news : [news] });
+    if (path.startsWith('/financials/') && path.endsWith('/history')) return json({ data: [2023,2024,2025].map((year,i) => ({fiscalYear:year,fiscalQuarter:url.searchParams.get('periodType') === 'quarterly' ? 1 : null,revenue:1000000+i*100000,netIncome:i === 0 ? -100000 : 100000+i*50000,eps:1+i,totalAssets:4000000,totalLiabilities:1000000,totalEquity:3000000,operatingIncome:300000,operatingCashFlow:350000,freeCashFlow:200000})) });
+    if (path.startsWith('/earnings/') && !path.endsWith('/recent')) return json({ data: [2024,2025,2026].map((year,i) => ({id:`earn-${year}`,fiscalYear:year,fiscalQuarter:null,reportedDate:i<2 ? `${year}-03-01` : null,revenueActual:i<2 ? 1000000+i*100000 : null,revenueEstimate:1050000+i*100000,epsActual:i<2 ? 1+i : null,epsEstimate:1.1+i})) });
     if (path.startsWith('/research/')) return json({ data: { ratios: { pe: 10, pb: 1.5, ps: 2, roe: .15, roa: .05, debtToEquity: .3, dividendYield: .06, netMargin: .2 }, score: { afriScore: 70, afriValue: 60, afriGrowth: 65, afriHealth: 80, afriIncome: 70, afriRisk: 60, afriQuality: 70, afriMomentum: 50, inputs: {} } } });
     if (path.startsWith('/historical/')) return json({ data: Array.from({ length: 30 }, (_, i) => ({ securityId: 'NSE:KCB', interval: '1d', timestamp: new Date(Date.now() - (30 - i) * 86400000).toISOString(), open: 40 + i / 3, high: 41 + i / 3, low: 39 + i / 3, close: 40 + i / 3, volume: 10000 })) });
     if (path.startsWith('/indices') || path.startsWith('/screener') || path.includes('/dividends') || path.includes('/announcements')) return json({ data: [] });
@@ -74,7 +78,8 @@ await context.route('**/*', async (route) => {
     return json({ error: 'Fixture data not provided' }, 404);
   }
   return route.abort();
-});
+};
+await context.route('**/*', handleRoute);
 await context.addInitScript(({ user, profile }) => {
   const payload = btoa(JSON.stringify({ sub: user.id, exp: 4102444800, role: 'authenticated' }));
   localStorage.setItem('sb-continua-test-auth-token', JSON.stringify({ access_token: `e30.${payload}.fixture`, refresh_token: 'fixture', expires_at: 4102444800, expires_in: 3600, token_type: 'bearer', user }));
@@ -87,6 +92,17 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const artifacts = new URL('../../.qa-artifacts/', import.meta.url);
 await mkdir(artifacts, { recursive: true });
 try {
+  const loginContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await loginContext.route('**/*', handleRoute);
+  const loginPage = await loginContext.newPage();
+  await loginPage.goto('http://127.0.0.1:5188/auth');
+  await loginPage.locator('input[type="email"]').first().fill(user.email);
+  await loginPage.locator('input[type="password"]').first().fill('FixturePassword123!');
+  await loginPage.locator('form').getByRole('button', { name: /Sign In|Log In|Login/i, exact: true }).tap();
+  await loginPage.waitForURL('http://127.0.0.1:5188/', { timeout: 15000 });
+  await loginPage.locator('.bottom-nav').waitFor();
+  console.log('PASS first login navigates on one submit despite AppLockGate remount');
+  await loginContext.close();
   await page.goto('http://127.0.0.1:5188/');
   await page.locator('.bottom-nav').waitFor();
   await wait(1600);
@@ -208,7 +224,8 @@ try {
   await page.locator('.bottom-nav').getByText('Home', { exact: true }).tap();
   await page.locator('.bottom-nav').getByText('Markets', { exact: true }).tap();
   await wait(700);
-  assert.ok(Math.abs(await page.evaluate(() => window.scrollY) - savedMarketScroll) < 3, 'Markets returns to saved scroll offset');
+  const resumedMarketScroll = await page.evaluate(() => window.scrollY);
+  assert.ok(Math.abs(resumedMarketScroll - savedMarketScroll) < 3, `Markets returns to saved scroll offset: expected ${savedMarketScroll}, got ${resumedMarketScroll}`);
   const surfaces = await page.locator('.content-surface').evaluateAll(nodes => nodes.map(n => {
     const style = getComputedStyle(n);
     return { radius: style.borderRadius, shadow: style.boxShadow, border: style.borderTopWidth };
@@ -266,6 +283,22 @@ try {
   assert.equal(await page.getByText('No stories yet',{exact:true}).count(),0);
   newsOffline = false;
   console.log('PASS news outage retains saved stories and shows an explicit error');
+
+  await page.goto('http://127.0.0.1:5188/stock/KCB');
+  await page.getByRole('button', {name:'Fundamentals',exact:true}).tap();
+  const categories = page.getByRole('tablist',{name:'Fundamentals category'});
+  await categories.waitFor();
+  await page.getByRole('img',{name:'revenue actual and estimate history'}).scrollIntoViewIfNeeded();
+  await page.getByRole('tablist',{name:'Estimates metric'}).getByRole('tab',{name:'EPS',exact:true}).tap();
+  await page.getByRole('img',{name:'eps actual and estimate history'}).waitFor();
+  const periodTabs = page.getByRole('tablist',{name:'Financial period'});
+  await periodTabs.getByRole('tab',{name:'Quarterly',exact:true}).tap();
+  await page.getByRole('img',{name:'Revenue history',exact:true}).first().scrollIntoViewIfNeeded();
+  assert.equal(await periodTabs.getByRole('tab',{name:'Quarterly',exact:true}).getAttribute('aria-selected'),'true');
+  const sticky = await categories.boundingBox();
+  assert.ok(sticky.y >= 90 && sticky.y < 120, `Fundamentals subnav stays under primary tabs: ${sticky.y}`);
+  await page.screenshot({path:fileURLToPath(new URL('fundamentals-sticky.png', artifacts))});
+  console.log('PASS Fundamentals charts, metric switching, quarterly control and sticky categories');
 
   // Route smoke coverage exercises mounted empty/error states, not every mutation.
   for (const path of ['/markets', '/discover', '/account', '/upgrade', '/settings', '/stock/KCB', '/watchlist', '/sector/Banking', '/theme/dividends', '/featured/dividends', '/learn', '/notifications', '/sector-heatmap', '/track-investments', '/traders-hub', '/rooms', '/screener', '/compare', `/profile/${user.id}`, '/traders-hub/post/missing', '/not-a-route']) {

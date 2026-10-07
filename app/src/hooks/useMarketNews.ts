@@ -29,7 +29,9 @@ export function useMarketNews(category?: NewsItem["category"]) {
     initialDataUpdatedAt: snapshot?.savedAt,
     refetchOnMount: 'always',
     retry: 1,
-    staleTime: 5 * 60_000,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
   });
 
   return {

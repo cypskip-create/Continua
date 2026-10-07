@@ -25,15 +25,15 @@ const ExchangeContext = createContext<ExchangeContextState>(initialState);
 
 export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   const [exchange, setExchangeState] = useState<string>(
-    () => localStorage.getItem(STORAGE_KEY) || DEFAULT_EXCHANGE
+    () => DEFAULT_EXCHANGE
   );
 
   const value: ExchangeContextState = {
     exchange,
     exchangeMeta: getExchangeMeta(exchange),
-    setExchange: (code: string) => {
-      localStorage.setItem(STORAGE_KEY, code);
-      setExchangeState(code);
+    setExchange: (_code: string) => {
+      localStorage.setItem(STORAGE_KEY, DEFAULT_EXCHANGE);
+      setExchangeState(DEFAULT_EXCHANGE);
     },
   };
 

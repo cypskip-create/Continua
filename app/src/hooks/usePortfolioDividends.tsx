@@ -35,7 +35,7 @@ function median(nums: number[]): number | null {
 
 function toDividendPayout(action: CorporateAction): DividendPayout | null {
   const details = action.details as { amountPerShare?: number; dividendType?: string };
-  if (!details?.amountPerShare) return null;
+  if (!Number.isFinite(details?.amountPerShare) || Number(details.amountPerShare) <= 0) return null;
   return {
     amountPerShare: details.amountPerShare,
     exDate: action.exDate ?? null,
@@ -48,18 +48,23 @@ function analyze(symbol: string, actions: CorporateAction[]): HoldingDividendDat
   const payouts = actions
     .filter((action) => action.type === "dividend" && action.status !== "cancelled")
     .map(toDividendPayout)
-    .filter((p): p is DividendPayout => !!p && !!p.exDate)
+    .filter((p): p is DividendPayout => !!p && !!p.exDate && Number.isFinite(new Date(p.exDate).getTime()))
     .sort((a, b) => new Date(b.exDate as string).getTime() - new Date(a.exDate as string).getTime());
 
   const { ttm: ttmPerShare, prior: priorTtmPerShare, growth: growthPct } = dividendWindows(payouts);
 
+  const recurring = payouts.filter(p => p.dividendType !== "special" && new Date(p.exDate!).getTime() <= Date.now());
   const gaps: number[] = [];
-  for (let i = 0; i < payouts.length - 1; i++) {
-    const a = new Date(payouts[i].exDate as string).getTime();
-    const b = new Date(payouts[i + 1].exDate as string).getTime();
+  for (let i = 0; i < recurring.length - 1; i++) {
+    const a = new Date(recurring[i].exDate as string).getTime();
+    const b = new Date(recurring[i + 1].exDate as string).getTime();
     gaps.push(Math.round((a - b) / 86_400_000));
   }
   const avgIntervalDays = median(gaps);
+  const payLag = median(recurring.flatMap(p => {
+    const lag = p.payDate ? (new Date(p.payDate).getTime() - new Date(p.exDate!).getTime()) / 86_400_000 : NaN;
+    return Number.isFinite(lag) && lag >= 0 ? [lag] : [];
+  }));
   const lastExDate = payouts[0]?.exDate ?? null;
   const monthsSinceLastPay = lastExDate
     ? (Date.now() - new Date(lastExDate).getTime()) / (1000 * 60 * 60 * 24 * 30.44)
@@ -70,21 +75,22 @@ function analyze(symbol: string, actions: CorporateAction[]): HoldingDividendDat
   // real payout and an interval to project from, we project nothing
   // rather than invent a schedule.
   const projected: DividendPayout[] = [];
-  if (payouts.length > 0 && avgIntervalDays && avgIntervalDays > 0 && lastExDate) {
+  if (recurring.length > 0 && avgIntervalDays && avgIntervalDays > 0) {
     const horizon = Date.now() + 24 * 30.44 * 86_400_000; // ~24 months out
-    let cursor = new Date(lastExDate).getTime();
+    let cursor = new Date(recurring[0].exDate!).getTime();
     let guard = 0;
     while (cursor < horizon && guard < 30) {
       guard++;
       cursor += avgIntervalDays * 86_400_000;
       if (cursor < Date.now() - 86_400_000 * 3) continue; // don't project into the past
       const exDate = new Date(cursor).toISOString();
-      const payDate = new Date(cursor + 30 * 86_400_000).toISOString();
+      const payDate = payLag == null ? null : new Date(cursor + payLag * 86_400_000).toISOString();
+      if (payouts.some(p => Math.abs(new Date(p.exDate!).getTime() - cursor) < 14 * 86_400_000)) continue;
       projected.push({
-        amountPerShare: payouts[0].amountPerShare,
+        amountPerShare: recurring[0].amountPerShare,
         exDate,
         payDate,
-        dividendType: payouts[0].dividendType,
+        dividendType: recurring[0].dividendType,
         estimated: true,
       });
     }

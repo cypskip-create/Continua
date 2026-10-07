@@ -5,6 +5,8 @@
 //
 // See docs/api/API.md for the full contract this is built against.
 
+import { supabase } from "@/integrations/supabase/client";
+
 export const AFRIFINANCE_API_URL =
   (import.meta.env.VITE_CONTINUA_API_URL as string | undefined) ??
   (import.meta.env.VITE_AFRIFINANCE_API_URL as string | undefined) ??
@@ -85,6 +87,12 @@ function buildUrl(path: string, params?: ContinuaRequestOptions["params"]): stri
  *  typed error so callers can branch on `.status` (404 vs 401 vs 500 etc.)
  *  instead of re-parsing the response body everywhere. */
 export async function continuaFetch<T>(path: string, options: ContinuaRequestOptions = {}): Promise<T> {
+  let subscriberHeaders: Record<string, string> = {};
+  if (/^\/(engine|backtest|volume-profile)(\/|$)/.test(path)) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new ContinuaApiError("Sign in to use Continua Engine", 401, path);
+    subscriberHeaders = { "X-User-Token": session.access_token, "X-Supabase-Key": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY };
+  }
   const url = buildUrl(path, options.params);
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(new DOMException("Request timed out", "TimeoutError")), 12_000);
@@ -97,6 +105,7 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
       method: options.method ?? "GET",
       headers: {
         "X-API-Key": getApiKey(),
+        ...subscriberHeaders,
         ...(options.body !== undefined ? { "Content-Type": "application/json" } : {}),
       },
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,

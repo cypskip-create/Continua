@@ -20,6 +20,7 @@ import { STOCK_POOL } from "@/lib/homeSymbolPools";
 import { useIndices } from "@/hooks/useIndices";
 import { formatPostDate } from "@/lib/formatTimestamp";
 import { UpdatesFeed } from "@/components/home/UpdatesFeed";
+import { PortfolioPulse } from "@/components/home/PortfolioPulse";
 
 
 const Eyebrow = ({ children, action, onAction }: { children: React.ReactNode; action?: string; onAction?: () => void }) => (
@@ -111,6 +112,7 @@ export default function Home() {
   ];
 
   const researchTools = [
+    { label: "Continua Engine", detail: "Premium company and technical analysis", icon: Shield, route: "/engine" },
     { label: "Stock Screener", detail: "Filter valuation, growth and yield", icon: Search, route: "/screener" },
     { label: "Compare", detail: "Review companies side by side", icon: GitCompare, route: "/compare" },
     { label: "Sector Heatmap", detail: "Scan sector strength at a glance", icon: Grid3X3, route: "/sector-heatmap" },
@@ -127,9 +129,8 @@ export default function Home() {
       <TopBar
         title="Continua"
         subtitle={user ? `${greeting}, ${firstName}` : "Your smart companion"}
-        showSearch
+        showSearch={false}
         showNotifications
-        showExchangeSelector
       />
 
       <div className="px-4 pt-3 space-y-6">
@@ -218,6 +219,7 @@ export default function Home() {
 
         {/* UPDATES — real scraped news, real upcoming dividends, and real
             reported earnings merged into one chronological feed. */}
+        {user && <PortfolioPulse showValues={showBalance} />}
         <UpdatesFeed followedSymbols={followedSymbols} limit={6} />
 
         {/* A compact research launchpad makes the analysis workflow visible
