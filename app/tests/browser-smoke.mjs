@@ -455,7 +455,6 @@ try {
   await page.screenshot({path:fileURLToPath(new URL('engine-home.png',artifacts))});
   console.log('PASS journal persistence, checklist and mobile Engine layout');
 
-
   const freeContext = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   await freeContext.route('**/*',handleRoute);
   await freeContext.addInitScript((user) => {
