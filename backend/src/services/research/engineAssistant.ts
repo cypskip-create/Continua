@@ -3,6 +3,7 @@ import { z } from "zod";
 import { env } from "../../config/index.js";
 import { ApiError } from "../../api/middleware/errorHandler.js";
 import { engineRepository } from "../../storage/repositories/engineRepository.js";
+import { calculatedAnswer } from "./calculatedAnswer.js";
 export interface Evidence {id:string;title:string;asOf:string|null;url:string|null;facts:unknown}
 const AnswerSchema=z.object({answer:z.string().min(1).max(12000),citations:z.array(z.string()).min(1).max(20),limitations:z.array(z.string()).max(12)}).strict();
 const outputSchema={type:"object",additionalProperties:false,properties:{answer:{type:"string"},citations:{type:"array",items:{type:"string"}},limitations:{type:"array",items:{type:"string"}}},required:["answer","citations","limitations"]};
@@ -14,8 +15,8 @@ export function validateAssistantAnswer(value:unknown,evidence:Evidence[]) {
 const answers=new Map<string,{expires:number;answer:ReturnType<typeof validateAssistantAnswer>}>();
 const pending=new Map<string,Promise<ReturnType<typeof validateAssistantAnswer>&{cached:boolean}>>();
 export async function askEngine(userId:string,question:string,evidence:Evidence[],preferences:unknown) {
-  if(!env.OPENAI_API_KEY)throw new ApiError(503,"The research assistant is not configured on this server. Calculated analysis is available.");
   if(!evidence.length)throw new ApiError(422,"No verified evidence is available to answer this question.");
+  if(!env.OPENAI_API_KEY)return {...validateAssistantAnswer(calculatedAnswer(question,evidence),evidence),cached:false};
   const context=JSON.stringify({preferences,evidence});
   if(Buffer.byteLength(context,"utf8")>28000)throw new ApiError(422,"Research scope is too large. Choose fewer companies.");
   const cacheKey=userId+":"+createHash("sha256").update(question+context).digest("hex");

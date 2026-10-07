@@ -2,7 +2,7 @@
   font-size: 1.15rem;
 }
 .market-desk h2 {
-  font-size: 1.4rem;
+  font-size: 1rem;
   letter-spacing: -0.04em;
   font-weight: 500;
 }
@@ -15,11 +15,11 @@
   font-size: 0.72rem;
   color: hsl(var(--muted-foreground));
   font-weight: 400;
-  margin-top: 0.3rem;
+  margin-top: 0.15rem;
 }
 .market-section {
   border-top: 1px solid hsl(var(--border));
-  padding-block: 0.9rem;
+  padding-block: 0.4rem;
 }
 .market-section-heading {
   display: flex;
@@ -27,7 +27,7 @@
   align-items: center;
   justify-content: space-between;
   text-align: left;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.15rem;
   min-height: 44px;
 }
 .market-choices,
@@ -35,7 +35,7 @@
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
-  padding: 0.5rem 0;
+  padding: 0.15rem 0;
 }
 .market-choices button,
 .market-tool-rail button {
@@ -45,7 +45,7 @@
 .market-index-strip {
   display: flex;
   gap: 2rem;
-  padding-block: 0.75rem;
+  padding-block: 0.3rem;
   overflow-x: auto;
 }
 .market-index-strip > div {
@@ -57,10 +57,10 @@
   font-size: 0.75rem;
   color: hsl(var(--muted-foreground));
   line-height: 1.6;
-  margin-block: 0.65rem;
+  margin-block: 0.3rem;
 }
 .market-empty {
-  padding-block: 0.6rem;
+  padding-block: 0.25rem;
   font-size: 0.875rem;
   color: hsl(var(--muted-foreground));
   line-height: 1.7;
@@ -89,7 +89,7 @@
 }
 .market-table th,
 .market-table td {
-  padding: 0.6rem 0.8rem;
+  padding: 0.35rem 0.6rem;
   border-bottom: 1px solid hsl(var(--border));
   white-space: nowrap;
   text-align: right;
@@ -107,7 +107,7 @@
 }
 .market-table th:first-child button {
   text-align: left;
-  min-height: 44px;
+  min-height: 32px;
 }
 .market-table small {
   overflow: hidden;
@@ -123,7 +123,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.6rem;
   font-size: 0.85rem;
-  margin-block: 1rem;
+  margin-block: 0.35rem;
 }
 .market-definition dt {
   color: hsl(var(--muted-foreground));
@@ -193,14 +193,6 @@
 .market-breadth small {
   font-size: 0.55rem;
   white-space: nowrap;
-}
-.market-africa {
-  padding: 0.75rem 0;
-  color: hsl(var(--foreground));
-}
-.market-africa svg {
-  width: 100%;
-  max-height: 300px;
 }
 .market-error {
   border-top: 1px solid hsl(var(--border));

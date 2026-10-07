@@ -23,7 +23,7 @@ export const engineRepository = {
       return {...changesBetween(previous?.payload??null,state),fingerprint:hash,comparedAsOf:previous?.captured_at ?? null};
     });
   },
-  async rules(userId:string) {return (await query("SELECT id,exchange,symbol,kind,threshold,enabled FROM market.engine_monitor_rules WHERE user_id=$1 ORDER BY created_at DESC",[userId])).rows;},
+  async rules(userId:string) {return (await query("SELECT id,exchange,symbol,kind,threshold,enabled,last_state FROM market.engine_monitor_rules WHERE user_id=$1 ORDER BY created_at DESC",[userId])).rows;},
   async saveRule(userId:string,rule:{exchange:string;symbol:string;kind:string;threshold?:number;enabled:boolean}) {
     return (await query("INSERT INTO market.engine_monitor_rules(user_id,exchange,symbol,kind,threshold,enabled) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(user_id,exchange,symbol,kind) DO UPDATE SET threshold=EXCLUDED.threshold,enabled=EXCLUDED.enabled,last_state=NULL RETURNING id,exchange,symbol,kind,threshold,enabled",[userId,rule.exchange,rule.symbol,rule.kind,rule.threshold??null,rule.enabled])).rows[0];
   },

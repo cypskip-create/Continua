@@ -447,16 +447,16 @@ export default function StockCompare() {
               Comparison
             </p>
             <div className="-mx-4 overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="comparison-table w-max min-w-full text-xs">
                 <thead>
                   <tr className="border-y border-border/60">
-                    <th className="text-left py-2 px-4 font-medium text-muted-foreground sticky left-0 bg-background">
+                    <th className="text-left py-2 px-4 font-medium text-muted-foreground bg-background">
                       Metric
                     </th>
                     {selectedStocks.map((stock) => (
                       <th
                         key={stock.symbol}
-                        className="text-center py-2 px-3 font-semibold min-w-[90px]"
+                        className="text-center py-2 px-3 font-semibold min-w-[140px] whitespace-nowrap"
                       >
                         {stock.symbol}
                       </th>
@@ -481,9 +481,9 @@ export default function StockCompare() {
                         key={metric.key}
                         className="border-b border-border/40"
                       >
-                        <td className="py-2.5 px-4 font-medium sticky left-0 bg-background">
+                        <td className="py-2 px-4 font-medium bg-background whitespace-nowrap min-w-[160px]">
                           <div className="flex items-center gap-2">
-                            <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                            <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                             {metric.label}
                           </div>
                         </td>
@@ -502,7 +502,7 @@ export default function StockCompare() {
                           return (
                             <td
                               key={stock.symbol}
-                              className={`text-center py-2.5 px-3 tabular ${isBest ? "font-bold text-primary" : ""} ${colorClass}`}
+                              className={`text-center py-2 px-3 tabular whitespace-nowrap min-w-[140px] ${isBest ? "font-bold text-primary" : ""} ${colorClass}`}
                             >
                               {value == null
                                 ? "—"

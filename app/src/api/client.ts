@@ -99,7 +99,9 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
   }
   const url = buildUrl(path, options.params);
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(new DOMException("Request timed out", "TimeoutError")), ["/engine/assistant", "/engine/portfolio"].includes(path) ? 35_000 : 12_000);
+  // Company bundles can wait for profile + optional feeds + snapshot storage.
+  // A 12-second client timeout used to abort valid Engine responses mid-flight.
+  const timeout = window.setTimeout(() => controller.abort(new DOMException("Request timed out", "TimeoutError")), path.startsWith("/engine/") ? 45_000 : 12_000);
   const forwardAbort = () => controller.abort(options.signal?.reason);
   if (options.signal?.aborted) forwardAbort();
   else options.signal?.addEventListener("abort", forwardAbort, { once: true });
@@ -115,9 +117,23 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
       signal: controller.signal,
     });
+    if (!res.ok) {
+      let message = `Continua Data API request failed (${res.status})`;
+      if (res.headers.get("cf-mitigated") === "challenge" || (res.status === 429 && res.headers.get("content-type")?.includes("text/html"))) {
+        throw new ContinuaApiError("The hosting security check blocked the connection. Please retry shortly.", res.status, path);
+      }
+      try { const body = await res.json(); if (body?.error) message = body.error; } catch { /* Keep the HTTP status for non-JSON failures. */ }
+      throw new ContinuaApiError(message, res.status, path);
+    }
+    const body = await res.json();
+    return body.data as T;
   } catch (err) {
+    if (err instanceof ContinuaApiError) throw err;
+    if (options.signal?.aborted) throw new ContinuaApiError("Request cancelled", 499, path);
     throw new ContinuaApiError(
-      err instanceof Error ? `Network error reaching Continua Data API: ${err.message}` : "Network error reaching Continua Data API",
+      controller.signal.aborted && !options.signal?.aborted
+        ? "Engine connection timed out. The server may be waking up; retry shortly."
+        : "Could not connect to Continua Data API. Check your connection and retry.",
       0,
       path
     );
@@ -126,22 +142,6 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
     options.signal?.removeEventListener("abort", forwardAbort);
   }
 
-  if (!res.ok) {
-    let message = `Continua Data API request failed (${res.status})`;
-    if (res.headers.get("cf-mitigated") === "challenge" || (res.status === 429 && res.headers.get("content-type")?.includes("text/html"))) {
-      throw new ContinuaApiError("The hosting security check blocked the connection. Please retry shortly.", res.status, path);
-    }
-    try {
-      const body = await res.json();
-      if (body?.error) message = body.error;
-    } catch {
-      // response wasn't JSON — keep the generic message
-    }
-    throw new ContinuaApiError(message, res.status, path);
-  }
-
-  const body = await res.json();
-  return body.data as T;
 }
 
 /** True for a 404 from the Data Layer — "this symbol/exchange isn't in our

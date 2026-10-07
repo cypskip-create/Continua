@@ -84,7 +84,7 @@ function IndicatorReadouts({ symbol }: { symbol: string }) {
           <div className="flex items-center justify-between py-3">
             <div>
               <p className="text-xs font-semibold">MACD (12, 26, 9)</p>
-              <p className="text-[0.625rem] text-muted-foreground">Histogram: signal minus MACD line</p>
+              <p className="text-[0.625rem] text-muted-foreground">Histogram: MACD line minus signal</p>
             </div>
             <div className="text-right">
               <p className="text-sm font-bold tabular">{macdLatest?.histogram != null ? macdLatest.histogram.toFixed(3) : "—"}</p>
@@ -97,6 +97,8 @@ function IndicatorReadouts({ symbol }: { symbol: string }) {
           </div>
         </div>
       )}
+      <p className="text-xs text-muted-foreground mt-2">Latest indicator date: {rsi?.timestamps?.at(-1)??"unavailable"}. RSI extremes and moving-average alignment are observations, not standalone buy/sell instructions. Confirm volume, reporting news and the price-history adjustment basis.</p>
+      {sma20Value!=null&&sma50Value!=null&&sma50Value>0&&<p className="text-xs mt-1">20-day average relative to 50-day: {((sma20Value/sma50Value-1)*100).toFixed(2)}%.</p>}
     </div>
   );
 }

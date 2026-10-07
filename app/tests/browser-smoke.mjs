@@ -80,6 +80,8 @@ const handleRoute = async (route) => {
     if(path === '/engine/usage')return json({data:{requests:assistantRequests,reserved:assistantRequests*.01,monthlyApplicationCap:5,dailyUserLimit:20,model:'gpt-5.4-mini',configured:true}});
     if(path === '/engine/assistant'){assistantRequests++;return json({data:{answer:'The fixture filing reports 12% revenue growth.',citations:['fixture-filing'],limitations:['Fixture data only.'],cached:false,sources:[{id:'fixture-filing',title:'Fixture annual filing',asOf:'2026-10-07',url:null}]}});}
     if(path === '/engine/monitoring'){if(route.request().method()==='POST'){const body=route.request().postDataJSON();const prior=engineRules.find(r=>r.symbol===body.symbol&&r.kind===body.kind);if(prior)Object.assign(prior,body);else engineRules.push({...body,id:'44444444-4444-4444-8444-444444444444'});}return json({data:engineRules});}
+    if(path==='/engine/monitoring/activity')return json({data:[]});
+    if(path==='/engine/monitoring/check'){engineRules=engineRules.map(r=>({...r,last_state:{checkedAt:new Date().toISOString(),value:12,triggered:false}}));return json({data:engineRules});}
     if(path.startsWith('/engine/monitoring/')){engineRules=[];return json({data:{deleted:true}});}
     if(path === '/engine/cash-flows'){const b=route.request().postDataJSON();engineFlows.push({...b,id:'55555555-5555-4555-8555-555555555555'});return json({data:{id:engineFlows[0].id}});}
     if(path.startsWith('/engine/cash-flows/')){engineFlows=[];return json({data:{deleted:true}});}
@@ -89,7 +91,7 @@ const handleRoute = async (route) => {
     if (path.startsWith('/engine/')) {
       engineRequests++;
       assert.ok(route.request().headers()['x-user-token'], 'Engine sends the authenticated session');
-      return json({data:{symbol:'KCB',exchange:'NSE',currency:'KES',companyName:'KCB Group',generatedAt:new Date().toISOString(),quote:{lastPrice:50},history:[],earnings:[],ownership:[{holderName:'Fixture institutional holder',holderType:'institutional',percentHeld:12,asOf:'2025-12-31'}],valuation:{models:[{model:'Fixture valuation',fairValue:60,upsidePercent:20,methodology:'Fixture-only disclosed methodology'}]},briefing:{facts:['Fixture reported revenue increased.'],strengths:[],risks:[],coverage:'Two reported periods.',methodology:'Calculated from fixture financial statements.'},unavailable:[],news:[{id:'digest-test',headline:'Fixture company update',summary:'Revenue increased by 12 percent.',source:'Fixture publisher',url:'https://example.invalid/source',publishedAt:'2026-10-07',methodology:'Extractive source sentences',fullTextAvailable:true}],technicals:[],coverage:{annualPeriods:2,valuationModels:1,earningsEvents:0,analystEstimates:0}}});
+      return json({data:{symbol:path.split('/').at(-1),exchange:'NSE',currency:'KES',companyName:'KCB Group',generatedAt:new Date().toISOString(),quote:{lastPrice:50},history:[],earnings:[],ownership:[{holderName:'Fixture institutional holder',holderType:'institutional',percentHeld:12,asOf:'2025-12-31'}],valuation:{models:[{model:'Fixture valuation',fairValue:60,upsidePercent:20,methodology:'Fixture-only disclosed methodology'}]},briefing:{facts:['Fixture reported revenue increased.'],strengths:[],risks:[],coverage:'Two reported periods.',methodology:'Calculated from fixture financial statements.'},unavailable:[],news:[{id:'digest-test',headline:'Fixture company update',summary:'Revenue increased by 12 percent.',source:'Fixture publisher',url:'https://example.invalid/source',publishedAt:'2026-10-07',methodology:'Extractive source sentences',fullTextAvailable:true}],technicals:[],coverage:{annualPeriods:2,valuationModels:1,earningsEvents:0,analystEstimates:0}}});
     }
     if (path.startsWith('/quotes')) {
       quoteRequests++;
@@ -471,12 +473,16 @@ try {
   await engineTools.getByRole('tab',{name:'Monitoring',exact:true}).tap();
   await page.getByRole('button',{name:'Save rule',exact:true}).tap();
   await page.getByRole('button',{name:'Pause',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Check KCB now',exact:true}).tap();
+  await page.getByText(/Checked .*No crossing/).waitFor();
   await page.getByRole('button',{name:'Pause',exact:true}).tap();
   await page.getByRole('button',{name:'Resume',exact:true}).waitFor();
   await page.getByRole('button',{name:'Remove',exact:true}).tap();
   await page.getByRole('button',{name:'Remove',exact:true}).waitFor({state:'hidden'});
   await openEngineTool('Peers');
   await page.getByRole('heading',{name:/EQTY · Fixture peer/}).waitFor();
+  await page.getByLabel('Focused comparison metric',{exact:true}).selectOption('debtToEquity');
+  await page.getByRole('heading',{name:'Compare one metric',exact:true}).waitFor();
   await openEngineTool('Portfolio');
   await page.getByRole('heading',{name:'Recorded invested-holdings return',exact:true}).waitFor();
   await page.getByRole('heading',{name:'Your review desk',exact:true}).waitFor();
@@ -514,12 +520,19 @@ try {
   await page.getByLabel('Research notes',{exact:true}).fill('Review the next dated filing before revising my thesis.');
   await page.getByRole('checkbox',{name:'Check the reporting period',exact:true}).check();
   await page.getByText('Saved on this device',{exact:true}).waitFor();
+  await page.getByLabel('Journal evidence log',{exact:true}).fill('2026-10-07 · fixture filing · revenue growth evidence');
+  await page.getByRole('button',{name:'Save thesis snapshot',exact:true}).tap();
+  const journalDownload=page.waitForEvent('download');
+  await page.getByRole('button',{name:'Export journal',exact:true}).tap();
+  assert.equal((await journalDownload).suggestedFilename(),'KCB-research-journal.json');
   await page.reload();
   await page.getByLabel('Research notes',{exact:true}).waitFor();
   assert.equal(await page.getByLabel('Research notes',{exact:true}).inputValue(),'Review the next dated filing before revising my thesis.');
   assert.equal(await page.getByRole('checkbox',{name:'Check the reporting period',exact:true}).isChecked(),true);
   assert.equal(new URL(page.url()).searchParams.get('tool'),'Journal');
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Engine must fit mobile width');
+  await wait(1200);
+  await page.getByLabel('Research notes',{exact:true}).waitFor();
   await page.screenshot({path:fileURLToPath(new URL('engine-journal.png',artifacts))});
   await openEngineTool('Briefing');
   await page.screenshot({path:fileURLToPath(new URL('engine-briefing.png',artifacts))});
@@ -562,8 +575,9 @@ try {
   await page.goto('http://127.0.0.1:5188/markets');
   await page.getByRole('heading',{name:'IPOs',exact:true}).waitFor();
   await page.getByRole('button',{name:'Open Continua Engine',exact:true}).waitFor();
-  assert.equal(await page.getByRole('navigation',{name:'Market shortcuts'}).getByRole('button').count(),3);
-  assert.ok(await page.locator('.market-section').first().evaluate(el=>parseFloat(getComputedStyle(el).paddingTop)<20),'Market sections remain compact');
+  assert.equal(await page.locator('.sub-nav .market-choices button').count(),6);
+  assert.equal(await page.getByRole('navigation',{name:'Market shortcuts'}).count(),0);
+  assert.ok(await page.locator('.market-section').first().evaluate(el=>parseFloat(getComputedStyle(el).paddingTop)<=8),'Market sections match compact Home spacing');
   assert.equal(await page.getByText('Crypto',{exact:true}).count(),0);
   assert.equal(await page.getByText('Rating Changes',{exact:true}).count(),0);
   await page.getByRole('button',{name:'IPOs',exact:true}).tap();
@@ -590,7 +604,12 @@ try {
   await page.getByRole('button',{name:'Treasury Bonds',exact:true}).tap();
   await page.getByText('Fixture Kenya Bond',{exact:true}).waitFor();
   await page.screenshot({path:fileURLToPath(new URL('markets-bonds-mobile.png',artifacts))});
-  await page.getByRole('button',{name:'Stocks',exact:true}).tap();
+  await page.getByRole('button',{name:'Overview',exact:true}).tap();
+  assert.deepEqual(await page.locator('.sub-nav .market-choices button').allTextContents(),['Overview','Bonds','Watch List','Heat Map','Calendar','All Stocks']);
+  assert.equal(await page.locator('.market-africa').count(),0);
+  assert.equal(await page.getByRole('button',{name:'Stocks',exact:true}).count(),0);
+  const marketHeadings=await page.locator('.market-section h2').allTextContents();
+  assert.deepEqual(marketHeadings.slice(-2),['Market breadth','Kenyan sectors']);
   await page.screenshot({path:fileURLToPath(new URL('markets-desk-mobile.png',artifacts))});
   await page.goto('http://127.0.0.1:5188/screener');
   await page.getByRole('button',{name:'Income',exact:true}).first().tap();
@@ -604,6 +623,10 @@ try {
   await page.getByText('No matches. Widen or reset the filters.',{exact:true}).waitFor();
   await page.goto('http://127.0.0.1:5188/compare?stocks=KCB,EQTY');
   await page.getByRole('heading',{name:'Performance, aligned.'}).waitFor();
+  assert.ok(await page.locator('.comparison-table th').first().evaluate(el=>el.getBoundingClientRect().width>=160));
+  assert.equal(await page.locator('.comparison-table th').first().evaluate(el=>getComputedStyle(el).whiteSpace),'nowrap');
+  await page.locator('.comparison-table').scrollIntoViewIfNeeded();
+  await page.screenshot({path:fileURLToPath(new URL('compare-compact-mobile.png',artifacts))});
   await page.getByRole('button',{name:'Remove EQTY from comparison'}).tap();
   assert.equal(new URL(page.url()).searchParams.get('stocks'),'KCB');
   await page.evaluate(()=>localStorage.setItem('app_font_scale','1.2'));

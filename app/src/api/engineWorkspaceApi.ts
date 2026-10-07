@@ -4,7 +4,7 @@ export interface EnginePreferences {
   notifications:boolean;learnInterests:boolean;interests:{symbol:string;exchange:string;visits:number}[];
 }
 export const defaultEnginePreferences:EnginePreferences={goal:"Balanced",horizon:"1_to_5_years",experience:"beginner",riskComfort:"unspecified",incomeNeeds:"none",sectors:[],notifications:true,learnInterests:false,interests:[]};
-export interface MonitorRule {id:string;exchange:string;symbol:string;kind:string;threshold:number|null;enabled:boolean}
+export interface MonitorRule {id:string;exchange:string;symbol:string;kind:string;threshold:number|null;enabled:boolean;last_state?:{checkedAt?:string;asOf?:string|null;value?:number|null;triggered?:boolean;unavailable?:boolean;error?:string}|null}
 export interface AssistantAnswer {answer:string;citations:string[];limitations:string[];cached:boolean;sources:{id:string;title:string;asOf:string|null;url:string|null}[]}
 export interface EnginePortfolio {
   snapshots?:{date:string;value:number;flow:number}[];
@@ -30,6 +30,8 @@ export const engineWorkspaceApi={
   portfolioOverview:(exchange:string)=>continuaFetch<EnginePortfolioOverview>("/engine/portfolio/overview",{params:{exchange}}),
   peers:(symbol:string,exchange:string)=>continuaFetch<{symbol:string;name:string;period:number|null;metrics:Record<string,number|null>}[]>("/engine/peers",{params:{symbol,exchange}}),
   rules:()=>continuaFetch<MonitorRule[]>("/engine/monitoring"),
+  checkRules:(symbol:string,exchange:string)=>continuaFetch<MonitorRule[]>("/engine/monitoring/check",{method:"POST",body:{symbol,exchange}}),
+  monitorActivity:()=>continuaFetch<{id:string;title:string;message:string;created_at:string}[]>("/engine/monitoring/activity"),
   saveRule:(rule:Omit<MonitorRule,"id">)=>continuaFetch<MonitorRule>("/engine/monitoring",{method:"POST",body:{...rule,threshold:rule.threshold??undefined}}),
   deleteRule:(id:string)=>continuaFetch<{deleted:boolean}>(`/engine/monitoring/${encodeURIComponent(id)}`,{method:"DELETE"}),
   cashFlow:(exchange:string,date:string,amount:number,note:string)=>continuaFetch<{id:string}>("/engine/cash-flows",{method:"POST",body:{exchange,date,amount,note}}),

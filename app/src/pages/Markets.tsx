@@ -145,10 +145,10 @@ export default function Markets() {
     { section } = useParams();
   const { isInWatchlist } = useWatchlist();
   const [monitorScope, setMonitorScope] = useState("NSE");
-  const [savedTab, setTab] = usePageState<string>("markets:desk-tab", "Stocks");
-  const tab = ["Stocks", "Overview", "Bonds", "All Stocks"].includes(savedTab)
+  const [savedTab, setTab] = usePageState<string>("markets:desk-tab", "Overview");
+  const tab = ["Overview", "Bonds", "All Stocks"].includes(savedTab)
     ? savedTab
-    : "Stocks";
+    : "Overview";
   const [search, setSearch] = useState(""),
     [ranking, setRanking] = useState("Top Gainers"),
     [ipoStatus, setIpoStatus] = useState("To be Listed");
@@ -999,15 +999,14 @@ export default function Markets() {
           />
           <div className="sub-nav">
             <Choices
-              values={["Stocks", "Overview", "Bonds", "All Stocks"]}
+              values={["Overview", "Bonds", "Watch List", "Heat Map", "Calendar", "All Stocks"]}
               value={tab}
-              onChange={setTab}
+              onChange={(value) => {
+                const routes: Record<string, string> = { "Watch List": "/watchlist", "Heat Map": "/markets/heatmap", Calendar: "/markets/economic" };
+                if (routes[value]) navigate(routes[value]);
+                else setTab(value);
+              }}
             />
-            <nav className="market-shortcuts" aria-label="Market shortcuts">
-              <button onClick={() => navigate("/watchlist")}>Watchlist</button>
-              <button onClick={() => navigate("/markets/heatmap")}>Heatmap</button>
-              <button onClick={() => navigate("/markets/economic")}>Calendar</button>
-            </nav>
           </div>
         </>
       )}
@@ -1065,10 +1064,8 @@ export default function Markets() {
               />
             ) : (
               <>
-                {tab === "Overview" && <AfricaOverview />}
                 {indexStrip}
-                {tab === "Stocks" ? (
-                  sections
+                {sections
                     .filter(([id]) => id !== "dividend-calendar")
                     .map(([id, label]) => (
                       <section className="market-section" key={id}>
@@ -1093,11 +1090,11 @@ export default function Markets() {
                           </Button>
                         )}
                       </section>
-                    ))
-                ) : (
+                    ))}
+                {
                   <>
                     <section className="market-section">
-                      <h2 className="mb-5">Market breadth</h2>
+                      <h2 className="mb-2">Market breadth</h2>
                       <div className="market-breadth">
                         {intelligence.data?.distribution.map((d, i) => (
                           <div key={d.label}>
@@ -1153,18 +1150,8 @@ export default function Markets() {
                         </button>
                       ))}
                     </section>
-                    <section className="market-section">
-                      <button
-                        className="market-section-heading"
-                        onClick={() => navigate("/markets/macro")}
-                      >
-                        <h2>Kenya indicators</h2>
-                        <ChevronRight className="h-5 w-5" />
-                      </button>
-                      {body("macro")}
-                    </section>
                   </>
-                )}
+                }
               </>
             )}
           </>
@@ -1295,44 +1282,5 @@ function Bonds({
         Check each observation's source date before comparing.
       </p>
     </section>
-  );
-}
-function AfricaOverview() {
-  return (
-    <figure className="market-africa">
-      <svg
-        viewBox="0 0 440 275"
-        role="img"
-        aria-label="African market context, Kenya highlighted; only NSE is covered"
-      >
-        <defs>
-          <pattern
-            id="africa-dots"
-            width="7"
-            height="7"
-            patternUnits="userSpaceOnUse"
-          >
-            <circle cx="2" cy="2" r="1.4" fill="currentColor" opacity=".35" />
-          </pattern>
-        </defs>
-        <path
-          d="M140 26 L177 18 220 30 244 24 268 46 280 68 298 88 323 98 299 134 277 150 266 174 257 200 232 245 211 256 194 225 177 200 168 167 149 157 144 130 120 121 101 91 111 63Z"
-          fill="url(#africa-dots)"
-        />
-        <path
-          d="M295 192 L307 179 310 204 301 228 293 220Z"
-          fill="url(#africa-dots)"
-        />
-        <circle cx="271" cy="145" r="5" fill="hsl(var(--primary))" />
-        <path d="M276 145 H326" stroke="hsl(var(--primary))" />
-        <text x="328" y="147" fill="currentColor" fontSize="13">
-          Kenya · NSE
-        </text>
-      </svg>
-      <figcaption className="market-note">
-        Africa in perspective. Continua currently covers the Nairobi Securities
-        Exchange only.
-      </figcaption>
-    </figure>
   );
 }

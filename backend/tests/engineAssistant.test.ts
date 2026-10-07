@@ -3,8 +3,13 @@ const mocks=vi.hoisted(()=>({reserve:vi.fn(),finish:vi.fn()}));
 vi.mock("../src/storage/repositories/engineRepository.js",()=>({engineRepository:{reserveAi:mocks.reserve,finishAi:mocks.finish}}));
 vi.mock("../src/config/index.js",()=>({env:{OPENAI_API_KEY:"fixture-only",ENGINE_AI_MONTHLY_BUDGET_USD:5,ENGINE_AI_USER_DAILY_LIMIT:20,LOG_LEVEL:"silent",NODE_ENV:"test"}}));
 import { askEngine,validateAssistantAnswer } from "../src/services/research/engineAssistant.js";
+import {env} from "../src/config/index.js";
 afterEach(()=>{vi.unstubAllGlobals();vi.clearAllMocks();});
 const evidence=[{id:"filing",title:"Company filing",asOf:"2026-10-07",url:null,facts:{revenueGrowth:12}}];
+it("answers supported evidence without a provider key or paid API request",async()=>{
+  const prior=env.OPENAI_API_KEY;env.OPENAI_API_KEY="";const fetch=vi.fn();vi.stubGlobal("fetch",fetch);
+  try{const answer=await askEngine("calculated-user","Explain revenue growth",[{id:"KCB:company",title:"KCB reported results",asOf:"2026-01-01",url:null,facts:{financial:{period:2025,metrics:{revenueGrowth:12}}}}],{});expect(answer.answer).toContain("12.00%");expect(answer.sources[0]?.id).toBe("KCB:company");expect(fetch).not.toHaveBeenCalled();expect(mocks.reserve).not.toHaveBeenCalled();}finally{env.OPENAI_API_KEY=prior;}
+});
 it("rejects citations that cannot be resolved to supplied evidence",()=>{expect(()=>validateAssistantAnswer({answer:"Revenue grew.",citations:["invented"],limitations:[]},evidence)).toThrow("unknown source");});
 it("enforces the budget before making any provider request",async()=>{mocks.reserve.mockRejectedValue(new Error("cap reached"));const fetch=vi.fn();vi.stubGlobal("fetch",fetch);await expect(askEngine("user-budget","What changed?",evidence,{})).rejects.toThrow("cap reached");expect(fetch).not.toHaveBeenCalled();});
 it("uses bounded, server-only structured requests and caches only within the same user",async()=>{

@@ -11,6 +11,7 @@ import type { EngineBundle } from "@/api/engineApi";
 import { PortfolioReviewDesk } from "./PortfolioReviewDesk";
 import { ResearchChart } from "@/components/markets/ResearchChart";
 import { engineReadRetry } from "@/api/engineRetry";
+import { FocusedComparison } from "./FocusedComparison";
 const control =
   "rounded-lg border border-border bg-background px-3 py-2 text-sm min-w-0";
 const action =
@@ -340,6 +341,7 @@ export function EngineAssistantPanel({
         Ask about reported results, news, risks or your portfolio. Answers use
         dated evidence from the selected research scope.
       </p>
+      <div className="flex flex-wrap gap-2">{["Compare revenue growth","Review cash conversion and debt risk","What changed in company news?","Summarize technical observations"].map(prompt=><button key={prompt} type="button" className={control} onClick={()=>setQuestion(prompt)}>{prompt}</button>)}</div>
       <form
         className="space-y-3"
         onSubmit={(e) => {
@@ -390,8 +392,7 @@ export function EngineAssistantPanel({
           className={action}
           disabled={
             ask.isPending ||
-            question.trim().length < 3 ||
-            usage.data?.configured === false
+            question.trim().length < 3
           }
         >
           {ask.isPending ? "Researching…" : "Ask Engine"}
@@ -403,7 +404,7 @@ export function EngineAssistantPanel({
         <p className="text-xs text-muted-foreground">
           {usage.data.configured
             ? `${usage.data.requests} requests this month · $${usage.data.reserved.toFixed(3)} reserved usage · ${usage.data.dailyUserLimit} requests per user/day. Application monthly cap: $${usage.data.monthlyApplicationCap}.`
-            : "AI is not configured on this server. Calculated research is available."}{" "}
+            : "Calculated evidence mode: structured, sourced answers without generative AI."}{" "}
           Requests run only when you submit a question.
         </p>
       )}
@@ -455,8 +456,11 @@ export function EngineMonitoringPanel({
   const rules = useQuery({
     queryKey: key,
     queryFn: engineWorkspaceApi.rules,
-    retry: false,
+    retry: engineReadRetry,
+    refetchInterval: 60000,
   });
+  const activity = useQuery({queryKey:[...key,"activity"],queryFn:engineWorkspaceApi.monitorActivity,retry:engineReadRetry});
+  const check = useMutation({mutationFn:()=>engineWorkspaceApi.checkRules(symbol,exchange),onSuccess:value=>{client.setQueryData(key,value);void client.invalidateQueries({queryKey:[...key,"activity"]});void client.invalidateQueries({queryKey:["notifications"]});}});
   const [kind, setKind] = useState("material_change"),
     [threshold, setThreshold] = useState("");
   const save = useMutation({
@@ -472,10 +476,11 @@ export function EngineMonitoringPanel({
     <section className="space-y-4">
       <h3 className="text-lg font-semibold">Monitor your research</h3>
       <p className="text-sm text-muted-foreground">
-        Check rules every 30 minutes. Notifications appear when a threshold is
+        Automatic checks run every 10 minutes while the backend is running. In-app notifications appear when a threshold is
         crossed or tracked research changes materially. Unchanged states stay
-        quiet.
+        quiet. Your notification preference must be enabled. Missing data is never treated as a crossed threshold.
       </p>
+      <button className={control} disabled={check.isPending} onClick={()=>check.mutate()}>{check.isPending?"Checking…":`Check ${symbol} now`}</button>
       <form
         className="flex flex-wrap items-end gap-3"
         onSubmit={(e) => {
@@ -503,6 +508,10 @@ export function EngineMonitoringPanel({
               "price_above",
               "debt_above",
               "revenue_growth_below",
+              "earnings_growth_below",
+              "cash_conversion_below",
+              "dividend_payout_above",
+              "quote_age_above",
             ].map((v) => (
               <option key={v} value={v}>
                 {v.replace(/_/g, " ")}
@@ -515,9 +524,9 @@ export function EngineMonitoringPanel({
             Threshold{" "}
             {kind === "debt_above"
               ? "(debt/equity ratio)"
-              : kind === "revenue_growth_below"
+              : kind.endsWith("growth_below")
                 ? "(percent)"
-                : "(quote currency)"}
+                : kind === "quote_age_above" ? "(days)" : ["cash_conversion_below","dividend_payout_above"].includes(kind) ? "(ratio ×)" : "(quote currency)"}
             <input
               required
               type="number"
@@ -533,7 +542,7 @@ export function EngineMonitoringPanel({
           Save rule
         </button>
       </form>
-      <Notice value={rules.error ?? save.error ?? remove.error} />
+      <Notice value={rules.error ?? save.error ?? remove.error ?? check.error} />
       {rules.data?.map((rule) => (
         <div
           key={rule.id}
@@ -545,6 +554,7 @@ export function EngineMonitoringPanel({
             <p className="text-xs text-muted-foreground">
               {rule.enabled ? "Active" : "Paused"} · {rule.exchange}
             </p>
+            <p className="text-xs text-muted-foreground">{rule.last_state?.checkedAt?`Checked ${new Date(rule.last_state.checkedAt).toLocaleString()} · ${rule.last_state.error??(rule.last_state.unavailable?"Input unavailable":rule.last_state.triggered?"Threshold crossed":"No crossing")}`:"Awaiting first check"}{rule.last_state?.value!=null?` · observed ${number(rule.last_state.value)}`:""}{rule.last_state?.asOf?` · data ${rule.last_state.asOf}`:""}</p>
           </div>
           <div className="flex gap-2">
             <button
@@ -564,6 +574,10 @@ export function EngineMonitoringPanel({
           </div>
         </div>
       ))}
+      <h4 className="text-sm font-semibold">Alert history</h4>
+      <Notice value={activity.error} />
+      {activity.data?.map(item=><div key={item.id} className="border-t border-border py-2 text-xs"><strong>{item.title}</strong><p>{item.message}</p><time>{new Date(item.created_at).toLocaleString()}</time></div>)}
+      {activity.data?.length===0&&<p className="text-xs text-muted-foreground">No Engine alerts yet. New alerts appear here and in Notifications.</p>}
     </section>
   );
 }
@@ -809,6 +823,7 @@ export function EnginePeersPanel({
   return (
     <section className="space-y-4">
       <h3 className="text-lg font-semibold">Sector peers</h3>
+      <FocusedComparison key={exchange+symbol} symbol={symbol} exchange={exchange} />
       <p className="text-xs text-muted-foreground">
         Same-exchange and same-currency companies in the reported sector.
         Compare reporting years before interpreting differences.

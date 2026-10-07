@@ -3,4 +3,4 @@ import { ContinuaApiError } from "./client";
 export const engineReadRetry = (count: number, error: Error) =>
   count < 1 &&
   error instanceof ContinuaApiError &&
-  [500, 502, 503, 504].includes(error.status);
+  [0, 500, 502, 503, 504].includes(error.status);

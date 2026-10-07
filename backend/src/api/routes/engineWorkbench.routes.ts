@@ -10,6 +10,8 @@ import { getEngineBundle } from "../../services/research/engineBundle.js";
 import { getPortfolioOverview,getPortfolioResearch,getPeers } from "../../services/research/engineWorkspace.js";
 import { askEngine,type Evidence } from "../../services/research/engineAssistant.js";
 import { query } from "../../storage/db.js";
+import { monitoringKinds } from "../../services/research/engineMonitoring.js";
+import { runEngineMonitoringOnce } from "../../workers/engineMonitorWorker.js";
 export const engineWorkbenchRoutes=Router();
 const exchangeSchema=z.enum(ACTIVE_EXCHANGES).default("NSE");
 const symbolSchema=z.string().trim().toUpperCase().regex(/^[A-Z0-9.\-]{1,20}$/);
@@ -35,11 +37,13 @@ engineWorkbenchRoutes.delete("/engine/cash-flows/:id",requireSubscriber,handle(a
 engineWorkbenchRoutes.get("/engine/peers",requireSubscriber,handle(async(req,res)=>{res.json({data:await getPeers(parse(symbolSchema,req.query.symbol),parse(exchangeSchema,req.query.exchange))});}));
 engineWorkbenchRoutes.get("/engine/monitoring",requireSubscriber,handle(async(_req,res)=>{res.json({data:await engineRepository.rules(user(res))});}));
 engineWorkbenchRoutes.post("/engine/monitoring",requireSubscriber,handle(async(req,res)=>{
-  const rule=parse(z.object({exchange:exchangeSchema,symbol:symbolSchema,kind:z.enum(["material_change","price_below","price_above","debt_above","revenue_growth_below"]),threshold:z.number().finite().min(-1e9).max(1e9).optional(),enabled:z.boolean().default(true)}).refine(v=>v.kind==="material_change"||v.threshold!=null,"A numeric threshold is required"),req.body);
+  const rule=parse(z.object({exchange:exchangeSchema,symbol:symbolSchema,kind:z.enum(monitoringKinds),threshold:z.number().finite().min(-1e9).max(1e9).optional(),enabled:z.boolean().default(true)}).refine(v=>v.kind==="material_change"||v.threshold!=null,"A numeric threshold is required"),req.body);
   const count=await engineRepository.rules(user(res));if(count.length>=50&&!count.some(r=>r.symbol===rule.symbol&&r.kind===rule.kind&&r.exchange===rule.exchange))throw new ApiError(400,"Maximum 50 Engine monitoring rules per account.");
   res.json({data:await engineRepository.saveRule(user(res),rule)});
 }));
 engineWorkbenchRoutes.delete("/engine/monitoring/:id",requireSubscriber,handle(async(req,res)=>{await engineRepository.deleteRule(user(res),parse(z.string().uuid(),req.params.id));res.json({data:{deleted:true}});}));
+engineWorkbenchRoutes.post("/engine/monitoring/check",requireSubscriber,handle(async(req,res)=>{const body=parse(z.object({symbol:symbolSchema,exchange:exchangeSchema}),req.body);await runEngineMonitoringOnce(user(res),body.symbol,body.exchange);res.json({data:await engineRepository.rules(user(res))});}));
+engineWorkbenchRoutes.get("/engine/monitoring/activity",requireSubscriber,handle(async(_req,res)=>{res.json({data:(await query("SELECT id,title,message,created_at FROM public.notifications WHERE user_id=$1 AND type='engine' ORDER BY created_at DESC LIMIT 20",[user(res)])).rows});}));
 engineWorkbenchRoutes.get("/engine/usage",requireSubscriber,handle(async(_req,res)=>{res.json({data:{...await engineRepository.aiUsage(user(res)),monthlyApplicationCap:env.ENGINE_AI_MONTHLY_BUDGET_USD,dailyUserLimit:env.ENGINE_AI_USER_DAILY_LIMIT,model:"gpt-5.4-mini",configured:!!env.OPENAI_API_KEY}});}));
 engineWorkbenchRoutes.post("/engine/assistant",requireSubscriber,handle(async(req,res)=>{
   const body=parse(z.object({question:z.string().trim().min(3).max(2000),symbols:z.array(symbolSchema).min(1).max(3),exchange:exchangeSchema,scope:z.enum(["company","portfolio"]).default("company")}),req.body);

@@ -119,16 +119,22 @@ export async function getPortfolioResearch(
   const analysis = portfolioAnalysis(positions);
   const currency = positions.find((p) => p.price != null)?.currency ?? null;
   let persistenceAvailable = true;
+  const persistenceDeadline=Date.now()+4000;
   const optionalStorage = async <T>(
     request: () => Promise<T>,
     fallback: T,
   ): Promise<T> => {
+    let timer:ReturnType<typeof setTimeout>|undefined;
     try {
-      return await request();
+      const remaining=persistenceDeadline-Date.now();
+      if(remaining<=0)throw new Error("Portfolio persistence deadline");
+      return await Promise.race([request(),new Promise<T>((_,reject)=>{timer=setTimeout(()=>reject(new Error("Portfolio persistence deadline")),remaining);})]);
     } catch (err) {
       logger.warn({ err }, "Engine optional portfolio persistence unavailable");
       persistenceAvailable = false;
       return fallback;
+    } finally {
+      if(timer)clearTimeout(timer);
     }
   };
   // Never write a partial or mixed-session valuation as a performance snapshot.
@@ -383,8 +389,8 @@ export async function getPeers(symbol: string, exchange: ExchangeCode) {
   return Promise.all(
     candidates.map(async (peer) => {
       const [ratios, history] = await Promise.all([
-        researchService.getRatios(peer.securityId),
-        financialsRepository.getHistoricalPeriods(peer.securityId, "annual", 2),
+        researchService.getRatios(peer.securityId).catch(()=>null),
+        financialsRepository.getHistoricalPeriods(peer.securityId, "annual", 2).catch(()=>[]),
       ]);
       const financial = analyzeFinancials(history, peer.sector ?? "");
       return {

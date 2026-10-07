@@ -27,6 +27,15 @@ vi.mock("../src/services/research/engineBundle.js", () => ({
 }));
 import { getPortfolioResearch } from "../src/services/research/engineWorkspace.js";
 afterEach(() => vi.resetAllMocks());
+it("bounds stalled optional storage without hiding priced holdings",async()=>{
+  vi.useFakeTimers();
+  try{
+    mocks.query.mockImplementation(async sql=>sql.includes("FROM public.portfolios")?{rows:[{symbol:"KCB",shares:2,cost:80,sector:"Banking"}]}:new Promise(()=>{}));
+    mocks.instruments.mockResolvedValue([{symbol:"KCB",securityId:"kcb"}]);mocks.quote.mockResolvedValue({lastPrice:50,change:1,currency:"KES",timestamp:new Date().toISOString()});
+    const result=getPortfolioResearch("verified-user","NSE");await vi.advanceTimersByTimeAsync(4100);
+    expect((await result).totalValue).toBe(100);expect((await result).performance.twr).toBeNull();expect(vi.getTimerCount()).toBe(0);
+  }finally{vi.useRealTimers();}
+});
 it("keeps premium holdings available during persistence outages and withholds returns", async () => {
   mocks.query.mockImplementation(async (sql) => {
     if (sql.includes("FROM public.portfolios"))
