@@ -15,4 +15,6 @@ Company loads coalesce simultaneous requests. Portfolio optional persistence sha
 
 ## Deployment required
 
-Deploy the frontend and backend and apply `20261007230000_engine_monitoring_tools.sql` to widen the monitoring-kind constraint. The repository's Edge Function workflow does not apply database migrations. Existing rule records are retained. Local database credentials were unavailable, so this migration was not applied to production during this change. Verify premium Engine/portfolio/check-now with a real authenticated account after deployment; isolated browser fixtures are not proof of production delivery.
+The repository's Edge Function workflow does not apply database migrations. Existing rule records are retained. On 8 October 2026 (Africa/Nairobi), the production Supabase project was inspected through its SQL dashboard: `engine_monitor_rules_kind_check` already contained all nine kinds from `20261007230000_engine_monitoring_tools.sql`. No migration rerun or record changes were necessary.
+
+The live backend health endpoint returned HTTP 200 with database and cache checks passing, but quote freshness degraded (70/70 active quotes older than fifteen minutes). The monitoring activity request without credentials returned HTTP 401; this confirms the authentication boundary responds, not that the authenticated feature works. The live frontend was at its login screen. Premium Engine/portfolio/check-now and alert delivery still require a real authenticated account; isolated browser fixtures are not proof of production delivery.
