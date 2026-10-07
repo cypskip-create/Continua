@@ -29,6 +29,7 @@ let uploadRequests = 0;
 let newsOffline = false;
 let quoteRequests = 0;
 let portfolioRequests = 0;
+let engineRequests = 0;
 const unknown = new Set();
 const handleRoute = async (route) => {
   const url = new URL(route.request().url());
@@ -62,6 +63,11 @@ const handleRoute = async (route) => {
   }
   if (url.port === '4999') {
     const path = url.pathname.replace('/api/v1', '');
+    if (path.startsWith('/engine/')) {
+      engineRequests++;
+      assert.ok(route.request().headers()['x-user-token'], 'Engine sends the authenticated session');
+      return json({data:{symbol:'KCB',exchange:'NSE',currency:'KES',companyName:'KCB Group',generatedAt:new Date().toISOString(),quote:{lastPrice:50},history:[],earnings:[],ownership:[{holderName:'Fixture institutional holder',holderType:'institutional',percentHeld:12,asOf:'2025-12-31'}],valuation:{models:[{model:'Fixture valuation',fairValue:60,upsidePercent:20,methodology:'Fixture-only disclosed methodology'}]},briefing:{facts:['Fixture reported revenue increased.'],strengths:[],risks:[],coverage:'Two reported periods.',methodology:'Calculated from fixture financial statements.'},coverage:{annualPeriods:2,valuationModels:1,earningsEvents:0,analystEstimates:0}}});
+    }
     if (path.startsWith('/quotes')) {
       quoteRequests++;
       const symbols = (url.searchParams.get('symbols') || path.split('/')[2] || 'KCB').split(',');
@@ -299,6 +305,43 @@ try {
   assert.ok(sticky.y >= 90 && sticky.y < 120, `Fundamentals subnav stays under primary tabs: ${sticky.y}`);
   await page.screenshot({path:fileURLToPath(new URL('fundamentals-sticky.png', artifacts))});
   console.log('PASS Fundamentals charts, metric switching, quarterly control and sticky categories');
+
+  await page.goto('http://127.0.0.1:5188/engine?symbol=KCB');
+  await page.getByText('Fixture reported revenue increased.',{exact:true}).waitFor();
+  const engineTools = page.getByRole('tablist',{name:'Engine tools'});
+  await engineTools.getByRole('tab',{name:'Valuation',exact:true}).tap();
+  await page.getByText('Fixture valuation',{exact:true}).waitFor();
+  await engineTools.getByRole('tab',{name:'Ownership',exact:true}).tap();
+  await page.getByText('Fixture institutional holder',{exact:true}).waitFor();
+  await engineTools.getByRole('tab',{name:'Earnings & forecasts',exact:true}).tap();
+  await page.getByRole('img',{name:'revenue actual and estimate history'}).waitFor();
+  const requestsBeforeRefresh = engineRequests;
+  await page.getByRole('button',{name:'Refresh Engine analysis'}).tap();
+  await page.waitForFunction(() => !document.querySelector('[aria-label="Refresh Engine analysis"]')?.disabled);
+  assert.ok(engineRequests > requestsBeforeRefresh,'Engine refresh requests fresh analysis');
+  await engineTools.getByRole('tab',{name:'Scenario lab',exact:true}).tap();
+  await page.getByRole('spinbutton',{name:'Scenario annual growth percent'}).fill('15');
+  await page.getByRole('img',{name:'Revenue scenario forecast'}).waitFor();
+  await page.screenshot({path:fileURLToPath(new URL('engine-scenario.png',artifacts))});
+  console.log('PASS paid Engine briefing, valuation, ownership, sourced estimates, scenarios and refresh');
+
+  const freeContext = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+  await freeContext.route('**/*',handleRoute);
+  await freeContext.addInitScript((user) => {
+    const payload=btoa(JSON.stringify({sub:user.id,exp:4102444800,role:'authenticated'}));
+    localStorage.setItem('sb-continua-test-auth-token',JSON.stringify({access_token:`e30.${payload}.fixture`,refresh_token:'fixture',expires_at:4102444800,expires_in:3600,token_type:'bearer',user}));
+  },user);
+  const savedPlan=profile.subscription_plan;
+  profile.subscription_plan='free';
+  const freePage=await freeContext.newPage();
+  const beforeFree=engineRequests;
+  try {
+    await freePage.goto('http://127.0.0.1:5188/engine?symbol=KCB');
+    await freePage.getByText('Engine is included with Premium',{exact:true}).waitFor();
+    assert.equal(engineRequests,beforeFree,'Free users never fetch Engine output');
+    assert.equal(await freePage.getByRole('tablist',{name:'Engine tools'}).count(),0);
+  } finally {profile.subscription_plan=savedPlan; await freeContext.close();}
+  console.log('PASS free Engine lock prevents fetching paid analysis');
 
   // Route smoke coverage exercises mounted empty/error states, not every mutation.
   for (const path of ['/markets', '/discover', '/account', '/upgrade', '/settings', '/stock/KCB', '/watchlist', '/sector/Banking', '/theme/dividends', '/featured/dividends', '/learn', '/notifications', '/sector-heatmap', '/track-investments', '/traders-hub', '/rooms', '/screener', '/compare', `/profile/${user.id}`, '/traders-hub/post/missing', '/not-a-route']) {

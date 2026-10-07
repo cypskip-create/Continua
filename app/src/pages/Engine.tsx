@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, RefreshCw, Zap } from "lucide-react";
 import { engineApi, type EngineBundle } from "@/api/engineApi";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,6 +27,14 @@ export default function Engine() {
   const symbol = (params.get("symbol") || instruments[0]?.symbol || "KCB").toUpperCase();
   const [tool, setTool] = useState<Tool>("Briefing");
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const queryClient = useQueryClient();
+  const refreshAnalysis = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try { await queryClient.invalidateQueries({ queryKey: ["continua"], refetchType: "active" }); }
+    finally { setRefreshing(false); }
+  };
   const paid = ["premium", "premium_plus"].includes(profile?.subscription_plan ?? "");
   const query = useQuery({
     queryKey: ["continua", "engine", user?.id, exchange, symbol],
@@ -45,7 +53,7 @@ export default function Engine() {
         ["Technical Engine", "Indicators, daily volume profiles, historical signal backtesting and custom alerts."],
         ["Scenario lab", "Explore revenue and profit growth assumptions using company filings."],
       ].map(([title, detail]) => <div key={title} className="py-4"><h4 className="font-semibold">{title}</h4><p className="mt-1 text-sm text-muted-foreground">{detail}</p></div>)}</div><Link to="/upgrade" className="inline-block rounded-full bg-foreground px-5 py-3 text-sm font-semibold text-background">Unlock Continua Engine</Link><p className="text-xs text-muted-foreground">Your free Fundamentals allowance remains available on stock pages.</p></section> : <>
-        <section className="flex items-center justify-between gap-3 border-b border-border/70 py-4"><label className="text-xs text-muted-foreground">Stock · {exchangeMeta.code}<select aria-label="Engine stock" value={symbol} onChange={(event) => { setParams({ symbol: event.target.value }); setTool("Briefing"); }} className="ml-3 max-w-52 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">{[...new Set([symbol, ...instruments.map(item => item.symbol)])].map(item => <option key={item} value={item}>{item}</option>)}</select></label><button aria-label="Refresh Engine analysis" onClick={() => void query.refetch()} disabled={query.isFetching} className="p-2"><RefreshCw className={`h-4 w-4 ${query.isFetching ? "animate-spin" : ""}`} /></button></section>
+        <section className="flex items-center justify-between gap-3 border-b border-border/70 py-4"><label className="text-xs text-muted-foreground">Stock · {exchangeMeta.code}<select aria-label="Engine stock" value={symbol} onChange={(event) => { setParams({ symbol: event.target.value }); setTool("Briefing"); }} className="ml-3 max-w-52 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">{[...new Set([symbol, ...instruments.map(item => item.symbol)])].map(item => <option key={item} value={item}>{item}</option>)}</select></label><button aria-label="Refresh Engine analysis" onClick={() => void refreshAnalysis()} disabled={refreshing || query.isFetching} className="p-2"><RefreshCw className={`h-4 w-4 ${refreshing || query.isFetching ? "animate-spin" : ""}`} /></button></section>
         <div className="flex gap-1 overflow-x-auto border-b border-border/70 py-3 scrollbar-hide" role="tablist" aria-label="Engine tools">{tools.map(item => <button key={item} role="tab" aria-selected={tool === item} onClick={() => setTool(item)} className={`shrink-0 rounded-full px-3 py-2 text-xs ${tool === item ? "bg-foreground font-semibold text-background" : "text-muted-foreground"}`}>{item}</button>)}</div>
         {query.isLoading ? <p role="status" className="py-10 text-sm text-muted-foreground">Preparing your analysis…</p> : query.isError ? <div className="py-8 space-y-3"><p role="alert" className="text-sm text-muted-foreground">{query.error.message}</p><button className="text-sm font-semibold text-primary" onClick={() => void query.refetch()}>Retry analysis</button></div> : data && <div key={`${exchange}:${symbol}`} className="py-6 space-y-6">
           <div><h2 className="text-lg font-semibold">{data.companyName}</h2><p className="mt-1 text-xs text-muted-foreground">{symbol} · {money(data.quote?.lastPrice, data.currency)} · Updated {new Date(data.generatedAt).toLocaleString()}</p></div>
