@@ -11,8 +11,13 @@ import cron, { type ScheduledTask } from "node-cron";
 import { runNewsBridge } from "../ingestion/pipelines/newsIngestionPipeline.js";
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
+import { newsRepository } from "../storage/repositories/newsRepository.js";
+let revalidationCursor = "0";
+let running = false;
 
 export async function runNewsBridgeOnce(): Promise<void> {
+  if (running) return;
+  running = true;
   try {
     const total = { processed: 0, withMentions: 0, withoutMentions: 0, failed: 0 };
     const batchSize = 100;
@@ -25,8 +30,13 @@ export async function runNewsBridgeOnce(): Promise<void> {
       if (summary.processed < batchSize || summary.failed === summary.processed) break;
     }
     logger.info(total, "News bridge sync complete");
+    const repaired = await newsRepository.revalidateBatch(revalidationCursor, 100);
+    revalidationCursor = repaired.processed < 100 ? "0" : repaired.lastId;
+    logger.info(repaired, "Historical news issuer evidence revalidated");
   } catch (err) {
     logger.error({ err }, "News bridge sync failed");
+  } finally {
+    running = false;
   }
 }
 

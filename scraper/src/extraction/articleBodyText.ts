@@ -25,14 +25,18 @@ export function extractArticleBodyText(html: string): string {
     ".related", ".recommended", ".also-read", ".read-more", ".tags", ".tag-list",
     ".categories", ".breadcrumbs", ".share", ".social", ".newsletter", ".advert",
     ".advertisement", ".ticker", ".market-watch", "[role='navigation']",
+    "[class*='related-']", "[class*='recommended-']", "[class*='ticker-']",
+    "[id*='related-']", "[id*='ticker-']", ".jp-relatedposts", ".yarpp-related",
   ].join(",")).remove();
 
   // Paragraphs are substantially less likely than a container's complete
   // textContent to include menus, ticker rails and category clouds. Keep
   // headings only as a fallback because the RSS title is stored separately.
   const paragraphs = root.find("p").toArray()
+    .filter(node => $(node).closest("li, [role='complementary']").length === 0)
     .map((node) => $(node).text().replace(/\s+/g, " ").trim())
-    .filter((line) => line.length >= 20);
+    .filter((line) => line.length >= 20 && !/^(also read|read also|related|subscribe|follow us)\b/i.test(line))
+    .filter(line => (line.match(/(?:\bKES\s*[\d,.]+|[+-]\d+(?:\.\d+)?%)/gi)?.length ?? 0) < 2);
   if (paragraphs.length > 0) {
     const heading = root.find("h1").first().text().replace(/\s+/g, " ").trim();
     return [heading, ...paragraphs].filter(Boolean).join("\n").trim();

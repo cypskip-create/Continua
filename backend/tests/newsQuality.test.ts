@@ -17,10 +17,10 @@ describe("news quality", () => {
     const text = cleanArticleContent("Bank profit rises", "Bank profit rises\nHome Factcheck Sports Lifestyle Careers Leadership\nReported profit rose by ten percent after stronger lending.");
     expect(text).toBe("Reported profit rose by ten percent after stronger lending.");
   });
-  it("deduplicates syndicated stories and merges tickers", () => {
+  it("deduplicates stories without resurrecting old ticker associations", () => {
     const duplicate = { ...base, id: "2", articleUrl: "https://example.com/story", symbols: ["SCOM"] };
     const result = dedupeNewsItems([base, duplicate]);
     expect(result).toHaveLength(1);
-    expect(result[0]?.symbols.sort()).toEqual(["KCB", "SCOM"]);
+    expect(result[0]?.symbols).toEqual(["KCB"]);
   });
 });

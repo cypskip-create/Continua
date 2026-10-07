@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { newsApi } from "@/api/newsApi";
 import type { NewsItem } from "@/api/types";
 import { useMemo } from "react";
+import { verifiedNewsItem } from "@/lib/news";
 
 const NEWS_CACHE = 'continua:financial-news:v1';
 function savedNews(): { items: NewsItem[]; savedAt: number } | undefined {
@@ -9,7 +10,7 @@ function savedNews(): { items: NewsItem[]; savedAt: number } | undefined {
     const cached = JSON.parse(localStorage.getItem(NEWS_CACHE) ?? 'null');
     if (cached && Array.isArray(cached.items) && cached.items.length <= 50 &&
         cached.items.every((item: NewsItem) => typeof item?.id === 'string' && typeof item?.headline === 'string' && Array.isArray(item?.symbols)) &&
-        Number.isFinite(cached.savedAt) && cached.savedAt <= Date.now() && Date.now() - cached.savedAt < 86400000) return cached;
+        Number.isFinite(cached.savedAt) && cached.savedAt <= Date.now() && Date.now() - cached.savedAt < 86400000) return {...cached,items:cached.items.map(verifiedNewsItem)};
   } catch { /* Storage is optional. */ }
 }
 

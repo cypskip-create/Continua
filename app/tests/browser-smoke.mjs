@@ -24,6 +24,7 @@ const profile = { ...user, user_id: user.id, full_name: 'Test Investor', handle:
 const holdings = [{ id: '22222222-2222-4222-8222-222222222222', user_id: user.id, symbol: 'KCB', name: 'KCB Group', shares: 10, avg_cost: 30, sector: 'Banking', created_at: '2025-01-01', updated_at: '2025-01-01' }];
 const news = { id: 'fixture-news', headline: 'KCB reports annual earnings growth', excerpt: 'Fixture financial article for reader interaction testing.', content: Array.from({ length: 35 }, (_, i) => `Paragraph ${i + 1}. This is locally generated test content for checking article scrolling. No publisher content is used.`).join('\n\n'), articleUrl: 'https://example.invalid/article', source: 'fixture', sourceName: 'Test financial news', publishedAt: new Date().toISOString(), category: 'earnings', symbols: ['KCB'], imageUrl: '/test-image.svg' };
 const fixturePosts = [];
+news.relevance = {version:2,evidence:[{symbol:'KCB',companyName:'KCB Group',evidence:'KCB reports annual earnings growth',basis:'headline',relationship:'issuer'}],methodology:'Fixture issuer evidence'};
 let pollChoice = null;
 let uploadRequests = 0;
 let newsOffline = false;

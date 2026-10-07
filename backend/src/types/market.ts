@@ -326,6 +326,7 @@ export interface FinancialStatementCandidate {
  *  company_announcements rather than a shared shape. */
 
 export interface NewsItem {
+  relevance?: { version: number; evidence: { symbol: string; companyName: string; evidence: string; basis: "headline" | "article"; relationship: "issuer" | "brand" }[]; methodology: string };
   impact?: { topic: string; reason: string; symbols: string[]; methodology: string } | null;
   id: string;
   headline: string;

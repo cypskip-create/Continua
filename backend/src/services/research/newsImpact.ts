@@ -3,6 +3,7 @@ export function newsImpact(headline: string, excerpt: string | null, symbols: st
   if (!symbols.length) return null;
   const text = `${headline} ${excerpt ?? ""}`;
   const topics: [RegExp, string, string][] = [
+    [/\b(passenger dies|safety incident|flight disruption|flight cancellation|fleet grounded)\b/i, "Operational risk", "Reported airline operations or safety event. Relevance to the named issuer is established; a financial or price effect is not established by the headline alone."],
     [/\b(cbk|regulat\w*|compliance|fraud|cyber\w*|court|lawsuit)\b/i, "Regulation & risk", "May affect compliance obligations, operating risk or costs."],
     [/\b(dividend|payout|ex-dividend)\b/i, "Shareholder income", "May affect dividend income; verify the company's confirmed payment terms."],
     [/\b(earnings|profit|revenue|results|loss)\b/i, "Financial performance", "May change the financial inputs used in profitability and valuation analysis."],

@@ -37,7 +37,7 @@ export function cleanArticleContent(headline: string, value: string | null | und
   return unique.join("\n\n") || null;
 }
 
-/** Merge syndication/crawl duplicates and preserve all affected tickers. */
+/** Prefer one verified receipt; never union old tags into its evidence. */
 export function dedupeNewsItems(items: NewsItem[]): NewsItem[] {
   const byKey = new Map<string, NewsItem>();
   for (const item of items) {
@@ -54,8 +54,8 @@ export function dedupeNewsItems(items: NewsItem[]): NewsItem[] {
     const prefer = (item.content?.length ?? item.excerpt?.length ?? 0) > (previous.content?.length ?? previous.excerpt?.length ?? 0) ? item : previous;
     byKey.set(existingKey, {
       ...prefer,
-      symbols: [...new Set([...previous.symbols, ...item.symbols])],
-      securityIds: [...new Set([...previous.securityIds, ...item.securityIds])],
+      symbols: prefer.symbols,
+      securityIds: prefer.securityIds,
     });
   }
   return [...byKey.values()];

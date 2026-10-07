@@ -31,10 +31,11 @@ function NewsReaderContent({ item, open, onOpenChange, navigate }: NewsReaderShe
     queryKey: ["continua", "news", "detail", item.id],
     queryFn: () => newsApi.getById(item.id),
     enabled: open,
-    staleTime: 30 * 60_000,
+    staleTime: 0,
   });
   const article = detail.data ?? item;
-  const { quotes } = useLiveQuotes(article.symbols);
+  const linkedSymbols = article.relevance?.version === 2 ? article.relevance.evidence.map(e => e.symbol) : [];
+  const { quotes } = useLiveQuotes(linkedSymbols);
   const body = article.content?.trim() || article.excerpt?.trim() || "";
   const paragraphs = body.split(/\n{2,}/).map((part) => part.trim()).filter(Boolean);
 
@@ -72,11 +73,11 @@ function NewsReaderContent({ item, open, onOpenChange, navigate }: NewsReaderShe
 
             <h2 className="mb-4 text-2xl font-bold leading-tight sm:text-3xl">{article.headline}</h2>
 
-            {article.symbols.length > 0 && (
+            {linkedSymbols.length > 0 && (
               <div className="mb-5 space-y-2">
-                <p className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground">Affected stocks</p>
+                <p className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground">Companies linked to this story</p>
                 <div className="flex flex-wrap gap-2">
-                {article.symbols.map((s) => {
+                {linkedSymbols.map((s) => {
                   const quote = quotes[s.toUpperCase()];
                   return <button key={s} data-small-target onClick={() => { onOpenChange(false); navigate(`/stock/${s}`); }} className="flex items-center gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2 text-left">
                     <Badge variant="outline" className="rounded-full text-[0.625rem]">${s}</Badge>
@@ -84,8 +85,11 @@ function NewsReaderContent({ item, open, onOpenChange, navigate }: NewsReaderShe
                   </button>
                 })}
                 </div>
+                {article.relevance?.evidence.map(e => <details key={e.symbol} className="border-b border-border/60 py-2 text-xs"><summary className="cursor-pointer font-semibold">Why {e.symbol}? · {e.basis === "headline" ? "Named in headline" : "Article evidence"}</summary><p className="mt-2 leading-relaxed text-muted-foreground">“{e.evidence}”</p></details>)}
+                <p className="text-[0.6875rem] leading-relaxed text-muted-foreground">A company mention is not proof of a price impact. The quote change is market data, not an effect attributed to this story.</p>
               </div>
             )}
+            {article.relevance && !linkedSymbols.length && <p className="mb-5 text-xs text-muted-foreground">No listed company could be linked confidently from the available article evidence.</p>}
 
             {detail.isLoading && !article.content && <p className="mb-4 animate-pulse text-sm text-muted-foreground">Loading article…</p>}
             <div className="space-y-4">

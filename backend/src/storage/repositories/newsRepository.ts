@@ -2,12 +2,15 @@ import { query, withTransaction } from "../db.js";
 import type { NewsItem } from "../../types/market.js";
 import { cleanArticleContent, dedupeNewsItems, isFinancialNews } from "../../domain/newsQuality.js";
 import { newsImpact } from "../../services/research/newsImpact.js";
+import { analyzeNewsIssuers, type NewsIssuer } from "../../services/research/newsRelevance.js";
+import { loadNewsIssuerDirectory } from "../../ingestion/entityResolution/resolveStockMentions.js";
 
 interface NewsItemRow {
   id: string;
   headline: string;
   excerpt: string | null;
   content?: string | null;
+  matchingText?: string | null;
   articleUrl: string;
   source: string;
   sourceName: string;
@@ -22,7 +25,9 @@ interface NewsItemRow {
   symbols: string[] | null;
 }
 
-function mapRow(row: NewsItemRow): NewsItem {
+function mapRow(row: NewsItemRow, directory: NewsIssuer[]): NewsItem {
+  const evidence = analyzeNewsIssuers(row.headline, row.matchingText ?? row.content ?? row.excerpt ?? "", directory);
+  const symbols = evidence.map(e => e.symbol);
   return {
     id: row.id,
     headline: row.headline,
@@ -33,14 +38,15 @@ function mapRow(row: NewsItemRow): NewsItem {
     sourceName: row.sourceName,
     category: row.category as NewsItem["category"],
     imageUrl: row.imageUrl,
-    securityIds: row.securityIds ?? [],
-    symbols: row.symbols ?? [],
+    securityIds: evidence.map(e => e.securityId),
+    symbols,
+    relevance: { version: 2, evidence, methodology: "Direct issuer or known brand evidence in the headline or article prose. Unrelated market widgets and legacy tags are excluded. Relevance does not establish a price impact." },
     scrapedArtifactId: row.scrapedArtifactId,
     scrapedExtractionId: row.scrapedExtractionId,
     extractionConfidence: row.extractionConfidence !== null ? Number(row.extractionConfidence) : null,
     needsReview: row.needsReview,
     publishedAt: row.publishedAt,
-    impact: newsImpact(row.headline, row.excerpt, row.symbols ?? []),
+    impact: newsImpact(row.headline, row.excerpt, symbols),
   };
 }
 
@@ -50,12 +56,13 @@ function mapRow(row: NewsItemRow): NewsItem {
 // useFollowedNews.ts), so this resolves it at read time rather than
 // storing it denormalized and risking it drifting from securities.symbol.
 const SELECT_WITH_SECURITIES = `
-  SELECT n.id::text, n.headline, n.excerpt, n.article_url as "articleUrl", n.source, n.source_name as "sourceName",
+  SELECT n.id::text, n.headline, n.excerpt, max(e.text) as "matchingText", n.article_url as "articleUrl", n.source, n.source_name as "sourceName",
          n.category, n.image_url as "imageUrl", n.scraped_artifact_id as "scrapedArtifactId", n.scraped_extraction_id as "scrapedExtractionId",
          n.extraction_confidence as "extractionConfidence", n.needs_review as "needsReview", n.published_at as "publishedAt",
          COALESCE(array_agg(DISTINCT nis.security_id) FILTER (WHERE nis.security_id IS NOT NULL), '{}') as "securityIds",
          COALESCE(array_agg(DISTINCT sec.symbol) FILTER (WHERE sec.symbol IS NOT NULL), '{}') as "symbols"
   FROM market.news_items n
+  LEFT JOIN scraping.extractions e ON e.id=n.scraped_extraction_id
   LEFT JOIN market.news_item_securities nis ON nis.news_item_id = n.id
   LEFT JOIN market.securities sec ON sec.id = nis.security_id
 `;
@@ -74,6 +81,25 @@ const TRUSTED_NEWS_FILTER = `
 `;
 
 export const newsRepository = {
+  /** Repair historical associations without changing article text or dates. */
+  async revalidateBatch(afterId = "0", limit = 100): Promise<{ lastId: string; processed: number; corrected: number }> {
+    const res = await query<NewsItemRow>(`${SELECT_WITH_SECURITIES} WHERE n.id > $1::bigint
+      GROUP BY n.id ORDER BY n.id LIMIT $2`, [afterId, Math.min(limit, 500)]);
+    const directory = await loadNewsIssuerDirectory("NSE");
+    if (!directory.length) throw new Error("Cannot revalidate news without the securities directory");
+    let corrected = 0;
+    for (const row of res.rows) {
+      const verified = mapRow(row, directory).securityIds;
+      if ([...verified].sort().join(",") === [...(row.securityIds ?? [])].sort().join(",")) continue;
+      await withTransaction(async client => {
+        await client.query("SELECT id FROM market.news_items WHERE id=$1 FOR UPDATE", [row.id]);
+        await client.query("DELETE FROM market.news_item_securities WHERE news_item_id=$1", [row.id]);
+        for (const id of verified) await client.query("INSERT INTO market.news_item_securities (news_item_id, security_id) VALUES ($1,$2) ON CONFLICT DO NOTHING", [row.id, id]);
+      });
+      corrected++;
+    }
+    return {lastId: res.rows.at(-1)?.id ?? "0", processed: res.rows.length, corrected};
+  },
   /**
    * Upsert keyed on scraped_extraction_id — same idempotency pattern as
    * companyAnnouncementsRepository. Security mentions are replaced
@@ -173,27 +199,32 @@ export const newsRepository = {
           `${SELECT_WITH_SECURITIES} WHERE ${TRUSTED_NEWS_FILTER} GROUP BY n.id ORDER BY n.published_at DESC NULLS LAST, n.created_at DESC LIMIT $1`,
           [candidateLimit],
         );
-    return dedupeNewsItems(res.rows.map(mapRow).filter((item) => isFinancialNews(item.headline, item.excerpt ?? "", item.securityIds.length > 0))).slice(0, limit);
+    const directory = await loadNewsIssuerDirectory("NSE");
+    return dedupeNewsItems(res.rows.map(row => mapRow(row, directory)).filter((item) => isFinancialNews(item.headline, item.excerpt ?? "", item.securityIds.length > 0))).slice(0, limit);
   },
 
   async listBySecurity(securityId: string, limit = 50): Promise<NewsItem[]> {
-    const candidateLimit = Math.min(Math.max(limit * 4, 80), 400);
+    const candidateLimit = 800;
     const res = await query<NewsItemRow>(
-      `${SELECT_WITH_SECURITIES} WHERE ${TRUSTED_NEWS_FILTER} AND n.id IN (SELECT news_item_id FROM market.news_item_securities WHERE security_id = $1)
+      `${SELECT_WITH_SECURITIES} WHERE ${TRUSTED_NEWS_FILTER} AND (n.id IN (
+         SELECT historical.id FROM market.news_items historical
+         JOIN market.news_item_securities links ON links.news_item_id=historical.id
+         WHERE links.security_id=$1 ORDER BY historical.published_at DESC NULLS LAST, historical.created_at DESC LIMIT 400)
+       OR n.id IN (SELECT id FROM market.news_items ORDER BY published_at DESC NULLS LAST, created_at DESC LIMIT 400))
        GROUP BY n.id ORDER BY n.published_at DESC NULLS LAST, n.created_at DESC LIMIT $2`,
       [securityId, candidateLimit],
     );
-    return dedupeNewsItems(res.rows.map(mapRow).filter((item) => isFinancialNews(item.headline, item.excerpt ?? "", item.securityIds.length > 0))).slice(0, limit);
+    const directory = await loadNewsIssuerDirectory("NSE");
+    return dedupeNewsItems(res.rows.map(row => mapRow(row, directory)).filter(item => item.securityIds.includes(securityId) && isFinancialNews(item.headline, item.excerpt ?? "", true))).slice(0, limit);
   },
 
   async getById(id: string): Promise<NewsItem | null> {
     const res = await query<NewsItemRow>(
-      `${SELECT_WITH_SECURITIES.replace("n.excerpt,", "n.excerpt, e.text as content,")}
-       LEFT JOIN scraping.extractions e ON e.id = n.scraped_extraction_id
-       WHERE ${TRUSTED_NEWS_FILTER} AND n.id = $1 GROUP BY n.id, e.text LIMIT 1`,
+      `${SELECT_WITH_SECURITIES.replace("n.excerpt,", "n.excerpt, max(e.text) as content,")}
+       WHERE ${TRUSTED_NEWS_FILTER} AND n.id = $1 GROUP BY n.id LIMIT 1`,
       [id],
     );
-    const item = res.rows[0] ? mapRow(res.rows[0]) : null;
+    const item = res.rows[0] ? mapRow(res.rows[0], await loadNewsIssuerDirectory("NSE")) : null;
     return item && isFinancialNews(item.headline, item.excerpt ?? "", item.securityIds.length > 0) ? item : null;
   },
 
