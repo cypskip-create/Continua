@@ -65,6 +65,9 @@ export function usePortfolio() {
       persist(user.id, next);
       return next;
     });
+    // Holdings edits must also refresh the Engine's private analysis and overview.
+    void client.invalidateQueries({ queryKey: ['continua', 'engine-portfolio', user.id] });
+    void client.invalidateQueries({ queryKey: ['continua', 'engine-portfolio-overview', user.id] });
   };
 
   const addToPortfolio = async (symbol: string, name: string, shares: number, avgCost: number, sector?: string) => {

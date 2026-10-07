@@ -1,11 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Newspaper, ExternalLink } from "lucide-react";
+import { Calendar, Newspaper, ExternalLink, ChevronRight } from "lucide-react";
 import { AIThesisCard } from "@/components/stock/AIThesisCard";
 import { formatTimestamp } from "@/lib/formatTimestamp";
 import { useQuery } from "@tanstack/react-query";
 import { announcementsApi } from "@/api/announcementsApi";
 import { useSecurityNews } from "@/hooks/useSecurityNews";
 import { InfoTip } from "@/components/portfolio/InfoTip";
+import { Link } from "react-router-dom";
+import { mediaStoryUrl } from "@/lib/mediaRoute";
 
 interface Props {
   symbol: string;
@@ -90,7 +92,7 @@ export function NewsEventsTab(props: Props) {
           </Card>
         ) : (
           news.map(n => (
-            <a key={n.id} href={n.articleUrl} target="_blank" rel="noopener noreferrer">
+            <Link key={n.id} to={mediaStoryUrl(n.id)}>
               <Card className="soft-card cursor-pointer active:opacity-70 transition-opacity">
                 <CardContent className="p-3 flex items-start gap-3">
                   <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-muted text-muted-foreground">
@@ -100,10 +102,10 @@ export function NewsEventsTab(props: Props) {
                     <p className="text-xs font-semibold line-clamp-2">{n.headline}</p>
                     <p className="text-[0.625rem] text-muted-foreground mt-0.5">{n.sourceName} · {n.publishedAt ? formatTimestamp(n.publishedAt) : "Date unknown"}</p>
                   </div>
-                  <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+                  <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
                 </CardContent>
               </Card>
-            </a>
+            </Link>
           ))
         )}
       </div>

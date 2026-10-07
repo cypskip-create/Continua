@@ -95,6 +95,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NEWS_CRAWL_CRON
+        value: "*/10 * * * *"
       # Same value as continua-backend's DATABASE_URL above — this service
       # only ever touches the `scraping` schema of that same database.
       - key: DATABASE_URL

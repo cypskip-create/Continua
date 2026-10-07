@@ -1,4 +1,6 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useStickyHeights } from "@/hooks/useStickyHeights";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { mediaStoryUrl } from "@/lib/mediaRoute";
 import { navigateBack } from "@/lib/navigation";
 import { useTouchClick } from "@/hooks/useTouchClick";
 import { Button } from "@/components/ui/button";
@@ -69,6 +71,7 @@ const TIMEFRAME_LABELS: Record<string, string> = {
 };
 
 export default function StockDetail() {
+  const stickyRoot = useStickyHeights();
   const { exchangeMeta } = useExchange();
   const navigate = useNavigate();
   const goBack = useCallback(() => navigateBack(navigate, "/markets"), [navigate]);
@@ -413,14 +416,14 @@ export default function StockDetail() {
   );
 
   return (
-    <div className="page-canvas min-h-screen bg-background pb-28">
+    <div ref={stickyRoot} className="page-canvas min-h-screen bg-background pb-28">
       {/* Slim sticky header. Before the hero price scrolls out of view, this
           shows a bigger ticker symbol + the full company name underneath —
           filling the space that would otherwise sit empty. Once the hero
           price is gone, the ticker shrinks back down, the company name is
           replaced by the market price, and the day's KES/% change fades in
           on the right (where the market-open badge used to sit). */}
-      <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border/50">
+      <header data-sticky-header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-3 py-2">
           <div className="flex items-center gap-2 min-w-0">
             <Button
@@ -728,7 +731,7 @@ export default function StockDetail() {
       />
 
       {/* STICKY SUB-NAV */}
-      <div className="sticky top-[53px] z-30 bg-background/92 backdrop-blur-xl border-b border-border/60">
+      <div data-sticky-nav className="sticky top-[var(--sticky-header-height)] z-30 bg-background/92 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center gap-1 px-3 py-2 overflow-x-auto scrollbar-hide">
           {SUB_NAV.map(s => (
             <button
@@ -811,11 +814,9 @@ export default function StockDetail() {
               </div>
               <div className="border-t border-border/60">
                 {stockNews.slice(0, 3).map(n => (
-                  <a
+                  <Link
                     key={n.id}
-                    href={n.articleUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    to={mediaStoryUrl(n.id)}
                     data-small-target
                     className="w-full flex items-start justify-between py-3 border-b border-border/40 gap-3 text-left active:opacity-70 transition-opacity"
                   >
@@ -823,7 +824,7 @@ export default function StockDetail() {
                       <p className="text-xs font-medium leading-snug">{n.headline}</p>
                       <p className="text-[0.625rem] text-muted-foreground mt-0.5">{n.sourceName} · {n.publishedAt ? formatTimestamp(n.publishedAt) : "Date unknown"}</p>
                     </div>
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>

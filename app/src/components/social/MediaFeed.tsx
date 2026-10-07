@@ -8,7 +8,9 @@ import { NewsStoryCard } from "@/components/news/NewsStoryCard";
 import type { NewsItem } from "@/api/types";
 import { dedupeNews } from "@/lib/news";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { newsApi } from "@/api/newsApi";
 
 interface MediaFeedProps {
   searchQuery: string;
@@ -36,9 +38,23 @@ const CATEGORIES: { id: NewsItem["category"] | "all"; label: string }[] = [
  */
 export function MediaFeed({ searchQuery }: MediaFeedProps) {
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const articleId = params.get("article");
   const [category, setCategory] = usePageState<NewsItem["category"] | "all">("media:category", "all");
   const [readerItem, setReaderItem] = useState<NewsItem | null>(null);
-  const { news, isLoading, isError, refetch } = useMarketNews(category === "all" ? undefined : category);
+  const { news, isLoading, isError, refetch, checkedAt, isFetching } = useMarketNews(category === "all" ? undefined : category);
+  const article = useQuery({
+    queryKey: ["continua", "news", "detail", articleId],
+    queryFn: () => newsApi.getById(articleId!),
+    enabled: !!articleId,
+    staleTime: 30 * 60_000,
+    retry: 1,
+  });
+  const selectedArticle = articleId ? article.data ?? news.find(item => item.id === articleId) ?? null : readerItem;
+  const closeArticle = () => {
+    setReaderItem(null);
+    if (articleId) setParams(current => { const next = new URLSearchParams(current); next.delete("article"); return next; }, { replace: true });
+  };
 
   const filtered = useMemo(() => {
     const unique = dedupeNews(news);
@@ -51,6 +67,8 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
 
   return (
     <div className="px-4 pt-3 pb-6 space-y-4">
+      {articleId && article.isLoading && !selectedArticle && <p role="status" className="text-sm text-muted-foreground">Opening story…</p>}
+      {articleId && article.isError && !selectedArticle && <div role="alert" className="text-sm">This story could not be opened. <button className="text-primary underline" onClick={() => void article.refetch()}>Retry story</button> <button className="underline" onClick={closeArticle}>Back to headlines</button></div>}
       {/* Category rail */}
       <ScrollArea className="w-full">
         <div className="flex gap-1.5 pb-1">
@@ -69,6 +87,8 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
+
+      <p className="text-[0.6875rem] text-muted-foreground" role="status">{isFetching ? "Checking headlines…" : isError ? "Showing saved headlines" : checkedAt ? `Headlines checked ${new Date(checkedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Waiting for headlines"}</p>
 
       {isError && <div role="status" className="text-sm text-muted-foreground">News could not refresh. {news.length ? 'Showing saved stories.' : 'Check your connection.'} <button className="underline" onClick={()=>void refetch()}>Retry</button></div>}
       {isLoading ? (
@@ -91,7 +111,7 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
         </div>
       )}
 
-      <NewsReaderSheet item={readerItem} open={readerItem !== null} onOpenChange={(open) => !open && setReaderItem(null)} />
+      <NewsReaderSheet item={selectedArticle} open={selectedArticle !== null} onOpenChange={(open) => !open && closeArticle()} />
     </div>
   );
 }

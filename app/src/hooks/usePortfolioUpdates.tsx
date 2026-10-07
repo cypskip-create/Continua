@@ -14,6 +14,7 @@ export interface PortfolioUpdateItem {
   detail: string | null;
   date: string; // ISO
   url: string | null;
+  newsId?: string;
   needsReview?: boolean; // filings only — low-confidence entity match
 }
 
@@ -101,6 +102,7 @@ export function usePortfolioUpdates(symbols: string[]) {
           detail: [a.excerpt, a.impact ? `${a.impact.topic}: ${a.impact.reason}` : null].filter(Boolean).join(" · "),
           date: a.publishedAt!,
           url: a.articleUrl,
+          newsId: a.id,
           needsReview: a.needsReview,
         });
       });

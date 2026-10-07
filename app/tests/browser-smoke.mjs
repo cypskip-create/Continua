@@ -29,7 +29,13 @@ let uploadRequests = 0;
 let newsOffline = false;
 let quoteRequests = 0;
 let portfolioRequests = 0;
+let premiumPortfolioRequests=0,overviewRequests=0;
 let engineRequests = 0;
+let enginePreferences={goal:'Balanced',horizon:'1_to_5_years',experience:'beginner',riskComfort:'unspecified',incomeNeeds:'none',sectors:[],notifications:true,learnInterests:false,interests:[]};
+let engineRules=[];
+let engineFlows=[];
+let assistantRequests=0;
+
 const unknown = new Set();
 const handleRoute = async (route) => {
   const url = new URL(route.request().url());
@@ -63,10 +69,22 @@ const handleRoute = async (route) => {
   }
   if (url.port === '4999') {
     const path = url.pathname.replace('/api/v1', '');
+    if(path.startsWith('/engine/')) assert.ok(route.request().headers()['x-user-token'],'Private Engine requests include a verified session token');
+    if(path === '/engine/preferences') {if(route.request().method()==='POST')enginePreferences=route.request().postDataJSON();return json({data:enginePreferences});}
+    if(path === '/engine/interests') {if(route.request().postDataJSON().reset)enginePreferences.interests=[];return json({data:enginePreferences});}
+    if(path === '/engine/usage')return json({data:{requests:assistantRequests,reserved:assistantRequests*.01,monthlyApplicationCap:5,dailyUserLimit:20,model:'gpt-5.4-mini',configured:true}});
+    if(path === '/engine/assistant'){assistantRequests++;return json({data:{answer:'The fixture filing reports 12% revenue growth.',citations:['fixture-filing'],limitations:['Fixture data only.'],cached:false,sources:[{id:'fixture-filing',title:'Fixture annual filing',asOf:'2026-10-07',url:null}]}});}
+    if(path === '/engine/monitoring'){if(route.request().method()==='POST'){const body=route.request().postDataJSON();const prior=engineRules.find(r=>r.symbol===body.symbol&&r.kind===body.kind);if(prior)Object.assign(prior,body);else engineRules.push({...body,id:'44444444-4444-4444-8444-444444444444'});}return json({data:engineRules});}
+    if(path.startsWith('/engine/monitoring/')){engineRules=[];return json({data:{deleted:true}});}
+    if(path === '/engine/cash-flows'){const b=route.request().postDataJSON();engineFlows.push({...b,id:'55555555-5555-4555-8555-555555555555'});return json({data:{id:engineFlows[0].id}});}
+    if(path.startsWith('/engine/cash-flows/')){engineFlows=[];return json({data:{deleted:true}});}
+    if(path === '/engine/peers')return json({data:[{symbol:'EQTY',name:'Fixture peer',period:2025,metrics:{revenueGrowth:10,cashConversion:1.2,debtToEquity:.4}}]});
+    if(path === '/engine/portfolio/overview'){overviewRequests++;return json({data:{available:true,reason:null,totalValue:500,totalCost:400,unrealized:100,sessionPnl:10,sessionDate:'2026-10-07',holdingCount:1,pricedCount:1,coverage:'1/1',currency:'KES',warnings:[],positions:[],methodology:'Calculated holdings; no OpenAI request.',generatedAt:'2026-10-07'}});}
+    if(path === '/engine/portfolio') {premiumPortfolioRequests++;return json({data:{available:true,reason:null,totalValue:500,sessionPnl:10,coverage:'1/1',currency:'KES',warnings:[],historyWarnings:[],positions:[{symbol:'KCB',sector:'Banking',value:500,weight:1,sessionContribution:10,asOf:'2026-10-07'}],sectors:[{sector:'Banking',weight:1}],correlations:{pairs:[],methodology:'Identical dates required.'},performance:{twr:10,moneyWeighted:null,reason:'Fixture dated snapshots.'},dividends:[{symbol:'KCB',trailingIncome:20,upcoming:[]}],flows:engineFlows,methodology:'Covered holdings only.',researchBriefing:{covered:1,requested:1,limit:20,companies:[{symbol:'KCB',weight:1,period:2025,metrics:{},findings:['Fixture cash conversion improved.'],risks:[],qualityWarnings:[],unavailable:[],changes:[]}],news:[],methodology:'Company-specific periods.'}}});}
     if (path.startsWith('/engine/')) {
       engineRequests++;
       assert.ok(route.request().headers()['x-user-token'], 'Engine sends the authenticated session');
-      return json({data:{symbol:'KCB',exchange:'NSE',currency:'KES',companyName:'KCB Group',generatedAt:new Date().toISOString(),quote:{lastPrice:50},history:[],earnings:[],ownership:[{holderName:'Fixture institutional holder',holderType:'institutional',percentHeld:12,asOf:'2025-12-31'}],valuation:{models:[{model:'Fixture valuation',fairValue:60,upsidePercent:20,methodology:'Fixture-only disclosed methodology'}]},briefing:{facts:['Fixture reported revenue increased.'],strengths:[],risks:[],coverage:'Two reported periods.',methodology:'Calculated from fixture financial statements.'},coverage:{annualPeriods:2,valuationModels:1,earningsEvents:0,analystEstimates:0}}});
+      return json({data:{symbol:'KCB',exchange:'NSE',currency:'KES',companyName:'KCB Group',generatedAt:new Date().toISOString(),quote:{lastPrice:50},history:[],earnings:[],ownership:[{holderName:'Fixture institutional holder',holderType:'institutional',percentHeld:12,asOf:'2025-12-31'}],valuation:{models:[{model:'Fixture valuation',fairValue:60,upsidePercent:20,methodology:'Fixture-only disclosed methodology'}]},briefing:{facts:['Fixture reported revenue increased.'],strengths:[],risks:[],coverage:'Two reported periods.',methodology:'Calculated from fixture financial statements.'},unavailable:[],news:[{id:'digest-test',headline:'Fixture company update',summary:'Revenue increased by 12 percent.',source:'Fixture publisher',url:'https://example.invalid/source',publishedAt:'2026-10-07',methodology:'Extractive source sentences',fullTextAvailable:true}],technicals:[],coverage:{annualPeriods:2,valuationModels:1,earningsEvents:0,analystEstimates:0}}});
     }
     if (path.startsWith('/quotes')) {
       quoteRequests++;
@@ -74,7 +92,7 @@ const handleRoute = async (route) => {
       const quotes = symbols.map((symbol) => ({ symbol, securityId: `NSE:${symbol}`, exchange: 'NSE', lastPrice: 50, open: 48, high: 51, low: 47, previousClose: 49, change: 1, changePercent: 2.04, volume: 10000, currency: 'KES', status: 'active', timestamp: new Date().toISOString(), source: 'eod' }));
       return json({ data: path === '/quotes' ? quotes : quotes[0] });
     }
-    if (path.startsWith('/news')) return newsOffline ? json({error:'Fixture offline'},503) : json({ data: path.includes('/item/') ? news : [news] });
+    if (path.startsWith('/news')) return newsOffline ? json({error:'Fixture offline'},503) : json({ data: path.endsWith('/item/older-story') ? {...news,id:'older-story',headline:'Older story outside the current feed'} : path.includes('/item/') ? news : [news] });
     if (path.startsWith('/financials/') && path.endsWith('/history')) return json({ data: [2023,2024,2025].map((year,i) => ({fiscalYear:year,fiscalQuarter:url.searchParams.get('periodType') === 'quarterly' ? 1 : null,revenue:1000000+i*100000,netIncome:i === 0 ? -100000 : 100000+i*50000,eps:1+i,totalAssets:4000000,totalLiabilities:1000000,totalEquity:3000000,operatingIncome:300000,operatingCashFlow:350000,freeCashFlow:200000})) });
     if (path.startsWith('/earnings/') && !path.endsWith('/recent')) return json({ data: [2024,2025,2026].map((year,i) => ({id:`earn-${year}`,fiscalYear:year,fiscalQuarter:null,reportedDate:i<2 ? `${year}-03-01` : null,revenueActual:i<2 ? 1000000+i*100000 : null,revenueEstimate:1050000+i*100000,epsActual:i<2 ? 1+i : null,epsEstimate:1.1+i})) });
     if (path.startsWith('/research/')) return json({ data: { ratios: { pe: 10, pb: 1.5, ps: 2, roe: .15, roa: .05, debtToEquity: .3, dividendYield: .06, netMargin: .2 }, score: { afriScore: 70, afriValue: 60, afriGrowth: 65, afriHealth: 80, afriIncome: 70, afriRisk: 60, afriQuality: 70, afriMomentum: 50, inputs: {} } } });
@@ -195,6 +213,30 @@ try {
 
   await page.goto('http://127.0.0.1:5188/track-investments');
   await page.getByRole('tab', { name: 'Analysis', exact: true }).tap();
+  await page.getByRole('heading',{name:'Your portfolio research briefing',exact:true}).waitFor();
+  assert.equal(assistantRequests,0,'Browsing portfolio analysis never submits AI questions');
+  await page.getByRole('tablist',{name:'Portfolio Engine tools',exact:true}).getByRole('tab',{name:'Ask Engine',exact:true}).tap();
+  await page.getByRole('heading',{name:'Ask your research assistant',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Hide portfolio values',exact:true}).tap();
+  assert.equal(await page.getByRole('heading',{name:'Ask your research assistant',exact:true}).count(),0);
+  assert.equal(await page.getByRole('heading',{name:'Portfolio intelligence',exact:true}).count(),0);
+  await page.getByRole('button',{name:'Show portfolio values',exact:true}).tap();
+  const portfolioTools=page.getByRole('tablist',{name:'Portfolio Engine tools',exact:true});
+  assert.equal(await page.getByLabel('Assistant scope',{exact:true}).inputValue(),'portfolio');
+  for(const tool of ['Returns & income','Ask Engine','Monitoring']){
+    await portfolioTools.getByRole('tab',{name:tool,exact:true}).tap();
+    if(tool==='Returns & income')await page.getByRole('heading',{name:'Portfolio intelligence',exact:true}).waitFor();
+    if(tool==='Monitoring')await page.getByLabel('Portfolio monitoring holding',{exact:true}).waitFor();
+    for(const width of [320,390])for(const scale of [.9,1.2]){
+      await page.setViewportSize({width,height:844});
+      await page.evaluate(scale=>{document.documentElement.style.fontSize=(16*scale)+'px';},scale);
+      await wait(100);
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth<=1),tool+' fits at '+width+' / '+scale);
+    }
+  }
+  await page.setViewportSize({width:390,height:844});
+  await page.evaluate(()=>{document.documentElement.style.fontSize='16px';});
+  await portfolioTools.getByRole('tab',{name:'Briefing',exact:true}).tap();
   await page.getByRole('button', { name: 'Past Performance', exact: true }).tap();
   const metric = page.getByRole('button', { name: 'KCB: 15.0%', exact: true });
   await metric.tap();
@@ -290,6 +332,31 @@ try {
   newsOffline = false;
   console.log('PASS news outage retains saved stories and shows an explicit error');
 
+  await page.goto('http://127.0.0.1:5188/traders-hub?tab=media&article=older-story');
+  await page.getByRole('dialog').getByRole('article').getByRole('heading',{name:'Older story outside the current feed',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Close article',exact:true}).tap();
+  assert.equal(new URL(page.url()).searchParams.get('article'),null);
+  assert.equal(new URL(page.url()).searchParams.get('tab'),'media');
+  console.log('PASS exact Media article lookup works outside the recent feed');
+
+  await page.goto('http://127.0.0.1:5188/track-investments');
+  await wait(700);
+  await page.getByRole('tab',{name:'Updates',exact:true}).tap();
+  const portfolioStory = page.getByRole('link').filter({hasText:news.headline}).first();
+  await portfolioStory.waitFor();
+  assert.equal(await portfolioStory.getAttribute('href'),'/traders-hub?tab=media&article=fixture-news');
+  await portfolioStory.tap();
+  await page.getByRole('dialog').getByRole('article').getByRole('heading',{name:news.headline,exact:true}).waitFor();
+  await page.getByRole('button',{name:'Close article',exact:true}).tap();
+  await page.goto('http://127.0.0.1:5188/stock/KCB');
+  await wait(700);
+  const stockStory = page.getByRole('link',{name:new RegExp(news.headline)}).first();
+  await stockStory.waitFor();
+  await stockStory.tap();
+  await page.getByRole('dialog').getByRole('article').getByRole('heading',{name:news.headline,exact:true}).waitFor();
+  await page.getByRole('button',{name:'Close article',exact:true}).tap();
+  console.log('PASS Portfolio Updates and stock headlines open the exact Media story');
+
   await page.goto('http://127.0.0.1:5188/stock/KCB');
   await page.getByRole('button', {name:'Fundamentals',exact:true}).tap();
   const categories = page.getByRole('tablist',{name:'Fundamentals category'});
@@ -309,21 +376,85 @@ try {
   await page.goto('http://127.0.0.1:5188/engine?symbol=KCB');
   await page.getByText('Fixture reported revenue increased.',{exact:true}).waitFor();
   const engineTools = page.getByRole('tablist',{name:'Engine tools'});
+  const openEngineTool = async (tool) => {
+    const group = ['Briefing','News','Earnings & forecasts','Valuation','Ownership'].includes(tool) ? 'Company' : ['Evidence','Technicals','Scenario lab','Peers'].includes(tool) ? 'Analysis' : 'My workspace';
+    await page.getByRole('navigation',{name:'Engine navigation'}).getByRole('button',{name:group,exact:true}).tap();
+    await engineTools.getByRole('tab',{name:tool,exact:true}).tap();
+  };
   await engineTools.getByRole('tab',{name:'Valuation',exact:true}).tap();
   await page.getByText('Fixture valuation',{exact:true}).waitFor();
   await engineTools.getByRole('tab',{name:'Ownership',exact:true}).tap();
   await page.getByText('Fixture institutional holder',{exact:true}).waitFor();
   await engineTools.getByRole('tab',{name:'Earnings & forecasts',exact:true}).tap();
   await page.getByRole('img',{name:'revenue actual and estimate history'}).waitFor();
+  await engineTools.getByRole('tab', {name:'News',exact:true}).tap();
+  await page.getByText('Revenue increased by 12 percent.', {exact:true}).waitFor();
+  assert.equal(await page.getByRole('link', {name:'Fixture company update'}).getAttribute('href'), '/traders-hub?tab=media&article=digest-test');
+  await engineTools.getByRole('tab', {name:'Briefing',exact:true}).tap();
+  await page.getByLabel('Research goal', {exact:true}).selectOption('Income');
+  await page.getByText('Evidence ordered for your income research goal', {exact:true}).waitFor();
+  await page.reload();
+  await page.getByText('Evidence ordered for your income research goal', {exact:true}).waitFor();
+  console.log('PASS sourced news digest and persisted preference ordering');
   const requestsBeforeRefresh = engineRequests;
   await page.getByRole('button',{name:'Refresh Engine analysis'}).tap();
   await page.waitForFunction(() => !document.querySelector('[aria-label="Refresh Engine analysis"]')?.disabled);
   assert.ok(engineRequests > requestsBeforeRefresh,'Engine refresh requests fresh analysis');
-  await engineTools.getByRole('tab',{name:'Scenario lab',exact:true}).tap();
+  await openEngineTool('Scenario lab');
   await page.getByRole('spinbutton',{name:'Scenario annual growth percent'}).fill('15');
   await page.getByRole('img',{name:'Revenue scenario forecast'}).waitFor();
   await page.screenshot({path:fileURLToPath(new URL('engine-scenario.png',artifacts))});
   console.log('PASS paid Engine briefing, valuation, ownership, sourced estimates, scenarios and refresh');
+  await openEngineTool('Preferences');
+  await page.getByRole('heading',{name:'Research preferences',exact:true}).waitFor();
+  await page.getByRole('checkbox',{name:'Learn research interests from companies I open in Engine'}).check();
+  await page.getByRole('button',{name:'Save preferences',exact:true}).tap();
+  await page.getByText('Preferences saved.',{exact:true}).waitFor();
+  assert.equal(enginePreferences.learnInterests,true);
+  await engineTools.getByRole('tab',{name:'Monitoring',exact:true}).tap();
+  await page.getByRole('button',{name:'Save rule',exact:true}).tap();
+  await page.getByRole('button',{name:'Pause',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Pause',exact:true}).tap();
+  await page.getByRole('button',{name:'Resume',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Remove',exact:true}).tap();
+  await page.getByRole('button',{name:'Remove',exact:true}).waitFor({state:'hidden'});
+  await openEngineTool('Peers');
+  await page.getByRole('heading',{name:/EQTY · Fixture peer/}).waitFor();
+  await openEngineTool('Portfolio');
+  await page.getByRole('heading',{name:'Recorded invested-holdings return',exact:true}).waitFor();
+  await page.getByLabel('Cash flow amount',{exact:true}).fill('50');
+  await page.getByRole('button',{name:'Record flow',exact:true}).tap();
+  await page.getByRole('button',{name:'Remove',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Remove',exact:true}).tap();
+  await page.getByRole('button',{name:'Remove',exact:true}).waitFor({state:'hidden'});
+  await engineTools.getByRole('tab',{name:'Ask Engine',exact:true}).tap();
+  assert.equal(assistantRequests,0,'AI never runs automatically');
+  await page.getByLabel('Research question',{exact:true}).fill('What do the reported results show?');
+  await page.getByRole('button',{name:'Ask Engine',exact:true}).tap();
+  await page.getByText('The fixture filing reports 12% revenue growth.',{exact:true}).waitFor();
+  await page.getByText(/Fixture annual filing/).waitFor();
+  assert.equal(assistantRequests,1);
+  console.log('PASS cloud preferences, consent, monitoring pause/remove, peers, flow corrections and explicit sourced AI');
+
+  await openEngineTool('Journal');
+  await page.getByLabel('Research notes',{exact:true}).fill('Review the next dated filing before revising my thesis.');
+  await page.getByRole('checkbox',{name:'Check the reporting period',exact:true}).check();
+  await page.getByText('Saved on this device',{exact:true}).waitFor();
+  await page.reload();
+  await page.getByLabel('Research notes',{exact:true}).waitFor();
+  assert.equal(await page.getByLabel('Research notes',{exact:true}).inputValue(),'Review the next dated filing before revising my thesis.');
+  assert.equal(await page.getByRole('checkbox',{name:'Check the reporting period',exact:true}).isChecked(),true);
+  assert.equal(new URL(page.url()).searchParams.get('tool'),'Journal');
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Engine must fit mobile width');
+  await page.screenshot({path:fileURLToPath(new URL('engine-journal.png',artifacts))});
+  await openEngineTool('Briefing');
+  await page.screenshot({path:fileURLToPath(new URL('engine-briefing.png',artifacts))});
+  await page.goto('http://127.0.0.1:5188/');
+  await wait(1200);
+  await page.getByRole('region',{name:'Engine research focus'}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:fileURLToPath(new URL('engine-home.png',artifacts))});
+  console.log('PASS journal persistence, checklist and mobile Engine layout');
+
 
   const freeContext = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   await freeContext.route('**/*',handleRoute);
@@ -340,6 +471,17 @@ try {
     await freePage.getByText('Engine is included with Premium',{exact:true}).waitFor();
     assert.equal(engineRequests,beforeFree,'Free users never fetch Engine output');
     assert.equal(await freePage.getByRole('tablist',{name:'Engine tools'}).count(),0);
+    const paidBefore=premiumPortfolioRequests, aiBefore=assistantRequests, overviewBefore=overviewRequests;
+    await freePage.goto('http://127.0.0.1:5188/track-investments');
+    await freePage.getByRole('heading',{name:'Engine portfolio overview',exact:true}).waitFor();
+    await freePage.getByText('Included free',{exact:true}).waitFor();
+    await freePage.getByRole('tab',{name:'Returns',exact:true}).tap();
+    await freePage.getByRole('tab',{name:'Updates',exact:true}).tap();
+    await freePage.getByRole('tab',{name:'Analysis',exact:true}).tap();
+    await freePage.getByText('Portfolio Analysis is a Premium feature',{exact:true}).waitFor();
+    assert.equal(premiumPortfolioRequests,paidBefore,'Free portfolio must not request paid Engine analysis');
+    assert.equal(assistantRequests,aiBefore,'Free browsing never calls OpenAI');
+    assert.ok(overviewRequests>overviewBefore,'Free portfolio gets Engine overview');
   } finally {profile.subscription_plan=savedPlan; await freeContext.close();}
   console.log('PASS free Engine lock prevents fetching paid analysis');
 
@@ -357,6 +499,31 @@ try {
   await page.getByRole('button', { name: 'Back to markets' }).tap();
   await page.waitForURL('**/markets');
   console.log('PASS single-tap stock back');
+  // Every supported text scale must keep sticky rows flush and contained.
+  for (const route of ['/stock/KCB', '/track-investments', '/', '/engine?symbol=KCB']) {
+    await page.goto('http://127.0.0.1:5188' + route);
+    await wait(700);
+    for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({width, height:844});
+    for (const scale of [0.9, 1, 1.1, 1.2]) {
+      await page.evaluate(scale => { document.documentElement.style.fontSize = (16 * scale) + 'px'; }, scale);
+      await wait(350);
+      const layout = await page.evaluate(() => {
+        const root = document.querySelector('.page-canvas');
+        const header = root?.querySelector('[data-sticky-header]');
+        const nav = root?.querySelector('[data-sticky-nav]');
+        return { overflow: document.documentElement.scrollWidth - innerWidth,
+          header: header?.getBoundingClientRect().height,
+          top: nav ? parseFloat(getComputedStyle(nav).top) : undefined };
+      });
+      assert.ok(layout.overflow <= 1, route + ' horizontal overflow at scale ' + scale + ': ' + layout.overflow);
+      if (layout.header != null && layout.top != null) assert.ok(Math.abs(layout.header - layout.top) < 1, route + ' sticky gap at width ' + width + ' scale ' + scale + ': ' + JSON.stringify(layout));
+    }
+  }
+    }
+  await page.setViewportSize({width:390,height:844});
+  await page.evaluate(() => { document.documentElement.style.fontSize = '16px'; });
+  console.log('PASS four font sizes: stock, portfolio, Home and Engine containment and sticky offsets');
   // Device verification is stubbed to fail: private UI must stay unmounted.
   // This tests the lock boundary, not a real platform authenticator.
   await page.addInitScript(() => {

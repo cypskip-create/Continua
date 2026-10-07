@@ -12,6 +12,7 @@ import { listNeedsReview } from "../storage/extractionsRepository.js";
 import { reprocessArtifact } from "../extraction/reprocessArtifact.js";
 import { sweepUnextractedArtifacts } from "../extraction/extractionSweep.js";
 import { getCrawlStatus } from "../monitoring/crawlStatus.js";
+import { newsScheduleStatus } from "../scheduler/scheduler.js";
 
 export function createServer() {
   const app = express();
@@ -21,6 +22,8 @@ export function createServer() {
     const health = await checkHealth();
     res.status(health.status === "ok" ? 200 : 503).json(health);
   });
+
+  app.get("/news/status", (_req, res) => res.json(newsScheduleStatus()));
 
   // Phase 0: read-only visibility into configured sources. Crawl-trigger
   // and job-status endpoints (§40) land in a later phase once there's an

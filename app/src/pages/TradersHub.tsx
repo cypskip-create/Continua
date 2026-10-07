@@ -88,6 +88,10 @@ export default function TradersHub() {
   );
 
   useEffect(() => {
+    const requestedTab = searchParams.get("tab");
+    const nextTab: Tab = requestedTab === "media" || requestedTab === "following" || requestedTab === "trending" ? requestedTab : "for-you";
+    setActiveTab(nextTab);
+    if (isFeedTab(nextTab)) setLastFeedTab(nextTab);
     const urlSearch = searchParams.get("search");
     if (urlSearch) setSearchQuery(urlSearch);
     const ticker = searchParams.get("ticker");

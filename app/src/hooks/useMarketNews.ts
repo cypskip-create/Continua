@@ -32,6 +32,7 @@ export function useMarketNews(category?: NewsItem["category"]) {
     staleTime: 60_000,
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   return {
@@ -39,5 +40,7 @@ export function useMarketNews(category?: NewsItem["category"]) {
     isLoading: query.isLoading,
     isError: query.isError,
     refetch: query.refetch,
+    checkedAt: query.dataUpdatedAt,
+    isFetching: query.isFetching,
   };
 }

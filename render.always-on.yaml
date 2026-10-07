@@ -1,0 +1,63 @@
+# PREPARED ONLY. Applying this Blueprint enables paid compute for BOTH services.
+# Keep render.yaml as the active free configuration until billing is approved.
+# Use one instance per service: in-process schedules are not distributed locks.
+services:
+  - type: web
+    name: continua-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    numInstances: 1
+    region: oregon
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: CACHE_DRIVER
+        value: memory
+      - key: API_KEY_AUTH_ENABLED
+        value: "true"
+      - key: ADAPTER_MODE
+        value: live
+      - key: NSE_ADAPTER_SOURCE
+        value: nse_client
+      - key: NSE_CLIENT_MODE
+        value: mystocks
+      - key: PRICE_POLL_INTERVAL_MS
+        value: "30000"
+      - key: INDEX_POLL_INTERVAL_MS
+        value: "1800000"
+      - key: NEWS_BRIDGE_CRON
+        value: "*/2 * * * *"
+      - key: MANSA_API_BASE_URL
+        sync: false
+      - key: MANSA_API_KEY
+        sync: false
+      - key: MANSA_API_IP
+        sync: false
+
+  - type: web
+    name: continua-scraper
+    runtime: docker
+    rootDir: scraper
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    numInstances: 1
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SCHEDULER_ENABLED
+        value: "true"
+      - key: NEWS_CRAWL_CRON
+        value: "*/10 * * * *"

@@ -1,6 +1,6 @@
 /**
- * Real scheduling (§19): each enabled source runs on its own cron
- * expression, not one hardcoded global interval. A source with an
+ * News RSS uses NEWS_CRAWL_CRON; all other sources retain their own cron
+ * expressions. A source with an
  * adapter registered in adapters/registry.ts runs via that adapter's
  * discover->fetch->parse pipeline; anything else falls back to the
  * generic crawler (crawler/crawlSource.ts).
@@ -18,23 +18,31 @@ import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 import type { Source } from "../types.js";
 import { ensureDefaultSources } from "../config/defaultSources.js";
+import { sourceSchedule } from "./newsSchedule.js";
 
 const scheduledTasks: ScheduledTask[] = [];
 const runningSources = new Set<string>();
+const newsRuns = new Map<string, { startedAt: string; completedAt: string | null; success: boolean | null; discovered?: number; extracted?: number }>();
+export function newsScheduleStatus() {
+  return { enabled: env.SCHEDULER_ENABLED, cron: env.NEWS_CRAWL_CRON, running: [...runningSources].filter(id => newsRuns.has(id)), sources: [...newsRuns].map(([sourceId, state]) => ({ sourceId, ...state })) };
+}
 
 async function runSourceOnce(source: Source): Promise<void> {
   // A slow publisher must not accumulate another crawl every cron tick.
   if (runningSources.has(source.id)) return;
   runningSources.add(source.id);
+  if (source.adapter === "rss") newsRuns.set(source.id, { startedAt: new Date().toISOString(), completedAt: null, success: null });
   try {
     if (hasRegisteredAdapter(source.adapter)) {
       const summary = await runRegisteredAdapter(source);
+      if (source.adapter === "rss") newsRuns.set(source.id, { ...newsRuns.get(source.id)!, completedAt: new Date().toISOString(), success: summary.failed === 0 && summary.discovered > 0, discovered: summary.discovered, extracted: summary.extracted });
       logger.info({ sourceId: source.id, ...summary }, "Scheduled adapter run complete");
     } else {
       const summary = await crawlSource(source.id);
       logger.info(summary, "Scheduled crawl complete");
     }
   } catch (err) {
+    if (source.adapter === "rss") newsRuns.set(source.id, { ...newsRuns.get(source.id)!, completedAt: new Date().toISOString(), success: false });
     logger.error({ sourceId: source.id, err }, "Scheduled run failed");
   } finally {
     runningSources.delete(source.id);
@@ -56,7 +64,7 @@ export async function startScheduler(): Promise<ScheduledTask[]> {
   await ensureDefaultSources();
   const sources = await listEnabledSources();
   for (const source of sources) {
-    const cronExpression = source.config.schedule ?? env.DEFAULT_CRAWL_CRON;
+    const cronExpression = sourceSchedule(source, env.NEWS_CRAWL_CRON, env.DEFAULT_CRAWL_CRON);
 
     if (!cron.validate(cronExpression)) {
       logger.warn({ sourceId: source.id, cronExpression }, "Invalid cron expression for source — skipping schedule");

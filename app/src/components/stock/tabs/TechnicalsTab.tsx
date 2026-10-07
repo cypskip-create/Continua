@@ -175,18 +175,20 @@ const STRATEGY_LABELS: Record<BacktestStrategy, string> = {
 function BacktesterSection({ symbol }: { symbol: string }) {
   const [strategy, setStrategy] = useState<BacktestStrategy>("sma_cross");
   const [months, setMonths] = useState(12);
+  const [feeBps,setFeeBps]=useState(20);
+  const [slippageBps,setSlippageBps]=useState(10);
   const { runBacktest, result, isRunning, isError, error } = useBacktest();
 
   const handleRun = () => {
     const to = new Date();
     const from = new Date();
     from.setMonth(from.getMonth() - months);
-    runBacktest({ symbol, strategy, from: from.toISOString(), to: to.toISOString() });
+    runBacktest({ symbol, strategy, feeBps, slippageBps, from: from.toISOString(), to: to.toISOString() });
   };
 
   return (
     <div>
-      <Eyebrow>Strategy Backtester</Eyebrow>
+      <Eyebrow>Strategy Backtester</Eyebrow><div className="flex flex-wrap gap-3 py-3 text-xs"><label>Fee (basis points)<input aria-label="Backtest fee basis points" className="ml-2 w-16 border border-border bg-background rounded px-2 py-1" type="number" min={0} max={500} value={feeBps} onChange={e=>setFeeBps(Number(e.target.value))}/></label><label>Slippage (basis points)<input aria-label="Backtest slippage basis points" className="ml-2 w-16 border border-border bg-background rounded px-2 py-1" type="number" min={0} max={500} value={slippageBps} onChange={e=>setSlippageBps(Number(e.target.value))}/></label></div>
       <div className="border-t border-border/60 pt-3 space-y-3">
         <div className="flex items-center gap-2">
           <Select value={strategy} onValueChange={(v) => setStrategy(v as BacktestStrategy)}>

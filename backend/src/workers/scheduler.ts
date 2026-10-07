@@ -1,3 +1,4 @@
+import { startEngineMonitorWorker } from "./engineMonitorWorker.js";
 /**
  * Live prices are the latency-critical path. Start their recurring workers
  * and first ingestion immediately; do not hold them behind slow candle,
@@ -18,6 +19,7 @@ import { ACTIVE_EXCHANGES } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 
 export async function startAllWorkers(): Promise<() => void> {
+  const engineMonitorTask = startEngineMonitorWorker();
   const stopPriceWorker = startPriceWorker();
   const stopIndexWorker = startIndexWorker();
   const financialsTask = startFinancialsWorker();
@@ -74,6 +76,7 @@ export async function startAllWorkers(): Promise<() => void> {
 
   logger.info("All recurring workers started; enrichment continuing in background");
   return () => {
+    engineMonitorTask.stop();
     stopPriceWorker();
     stopIndexWorker();
     financialsTask.stop();

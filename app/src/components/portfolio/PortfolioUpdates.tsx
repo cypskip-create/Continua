@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Info, ExternalLink, TrendingUp, DollarSign, FileText, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { mediaStoryUrl } from "@/lib/mediaRoute";
+import { Info, ChevronRight, TrendingUp, DollarSign, FileText, AlertCircle } from "lucide-react";
 import { InfoTip } from "./InfoTip";
 import type { PortfolioUpdateItem, UpdateCategory } from "@/hooks/usePortfolioUpdates";
 
@@ -72,11 +74,9 @@ export function PortfolioUpdates({ items, recentCounts, isLoading }: PortfolioUp
       ) : (
         <div className="divide-y divide-border/40">
           {filtered.slice(0, 30).map((item) => (
-            <a
+            <Link
               key={item.id}
-              href={item.url ?? undefined}
-              target={item.url ? "_blank" : undefined}
-              rel={item.url ? "noopener noreferrer" : undefined}
+              to={item.newsId ? mediaStoryUrl(item.newsId) : `/stock/${encodeURIComponent(item.symbol)}`}
               className={`flex gap-3 py-3 ${item.url ? "active:opacity-70 cursor-pointer" : ""}`}
             >
               <div className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center shrink-0 text-[0.625rem] font-bold">
@@ -95,8 +95,8 @@ export function PortfolioUpdates({ items, recentCounts, isLoading }: PortfolioUp
                 <p className="text-[0.78125rem] font-semibold mt-0.5">{item.title}</p>
                 {item.detail && <p className="text-[0.6875rem] text-muted-foreground mt-0.5 line-clamp-2">{item.detail}</p>}
               </div>
-              {item.url && <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-1" />}
-            </a>
+              {item.newsId && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-1" />}
+            </Link>
           ))}
         </div>
       )}

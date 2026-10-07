@@ -1,3 +1,4 @@
+import { EngineFocus } from "@/components/home/EngineFocus";
 import { useMemo, useState } from "react";
 import { Crown, ChevronRight, Eye, EyeOff, ArrowUpRight, ArrowDownRight, LogIn, TrendingUp, Search, Coins, Shield, BarChart3, Bell, Binoculars, GitCompare, Grid3X3 } from "lucide-react";
 import { QuickTradeWidget } from "@/components/home/QuickTradeWidget";
@@ -112,7 +113,6 @@ export default function Home() {
   ];
 
   const researchTools = [
-    { label: "Continua Engine", detail: "Premium company and technical analysis", icon: Shield, route: "/engine" },
     { label: "Stock Screener", detail: "Filter valuation, growth and yield", icon: Search, route: "/screener" },
     { label: "Compare", detail: "Review companies side by side", icon: GitCompare, route: "/compare" },
     { label: "Sector Heatmap", detail: "Scan sector strength at a glance", icon: Grid3X3, route: "/sector-heatmap" },
@@ -219,8 +219,8 @@ export default function Home() {
 
         {/* UPDATES — real scraped news, real upcoming dividends, and real
             reported earnings merged into one chronological feed. */}
+        <EngineFocus />
         {user && <PortfolioPulse showValues={showBalance} />}
-        <UpdatesFeed followedSymbols={followedSymbols} limit={6} />
 
         {/* A compact research launchpad makes the analysis workflow visible
             from Home instead of hiding capable tools several screens deep. */}
@@ -242,6 +242,8 @@ export default function Home() {
             ))}
           </div>
         </div>
+
+        <UpdatesFeed followedSymbols={followedSymbols} limit={6} />
 
         {/* OPPORTUNITIES — pill row */}
         <div>

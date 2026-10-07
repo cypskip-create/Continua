@@ -65,6 +65,7 @@ const EnvSchema = z.object({
   // hardcode one global interval" — this default exists for convenience,
   // not because every source should share it).
   DEFAULT_CRAWL_CRON: z.string().default("0 */6 * * *"), // every 6 hours
+  NEWS_CRAWL_CRON: z.string().default("*/10 * * * *"), // all enabled RSS sources
   SCHEDULER_ENABLED: booleanEnv(true),
 
   // How often to catch up generic-crawled artifacts that were stored but

@@ -37,6 +37,7 @@ import { logger } from "../../monitoring/logger.js";
 import { env } from "../../config/index.js";
 import type { FetchedDocument, ParsedExtraction, SourceAdapter, SourceDocument } from "../types.js";
 import type { Source } from "../../types.js";
+import { newestFeedItems } from "../../scheduler/newsSchedule.js";
 
 const CRAWLER_VERSION = "scraper-phase7-0.1.0";
 const MIN_BODY_TEXT_LENGTH = 100;
@@ -93,7 +94,7 @@ export function createRssFeedAdapter(source: Source): SourceAdapter {
       }
 
       const feed = await rssParser.parseString(res.body.toString("utf-8"));
-      const docs: SourceDocument[] = (feed.items ?? [])
+      const docs: SourceDocument[] = newestFeedItems(feed.items ?? [])
         .filter((item) => !!item.link)
         .slice(0, maxItemsPerRun)
         .map((item) => ({
