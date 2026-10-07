@@ -1,4 +1,6 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
+dotenv.config();
 import { z } from "zod";
 
 /**
@@ -20,6 +22,10 @@ export function booleanEnv(defaultValue: boolean) {
  * instead of failing weirdly three layers deep at 2am during a price tick.
  */
 const EnvSchema = z.object({
+  OPENAI_API_KEY: z.string().optional(),
+  ENGINE_AI_MONTHLY_BUDGET_USD: z.coerce.number().min(0).max(1000).default(5),
+  ENGINE_AI_USER_DAILY_LIMIT: z.coerce.number().int().min(0).max(100).default(20),
+  ENGINE_MONITOR_ENABLED: booleanEnv(true),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(4000),
   WS_PORT: z.coerce.number().default(4001),

@@ -28,9 +28,12 @@ export interface BacktestResult {
     averageHoldingDays: number | null;
   };
   caveat: string;
+  execution?: {feeBps:number;slippageBps:number;skipped:number;openPosition:boolean};
+  evaluation?: {inSampleReturn:number;outOfSampleReturn:number|null;splitDate:string|null};
 }
 
 export interface BacktestRequest {
+  feeBps?:number;slippageBps?:number;initialCapital?:number;maxVolumeParticipation?:number;
   exchange?: string;
   symbol: string;
   strategy: BacktestStrategy;

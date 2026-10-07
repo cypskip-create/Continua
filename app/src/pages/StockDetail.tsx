@@ -1,3 +1,4 @@
+import { useStickyHeights } from "@/hooks/useStickyHeights";
 import { useParams, useNavigate } from "react-router-dom";
 import { navigateBack } from "@/lib/navigation";
 import { useTouchClick } from "@/hooks/useTouchClick";
@@ -69,6 +70,7 @@ const TIMEFRAME_LABELS: Record<string, string> = {
 };
 
 export default function StockDetail() {
+  const stickyRoot = useStickyHeights();
   const { exchangeMeta } = useExchange();
   const navigate = useNavigate();
   const goBack = useCallback(() => navigateBack(navigate, "/markets"), [navigate]);
@@ -413,14 +415,14 @@ export default function StockDetail() {
   );
 
   return (
-    <div className="page-canvas min-h-screen bg-background pb-28">
+    <div ref={stickyRoot} className="page-canvas min-h-screen bg-background pb-28">
       {/* Slim sticky header. Before the hero price scrolls out of view, this
           shows a bigger ticker symbol + the full company name underneath —
           filling the space that would otherwise sit empty. Once the hero
           price is gone, the ticker shrinks back down, the company name is
           replaced by the market price, and the day's KES/% change fades in
           on the right (where the market-open badge used to sit). */}
-      <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border/50">
+      <header data-sticky-header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-3 py-2">
           <div className="flex items-center gap-2 min-w-0">
             <Button
@@ -728,7 +730,7 @@ export default function StockDetail() {
       />
 
       {/* STICKY SUB-NAV */}
-      <div className="sticky top-[53px] z-30 bg-background/92 backdrop-blur-xl border-b border-border/60">
+      <div data-sticky-nav className="sticky top-[var(--sticky-header-height)] z-30 bg-background/92 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center gap-1 px-3 py-2 overflow-x-auto scrollbar-hide">
           {SUB_NAV.map(s => (
             <button

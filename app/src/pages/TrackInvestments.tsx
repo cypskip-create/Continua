@@ -1,3 +1,4 @@
+import { useStickyHeights } from "@/hooks/useStickyHeights";
 import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { refreshPageData } from "@/lib/pageRefresh";
@@ -65,6 +66,7 @@ const PORTFOLIO_TABS: { id: PortfolioTab; label: string }[] = [
 
 
 export default function TrackInvestments() {
+  const stickyRoot = useStickyHeights();
   const { portfolio, loading, removeFromPortfolio, refetch } = usePortfolio();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -203,9 +205,9 @@ export default function TrackInvestments() {
 
 
   return (
-    <div className="page-canvas min-h-screen bg-background pb-24">
+    <div ref={stickyRoot} className="page-canvas min-h-screen bg-background pb-24">
       {/* Header — thin, editorial (no back button) */}
-      <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-xl border-b border-border/60">
+      <header data-sticky-header className="sticky top-0 z-40 bg-background/85 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="text-base font-semibold">Portfolio</h1>
           <div className="flex items-center gap-1">
@@ -321,8 +323,8 @@ export default function TrackInvestments() {
           {/* Keep this rail identical in geometry to Markets. Radix tab
               triggers add active-state padding/shadow styles and focus
               scrolling, which made this rail visibly jump between panels. */}
-          <div className="sticky top-[60px] z-30 -mx-4 bg-background/95 backdrop-blur-xl border-b border-border">
-            <div className="flex h-12 items-center overflow-x-auto scrollbar-hide px-4 gap-1 py-2">
+          <div data-sticky-nav className="sticky top-[var(--sticky-header-height)] z-30 -mx-4 bg-background/95 backdrop-blur-xl border-b border-border">
+            <div className="flex items-center overflow-x-auto scrollbar-hide px-4 gap-1 py-2">
               {PORTFOLIO_TABS.map((tab) => (
                 <button
                   key={tab.id}

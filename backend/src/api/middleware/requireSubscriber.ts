@@ -5,7 +5,7 @@ import { ApiError } from "./errorHandler.js";
 
 // Verify the session against this project's auth service; never trust a
 // client-provided user ID or subscription flag. The project key is public.
-export async function requireSubscriber(req: Request, _res: Response, next: NextFunction) {
+export async function requireSubscriber(req: Request, res: Response, next: NextFunction) {
   try {
     const token = req.header("x-user-token");
     const publicKey = req.header("x-supabase-key");
@@ -24,6 +24,8 @@ export async function requireSubscriber(req: Request, _res: Response, next: Next
     if (!["premium", "premium_plus"].includes(profile.rows[0]?.subscription_plan ?? "")) {
       throw new ApiError(403, "Continua Engine is included with Premium. Upgrade to unlock it.");
     }
+    res.locals ??= {};
+    res.locals.engineUserId = user.id;
     next();
   } catch (error) { next(error); }
 }

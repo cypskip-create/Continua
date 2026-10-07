@@ -1,18 +1,7 @@
-/**
- * A real, deterministic backtest engine — not a canned demo. Every trade
- * comes from actually walking the historical candle series day by day and
- * evaluating the chosen strategy's signal at each bar; nothing here is
- * pre-scripted or randomized.
- *
- * Deliberately simple and honestly scoped:
- *  - Long-only, one position at a time, fills at that day's close (no
- *    intraday fill modeling — daily candles are all any adapter provides).
- *  - No transaction costs, slippage, or spread modeled — results are
- *    "what would this signal have done", not "what you'd have actually
- *    netted after fees". The response says so explicitly.
- *  - No look-ahead: a signal computed using data through day N only ever
- *    triggers a trade that fills at day N's close, never earlier.
- */
+import { simulateExecution } from "./executionSimulation.js";
+import { corporateActionsRepository } from "../../storage/repositories/corporateActionsRepository.js";
+import { ApiError } from "../../api/middleware/errorHandler.js";
+/** Daily historical execution simulation with next-session fills, costs and volume constraints. */
 import { candlesRepository } from "../../storage/repositories/candlesRepository.js";
 import { sma, ema, rsi } from "./indicators.js";
 import type { Candle } from "../../types/market.js";
@@ -26,6 +15,7 @@ export interface BacktestRequest {
   strategy: StrategyType;
   from: string;
   to: string;
+  feeBps?: number; slippageBps?: number; initialCapital?: number; maxVolumeParticipation?: number;
   // sma_cross / ema_cross
   fastPeriod?: number;
   slowPeriod?: number;
@@ -63,12 +53,9 @@ export interface BacktestResult {
   /** Load-bearing disclaimer, not boilerplate — see file header. Always
    *  present in the response so no UI can accidentally drop it. */
   caveat: string;
+  execution: { feeBps:number;slippageBps:number;initialCapital:number;maxVolumeParticipation:number;skipped:number;openPosition:boolean };
+  evaluation: { inSampleReturn:number;outOfSampleReturn:number|null;splitDate:string|null };
 }
-
-const CAVEAT =
-  "Simulated on historical daily closes only. Ignores transaction costs, " +
-  "spread, slippage, dividends, and liquidity constraints. Past performance " +
-  "of a rule against historical data is not a prediction of future results.";
 
 export const backtestService = {
   async run(req: BacktestRequest): Promise<BacktestResult | null> {
@@ -77,12 +64,19 @@ export const backtestService = {
     if (candles.length < 5) return null;
 
     const { signals, params } = computeSignals(candles, req);
-    const trades = simulate(candles, signals);
-    const metrics = computeMetrics(candles, trades);
+    const actions=await corporateActionsRepository.getBySecurity(securityId);
+    if(actions.some(a=>(a.type==="split"||a.type==="bonus_issue")&&a.status!=="cancelled"&&(a.effectiveDate??a.exDate??"")>=req.from.slice(0,10)&&(a.effectiveDate??a.exDate??"")<=req.to.slice(0,10)))throw new ApiError(422,"Backtest crosses a corporate action whose historical price adjustment basis is unverified.");
+    const options={feeBps:req.feeBps??20,slippageBps:req.slippageBps??10,initialCapital:req.initialCapital??100000,maxVolumeParticipation:req.maxVolumeParticipation??0.01};
+    const result=simulateExecution(candles,signals,options);
+    const trades=result.trades;
+    const metrics={...computeMetrics(candles,trades),totalReturnPercent:round(result.totalReturnPercent),maxDrawdownPercent:round(result.maxDrawdownPercent)};
+    const split=Math.floor(candles.length*0.7);
+    const inSample=simulateExecution(candles.slice(0,split),signals.slice(0,split),options);
+    const test=simulateExecution(candles.slice(split),signals.slice(split),options);
 
     return {
       symbol: req.symbol, exchange: req.exchange, strategy: req.strategy, params,
-      from: req.from, to: req.to, trades, metrics, caveat: CAVEAT,
+      from: req.from, to: req.to, trades, metrics, execution:{...options,skipped:result.skipped,openPosition:result.openPosition},evaluation:{inSampleReturn:inSample.totalReturnPercent,outOfSampleReturn:candles.length-split>=20?test.totalReturnPercent:null,splitDate:candles[split]?.timestamp??null}, caveat: "Prior-session signals execute at the next session open. Includes configured fees and slippage; rejects orders above configured session-volume participation. Open positions are marked to the final close. Historical volume is a coarse execution constraint, not order-book simulation. Dividends and taxes are excluded; 70/30 chronological evaluation is not a forecast.",
     };
   },
 };
@@ -125,33 +119,6 @@ function computeSignals(candles: Candle[], req: BacktestRequest): { signals: Sig
     else if (r0 >= overbought && r1 < overbought) signals[i] = "sell";
   }
   return { signals, params: { rsiPeriod, oversold, overbought } };
-}
-
-/** Long-only: a 'buy' signal opens a position only if flat; a 'sell'
- *  signal closes it only if long. Signals while already in the requested
- *  state are ignored — this is what "one position at a time" means. */
-function simulate(candles: Candle[], signals: Signal[]): Trade[] {
-  const trades: Trade[] = [];
-  let openEntry: { date: string; price: number } | null = null;
-
-  for (let i = 0; i < candles.length; i++) {
-    const signal = signals[i];
-    const candle = candles[i]!;
-
-    if (signal === "buy" && !openEntry) {
-      openEntry = { date: candle.timestamp, price: candle.close };
-    } else if (signal === "sell" && openEntry) {
-      const returnPercent = round(((candle.close - openEntry.price) / openEntry.price) * 100);
-      const holdingDays = daysBetween(openEntry.date, candle.timestamp);
-      trades.push({ entryDate: openEntry.date, entryPrice: openEntry.price, exitDate: candle.timestamp, exitPrice: candle.close, returnPercent, holdingDays });
-      openEntry = null;
-    }
-  }
-  // An still-open position at the end of the range is NOT force-closed
-  // into a phantom trade — an incomplete trade isn't a result, and
-  // silently closing it at the final candle would fabricate a return that
-  // never actually happened within the tested window.
-  return trades;
 }
 
 function computeMetrics(candles: Candle[], trades: Trade[]): BacktestResult["metrics"] {

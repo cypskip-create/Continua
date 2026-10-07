@@ -553,3 +553,13 @@
     animation: none; opacity: 1;
   }
 }
+
+/* Compact research controls follow the same height at every text scale. */
+.page-canvas [data-sticky-nav] button, .page-canvas [role="tab"], .page-canvas [data-section="fundamentals"] button:not([aria-label]) {
+  min-height: 0; height: auto; padding-block: .375rem; line-height: 1.25rem;
+}
+html, body, #root { width: 100%; max-width: 100%; min-width: 0; }
+.page-canvas { min-width: 0; overflow-wrap: anywhere; }
+.page-canvas .recharts-responsive-container { min-width: 0; }
+
+.page-canvas [data-section] { scroll-margin-top: calc(var(--sticky-header-height, 0px) + var(--sticky-nav-height, 0px) + 1rem); }
