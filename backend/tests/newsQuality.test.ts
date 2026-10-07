@@ -9,6 +9,9 @@ const base: NewsItem = {
 };
 
 describe("news quality", () => {
+  it.each(["14 killed, 17 injured from banditry between June and September in Samburu, Meru, Isiolo", "No compensation for livestock killed during Samburu operation, Murkomen says", "Passenger Dies on Kenya Airways Flight to Lagos"])("rejects nonfinancial incidents even when company-tagged: %s", headline => expect(isFinancialNews(headline,"Security officials addressed the operation.",true)).toBe(false));
+  it("ignores financial related-story contamination", () => expect(isFinancialNews("County leaders meet", "Related stories: Bank earnings rise")).toBe(false));
+  it.each(["Real estate rental demand rises","Fuel prices fall","Treasury bond auction results"])("retains financial topics: %s",headline=>expect(isFinancialNews(headline)).toBe(true));
   it("rejects unrelated accident coverage", () => expect(isFinancialNews("Salama Crash Leaves 17 Pilgrims Dead", "road accident")).toBe(false));
   it("keeps broad financial coverage", () => expect(isFinancialNews("Inflation slows as interest rates hold")).toBe(true));
   it("keeps linked company operations news", () => expect(isFinancialNews("Safaricom launches a new service", "Customers can subscribe today", true)).toBe(true));

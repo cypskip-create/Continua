@@ -93,7 +93,7 @@ const handleRoute = async (route) => {
       const quotes = symbols.map((symbol) => ({ symbol, securityId: `NSE:${symbol}`, exchange: 'NSE', lastPrice: 50, open: 48, high: 51, low: 47, previousClose: 49, change: 1, changePercent: 2.04, volume: 10000, currency: 'KES', status: 'active', timestamp: new Date().toISOString(), source: 'eod' }));
       return json({ data: path === '/quotes' ? quotes : quotes[0] });
     }
-    if (path.startsWith('/news')) return newsOffline ? json({error:'Fixture offline'},503) : json({ data: path.endsWith('/item/older-story') ? {...news,id:'older-story',headline:'Older story outside the current feed'} : path.includes('/item/') ? news : [news] });
+    if (path.startsWith('/news')) return newsOffline ? json({error:'Fixture offline'},503) : json({ data: path.endsWith('/item/older-story') ? {...news,id:'older-story',headline:'Older story outside the current feed'} : path.includes('/item/') ? news : [news,{...news,id:'off-topic',headline:'14 killed, 17 injured from banditry in Samburu',excerpt:'Security officials addressed the operation.'}] });
     if (path.startsWith('/financials/') && path.endsWith('/history')) return json({ data: [2023,2024,2025].map((year,i) => ({fiscalYear:year,fiscalQuarter:url.searchParams.get('periodType') === 'quarterly' ? 1 : null,revenue:1000000+i*100000,netIncome:i === 0 ? -100000 : 100000+i*50000,eps:1+i,totalAssets:4000000,totalLiabilities:1000000,totalEquity:3000000,operatingIncome:300000,operatingCashFlow:350000,freeCashFlow:200000})) });
     if (path.startsWith('/earnings/') && !path.endsWith('/recent')) return json({ data: [2024,2025,2026].map((year,i) => ({id:`earn-${year}`,fiscalYear:year,fiscalQuarter:null,reportedDate:i<2 ? `${year}-03-01` : null,revenueActual:i<2 ? 1000000+i*100000 : null,revenueEstimate:1050000+i*100000,epsActual:i<2 ? 1+i : null,epsEstimate:1.1+i})) });
     if (path.startsWith('/research/')) return json({ data: { ratios: { pe: 10, pb: 1.5, ps: 2, roe: .15, roa: .05, debtToEquity: .3, dividendYield: .06, netMargin: .2 }, score: { afriScore: 70, afriValue: 60, afriGrowth: 65, afriHealth: 80, afriIncome: 70, afriRisk: 60, afriQuality: 70, afriMomentum: 50, inputs: {} } } });
@@ -174,9 +174,11 @@ try {
   await page.locator('.bottom-nav').getByRole('link', { name: 'Home', exact: true }).tap();
   await page.waitForURL('http://127.0.0.1:5188/');
   console.log('PASS navigation ignores drags and supports keyboard activation');
+  assert.equal(await page.getByText('14 killed, 17 injured from banditry in Samburu',{exact:true}).count(),0,'Home excludes nonfinancial stories despite business publisher and legacy tags');
   for (let articleAttempt = 0; articleAttempt < 4; articleAttempt++) {
   await page.getByText(news.headline, { exact: true }).first().tap();
   await dialog.waitFor();
+  assert.equal(await dialog.getByText(/No listed company could be linked/).count(),0,'Unlinked articles have no empty company-link notice');
   await wait(300);
   const box = await dialog.boundingBox();
   assert.ok(box.y < 1 && box.height >= 843, JSON.stringify(box));
@@ -311,6 +313,20 @@ try {
   await page.reload();
   await page.getByText('Text size', { exact: true }).waitFor();
   assert.equal(await page.evaluate(() => document.documentElement.style.fontSize), '19.2px');
+  const themeControls = page.getByRole('group', {name:'Theme',exact:true});
+  for (const width of [320,390]) {
+    await page.setViewportSize({width,height:844});
+    for (const label of ['Light','Dark','AMOLED']) {
+      const button=themeControls.getByRole('button',{name:label,exact:true});
+      await button.tap();
+      assert.equal(await button.getAttribute('aria-pressed'),'true');
+      assert.ok(await button.evaluate(el=>getComputedStyle(el).whiteSpace==='nowrap' && el.scrollWidth<=el.clientWidth),'Theme label must fit at XL on narrow screens');
+    }
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
+  }
+  await themeControls.getByRole('button',{name:'Light',exact:true}).tap();
+  await wait(350); // Capture the settled theme, not the colour transition.
+  await page.screenshot({path:fileURLToPath(new URL('account-appearance.png',artifacts))});
   await page.getByRole('button', { name: 'M', exact: true }).tap();
   console.log('PASS saved scroll, flat surfaces and persistent global text sizing');
 
@@ -444,6 +460,11 @@ try {
   await page.getByRole('heading',{name:/EQTY · Fixture peer/}).waitFor();
   await openEngineTool('Portfolio');
   await page.getByRole('heading',{name:'Recorded invested-holdings return',exact:true}).waitFor();
+  const beforePortfolioReload=engineRequests;
+  await page.reload();
+  await page.getByRole('heading',{name:'Recorded invested-holdings return',exact:true}).waitFor();
+  assert.equal(engineRequests,beforePortfolioReload,'Workspace Portfolio must not request unrelated company analysis');
+  assert.equal(await page.getByRole('button',{name:'Retry analysis',exact:true}).count(),0);
   await page.getByLabel('Cash flow amount',{exact:true}).fill('50');
   await page.getByRole('button',{name:'Record flow',exact:true}).tap();
   await page.getByRole('button',{name:'Remove',exact:true}).waitFor();

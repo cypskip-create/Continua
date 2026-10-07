@@ -101,7 +101,7 @@ export default function Account() {
         <section>
           <p className="section-eyebrow mb-3">Appearance</p>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3">
               <div>
                 <p className="text-sm font-medium">Theme</p>
                 <p className="text-[0.6875rem] text-muted-foreground">Light, Dark, or AMOLED for OLED screens</p>
@@ -122,7 +122,7 @@ export default function Account() {
                     key={opt.val}
                     onClick={() => setFontScale(opt.val)}
                     data-small-target
-                    className={`h-9 rounded-lg text-xs font-semibold transition-colors ${
+                    className={`h-9 rounded-full text-xs font-semibold transition-colors ${
                       fontScale === opt.val ? "contrast-active" : "bg-muted text-muted-foreground hover:text-foreground"
                     }`}
                   >{opt.label}</button>

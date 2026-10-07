@@ -11,6 +11,8 @@ import { adminFinancialsRoutes } from "./routes/admin.routes.js";
 import { apiRateLimit } from "./middleware/rateLimit.js";
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
+import { isAllowedBrowserOrigin } from "./corsPolicy.js";
+import { ApiError } from "./middleware/errorHandler.js";
 
 // Requests are already gated behind an API key (see apiKeyAuth below), so an
 // open CORS policy was never a data-access hole — but leaving `cors()` with
@@ -27,16 +29,15 @@ const allowedOrigins = new Set(env.ALLOWED_ORIGINS);
 // Chasing each new hash by hand in ALLOWED_ORIGINS doesn't scale with how often
 // this ships, so recognize the whole family by pattern instead of exact string.
 // Update the slug below if the Vercel project/team is ever renamed.
-const VERCEL_PROJECT_ORIGIN = /^https:\/\/continua(-[a-z0-9-]+)?-cypskip-creates-projects\.vercel\.app$/;
 
 const corsOptions: cors.CorsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.has(origin) || VERCEL_PROJECT_ORIGIN.test(origin)) {
+    if (isAllowedBrowserOrigin(origin, [...allowedOrigins])) {
       callback(null, true);
       return;
     }
     logger.warn({ origin }, "Blocked CORS request from disallowed origin");
-    callback(new Error("Not allowed by CORS"));
+    callback(new ApiError(403, "Not allowed by CORS"));
   },
 };
 

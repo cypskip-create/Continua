@@ -1,4 +1,7 @@
 import type { NewsItem } from "@/api/types";
+import { isFinancialNews } from "./financialNews.ts";
+
+export const financialNewsOnly = (item: NewsItem) => isFinancialNews(item.headline, item.excerpt ?? "", !!item.relevance?.evidence.length);
 
 /** Keep cached stories, but never trust old unverified issuer tags. */
 export function verifiedNewsItem(item: NewsItem): NewsItem {

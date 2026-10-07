@@ -1,5 +1,6 @@
 import { portfolioRisk } from "./enginePortfolioRisk.js";
 import { getEngineBundle } from "./engineBundle.js";
+import { boundedResearch } from "./boundedResearch.js";
 import { query } from "../../storage/db.js";
 import { pricesRepository } from "../../storage/repositories/pricesRepository.js";
 import { candlesRepository } from "../../storage/repositories/candlesRepository.js";
@@ -65,11 +66,9 @@ export async function getPortfolioResearch(userId:string,exchange:ExchangeCode) 
     try {const actions=await corporateActionsRepository.getDividendsBySecurity(known.get(p.symbol)!.securityId);const dps=trailingDividendPerShare(actions);return {symbol:p.symbol,trailingIncome:dps==null?null:dps*p.shares,upcoming:actions.filter(a=>a.status!=="cancelled"&&a.details.type==="dividend"&&a.payDate&&a.payDate>new Date().toISOString().slice(0,10)).map(a=>({date:a.payDate!,amount:a.details.type==="dividend"?a.details.amountPerShare*p.shares:0}))};}catch{return {symbol:p.symbol,trailingIncome:null,upcoming:[]};}
   }));
   const eligible=analysis.available?analysis.positions:[];
-  const selected=eligible.slice(0,20),companyResearch:{symbol:string;weight:number;data:Awaited<ReturnType<typeof getEngineBundle>>|null}[]=[];
-  // Bound concurrent company aggregation and preserve usable holdings after one feed fails.
-  for(let index=0;index<selected.length;index+=4){companyResearch.push(...await Promise.all(selected.slice(index,index+4).map(async p=>{
-    try{return {symbol:p.symbol,weight:p.weight,data:await getEngineBundle(p.symbol,exchange)};}catch{return {symbol:p.symbol,weight:p.weight,data:null};}
-  })));}
+  const selected=eligible.slice(0,20);
+  const bundles=await boundedResearch(selected,p=>getEngineBundle(p.symbol,exchange));
+  const companyResearch=selected.map((p,index)=>({symbol:p.symbol,weight:p.weight,data:bundles[index]??null}));
   const researchBriefing={covered:companyResearch.filter(c=>c.data).length,requested:eligible.length,limit:20,
     companies:companyResearch.map(c=>({symbol:c.symbol,weight:c.weight,period:c.data?.financialAnalysis.period??null,metrics:c.data?.financialAnalysis.metrics??{},findings:c.data?.financialAnalysis.findings??[],sectorNote:c.data?.financialAnalysis.sectorNote??null,facts:c.data?.briefing.facts??[],risks:c.data?.briefing.risks??[],qualityWarnings:c.data?.quality.warnings??[],unavailable:c.data?.unavailable??["Company research"],changes:c.data?.changes.changes??[]})),
     news:companyResearch.flatMap(c=>(c.data?.news??[]).slice(0,2).map(n=>({...n,symbol:c.symbol}))).sort((a,b)=>(b.publishedAt??"").localeCompare(a.publishedAt??"")).slice(0,10),

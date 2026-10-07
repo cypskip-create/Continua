@@ -1,12 +1,6 @@
 import type { NewsItem } from "../types/market.js";
 
-const FINANCE_TERMS = /\b(stock|shares?|securit(?:y|ies)|nse|bond|treasur(?:y|ies)|bank(?:ing)?|loan|credit|insurance|invest(?:ment|or|ing)?|fund|financ(?:e|ial)|econom(?:y|ic)|inflation|interest rate|monetary|currency|shilling|forex|exchange rate|gdp|budget|tax|debt|real estate|propert(?:y|ies)|mortgage|rent|housing|construction|commodit(?:y|ies)|oil|fuel price|energy tariff|trade|earnings|profit|revenue|dividend|ipo|merger|acquisition|telecom|m-pesa|mobile money|pension|sacco|capital market)\b/i;
-const NON_FINANCIAL_TERMS = /\b(road accident|car crash|bus crash|crash leaves|pilgrims? dead|murder|football|celebrity|entertainment|church service|obituary)\b/i;
-
-export function isFinancialNews(headline: string, excerpt = "", hasLinkedSecurity = false): boolean {
-  const text = `${headline} ${excerpt}`;
-  return !NON_FINANCIAL_TERMS.test(text) && (hasLinkedSecurity || FINANCE_TERMS.test(text));
-}
+export { isFinancialNews } from "./financialNews.js";
 
 export function normalizeNewsHeadline(value: string): string {
   return value.normalize("NFKD").toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();

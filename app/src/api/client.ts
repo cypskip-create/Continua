@@ -6,11 +6,15 @@
 // See docs/api/API.md for the full contract this is built against.
 
 import { supabase } from "@/integrations/supabase/client";
+import { resolveApiEndpoint } from "./apiEndpoint";
 
-export const AFRIFINANCE_API_URL =
+const endpoints = resolveApiEndpoint(
   (import.meta.env.VITE_CONTINUA_API_URL as string | undefined) ??
-  (import.meta.env.VITE_AFRIFINANCE_API_URL as string | undefined) ??
-  "http://localhost:4000/api/v1";
+  (import.meta.env.VITE_AFRIFINANCE_API_URL as string | undefined),
+  import.meta.env.PROD,
+  window.location.origin,
+);
+export const AFRIFINANCE_API_URL = endpoints.rest;
 
 function deriveWebSocketUrl(apiUrl: string): string {
   const url = new URL(apiUrl);
@@ -27,7 +31,7 @@ function deriveWebSocketUrl(apiUrl: string): string {
 export const AFRIFINANCE_WS_URL =
   (import.meta.env.VITE_CONTINUA_WS_URL as string | undefined) ??
   (import.meta.env.VITE_AFRIFINANCE_WS_URL as string | undefined) ??
-  deriveWebSocketUrl(AFRIFINANCE_API_URL);
+  deriveWebSocketUrl(endpoints.upstream);
 
 // DEV-ONLY key, read from Vite env (see app/.env). This is a first-party key
 // for Continua's OWN backend, not an upstream NSE credential — but it is

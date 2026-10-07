@@ -89,7 +89,6 @@ function NewsReaderContent({ item, open, onOpenChange, navigate }: NewsReaderShe
                 <p className="text-[0.6875rem] leading-relaxed text-muted-foreground">A company mention is not proof of a price impact. The quote change is market data, not an effect attributed to this story.</p>
               </div>
             )}
-            {article.relevance && !linkedSymbols.length && <p className="mb-5 text-xs text-muted-foreground">No listed company could be linked confidently from the available article evidence.</p>}
 
             {detail.isLoading && !article.content && <p className="mb-4 animate-pulse text-sm text-muted-foreground">Loading article…</p>}
             <div className="space-y-4">
