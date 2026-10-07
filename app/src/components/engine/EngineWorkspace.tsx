@@ -576,8 +576,10 @@ export function EngineMonitoringPanel({
       ))}
       <h4 className="text-sm font-semibold">Alert history</h4>
       <Notice value={activity.error} />
+      {activity.error && <button className={control} disabled={activity.isFetching} onClick={()=>void activity.refetch()}>Retry alert history</button>}
+      {activity.error && !!activity.data?.length && <p role="status" className="text-xs text-muted-foreground">Showing previously loaded alerts. The latest check could not complete.</p>}
       {activity.data?.map(item=><div key={item.id} className="border-t border-border py-2 text-xs"><strong>{item.title}</strong><p>{item.message}</p><time>{new Date(item.created_at).toLocaleString()}</time></div>)}
-      {activity.data?.length===0&&<p className="text-xs text-muted-foreground">No Engine alerts yet. New alerts appear here and in Notifications.</p>}
+      {!activity.error && activity.data?.length===0&&<p className="text-xs text-muted-foreground">No Engine alerts yet. New alerts appear here and in Notifications.</p>}
     </section>
   );
 }
@@ -622,6 +624,7 @@ export function EnginePortfolioPanel({ exchange }: { exchange: string }) {
         </button>
       </div>
       <Notice value={portfolio.error} />
+      {portfolio.error && p && <p role="status" className="text-xs text-muted-foreground">Showing the last successfully loaded portfolio, not a fresh analysis. Loaded {new Date(portfolio.dataUpdatedAt).toLocaleString()}.</p>}
       {portfolio.isLoading && (
         <p role="status" className="text-sm">
           Analysing your holdings…

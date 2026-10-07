@@ -479,6 +479,13 @@ try {
   await page.getByRole('button',{name:'Resume',exact:true}).waitFor();
   await page.getByRole('button',{name:'Remove',exact:true}).tap();
   await page.getByRole('button',{name:'Remove',exact:true}).waitFor({state:'hidden'});
+  await page.route('**/api/v1/engine/monitoring/activity',route=>route.abort('failed'));
+  await page.getByRole('button',{name:'Check KCB now',exact:true}).tap();
+  await page.getByRole('button',{name:'Retry alert history',exact:true}).waitFor();
+  assert.equal(await page.getByText('No Engine alerts yet. New alerts appear here and in Notifications.',{exact:true}).count(),0,'Failed history must not claim there are no alerts');
+  await page.unroute('**/api/v1/engine/monitoring/activity');
+  await page.getByRole('button',{name:'Retry alert history',exact:true}).tap();
+  await page.getByText('No Engine alerts yet. New alerts appear here and in Notifications.',{exact:true}).waitFor();
   await openEngineTool('Peers');
   await page.getByRole('heading',{name:/EQTY · Fixture peer/}).waitFor();
   await page.getByLabel('Focused comparison metric',{exact:true}).selectOption('debtToEquity');
@@ -486,6 +493,12 @@ try {
   await openEngineTool('Portfolio');
   await page.getByRole('heading',{name:'Recorded invested-holdings return',exact:true}).waitFor();
   await page.getByRole('heading',{name:'Your review desk',exact:true}).waitFor();
+  await page.route('**/api/v1/engine/portfolio?*',route=>route.abort('failed'));
+  await page.getByRole('button',{name:'Refresh',exact:true}).tap();
+  await page.getByText(/Showing the last successfully loaded portfolio, not a fresh analysis/).waitFor();
+  await page.unroute('**/api/v1/engine/portfolio?*');
+  await page.getByRole('button',{name:'Refresh',exact:true}).tap();
+  await page.getByText(/Showing the last successfully loaded portfolio, not a fresh analysis/).waitFor({state:'hidden'});
   await page.getByLabel('Single holding limit',{exact:true}).fill('40');
   await page.getByText('Portfolio stress lab',{exact:true}).click();
   await page.getByLabel('Stress price change',{exact:true}).fill('-20');
