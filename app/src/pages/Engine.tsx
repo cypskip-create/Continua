@@ -10,6 +10,7 @@ import { useEnginePreferences } from "@/hooks/useEnginePreferences";
 import { engineWorkspaceApi } from "@/api/engineWorkspaceApi";
 import { engineReadRetry } from "@/api/engineRetry";
 import { ResearchJournal } from "@/components/engine/ResearchJournal";
+import { EngineConnectionCheck } from "@/components/engine/EngineConnectionCheck";
 import { mediaStoryUrl } from "@/lib/mediaRoute";
 import { useStickyHeights } from "@/hooks/useStickyHeights";
 import { useState, useEffect, useRef } from "react";
@@ -646,6 +647,7 @@ export default function Engine() {
             )}
           </>
         )}
+        {paid && <EngineConnectionCheck target={tool === "Portfolio" ? "portfolio" : tool === "Monitoring" ? "monitoring" : "preferences"} exchange={exchange} />}
       </main>
       {paid && (
         <StockAlertDialog

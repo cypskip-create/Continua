@@ -8,6 +8,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { resolveApiEndpoint } from "./apiEndpoint";
 import { fetchWithRateLimitRecovery } from "./rateLimitRecovery";
+import { DataApiResponseError, readApiData } from "./apiResponse";
 
 const endpoints = resolveApiEndpoint(
   (import.meta.env.VITE_CONTINUA_API_URL as string | undefined) ??
@@ -55,7 +56,9 @@ export class ContinuaApiError extends Error {
   constructor(
     message: string,
     public readonly status: number,
-    public readonly path: string
+    public readonly path: string,
+    public readonly stage: "session" | "connection" | "body" | "response" | "timeout" | "cancelled" = "response",
+    public readonly responseStatus?: number
   ) {
     super(message);
     this.name = "ContinuaApiError";
@@ -94,7 +97,7 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
   let subscriberHeaders: Record<string, string> = {};
   if (/^\/(engine|backtest|volume-profile)(\/|$)/.test(path)) {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new ContinuaApiError("Sign in to use Continua Engine", 401, path);
+    if (!session) throw new ContinuaApiError("Sign in to use Continua Engine", 401, path, "session");
     subscriberHeaders = { "X-User-Token": session.access_token, "X-Supabase-Key": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY };
   }
   const url = buildUrl(path, options.params);
@@ -105,7 +108,7 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
   const forwardAbort = () => controller.abort(options.signal?.reason);
   if (options.signal?.aborted) forwardAbort();
   else options.signal?.addEventListener("abort", forwardAbort, { once: true });
-  let res: Response;
+  let res: Response | undefined;
   try {
     res = await fetchWithRateLimitRecovery(url, {
       method: options.method ?? "GET",
@@ -117,25 +120,19 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
       signal: controller.signal,
     });
-    if (!res.ok) {
-      let message = `Continua Data API request failed (${res.status})`;
-      if (res.headers.get("cf-mitigated") === "challenge" || (res.status === 429 && res.headers.get("content-type")?.includes("text/html"))) {
-        throw new ContinuaApiError("The hosting security check blocked the connection. Please retry shortly.", res.status, path);
-      }
-      try { const body = await res.json(); if (body?.error) message = body.error; } catch { /* Keep the HTTP status for non-JSON failures. */ }
-      throw new ContinuaApiError(message, res.status, path);
-    }
-    const body = await res.json();
-    return body.data as T;
+    return await readApiData<T>(res);
   } catch (err) {
+    if (err instanceof DataApiResponseError) throw new ContinuaApiError(err.message, err.status, path, "response", err.responseStatus);
     if (err instanceof ContinuaApiError) throw err;
-    if (options.signal?.aborted) throw new ContinuaApiError("Request cancelled", 499, path);
+    if (options.signal?.aborted) throw new ContinuaApiError("Request cancelled", 499, path, "cancelled", res?.status);
     throw new ContinuaApiError(
       controller.signal.aborted && !options.signal?.aborted
         ? "Engine connection timed out. The server may be waking up; retry shortly."
         : "Could not connect to Continua Data API. Check your connection and retry.",
       0,
-      path
+      path,
+      controller.signal.aborted ? "timeout" : res ? "body" : "connection",
+      res?.status
     );
   } finally {
     window.clearTimeout(timeout);
@@ -149,4 +146,35 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
  *  to a "not covered yet" UI state rather than an error state. */
 export function isNotFound(err: unknown): boolean {
   return err instanceof ContinuaApiError && err.status === 404;
+}
+
+/** User-triggered, read-only diagnostics. Never include credentials, account
+ * identifiers, response bodies, holdings or request headers in the report. */
+export async function testEngineConnection(target: "portfolio" | "monitoring" | "preferences" = "preferences", exchange = "NSE"): Promise<string> {
+  const path = `/engine/${target}`;
+  const report = [
+    `Checked: ${new Date().toISOString()}`,
+    `App origin: ${window.location.origin}`,
+    `API origin: ${new URL(AFRIFINANCE_API_URL).origin}`,
+    `Checked endpoint: ${path}`,
+  ];
+  try {
+    const response = await fetch(`${AFRIFINANCE_API_URL}/health`, {cache:"no-store", signal:AbortSignal.timeout(15_000)});
+    report.push(`Public health: HTTP ${response.status}`);
+  } catch {
+    report.push("Public health: no usable HTTP response (network, browser restriction or timeout)");
+  }
+  const started = Date.now();
+  try {
+    await continuaFetch(path, {params:target === "portfolio" ? {exchange} : undefined});
+    report.push("Authenticated Engine read: passed (usable JSON data received)");
+  } catch (error) {
+    if (error instanceof ContinuaApiError) {
+      report.push(`Authenticated Engine read: failed at ${error.stage}; application status ${error.status}; HTTP ${error.responseStatus ?? "not available"}`);
+    } else {
+      report.push("Authenticated Engine read: session setup failed before an API result");
+    }
+  }
+  report.push(`Authenticated request elapsed: ${Date.now() - started} ms`);
+  return report.join("\n");
 }

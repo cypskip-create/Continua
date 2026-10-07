@@ -74,6 +74,7 @@ const handleRoute = async (route) => {
   }
   if (url.port === '4999') {
     const path = url.pathname.replace('/api/v1', '');
+    if(path==='/health')return json({status:'ok',checks:{database:{ok:true},cache:{ok:true}}});
     if(path.startsWith('/engine/')) assert.ok(route.request().headers()['x-user-token'],'Private Engine requests include a verified session token');
     if(path === '/engine/preferences') {if(route.request().method()==='POST')enginePreferences=route.request().postDataJSON();return json({data:enginePreferences});}
     if(path === '/engine/interests') {if(route.request().postDataJSON().reset)enginePreferences.interests=[];return json({data:enginePreferences});}
@@ -528,6 +529,19 @@ try {
   await page.getByText(/Fixture annual filing/).waitFor();
   assert.equal(assistantRequests,1);
   console.log('PASS cloud preferences, consent, monitoring pause/remove, peers, flow corrections and explicit sourced AI');
+  await page.getByText('Troubleshoot Engine connection',{exact:true}).click();
+  await page.getByRole('button',{name:'Check Engine connection',exact:true}).tap();
+  await page.getByText(/Authenticated Engine read: passed/).waitFor();
+  const connectionReport=await page.getByLabel('Engine connection report',{exact:true}).innerText();
+  assert.ok(connectionReport.includes('Public health: HTTP 200'));
+  for(const secret of [user.id,user.email,'fixture-only','test-public-key','X-User-Token'])assert.ok(!connectionReport.includes(secret),'Connection report must not expose credentials or user identity');
+  await page.route('**/api/v1/engine/preferences',route=>route.fulfill({status:200,contentType:'text/html',body:'<html>fixture unexpected response</html>'}));
+  await page.getByRole('button',{name:'Check Engine connection',exact:true}).tap();
+  await page.getByText(/failed at response; application status 502; HTTP 200/).waitFor();
+  await page.screenshot({path:fileURLToPath(new URL('engine-connection-diagnostic.png',artifacts))});
+  await page.unroute('**/api/v1/engine/preferences');
+  await page.getByRole('button',{name:'Check Engine connection',exact:true}).tap();
+  await page.getByText(/Authenticated Engine read: passed/).waitFor();
 
   await openEngineTool('Journal');
   await page.getByLabel('Research notes',{exact:true}).fill('Review the next dated filing before revising my thesis.');
