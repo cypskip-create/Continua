@@ -332,7 +332,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                   <circle cx="10" cy="10" r="9" fill="none" strokeWidth="2" stroke="hsl(var(--border))" />
                   <circle
                     cx="10" cy="10" r="9" fill="none" strokeWidth="2"
-                    stroke={charPercent > 100 ? "hsl(var(--destructive))" : charPercent > 90 ? "hsl(var(--accent))" : "hsl(var(--primary))"}
+                    stroke={charPercent > 100 ? "hsl(var(--destructive))" : charPercent > 90 ? "hsl(var(--chart-2))" : "hsl(var(--primary))"}
                     strokeDasharray={`${Math.min(charPercent, 100) * 0.565} 100`}
                   />
                 </svg>

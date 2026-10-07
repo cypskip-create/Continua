@@ -23,10 +23,12 @@ interface ContinuaMarkProps {
    *  passing this prop don't need to change. */
   tile?: "auto" | "dark" | "light" | "gradient";
   className?: string;
+  /** Use fixed artwork on a fixed canvas, such as the white public website. */
+  appearance?: "light" | "dark";
 }
 
-export const ContinuaMark = ({ size = 40, className }: ContinuaMarkProps) => {
-  const logoSrc = useActiveLogo();
+export const ContinuaMark = ({ size = 40, className, appearance }: ContinuaMarkProps) => {
+  const logoSrc = useActiveLogo(appearance);
 
   return (
     <img

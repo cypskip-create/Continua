@@ -132,6 +132,27 @@ try {
   await page.locator('.bottom-nav').waitFor();
   await wait(1600);
   assert.equal(await page.locator('body').evaluate((el) => getComputedStyle(el).backgroundColor), 'rgb(255, 255, 255)');
+  const design = await page.evaluate(() => {
+    const root=document.documentElement, previous=root.className;
+    const ratio=(a,b)=>{const lum=c=>{const v=c.match(/[\d.]+/g).slice(0,3).map(n=>{const x=Number(n)/255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4;});return v[0]*.2126+v[1]*.7152+v[2]*.0722;};const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
+    const probe=document.createElement('span');document.body.append(probe);
+    const themes=['light','dark','amoled'].map(theme=>{
+      root.classList.remove('light','dark','amoled');root.classList.add(theme);
+      probe.style.color='hsl(var(--primary))';const primary=getComputedStyle(probe).color;
+      probe.style.color='hsl(var(--background))';const background=getComputedStyle(probe).color;
+      probe.style.color='hsl(var(--accent))';const accent=getComputedStyle(probe).color;
+      probe.style.color='hsl(var(--accent-foreground))';const actionInk=getComputedStyle(probe).color;
+      probe.style.color='hsl(var(--muted-foreground))';const muted=getComputedStyle(probe).color;
+      return {theme,primaryRatio:ratio(primary,background),actionRatio:ratio(accent,actionInk),mutedRatio:ratio(muted,background)};
+    });probe.remove();root.className=previous;
+    return {themes,headingWeight:getComputedStyle(document.querySelector('.app-shell h1')).fontWeight,websiteInk:getComputedStyle(root).getPropertyValue('--continua-ink').trim()};
+  });
+  assert.equal(design.headingWeight,'500');
+  assert.equal(design.websiteInk,'#191827');
+  assert.ok(design.themes.every(t=>t.primaryRatio>=4.5 && t.actionRatio>=4.5 && t.mutedRatio>=4.5),JSON.stringify(design.themes));
+  assert.equal(await page.locator('.app-shell .lp-motion').count(),0);
+  await page.screenshot({path:fileURLToPath(new URL('brand-home-mobile.png',artifacts))});
+  console.log('PASS shared editorial identity, no website motion and readable light/dark/AMOLED colours');
   for (const [label, path] of [['Markets', '/markets'], ['Portfolio', '/track-investments'], ['TradersHub', '/traders-hub'], ['Profile', '/account'], ['Home', '/']]) {
     await page.locator('.bottom-nav').getByRole('link', { name: label, exact: true }).tap();
     await page.waitForURL(`http://127.0.0.1:5188${path}`);

@@ -26,7 +26,7 @@ export function MainLayout({ children }: { children?: React.ReactNode }) {
     <ProtectedRoute>
       <RouteSeo />
       {showSplash && <SplashScreen onDone={dismissSplash} />}
-        <div className="min-h-screen bg-background">
+        <div className="app-shell page-canvas min-h-screen bg-background">
           <PullToRefresh>
           <div className="pb-20">
             {children ?? <Outlet />}

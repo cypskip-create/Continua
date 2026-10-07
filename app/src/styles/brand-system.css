@@ -1,0 +1,138 @@
+/* One visual identity for the public website and the product. These tokens
+   deliberately follow the utility layers so legacy palettes cannot win.
+   Market gains/losses, font scaling and functional motion remain untouched. */
+:root {
+  --continua-ink: #191827;
+  --continua-muted: #6c6a7c;
+  --continua-purple: #7865e9;
+  --continua-line: #e5e3ed;
+  --background: 0 0% 100%;
+  --foreground: 244 24% 12%;
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover: var(--background);
+  --popover-foreground: var(--foreground);
+  /* Deeper violet keeps small text and chart labels readable on white. */
+  --primary: 249 54% 52%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 250 26% 96%;
+  --secondary-foreground: var(--foreground);
+  --muted: 250 26% 96%;
+  --muted-foreground: 247 8% 43%;
+  --accent: 248 100% 88%;
+  --accent-foreground: var(--foreground);
+  --border: 252 22% 91%;
+  --input: 252 16% 85%;
+  --ring: var(--primary);
+  --radius: 14px;
+  --sidebar-background: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--secondary);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --shadow-card: none;
+}
+.dark {
+  --background: 244 14% 8%;
+  --foreground: 250 20% 94%;
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover: 244 14% 11%;
+  --popover-foreground: var(--foreground);
+  --primary: 252 82% 76%;
+  --primary-foreground: 244 24% 12%;
+  --secondary: 246 15% 15%;
+  --secondary-foreground: var(--foreground);
+  --muted: var(--secondary);
+  --muted-foreground: 250 12% 70%;
+  --accent: 251 28% 27%;
+  --accent-foreground: 250 30% 96%;
+  --border: 248 14% 22%;
+  --input: 248 14% 30%;
+  --ring: var(--primary);
+}
+.amoled {
+  --background: 0 0% 0%;
+  --foreground: 250 20% 96%;
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover: 0 0% 0%;
+  --popover-foreground: var(--foreground);
+  --primary: 252 82% 76%;
+  --primary-foreground: 244 24% 12%;
+  --secondary: 246 10% 10%;
+  --secondary-foreground: var(--foreground);
+  --muted: var(--secondary);
+  --muted-foreground: 250 12% 70%;
+  --accent: 251 28% 24%;
+  --accent-foreground: 250 30% 96%;
+  --border: 248 10% 18%;
+  --input: 248 10% 27%;
+  --ring: var(--primary);
+}
+
+/* Editorial typography at product scale, never marketing headline sizes. */
+.app-shell h1, .app-shell h2, .app-shell h3, .app-shell h4 {
+  font-weight: 500;
+  letter-spacing: -.035em;
+  line-height: 1.25;
+}
+.app-shell .section-eyebrow {
+  font-weight: 500;
+  letter-spacing: .14em;
+}
+.app-shell .research-flow > * { margin-top: 2rem; }
+.app-shell .research-flow > *:first-child { margin-top: 0; }
+.app-shell .content-surface, .app-shell .flat-section,
+.app-shell .grouped-card, .app-shell .soft-card, .app-shell .card-gradient {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.app-shell .upgrade-banner {
+  border: 0;
+  border-block: 1px solid hsl(var(--border));
+  border-radius: 0;
+  background: transparent;
+  padding-block: 1rem;
+}
+.app-shell .bottom-nav { background: hsl(var(--background) / .96); }
+.app-shell .tab-item.active { color: hsl(var(--primary)); }
+.app-shell .tab-item.active > div {
+  background: hsl(var(--accent));
+  border-radius: 100px;
+  width: 3rem;
+  height: 1.875rem;
+}
+.app-shell .tab-item.active svg { color: hsl(var(--accent-foreground)); }
+.app-shell .tab-item.active > span { color: hsl(var(--primary)); }
+.btn-primary {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  border-radius: 100px;
+  box-shadow: none;
+}
+.btn-primary:hover { background: hsl(var(--accent) / .85); }
+.btn-primary:active { transform: none; }
+.pill-tab.active, .brand-active, .contrast-active,
+.adaptive-tab[data-state="active"] {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  box-shadow: none;
+}
+/* Legacy accent labels must not inherit the pale control fill as text. */
+.text-accent { color: hsl(var(--primary)); }
+.app-shell :is(button, a)[class~="bg-foreground"][class~="text-background"],
+.app-shell [role="tab"][data-state="active"] {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  box-shadow: none;
+}
+.app-shell .editorial-section {
+  border-top: 1px solid hsl(var(--border));
+  padding-block: 1rem;
+}

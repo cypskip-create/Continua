@@ -18,11 +18,11 @@ export const Logo = ({ size = "md", showText = true }: LogoProps) => {
     <div className="flex items-center space-x-2">
       <ContinuaMark
         size={sizePx[size]}
-        className="rounded-xl shadow-sm"
+        className="rounded-xl"
       />
       {showText && (
         <div>
-          <span className={`${textSizeClasses[size]} font-bold text-foreground block`}>Continua</span>
+          <span className={`${textSizeClasses[size]} font-medium tracking-tight text-foreground block`}>Continua</span>
           {size === "lg" && (
             <p className="text-xs text-muted-foreground">Pan-African markets, one app</p>
           )}

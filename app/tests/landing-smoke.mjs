@@ -23,6 +23,15 @@ try {
   await page.getByRole('heading',{name:'Your portfolio. A clearer perspective.'}).waitFor();
   await page.waitForTimeout(1200);
   assert.equal(await page.title(),'Continua — Your portfolio. A clearer perspective.');
+  const marks=page.locator('.continua-landing img[alt="Continua"]');
+  assert.equal(await marks.count(),4,'Header, demo, hero and footer use the real Continua logo');
+  await marks.evaluateAll(async images=>Promise.all(images.map(img=>img.decode())));
+  assert.ok(await marks.evaluateAll(images=>images.every(img=>img.naturalWidth>0 && img.getAttribute('src')==='/brand/logo-light.png')));
+  assert.equal(await page.locator('.lp-brand-mark').count(),0,'No placeholder wordmark remains');
+  await page.evaluate(()=>document.documentElement.classList.add('dark'));
+  await page.waitForTimeout(100);
+  assert.ok(await marks.evaluateAll(images=>images.every(img=>img.getAttribute('src')==='/brand/logo-light.png')),'White website keeps the correct light artwork even with a saved dark app theme');
+  await page.evaluate(()=>document.documentElement.classList.remove('dark'));
   await page.screenshot({path:`${artifacts}/landing-desktop.png`});
   for(const width of [320,390,768,1440]) {
     await page.setViewportSize({width,height:900});

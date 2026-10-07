@@ -233,7 +233,7 @@ export default function Home() {
                 type="button"
                 data-small-target
                 onClick={() => navigate(tool.route)}
-                className="flat-section min-h-[88px] rounded-2xl border border-border/70 bg-card p-3 text-left hover:border-primary/40 hover:bg-primary/[0.03] active:scale-[0.98] transition-all"
+                className="editorial-section min-h-[88px] px-1 text-left hover:text-primary transition-colors"
               >
                 <tool.icon className="h-4 w-4 text-primary mb-3" />
                 <p className="text-xs font-bold">{tool.label}</p>

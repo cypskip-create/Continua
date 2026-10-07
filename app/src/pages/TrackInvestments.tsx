@@ -117,7 +117,7 @@ export default function TrackInvestments() {
       const s = h.sector || "Other";
       map[s] = (map[s] || 0) + h.value;
     });
-    const colors = ["bg-primary", "bg-accent", "bg-chart-3", "bg-chart-4", "bg-chart-5", "bg-muted-foreground"];
+    const colors = ["bg-primary", "bg-[hsl(var(--chart-2))]", "bg-chart-3", "bg-chart-4", "bg-chart-5", "bg-muted-foreground"];
     return Object.entries(map)
       .map(([name, value], i) => ({ name, value, pct: stats.totalValue > 0 ? (value / stats.totalValue) * 100 : 0, color: colors[i % colors.length] }))
       .sort((a, b) => b.value - a.value);

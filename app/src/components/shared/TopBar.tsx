@@ -40,12 +40,12 @@ export function TopBar({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-xl border-b border-border/60">
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Logo size="sm" showText={false} />
           <div className="min-w-0">
-            <h1 className="text-lg font-bold text-foreground truncate">{title}</h1>
+            <h1 className="text-lg font-medium text-foreground truncate">{title}</h1>
             {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
           </div>
         </div>

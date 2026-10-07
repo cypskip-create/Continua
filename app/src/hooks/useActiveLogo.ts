@@ -54,8 +54,9 @@ function useIsDarkTheme(): boolean {
  * applies. See app/src/config/seasonalLogo.ts to add/update campaigns or
  * change the normal logo — this hook needs no changes for either.
  */
-export function useActiveLogo(): string {
-  const isDark = useIsDarkTheme();
+export function useActiveLogo(appearance?: "light" | "dark"): string {
+  const themeIsDark = useIsDarkTheme();
+  const isDark = appearance ? appearance === "dark" : themeIsDark;
   const [now] = useState(() => new Date()); // stable for the session; a new day means a fresh page load anyway
 
   const active = SEASONAL_LOGO_CAMPAIGNS.find((c) => isCampaignActive(c.startDate, c.endDate, now));

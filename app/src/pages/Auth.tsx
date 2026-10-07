@@ -23,15 +23,6 @@ const TAGLINES = [
   'Research first. React second.',
 ];
 
-// Purely decorative background chips — a little nod to the exchange board
-// on the landing page, drifting past behind the card. Not real data.
-const FLOATING_CHIPS = [
-  { symbol: 'SCOM', change: 1.7, className: 'top-[12%] left-[8%]', delay: 0 },
-  { symbol: 'EQTY', change: -0.9, className: 'top-[22%] right-[10%]', delay: 1.4 },
-  { symbol: 'KCB', change: 2.3, className: 'bottom-[24%] left-[12%]', delay: 2.8 },
-  { symbol: 'EABL', change: 0.6, className: 'bottom-[14%] right-[8%]', delay: 4.1 },
-];
-
 function getPasswordStrength(password: string) {
   if (!password) return { score: 0, label: '', barClass: '' };
   let score = 0;
@@ -150,52 +141,7 @@ export default function Auth() {
   const switchMode = (next: Mode) => { setMode(next); setResetSent(false); };
 
   return (
-    <div className="min-h-screen bg-gradient-hero flex flex-col relative overflow-hidden">
-      {/* Decorative backdrop — drifting brand-color glows */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        <motion.div
-          className="absolute -top-24 -left-16 h-64 w-64 rounded-full bg-primary/20 blur-3xl"
-          animate={{ x: [0, 30, 0], y: [0, 20, 0] }}
-          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute top-1/3 -right-20 h-72 w-72 rounded-full bg-accent/20 blur-3xl"
-          animate={{ x: [0, -25, 0], y: [0, -15, 0] }}
-          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-        />
-        <motion.div
-          className="absolute bottom-0 left-1/4 h-56 w-56 rounded-full bg-bull/10 blur-3xl"
-          animate={{ x: [0, 15, 0], y: [0, -20, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-        />
-      </div>
-
-      {/* Drawn-in sparkline, same motif as before but animates in on load */}
-      <svg className="absolute inset-x-0 top-0 w-full h-[280px] text-primary/10 pointer-events-none" viewBox="0 0 400 160" preserveAspectRatio="none" fill="none" aria-hidden="true">
-        <motion.path
-          d="M0,120 L40,100 L80,115 L120,70 L160,85 L200,40 L240,60 L280,25 L320,45 L360,15 L400,30"
-          stroke="currentColor"
-          strokeWidth="3"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 1.6, ease: 'easeOut' }}
-        />
-      </svg>
-
-      {/* Floating ticker chips — decorative only, not real data */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        {FLOATING_CHIPS.map((chip) => (
-          <motion.div
-            key={chip.symbol}
-            className={`absolute hidden sm:flex items-center gap-1 rounded-full bg-card/70 backdrop-blur border border-border px-2.5 py-1 text-[0.625rem] font-mono font-semibold shadow-sm ${chip.className} ${chip.change >= 0 ? 'text-bull' : 'text-bear'}`}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: [0, 1, 1, 0], y: [12, -4, -4, -22] }}
-            transition={{ duration: 6, repeat: Infinity, delay: chip.delay, ease: 'easeInOut' }}
-          >
-            {chip.symbol} {chip.change >= 0 ? '▲' : '▼'} {Math.abs(chip.change).toFixed(1)}%
-          </motion.div>
-        ))}
-      </div>
+    <div className="app-shell page-canvas min-h-screen bg-background flex flex-col relative overflow-hidden">
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 relative">
         {/* Brand */}

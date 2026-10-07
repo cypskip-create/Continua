@@ -51,9 +51,6 @@ export function BottomNavigation() {
                 isActive ? "active" : "inactive"
               )}
             >
-              {isActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-[2px] rounded-full bg-primary shadow-[0_0_8px_1px_hsl(var(--primary)/0.6)]" />
-              )}
               <div className="flex items-center justify-center h-6 w-6">
                 {item.isProfile && profile?.avatar_url ? (
                   <Avatar className={cn(
