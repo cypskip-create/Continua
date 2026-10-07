@@ -29,6 +29,7 @@ let uploadRequests = 0;
 let newsOffline = false;
 let quoteRequests = 0;
 let portfolioRequests = 0;
+let premiumPortfolioRequests=0,overviewRequests=0;
 let engineRequests = 0;
 let enginePreferences={goal:'Balanced',horizon:'1_to_5_years',experience:'beginner',riskComfort:'unspecified',incomeNeeds:'none',sectors:[],notifications:true,learnInterests:false,interests:[]};
 let engineRules=[];
@@ -78,7 +79,8 @@ const handleRoute = async (route) => {
     if(path === '/engine/cash-flows'){const b=route.request().postDataJSON();engineFlows.push({...b,id:'55555555-5555-4555-8555-555555555555'});return json({data:{id:engineFlows[0].id}});}
     if(path.startsWith('/engine/cash-flows/')){engineFlows=[];return json({data:{deleted:true}});}
     if(path === '/engine/peers')return json({data:[{symbol:'EQTY',name:'Fixture peer',period:2025,metrics:{revenueGrowth:10,cashConversion:1.2,debtToEquity:.4}}]});
-    if(path === '/engine/portfolio')return json({data:{available:true,reason:null,totalValue:500,sessionPnl:10,coverage:'1/1',currency:'KES',warnings:[],historyWarnings:[],positions:[{symbol:'KCB',sector:'Banking',value:500,weight:1,sessionContribution:10,asOf:'2026-10-07'}],sectors:[{sector:'Banking',weight:1}],correlations:{pairs:[],methodology:'Identical dates required.'},performance:{twr:10,moneyWeighted:null,reason:'Fixture dated snapshots.'},dividends:[{symbol:'KCB',trailingIncome:20,upcoming:[]}],flows:engineFlows,methodology:'Covered holdings only.'}});
+    if(path === '/engine/portfolio/overview'){overviewRequests++;return json({data:{available:true,reason:null,totalValue:500,totalCost:400,unrealized:100,sessionPnl:10,sessionDate:'2026-10-07',holdingCount:1,pricedCount:1,coverage:'1/1',currency:'KES',warnings:[],positions:[],methodology:'Calculated holdings; no OpenAI request.',generatedAt:'2026-10-07'}});}
+    if(path === '/engine/portfolio') {premiumPortfolioRequests++;return json({data:{available:true,reason:null,totalValue:500,sessionPnl:10,coverage:'1/1',currency:'KES',warnings:[],historyWarnings:[],positions:[{symbol:'KCB',sector:'Banking',value:500,weight:1,sessionContribution:10,asOf:'2026-10-07'}],sectors:[{sector:'Banking',weight:1}],correlations:{pairs:[],methodology:'Identical dates required.'},performance:{twr:10,moneyWeighted:null,reason:'Fixture dated snapshots.'},dividends:[{symbol:'KCB',trailingIncome:20,upcoming:[]}],flows:engineFlows,methodology:'Covered holdings only.',researchBriefing:{covered:1,requested:1,limit:20,companies:[{symbol:'KCB',weight:1,period:2025,metrics:{},findings:['Fixture cash conversion improved.'],risks:[],qualityWarnings:[],unavailable:[],changes:[]}],news:[],methodology:'Company-specific periods.'}}});}
     if (path.startsWith('/engine/')) {
       engineRequests++;
       assert.ok(route.request().headers()['x-user-token'], 'Engine sends the authenticated session');
@@ -211,6 +213,30 @@ try {
 
   await page.goto('http://127.0.0.1:5188/track-investments');
   await page.getByRole('tab', { name: 'Analysis', exact: true }).tap();
+  await page.getByRole('heading',{name:'Your portfolio research briefing',exact:true}).waitFor();
+  assert.equal(assistantRequests,0,'Browsing portfolio analysis never submits AI questions');
+  await page.getByRole('tablist',{name:'Portfolio Engine tools',exact:true}).getByRole('tab',{name:'Ask Engine',exact:true}).tap();
+  await page.getByRole('heading',{name:'Ask your research assistant',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Hide portfolio values',exact:true}).tap();
+  assert.equal(await page.getByRole('heading',{name:'Ask your research assistant',exact:true}).count(),0);
+  assert.equal(await page.getByRole('heading',{name:'Portfolio intelligence',exact:true}).count(),0);
+  await page.getByRole('button',{name:'Show portfolio values',exact:true}).tap();
+  const portfolioTools=page.getByRole('tablist',{name:'Portfolio Engine tools',exact:true});
+  assert.equal(await page.getByLabel('Assistant scope',{exact:true}).inputValue(),'portfolio');
+  for(const tool of ['Returns & income','Ask Engine','Monitoring']){
+    await portfolioTools.getByRole('tab',{name:tool,exact:true}).tap();
+    if(tool==='Returns & income')await page.getByRole('heading',{name:'Portfolio intelligence',exact:true}).waitFor();
+    if(tool==='Monitoring')await page.getByLabel('Portfolio monitoring holding',{exact:true}).waitFor();
+    for(const width of [320,390])for(const scale of [.9,1.2]){
+      await page.setViewportSize({width,height:844});
+      await page.evaluate(scale=>{document.documentElement.style.fontSize=(16*scale)+'px';},scale);
+      await wait(100);
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth<=1),tool+' fits at '+width+' / '+scale);
+    }
+  }
+  await page.setViewportSize({width:390,height:844});
+  await page.evaluate(()=>{document.documentElement.style.fontSize='16px';});
+  await portfolioTools.getByRole('tab',{name:'Briefing',exact:true}).tap();
   await page.getByRole('button', { name: 'Past Performance', exact: true }).tap();
   const metric = page.getByRole('button', { name: 'KCB: 15.0%', exact: true });
   await metric.tap();
@@ -396,6 +422,17 @@ try {
     await freePage.getByText('Engine is included with Premium',{exact:true}).waitFor();
     assert.equal(engineRequests,beforeFree,'Free users never fetch Engine output');
     assert.equal(await freePage.getByRole('tablist',{name:'Engine tools'}).count(),0);
+    const paidBefore=premiumPortfolioRequests, aiBefore=assistantRequests, overviewBefore=overviewRequests;
+    await freePage.goto('http://127.0.0.1:5188/track-investments');
+    await freePage.getByRole('heading',{name:'Engine portfolio overview',exact:true}).waitFor();
+    await freePage.getByText('Included free',{exact:true}).waitFor();
+    await freePage.getByRole('tab',{name:'Returns',exact:true}).tap();
+    await freePage.getByRole('tab',{name:'Updates',exact:true}).tap();
+    await freePage.getByRole('tab',{name:'Analysis',exact:true}).tap();
+    await freePage.getByText('Portfolio Analysis is a Premium feature',{exact:true}).waitFor();
+    assert.equal(premiumPortfolioRequests,paidBefore,'Free portfolio must not request paid Engine analysis');
+    assert.equal(assistantRequests,aiBefore,'Free browsing never calls OpenAI');
+    assert.ok(overviewRequests>overviewBefore,'Free portfolio gets Engine overview');
   } finally {profile.subscription_plan=savedPlan; await freeContext.close();}
   console.log('PASS free Engine lock prevents fetching paid analysis');
 

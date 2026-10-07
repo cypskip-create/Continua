@@ -8,10 +8,13 @@ export function portfolioAnalysis(positions: PricedPosition[]) {
   const rows=priced.map(p=>({...p,value:p.shares*p.price!,weight:total>0?p.shares*p.price!/total:0,sessionContribution:finite(p.change)?p.shares*p.change:null,participation:finite(p.volume)&&p.volume>0?p.shares/p.volume:null})).sort((a,b)=>b.value-a.value);
   const sectors = new Map<string,number>();rows.forEach(p=>sectors.set(p.sector,(sectors.get(p.sector)??0)+p.value));
   const warnings:string[]=[];
+  const dates = [...new Set(rows.map(p => p.asOf?.slice(0,10) ?? null))];
+  const sameSession = dates.length === 1 && dates[0] != null;
+  if(rows.length && !sameSession)warnings.push("Quotes do not share a dated session; combined session contribution is unavailable.");
   if(rows.some(p=>p.weight>0.4))warnings.push("A priced position exceeds 40% of covered portfolio value.");
   if(rows.some(p=>p.participation!=null&&p.participation>0.1))warnings.push("A holding exceeds 10% of its latest session volume. This is a rough liquidity observation, not a liquidation forecast.");
   if(priced.length!==positions.length)warnings.push("Unpriced holdings are excluded; weights and contributions describe covered positions only.");
-  return {available:true,reason:null,positions:rows,sectors:[...sectors].map(([sector,value])=>({sector,value,weight:total?value/total:0})),totalValue:total,sessionPnl:rows.length && rows.every(p=>p.sessionContribution!=null)?rows.reduce((s,p)=>s+p.sessionContribution!,0):null,coverage:`${priced.length}/${positions.length}`,warnings};
+  return {available:true,reason:null,positions:rows,sectors:[...sectors].map(([sector,value])=>({sector,value,weight:total?value/total:0})),totalValue:total,sessionPnl:sameSession && rows.length && rows.every(p=>p.sessionContribution!=null)?rows.reduce((s,p)=>s+p.sessionContribution!,0):null,coverage:`${priced.length}/${positions.length}`,warnings};
 }
 export interface PerformancePoint {date:string;value:number;flow:number}
 export function performance(points:PerformancePoint[],datedFlows?:{date:string;amount:number}[]) {

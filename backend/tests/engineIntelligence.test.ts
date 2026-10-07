@@ -27,6 +27,7 @@ describe("Engine financial quality",()=>{
 describe("Engine portfolio arithmetic",()=>{
   const position=(symbol:string,currency:string,price:number|null)=>({symbol,currency,price,shares:10,sector:"Banking",change:1,volume:10000,asOf:"2026-10-07"});
   it("does not aggregate money across currencies",()=>{expect(portfolioAnalysis([position("A","KES",100),position("B","USD",10)]).available).toBe(false);});
+  it("does not sum different quote sessions as one daily portfolio change",()=>{const result=portfolioAnalysis([position("A","KES",100),{...position("B","KES",50),asOf:"2026-10-05"}]);expect(result.sessionPnl).toBeNull();expect(result.warnings.some(w=>w.includes("dated session"))).toBe(true);});
   it("discloses incomplete coverage and computes session contributions on covered holdings",()=>{const result=portfolioAnalysis([position("A","KES",100),position("B","KES",null)]);expect(result.sessionPnl).toBe(10);expect(result.coverage).toBe("1/2");expect(result.warnings).toContain("Unpriced holdings are excluded; weights and contributions describe covered positions only.");});
   it("removes end-of-period deposits from time-weighted returns",()=>{expect(performance([{date:"2025-01-01",value:100,flow:0},{date:"2026-01-01",value:160,flow:50}]).twr).toBeCloseTo(10);});
   it("requires overlapping dates rather than pairing different sessions by array index",()=>{

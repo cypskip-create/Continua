@@ -7,6 +7,33 @@ observations, comparable-sector peers, private portfolio research and monitoring
 Missing feeds and stale observations are shown explicitly. Research preferences
 follow the account; learning company interests requires an explicit opt-in.
 
+## Portfolio integration and access
+
+The portfolio page uses `usePortfolioEngine` to coordinate its existing holdings,
+live quotes, valuation, dividend, updates and research feeds. Its free overview
+uses `/engine/portfolio/overview`: a verified signed-in user can see their own
+covered cost basis, unrealized change, allocation and dated contribution without
+a paid subscription or an OpenAI call. It performs no premium history writes or
+company aggregation. Existing free returns, updates, allocation, dividend calendar
+and limited dividend/valuation views retain their existing access rules.
+
+Advanced portfolio Analysis remains Premium/Premium Plus. Its compact Engine
+tools contain a company-specific research briefing and held-company news,
+recorded returns and income, explicit portfolio questions and holding monitoring.
+The server verifies the subscription before premium aggregation, cash-flow edits,
+monitoring or assistant requests; client plan flags and user IDs are not trusted.
+Portfolio edits invalidate both the overview and private research caches.
+Hiding values masks the new summary amounts and unmounts income/assistant panels.
+
+Risk measures now come from the server Engine, using common dated intervals
+instead of pairing array positions. Annualized volatility requires twenty common
+short-interval returns; gaps exceeding four days are excluded and reported.
+The current-weight basket is hypothetical rather than historical broker account
+performance. Its beta uses the equal-weight held-company basket. Sharpe/Sortino
+remain unavailable without a verified risk-free-rate feed. Research covers up to
+twenty highest-value priced companies with four concurrent company requests;
+correlations/risk cover up to ten holdings and disclose partial coverage.
+
 ## Deployment
 
 Apply `supabase/migrations/20261007200000_engine_intelligence.sql` after existing

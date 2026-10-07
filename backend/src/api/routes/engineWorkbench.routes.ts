@@ -2,12 +2,12 @@ import { Router } from "express";
 import type { Request,Response } from "express";
 import { z } from "zod";
 import { ACTIVE_EXCHANGES,env } from "../../config/index.js";
-import { requireSubscriber } from "../middleware/requireSubscriber.js";
+import { requireSubscriber, requireEngineUser } from "../middleware/requireSubscriber.js";
 import { asyncHandler,ApiError } from "../middleware/errorHandler.js";
 import { engineRepository } from "../../storage/repositories/engineRepository.js";
 import { EnginePreferencesSchema } from "../../services/research/enginePreferences.js";
 import { getEngineBundle } from "../../services/research/engineBundle.js";
-import { getPortfolioResearch,getPeers } from "../../services/research/engineWorkspace.js";
+import { getPortfolioOverview,getPortfolioResearch,getPeers } from "../../services/research/engineWorkspace.js";
 import { askEngine,type Evidence } from "../../services/research/engineAssistant.js";
 import { query } from "../../storage/db.js";
 export const engineWorkbenchRoutes=Router();
@@ -26,6 +26,7 @@ engineWorkbenchRoutes.post("/engine/interests",requireSubscriber,handle(async(re
   res.json({data:await engineRepository.savePreferences(user(res),preferences)});
 }));
 engineWorkbenchRoutes.get("/engine/portfolio",requireSubscriber,handle(async(req,res)=>{res.json({data:await getPortfolioResearch(user(res),parse(exchangeSchema,req.query.exchange))});}));
+engineWorkbenchRoutes.get("/engine/portfolio/overview",requireEngineUser,handle(async(req,res)=>{res.json({data:await getPortfolioOverview(user(res),parse(exchangeSchema,req.query.exchange))});}));
 engineWorkbenchRoutes.post("/engine/cash-flows",requireSubscriber,handle(async(req,res)=>{
   const b=parse(z.object({exchange:exchangeSchema,date:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v&&v<=new Date().toISOString().slice(0,10)),amount:z.number().finite().min(-1e12).max(1e12).refine(n=>n!==0),note:z.string().max(160).default("")}),req.body);
   const id=(await query("INSERT INTO public.engine_cash_flows(user_id,exchange,session_date,amount,note) VALUES($1,$2,$3,$4,$5) RETURNING id",[user(res),b.exchange,b.date,b.amount,b.note])).rows[0];res.json({data:id});
@@ -46,7 +47,7 @@ engineWorkbenchRoutes.post("/engine/assistant",requireSubscriber,handle(async(re
   const evidence:Evidence[]=[];
   if(body.scope==="portfolio"){
     const portfolio=await getPortfolioResearch(user(res),body.exchange);
-    evidence.push({id:"portfolio",title:"Your portfolio research",asOf:new Date().toISOString(),url:null,facts:{positions:portfolio.positions,sectors:portfolio.sectors,warnings:portfolio.warnings,performance:portfolio.performance,correlations:portfolio.correlations,coverage:portfolio.coverage,methodology:portfolio.methodology}});
+    evidence.push({id:"portfolio",title:"Your portfolio research",asOf:new Date().toISOString(),url:null,facts:{positions:portfolio.positions,sectors:portfolio.sectors,warnings:portfolio.warnings,performance:portfolio.performance,correlations:portfolio.correlations,risk:portfolio.risk,dividends:portfolio.dividends,researchBriefing:portfolio.researchBriefing,coverage:portfolio.coverage,methodology:portfolio.methodology}});
   }else for(const symbol of [...new Set(body.symbols)]){
     const data=await getEngineBundle(symbol,body.exchange);
     evidence.push({id:symbol+":company",title:data.companyName+" financial analysis",asOf:data.quality.filedAt,url:null,facts:{briefing:data.briefing,quality:data.quality,financial:data.financialAnalysis,valuation:data.valuation?.models,scenarios:data.scenarios,missing:data.unavailable}});

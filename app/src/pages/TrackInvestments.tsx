@@ -4,7 +4,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { refreshPageData } from "@/lib/pageRefresh";
 import { usePageState } from "@/hooks/usePageState";
 import { Button } from "@/components/ui/button";
-import { usePortfolio } from "@/hooks/usePortfolio";
 import { AddInvestmentDialog } from "@/components/portfolio/AddInvestmentDialog";
 import { RobinhoodPerformanceChart } from "@/components/portfolio/RobinhoodPerformanceChart";
 import { PortfolioSnowflake } from "@/components/portfolio/PortfolioSnowflake";
@@ -16,33 +15,26 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
-import { computePortfolioStats } from "@/lib/stockPrices";
+import { usePortfolioEngine } from "@/hooks/usePortfolioEngine";
+import { PortfolioEngineOverview, PortfolioEngineWorkspace } from "@/components/portfolio/PortfolioEngine";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { ReturnsBreakdown } from "@/components/portfolio/ReturnsBreakdown";
 import { ReturnsContributors } from "@/components/portfolio/ReturnsContributors";
 import { PortfolioValuations } from "@/components/portfolio/PortfolioValuations";
-import { usePortfolioValuations } from "@/hooks/usePortfolioValuations";
 import { DividendQuality } from "@/components/portfolio/DividendQuality";
 import { FullLock } from "@/components/portfolio/FullLock";
 import { DividendCalendar } from "@/components/portfolio/DividendCalendar";
 import { DividendForecast } from "@/components/portfolio/DividendForecast";
 import { DividendHistory } from "@/components/portfolio/DividendHistory";
 import { DividendContributors } from "@/components/portfolio/DividendContributors";
-import { usePortfolioDividends } from "@/hooks/usePortfolioDividends";
 import { PortfolioRisksRewards } from "@/components/portfolio/PortfolioRisksRewards";
 import { KeyMetricsBenchmarks } from "@/components/portfolio/KeyMetricsBenchmarks";
 import { PortfolioDiversification } from "@/components/portfolio/PortfolioDiversification";
-import { usePortfolioResearch } from "@/hooks/usePortfolioResearch";
-import { useMarketBenchmark } from "@/hooks/useMarketBenchmark";
 import { PortfolioUpdates } from "@/components/portfolio/PortfolioUpdates";
-import { usePortfolioUpdates } from "@/hooks/usePortfolioUpdates";
 import { PortfolioScorecard } from "@/components/portfolio/PortfolioScorecard";
 import { PortfolioCorrelation } from "@/components/portfolio/PortfolioCorrelation";
 import { PortfolioRiskAnalysis } from "@/components/portfolio/PortfolioRiskAnalysis";
 import { ShareDilution } from "@/components/portfolio/ShareDilution";
-import { usePortfolioGrowth } from "@/hooks/usePortfolioGrowth";
-import { usePortfolioRiskAnalytics } from "@/hooks/usePortfolioRiskAnalytics";
-import { useLivePortfolioQuotes } from "@/hooks/useLiveQuotes";
 import { useProfile } from "@/hooks/useProfile";
 import { HoldingsList } from "@/components/portfolio/HoldingsList";
 import { PortfolioVisibilityToggles } from "@/components/portfolio/PortfolioVisibilityToggles";
@@ -67,7 +59,6 @@ const PORTFOLIO_TABS: { id: PortfolioTab; label: string }[] = [
 
 export default function TrackInvestments() {
   const stickyRoot = useStickyHeights();
-  const { portfolio, loading, removeFromPortfolio, refetch } = usePortfolio();
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -84,16 +75,16 @@ export default function TrackInvestments() {
   const [privacyPanelOpen, setPrivacyPanelOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = usePageState<PortfolioTab>("portfolio:tab", "holdings");
+  const engine = usePortfolioEngine(isPremium, activeTab === "analysis");
+  const { portfolio, loading, removeFromPortfolio, refetch, liveQuotes, stats } = engine;
 
   // Live Continua Data Layer quotes — the SAME quotes HoldingsList (rendered further
   // down) uses internally, so this page's total balance / allocation chart can't disagree
   // with what the individual holding rows show. A position with no live quote yet is
   // excluded from `holdings` (and every derived chart/widget below) rather than priced
   // from a fabricated fallback — see `pricingCount` for a "pricing N more…" note.
-  const { liveQuotes } = useLivePortfolioQuotes(portfolio.map(h => h.symbol));
   const getLivePrice = (symbol: string): number | undefined => liveQuotes[symbol.toUpperCase()]?.price;
 
-  const stats = useMemo(() => computePortfolioStats(portfolio, liveQuotes), [portfolio, liveQuotes]);
   const pricingCount = portfolio.length - stats.pricedCount;
 
   const holdings = useMemo(() => {
@@ -143,8 +134,8 @@ export default function TrackInvestments() {
   // ── VALUATIONS ──
   // Real, per-symbol model-based fair values (see usePortfolioValuations),
   // fetched in parallel for every distinct holding.
-  const { valuations, isLoading: valuationsLoading } = usePortfolioValuations(holdings.map(h => h.symbol));
-  const { data: dividendData } = usePortfolioDividends(holdings.map(h => h.symbol));
+  const { valuations, isLoading: valuationsLoading } = engine.valuations;
+  const { data: dividendData } = engine.dividends;
 
   // ── RETURNS ──
   // Unrealized P&L is the one figure Continua can compute with full
@@ -162,11 +153,18 @@ export default function TrackInvestments() {
       return sum + d.ttmPerShare * h.shares;
     }, 0);
   }, [holdings, dividendData]);
-  const { research, isLoading: researchLoading } = usePortfolioResearch(holdings.map(h => h.symbol));
-  const { averages: marketBenchmark, isLoading: benchmarkLoading } = useMarketBenchmark();
-  const { items: updateItems, recentCounts: updateCounts, isLoading: updatesLoading } = usePortfolioUpdates(portfolio.map(h => h.symbol));
-  const { growth } = usePortfolioGrowth(holdings.map(h => h.symbol));
-  const riskAnalytics = usePortfolioRiskAnalytics(holdings.map(h => ({ symbol: h.symbol, weight: h.weight })));
+  const { research, isLoading: researchLoading } = engine.research;
+  const { averages: marketBenchmark, isLoading: benchmarkLoading } = engine.benchmark;
+  const { items: updateItems, recentCounts: updateCounts, isLoading: updatesLoading } = engine.updates;
+  const { growth } = engine.growth;
+  const risk = engine.intelligence.data?.risk;
+  const riskAnalytics = {
+    isLoading: engine.intelligence.isLoading,
+    hasEnoughData: !!risk?.available,
+    ...(risk?.metrics ?? {portfolioVolatility:0,marketVolatility:0,portfolioMaxDrawdown:0,portfolioBeta:null,sharpe:null,sortino:null,volatilityByHolding:[],drawdownByHolding:[]}),
+    symbolsWithData: risk?.symbols ?? [],
+    pairs: (engine.intelligence.data?.correlations.pairs ?? []).flatMap(p => p.correlation == null ? [] : [{a:p.a,b:p.b,corr:p.correlation}]),
+  };
 
   const topMovers = useMemo(() => {
     const sorted = [...holdings].sort((a, b) => Math.abs(b.gainPct) - Math.abs(a.gainPct));
@@ -214,7 +212,7 @@ export default function TrackInvestments() {
             <Button variant="ghost" size="icon" className={`rounded-full h-9 w-9 ${isRefreshing ? 'animate-spin' : ''}`} onClick={handleRefresh} data-small-target>
               <RefreshCw className="h-4 w-4 text-muted-foreground" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowBalance(!showBalance)} data-small-target>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowBalance(!showBalance)} aria-label={showBalance ? "Hide portfolio values" : "Show portfolio values"} data-small-target>
               {showBalance ? <Eye className="h-4 w-4 text-muted-foreground" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
             </Button>
           </div>
@@ -243,7 +241,7 @@ export default function TrackInvestments() {
               )}
               <span className="opacity-80 ml-1">({stats.gainPct >= 0 ? '+' : ''}{stats.gainPct.toFixed(2)}%)</span>
             </span>
-            <span className="text-muted-foreground text-xs">All time</span>
+            <span className="text-muted-foreground text-xs">Unrealized</span>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-4 hairline-t pt-4">
             <div>
@@ -299,6 +297,8 @@ export default function TrackInvestments() {
             />
           </div>
         </div>
+
+        <PortfolioEngineOverview data={engine.overview.data} loading={engine.overview.isLoading} error={engine.overview.error} showValues={showBalance} />
 
         {/* ── PORTFOLIO HEALTH ── */}
         <PortfolioSnowflake
@@ -365,6 +365,9 @@ export default function TrackInvestments() {
               />
             ) : (
               <>
+                {engine.intelligence.isLoading && <p role="status" className="text-sm text-muted-foreground">Engine is analysing your portfolio…</p>}
+                {!!engine.intelligence.error && <p role="alert" className="text-sm text-bear">Portfolio Engine analysis could not load. Refresh to retry.</p>}
+                {engine.intelligence.data && <PortfolioEngineWorkspace data={engine.intelligence.data} showValues={showBalance} exchange={engine.exchange} symbols={portfolio.map(h=>h.symbol)} />}
                 <PortfolioScorecard
                   holdings={holdings.map(h => ({ symbol: h.symbol, name: h.name, weight: h.weight }))}
                   research={research}
@@ -391,10 +394,10 @@ export default function TrackInvestments() {
                   isLoading={riskAnalytics.isLoading}
                   hasEnoughData={riskAnalytics.hasEnoughData}
                 />
-                <PortfolioRiskAnalysis
+                {risk?.available && <PortfolioRiskAnalysis
                   holdings={holdings.map(h => ({ symbol: h.symbol, weight: h.weight }))}
                   risk={riskAnalytics}
-                />
+                />}
                 <ShareDilution
                   holdings={holdings.map(h => ({ symbol: h.symbol, weight: h.weight }))}
                 />

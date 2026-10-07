@@ -95,7 +95,7 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
   }
   const url = buildUrl(path, options.params);
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(new DOMException("Request timed out", "TimeoutError")), path === "/engine/assistant" ? 35_000 : 12_000);
+  const timeout = window.setTimeout(() => controller.abort(new DOMException("Request timed out", "TimeoutError")), ["/engine/assistant", "/engine/portfolio"].includes(path) ? 35_000 : 12_000);
   const forwardAbort = () => controller.abort(options.signal?.reason);
   if (options.signal?.aborted) forwardAbort();
   else options.signal?.addEventListener("abort", forwardAbort, { once: true });
