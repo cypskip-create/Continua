@@ -129,7 +129,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
     (async () => {
       if (!userId) return;
       const lsKey = `tradershub_disclaimer_${userId}`;
-      if (localStorage.getItem(lsKey)) return;
+      try { if (localStorage.getItem(lsKey)) { onDone(); return; } } catch { /* Storage can be blocked on mobile. */ }
       const { data } = await supabase
         .from("profiles")
         .select("tradershub_onboarded")
@@ -137,13 +137,14 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
         .maybeSingle();
       if (cancelled) return;
       if (data?.tradershub_onboarded) {
-        localStorage.setItem(lsKey, "true");
+        try { localStorage.setItem(lsKey, "true"); } catch { /* Database remains authoritative. */ }
+        onDone();
       } else {
         setShow(true);
       }
     })();
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [userId, onDone]);
 
   // Prefill with a suggested handle and any existing avatar once we know the
   // profile, so neither field is ever empty to start — just easy to change.
@@ -281,7 +282,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
       await Promise.all([createAccount, minDelay]);
       clearInterval(messageTimer);
       setCreatingDone(true);
-      if (userId) localStorage.setItem(`tradershub_disclaimer_${userId}`, "true");
+      try { if (userId) localStorage.setItem(`tradershub_disclaimer_${userId}`, "true"); } catch { /* Profile was saved on the server. */ }
       setTimeout(() => {
         setShow(false);
         onDone();

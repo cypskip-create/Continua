@@ -53,7 +53,7 @@ export default function TradersHub() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { profile, updateProfile } = useProfile();
-  const { posts, loading, createPost, bookmarkPost, reactToPost, deletePost, editPost, reportPost, hidePost } = usePosts();
+  const { posts, loading, error: feedError, fetchPosts, createPost, bookmarkPost, reactToPost, deletePost, editPost, reportPost, hidePost } = usePosts();
   const { isFollowing, toggleFollow, followingIds } = useFollows();
   const { portfolio } = usePortfolio();
   const { watchlist } = useWatchlist();
@@ -79,8 +79,9 @@ export default function TradersHub() {
   const [editDraft, setEditDraft] = useState("");
   const [disclaimerDone, setDisclaimerDone] = useState(() => {
     if (!user) return true;
-    return !!localStorage.getItem(`tradershub_disclaimer_${user.id}`);
+    try { return !!localStorage.getItem(`tradershub_disclaimer_${user.id}`); } catch { return false; }
   });
+  const finishOnboarding = useCallback(() => setDisclaimerDone(true), []);
 
   const hubUnread = useMemo(
     () => notifications.filter(n => !n.read && (n.feature === "tradershub" || n.feature === "social")).length,
@@ -311,13 +312,13 @@ export default function TradersHub() {
     : [];
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="community-desk page-canvas min-h-screen bg-background pb-24">
       {!disclaimerDone && (
         <TradersHubOnboarding
           userId={user?.id}
           profile={profile}
           updateProfile={updateProfile}
-          onDone={() => setDisclaimerDone(true)}
+          onDone={finishOnboarding}
         />
       )}
 
@@ -458,6 +459,8 @@ export default function TradersHub() {
         </div>
       )}
 
+      <div className="desk-intro"><div><h2>TradersHub</h2><p>Ideas, evidence and conversations from the NSE community.</p></div><button className="pill-tab" onClick={() => setComposeOpen(true)}>Post an idea</button></div>
+      {feedError && activeTab !== "media" && <div role="alert" className="px-4 py-3 text-sm">Your feed could not load. <button className="text-primary" onClick={() => void fetchPosts()}>Retry feed</button></div>}
       {/* Suggested people — ranked by shared TradersHub interests */}
       {activeTab === "for-you" && !searching && (
         <SuggestedForYou
@@ -474,7 +477,7 @@ export default function TradersHub() {
       ) : loading || !disclaimerDone ? (
         <PostSkeletonList count={6} />
       ) : feed.length === 0 ? (
-        <div className="px-10 py-16 text-center">
+        <div className="px-6 py-8 text-center">
           {activeTab === "following" ? (
             <>
               <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />

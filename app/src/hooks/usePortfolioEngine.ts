@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { engineReadRetry } from "@/api/engineRetry";
 import { useAuth } from "./useAuth";
 import { useExchange } from "./useExchange";
 import { usePortfolio } from "./usePortfolio";
@@ -29,13 +30,13 @@ export function usePortfolioEngine(isPremium: boolean, analysisOpen: boolean) {
   const overview = useQuery({
     queryKey: ["continua", "engine-portfolio-overview", user?.id, exchange],
     queryFn: () => engineWorkspaceApi.portfolioOverview(exchange), enabled: !!user,
-    staleTime: 60_000, retry: false,
+    staleTime: 60_000, retry: engineReadRetry,
   });
   const intelligence = useQuery({
     queryKey: ["continua", "engine-portfolio", user?.id, exchange],
     queryFn: () => engineWorkspaceApi.portfolio(exchange),
     enabled: !!user && isPremium && analysisOpen && symbols.length > 0,
-    staleTime: 60_000, retry: false,
+    staleTime: 60_000, retry: engineReadRetry,
   });
   return { ...portfolio, exchange, liveQuotes, stats, valuations, dividends, research, updates, growth, benchmark, overview, intelligence };
 }

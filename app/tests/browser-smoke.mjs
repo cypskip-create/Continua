@@ -14,6 +14,7 @@ process.env.VITE_CONTINUA_API_KEY = 'fixture-only';
 process.env.VITE_CONTINUA_WS_URL = 'ws://127.0.0.1:4999';
 const appRoot = fileURLToPath(new URL('../', import.meta.url));
 const server = await createServer({ root: appRoot, configFile: false, plugins: [react()],
+  cacheDir:fileURLToPath(new URL('../../.qa-artifacts/vite-browser-cache/',import.meta.url)),
   resolve: { alias: { '@': `${appRoot}/src` } },
   server: { host: '127.0.0.1', port: 5188, strictPort: true, hmr: false } });
 await server.listen();
@@ -343,6 +344,12 @@ try {
   console.log('PASS saved scroll, flat surfaces and persistent global text sizing');
 
   await page.goto('http://127.0.0.1:5188/traders-hub');
+  // Existing accounts with no device mirror must unlock on the FIRST visit.
+  await page.evaluate(id=>localStorage.removeItem(`tradershub_disclaimer_${id}`),user.id);
+  await page.reload();
+  await page.getByRole('heading',{name:'TradersHub',exact:true}).waitFor();
+  await page.waitForFunction(()=>!document.querySelector('.hub-skeleton'));
+  await page.getByText('Start the conversation',{exact:true}).waitFor();
   await page.getByRole('button', {name:'Create post',exact:true}).tap();
   await page.getByRole('dialog', {name:'Compose post'}).waitFor();
   const composer = page.getByRole('dialog', {name:'Compose post'});
@@ -472,6 +479,15 @@ try {
   await page.getByRole('heading',{name:/EQTY · Fixture peer/}).waitFor();
   await openEngineTool('Portfolio');
   await page.getByRole('heading',{name:'Recorded invested-holdings return',exact:true}).waitFor();
+  await page.getByRole('heading',{name:'Your review desk',exact:true}).waitFor();
+  await page.getByLabel('Single holding limit',{exact:true}).fill('40');
+  await page.getByText('Portfolio stress lab',{exact:true}).click();
+  await page.getByLabel('Stress price change',{exact:true}).fill('-20');
+  await page.getByText(/Illustrative value: KES 400/).waitFor();
+  await page.getByText('Contribution planner',{exact:true}).click();
+  await page.getByLabel('Target invested value',{exact:true}).fill('1000');
+  await page.getByLabel('Monthly contribution',{exact:true}).fill('100');
+  await page.getByText(/5 months at this contribution/).waitFor();
   const beforePortfolioReload=engineRequests;
   assert.equal(portfolioThrottle,0,'Transient Engine throttle recovered');
   assert.equal(overviewThrottle,0,'Transient free overview throttle recovered');
@@ -545,6 +561,9 @@ try {
   // Markets research: complete routes, aligned chart, horizontally scrollable tables and source links.
   await page.goto('http://127.0.0.1:5188/markets');
   await page.getByRole('heading',{name:'IPOs',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Open Continua Engine',exact:true}).waitFor();
+  assert.equal(await page.getByRole('navigation',{name:'Market shortcuts'}).getByRole('button').count(),3);
+  assert.ok(await page.locator('.market-section').first().evaluate(el=>parseFloat(getComputedStyle(el).paddingTop)<20),'Market sections remain compact');
   assert.equal(await page.getByText('Crypto',{exact:true}).count(),0);
   assert.equal(await page.getByText('Rating Changes',{exact:true}).count(),0);
   await page.getByRole('button',{name:'IPOs',exact:true}).tap();
@@ -637,6 +656,22 @@ try {
   await page.setViewportSize({width:390,height:844});
   await page.evaluate(() => { document.documentElement.style.fontSize = '16px'; });
   console.log('PASS four font sizes: stock, portfolio, Home and Engine containment and sticky offsets');
+  const recoveryContext=await browser.newContext({viewport:{width:390,height:844},storageState:await context.storageState()});
+  let blockModule=true;
+  await recoveryContext.route('**/*',route=>blockModule && new URL(route.request().url()).pathname==='/src/pages/TradersHub.tsx'?route.abort():handleRoute(route));
+  const recoveryPage=await recoveryContext.newPage();
+  await recoveryPage.goto('http://127.0.0.1:5188/traders-hub');
+  await recoveryPage.getByRole('heading',{name:'This page could not load',exact:true}).waitFor();
+  await recoveryPage.locator('.bottom-nav').getByRole('link',{name:'Home',exact:true}).click();
+  await recoveryPage.getByRole('heading',{name:'Market Snapshot',exact:true}).waitFor();
+  await recoveryPage.goto('http://127.0.0.1:5188/traders-hub');
+  await recoveryPage.getByRole('button',{name:'Reload this page',exact:true}).waitFor();
+  blockModule=false;
+  await recoveryPage.getByRole('button',{name:'Reload this page',exact:true}).click();
+  await recoveryPage.locator('.bottom-nav').waitFor();
+  await recoveryPage.getByRole('button',{name:'Reload this page',exact:true}).waitFor({state:'hidden'});
+  await recoveryContext.close();
+  console.log('PASS failed page-module download retains navigation and reload recovery');
   // Device verification is stubbed to fail: private UI must stay unmounted.
   // This tests the lock boundary, not a real platform authenticator.
   await page.addInitScript(() => {

@@ -25,7 +25,7 @@ export function ResearchChart({
 }) {
   if (data.length < 2)
     return (
-      <p className="py-10 text-sm text-muted-foreground">
+      <p className="py-4 text-sm text-muted-foreground">
         At least two dated observations are needed to draw this chart.
       </p>
     );

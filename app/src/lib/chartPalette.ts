@@ -57,9 +57,9 @@ export const fx = {
 export const tooltipStyle = {
   background: "hsl(var(--card))",
   border: "1px solid hsl(var(--border))",
-  borderRadius: 10,
+  borderRadius: 0,
   fontSize: 11,
-  boxShadow: "0 8px 24px -8px rgba(0,0,0,0.18)",
+  boxShadow: "none",
   color: "hsl(var(--card-foreground))",
 } as const;
 
@@ -80,6 +80,6 @@ export const axisStyle = {
 
 export const gridStyle = {
   stroke: "hsl(var(--border))",
-  strokeDasharray: "2 4",
+  strokeDasharray: "3 5",
   vertical: false,
 };

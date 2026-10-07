@@ -7,6 +7,7 @@ export const defaultEnginePreferences:EnginePreferences={goal:"Balanced",horizon
 export interface MonitorRule {id:string;exchange:string;symbol:string;kind:string;threshold:number|null;enabled:boolean}
 export interface AssistantAnswer {answer:string;citations:string[];limitations:string[];cached:boolean;sources:{id:string;title:string;asOf:string|null;url:string|null}[]}
 export interface EnginePortfolio {
+  snapshots?:{date:string;value:number;flow:number}[];
   risk?:{available:boolean;reason:string;symbols:string[];observations:number;coveredWeight:number;excludedIntervals:number;metrics:null|{portfolioVolatility:number;marketVolatility:number;portfolioMaxDrawdown:number;portfolioBeta:number|null;sharpe:null;sortino:null;volatilityByHolding:{symbol:string;volatility:number}[];drawdownByHolding:{symbol:string;drawdown:number}[]}};
   researchBriefing?:{covered:number;requested:number;limit:number;methodology:string;companies:{symbol:string;weight:number;period:number|null;metrics:Record<string,number|null>;findings:string[];sectorNote?:string|null;facts?:string[];risks:string[];qualityWarnings:string[];unavailable:string[];changes:{topic:string;text:string;material:boolean}[]}[];news:{id:string;symbol:string;headline:string;summary:string;url:string;publishedAt:string|null;source:string}[]};
   available:boolean;reason:string|null;totalValue:number;sessionPnl:number|null;coverage:string;currency:string|null;warnings:string[];methodology:string;historyWarnings:string[];

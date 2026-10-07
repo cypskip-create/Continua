@@ -3,6 +3,7 @@ import { EngineAssistantPanel } from "@/components/engine/EngineWorkspace";
 import { EnginePortfolioPanel, EngineMonitoringPanel } from "@/components/engine/EngineWorkspace";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { PortfolioReviewDesk } from "@/components/engine/PortfolioReviewDesk";
 
 const numeric = (n: number | null | undefined) => n == null ? "Unavailable" : n.toLocaleString(undefined, { maximumFractionDigits: 2 });
 
@@ -67,9 +68,10 @@ export function PortfolioEngineWorkspace({ data, showValues, exchange, symbols }
   return <section className="space-y-4 border-b border-border pb-5" aria-label="Premium portfolio Engine">
     <div className="flex flex-wrap justify-between gap-2"><h3 className="text-lg font-semibold">Portfolio Engine</h3><span className="text-xs text-muted-foreground">Premium research</span></div>
     <div role="tablist" aria-label="Portfolio Engine tools" className="flex gap-1 overflow-x-auto scrollbar-hide">
-      {["Briefing", "Returns & income", "Ask Engine", "Monitoring"].map(item => <button key={item} role="tab" aria-selected={tool === item} className={`pill-tab h-8 shrink-0 ${tool === item ? "contrast-active" : ""}`} onClick={() => setTool(item)}>{item}</button>)}
+      {["Briefing", "Review desk", "Returns & income", "Ask Engine", "Monitoring"].map(item => <button key={item} role="tab" aria-selected={tool === item} className={`pill-tab h-8 shrink-0 ${tool === item ? "contrast-active" : ""}`} onClick={() => setTool(item)}>{item}</button>)}
     </div>
     {tool === "Briefing" && <PortfolioEngineBriefing data={data} showValues={showValues} />}
+    {tool === "Review desk" && (showValues?<PortfolioReviewDesk data={data} />:<p className="text-xs text-muted-foreground">Show portfolio values to use this tool.</p>)}
     {(tool === "Returns & income" || tool === "Ask Engine") && !showValues && <p className="text-xs text-muted-foreground">Show portfolio values to use this tool.</p>}
     {tool === "Returns & income" && showValues && <EnginePortfolioPanel exchange={exchange} />}
     {tool === "Ask Engine" && showValues && <PortfolioEngineAssistant exchange={exchange} symbols={symbols} />}

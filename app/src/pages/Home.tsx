@@ -26,7 +26,7 @@ import { PortfolioPulse } from "@/components/home/PortfolioPulse";
 
 const Eyebrow = ({ children, action, onAction }: { children: React.ReactNode; action?: string; onAction?: () => void }) => (
   <div className="flex items-center justify-between mb-2">
-    <p className="section-eyebrow">{children}</p>
+    <h2 className="text-lg font-medium">{children}</h2>
     {action && (
       <button data-small-target onClick={onAction} className="text-[0.6875rem] text-primary font-semibold flex items-center">
         {action} <ChevronRight className="h-3 w-3" />
@@ -125,7 +125,7 @@ export default function Home() {
   const followedSymbols = [...new Set([...portfolio.map(h => h.symbol), ...watchlist.map(w => w.symbol)])];
 
   return (
-    <div className="page-canvas min-h-screen bg-background pb-24">
+    <div className="home-desk page-canvas min-h-screen bg-background pb-24">
       <TopBar
         title="Continua"
         subtitle={user ? `${greeting}, ${firstName}` : "Your smart companion"}
@@ -133,7 +133,7 @@ export default function Home() {
         showNotifications
       />
 
-      <div className="px-4 pt-3 space-y-6">
+      <div className="desk-content home-flow px-4 pt-3 space-y-4">
         {/* Auth CTA — non-users */}
         {!user && (
           <div className="flat-section border border-primary/25 bg-primary/5 rounded-2xl p-5 text-center">
@@ -194,6 +194,7 @@ export default function Home() {
         {/* MARKET SNAPSHOT — inline stat row */}
         <div>
           <Eyebrow action="Markets" onAction={() => navigate('/markets')}>Market Snapshot</Eyebrow>
+          {!nseIndices.length && <p className="py-2 text-xs text-muted-foreground">Published NSE index observations are not available yet.</p>}
           <div className="grid grid-cols-3 gap-3 border-t border-border/60 pt-3">
             {nseIndices.map(idx => (
               <div key={idx.name} className="cursor-pointer" onClick={() => navigate('/markets')}>

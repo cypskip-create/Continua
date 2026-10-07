@@ -78,7 +78,7 @@ export default function StockDetail() {
   const backTap = useTouchClick<HTMLButtonElement>();
   const { symbol } = useParams();
   const [selectedTimeframe, setSelectedTimeframe] = useState("1D");
-  const [chartType, setChartType] = useState<ChartType>("area");
+  const [chartType, setChartType] = useState<ChartType>("line");
   const [fullscreen, setFullscreen] = useState(false);
   // Fullscreen chart toolbar (Moomoo/TradingView-style) — period picker plus
   // crosshair-pin, draw, gridline, and immersive toggles. Kept separate from

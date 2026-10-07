@@ -34,3 +34,10 @@ it("suppresses stale session contribution instead of presenting it as today's ch
   const result = await getPortfolioOverview("verified-user", "NSE");
   expect(result.sessionPnl).toBeNull(); expect(result.warnings.join(" ")).toContain("stale");
 });
+it("accepts real node-postgres Date objects without crashing portfolio analysis", async () => {
+  setup(); mocks.quote.mockResolvedValue({ lastPrice: 50, change: 1, currency: "KES", timestamp: new Date("2026-10-07T10:00:00Z") });
+  const result = await getPortfolioOverview("verified-user", "NSE");
+  expect(result.totalValue).toBe(150);
+  expect(result.sessionDate).toBe("2026-10-07");
+  expect(result.sessionPnl).toBe(3);
+});

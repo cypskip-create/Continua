@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Logo } from "./Logo";
 import { useNotifications } from "@/hooks/useNotifications";
+import { EngineLaunchButton } from "./EngineLaunchButton";
 
 interface TopBarProps {
   title: string;
@@ -51,6 +52,7 @@ export function TopBar({
         </div>
         
         <div className="flex items-center gap-1">
+          {(location.pathname === "/" || location.pathname === "/markets") && <EngineLaunchButton />}
           {showSearch && location.pathname === '/markets' && (
             <>
               {searchOpen ? (

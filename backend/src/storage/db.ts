@@ -6,6 +6,7 @@
  * supabase/migrations/030_market_schema.sql for the DDL.
  */
 import pg from "pg";
+import { registerDateTypes } from "./dateTypes.js";
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 
@@ -25,11 +26,14 @@ import { logger } from "../monitoring/logger.js";
 // value or an ID space larger than 2^53.
 pg.types.setTypeParser(pg.types.builtins.NUMERIC, (val: string) => parseFloat(val));
 pg.types.setTypeParser(pg.types.builtins.INT8, (val: string) => parseInt(val, 10));
+registerDateTypes();
 
 export const pool = new pg.Pool({
   connectionString: env.DATABASE_URL,
   max: 10,
   idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 5_000,
+  statement_timeout: 12_000,
 });
 
 pool.on("error", (err) => {

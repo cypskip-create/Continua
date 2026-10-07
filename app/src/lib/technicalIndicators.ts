@@ -1,6 +1,6 @@
 // Pure, dependency-free technical indicator math for the stock chart.
 // Each function takes the same point shape the chart already uses
-// (StockPriceChart.generateMockData / useHistoricalCandles output) and
+// (verified useHistoricalCandles output) and
 // returns one value per input point (null where there isn't enough
 // history yet to compute one).
 

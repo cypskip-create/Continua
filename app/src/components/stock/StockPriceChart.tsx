@@ -77,7 +77,7 @@ interface StockPriceChartProps {
 const VOLUME_PANEL_HEIGHT = 56;
 const SUB_PANEL_HEIGHT = 84;
 
-export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "area", onHoverPrice, data: liveData, indicators = DEFAULT_INDICATOR_SETTINGS, mainHeight, showPriceAxis = false, showGrid = false, pinCrosshair = false, activeDrawTool = null, onDrawToolComplete, hideDrawings = false, clearDrawSignal, onDrawingsChange }: StockPriceChartProps) => {
+export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line", onHoverPrice, data: liveData, indicators = DEFAULT_INDICATOR_SETTINGS, mainHeight, showPriceAxis = true, showGrid = true, pinCrosshair = false, activeDrawTool = null, onDrawToolComplete, hideDrawings = false, clearDrawSignal, onDrawingsChange }: StockPriceChartProps) => {
   // Recharts synchronizes charts sharing a syncId via a registry keyed by
   // that exact string, shared across the whole app -- not scoped per
   // component instance. A syncId built only from symbol+timeframe (as this
@@ -923,7 +923,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "area",
                 <stop offset={1} stopColor={greyLineColor} />
               </linearGradient>
             </defs>
-            {showGrid && <CartesianGrid horizontal vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.4} strokeDasharray="3 3" />}
+            {showGrid && <CartesianGrid horizontal vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.7} strokeDasharray="3 5" />}
             <XAxis dataKey="date" hide />
             <YAxis
               hide={!showPriceAxis}
@@ -942,10 +942,10 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "area",
               <ReferenceLine y={lastPrice} stroke={lineColor} strokeDasharray="3 3" strokeOpacity={0.6} label={renderCurrentPriceTag} />
             )}
             <Area
-              type="monotone"
+              type="linear"
               dataKey="price"
               stroke={`url(#${crosshairGradId})`}
-              strokeWidth={1.6}
+              strokeWidth={2}
               fill={chartType === "area" ? `url(#${gradientId})` : "transparent"}
               dot={false}
               activeDot={false}

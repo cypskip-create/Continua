@@ -12,7 +12,8 @@ import { ExchangeProvider } from "./hooks/useExchange";
 import { Analytics } from "@vercel/analytics/react";
 import { AppLockGate } from "./components/security/AppLockGate";
 import { useScrollRestoration } from "./hooks/useScrollRestoration";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
+import { lazyWithRetry as lazy } from "./lib/lazyWithRetry";
 
 const Home = lazy(() => import("./pages/Home"));
 const Markets = lazy(() => import("./pages/Markets"));

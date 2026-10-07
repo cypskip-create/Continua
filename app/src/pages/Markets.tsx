@@ -1003,6 +1003,11 @@ export default function Markets() {
               value={tab}
               onChange={setTab}
             />
+            <nav className="market-shortcuts" aria-label="Market shortcuts">
+              <button onClick={() => navigate("/watchlist")}>Watchlist</button>
+              <button onClick={() => navigate("/markets/heatmap")}>Heatmap</button>
+              <button onClick={() => navigate("/markets/economic")}>Calendar</button>
+            </nav>
           </div>
         </>
       )}
@@ -1025,7 +1030,7 @@ export default function Markets() {
           </>
         ) : (
           <>
-            <div className="flex justify-between items-center py-4">
+            <div className="flex justify-between items-center py-1">
               <MarketStatusIndicator />
               <Button
                 variant="ghost"
@@ -1049,9 +1054,6 @@ export default function Markets() {
               <Button variant="outline" onClick={() => navigate("/compare")}>
                 <GitCompare className="h-4 w-4 mr-2" />
                 Compare
-              </Button>
-              <Button variant="ghost" onClick={() => navigate("/watchlist")}>
-                Watchlist
               </Button>
             </div>
             {tab === "All Stocks" ? (
