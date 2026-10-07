@@ -6,6 +6,8 @@ import { ApiError } from "./errorHandler.js";
 // Verify the session against this project's auth service; never trust a
 // client-provided user ID or subscription flag. The project key is public.
 export async function requireEngineUser(req: Request, res: Response, next: NextFunction) {
+  // Identity is reused only within this request, after server verification.
+  if (res.locals?.engineIdentityVerified === true) return next();
   try {
     const token = req.header("x-user-token");
     const publicKey = req.header("x-supabase-key");
@@ -24,8 +26,16 @@ export async function requireEngineUser(req: Request, res: Response, next: NextF
     res.locals ??= {};
     res.locals.engineUserId = user.id;
     res.locals.enginePlan = profile.rows[0]?.subscription_plan ?? "free";
+    res.locals.engineIdentityVerified = true;
     next();
   } catch (error) { next(error); }
+}
+
+/** Isolate verified Engine users from the public market-data key's bucket.
+ * Never derive a limiter identity from unverified JWT claims or user headers. */
+export function verifyEngineRateLimitIdentity(req: Request, res: Response, next: NextFunction) {
+  if (!/^\/engine(?:\/|$)/.test(req.path)) return next();
+  return requireEngineUser(req, res, next);
 }
 
 export async function requireSubscriber(req: Request, res: Response, next: NextFunction) {

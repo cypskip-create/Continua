@@ -13,6 +13,7 @@ import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 import { isAllowedBrowserOrigin } from "./corsPolicy.js";
 import { ApiError } from "./middleware/errorHandler.js";
+import { verifyEngineRateLimitIdentity } from "./middleware/requireSubscriber.js";
 
 // Requests are already gated behind an API key (see apiKeyAuth below), so an
 // open CORS policy was never a data-access hole — but leaving `cors()` with
@@ -31,6 +32,7 @@ const allowedOrigins = new Set(env.ALLOWED_ORIGINS);
 // Update the slug below if the Vercel project/team is ever renamed.
 
 const corsOptions: cors.CorsOptions = {
+  exposedHeaders: ["Retry-After", "RateLimit-Limit", "RateLimit-Remaining", "RateLimit-Reset", "cf-mitigated"],
   origin(origin, callback) {
     if (isAllowedBrowserOrigin(origin, [...allowedOrigins])) {
       callback(null, true);
@@ -58,7 +60,7 @@ export function createServer() {
   // a matched admin route never falls through to public-key auth.
   app.use("/api/v1/admin", requireAdminKey(), adminFinancialsRoutes);
 
-  app.use("/api/v1", apiKeyAuth(), apiRateLimit(), apiRouter);
+  app.use("/api/v1", apiKeyAuth(), verifyEngineRateLimitIdentity, apiRateLimit(), apiRouter);
 
   app.use((_req, res) => res.status(404).json({ error: "Not found" }));
   app.use(errorHandler);

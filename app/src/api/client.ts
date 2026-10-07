@@ -7,12 +7,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { resolveApiEndpoint } from "./apiEndpoint";
+import { fetchWithRateLimitRecovery } from "./rateLimitRecovery";
 
 const endpoints = resolveApiEndpoint(
   (import.meta.env.VITE_CONTINUA_API_URL as string | undefined) ??
   (import.meta.env.VITE_AFRIFINANCE_API_URL as string | undefined),
   import.meta.env.PROD,
-  window.location.origin,
 );
 export const AFRIFINANCE_API_URL = endpoints.rest;
 
@@ -105,7 +105,7 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
   else options.signal?.addEventListener("abort", forwardAbort, { once: true });
   let res: Response;
   try {
-    res = await fetch(url, {
+    res = await fetchWithRateLimitRecovery(url, {
       method: options.method ?? "GET",
       headers: {
         "X-API-Key": getApiKey(),
@@ -128,6 +128,9 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
 
   if (!res.ok) {
     let message = `Continua Data API request failed (${res.status})`;
+    if (res.headers.get("cf-mitigated") === "challenge" || (res.status === 429 && res.headers.get("content-type")?.includes("text/html"))) {
+      throw new ContinuaApiError("The hosting security check blocked the connection. Please retry shortly.", res.status, path);
+    }
     try {
       const body = await res.json();
       if (body?.error) message = body.error;

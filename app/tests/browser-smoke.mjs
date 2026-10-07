@@ -31,6 +31,7 @@ let newsOffline = false;
 let quoteRequests = 0;
 let portfolioRequests = 0;
 let premiumPortfolioRequests=0,overviewRequests=0;
+let portfolioThrottle=1,overviewThrottle=1;
 let engineRequests = 0;
 let enginePreferences={goal:'Balanced',horizon:'1_to_5_years',experience:'beginner',riskComfort:'unspecified',incomeNeeds:'none',sectors:[],notifications:true,learnInterests:false,interests:[]};
 let engineRules=[];
@@ -40,9 +41,11 @@ let assistantRequests=0;
 const unknown = new Set();
 const handleRoute = async (route) => {
   const url = new URL(route.request().url());
-  const json = (body, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body), headers: { 'access-control-allow-origin': '*' } });
+  const json = (body, status = 200, headers = {}) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body), headers: { 'access-control-allow-origin': '*', 'access-control-expose-headers':'Retry-After', ...headers } });
   if (url.pathname === '/test-image.svg') return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400"><rect width="800" height="400" fill="#7862df"/></svg>' });
   if (url.port === '5188') return route.continue();
+  if(url.pathname==='/api/v1/engine/portfolio/overview' && overviewThrottle>0){overviewThrottle--;overviewRequests++;return json({error:'Rate limit exceeded'},429,{'retry-after':'0'});}
+  if(url.pathname==='/api/v1/engine/portfolio' && portfolioThrottle>0){portfolioThrottle--;premiumPortfolioRequests++;return json({error:'Rate limit exceeded'},429,{'retry-after':'0'});}
   if (url.hostname === 'continua-test.supabase.co') {
     if (url.pathname.includes('/storage/v1/object/public/')) return route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="purple"/></svg>'});
     if (url.pathname.includes('/storage/v1/object/post-images/')) { uploadRequests++; return json({Key:'fixture-image'}); }
@@ -461,6 +464,9 @@ try {
   await openEngineTool('Portfolio');
   await page.getByRole('heading',{name:'Recorded invested-holdings return',exact:true}).waitFor();
   const beforePortfolioReload=engineRequests;
+  assert.equal(portfolioThrottle,0,'Transient Engine throttle recovered');
+  assert.equal(overviewThrottle,0,'Transient free overview throttle recovered');
+  assert.ok(premiumPortfolioRequests>=2 && overviewRequests>=2,'Both portfolio endpoints retry their explicit short throttle');
   await page.reload();
   await page.getByRole('heading',{name:'Recorded invested-holdings return',exact:true}).waitFor();
   assert.equal(engineRequests,beforePortfolioReload,'Workspace Portfolio must not request unrelated company analysis');
