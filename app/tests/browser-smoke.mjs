@@ -75,6 +75,7 @@ const handleRoute = async (route) => {
   if (url.port === '4999') {
     const path = url.pathname.replace('/api/v1', '');
     if(path==='/health')return json({status:'ok',checks:{database:{ok:true},cache:{ok:true}}});
+    if(path==='/instruments')return json({data:['KCB','EQTY'].map(symbol=>({id:`NSE:${symbol}`,symbol,exchange:'NSE',name:symbol==='KCB'?'KCB Group':'Equity Group',companyName:symbol==='KCB'?'KCB Group':'Equity Group',sector:'Banking',currency:'KES',status:'active',type:'stock'}))});
     if(path.startsWith('/engine/')) assert.ok(route.request().headers()['x-user-token'],'Private Engine requests include a verified session token');
     if(path === '/engine/preferences') {if(route.request().method()==='POST')enginePreferences=route.request().postDataJSON();return json({data:enginePreferences});}
     if(path === '/engine/interests') {if(route.request().postDataJSON().reset)enginePreferences.interests=[];return json({data:enginePreferences});}
@@ -350,7 +351,9 @@ try {
   // Existing accounts with no device mirror must unlock on the FIRST visit.
   await page.evaluate(id=>localStorage.removeItem(`tradershub_disclaimer_${id}`),user.id);
   await page.reload();
-  await page.getByRole('heading',{name:'TradersHub',exact:true}).waitFor();
+  await page.getByRole('button',{name:'TradersHub notifications',exact:true}).waitFor();
+  assert.equal(await page.getByText('Ideas, evidence and conversations from the NSE community.',{exact:true}).count(),0);
+  assert.equal(await page.getByRole('button',{name:'Post an idea',exact:true}).count(),0);
   await page.waitForFunction(()=>!document.querySelector('.hub-skeleton'));
   await page.getByText('Start the conversation',{exact:true}).waitFor();
   await page.getByRole('button', {name:'Create post',exact:true}).tap();
@@ -432,6 +435,12 @@ try {
   assert.ok(sticky.y >= 90 && sticky.y < 120, `Fundamentals subnav stays under primary tabs: ${sticky.y}`);
   await page.screenshot({path:fileURLToPath(new URL('fundamentals-sticky.png', artifacts))});
   console.log('PASS Fundamentals charts, metric switching, quarterly control and sticky categories');
+  const fundamentalHeadingSize = await page.getByRole('heading',{name:'Reported financials',exact:true}).evaluate(el=>getComputedStyle(el).fontSize);
+  const valuationHeadingSize = await page.getByRole('heading',{name:'Key Valuation Metric',exact:true}).evaluate(el=>getComputedStyle(el).fontSize);
+  assert.equal(valuationHeadingSize,fundamentalHeadingSize,'Valuation and Fundamentals share section heading sizes');
+  const fundamentalBodySize = await periodTabs.getByRole('tab',{name:'Annual',exact:true}).evaluate(el=>getComputedStyle(el).fontSize);
+  const valuationBodySize = await page.getByText('P/E Ratio — used since KCB is profitable',{exact:true}).evaluate(el=>getComputedStyle(el).fontSize);
+  assert.equal(valuationBodySize,fundamentalBodySize,'Legacy valuation labels share the Fundamentals reading scale');
 
   await page.goto('http://127.0.0.1:5188/engine?symbol=KCB');
   await page.getByText('Fixture reported revenue increased.',{exact:true}).waitFor();
@@ -445,6 +454,15 @@ try {
   await page.getByText('Fixture valuation',{exact:true}).waitFor();
   await engineTools.getByRole('tab',{name:'Ownership',exact:true}).tap();
   await page.getByText('Fixture institutional holder',{exact:true}).waitFor();
+  await openEngineTool('Monitoring');
+  await page.getByRole('navigation',{name:'Engine navigation'}).getByRole('button',{name:'Company',exact:true}).tap();
+  assert.equal(await engineTools.getByRole('tab',{name:'Ownership',exact:true}).getAttribute('aria-selected'),'true','Engine remembers the last Company tool');
+  await page.getByRole('combobox',{name:'Engine stock',exact:true}).selectOption('EQTY');
+  assert.equal(new URL(page.url()).searchParams.get('tool'),'Ownership','Changing company preserves the selected tool');
+  await page.getByRole('combobox',{name:'Engine stock',exact:true}).selectOption('KCB');
+  const bodyFont = await page.getByText('Fixture institutional holder',{exact:true}).evaluate(el => getComputedStyle(el).fontSize);
+  const contextFont = await page.getByLabel('Current research tool',{exact:true}).locator('p').last().evaluate(el => getComputedStyle(el).fontSize);
+  assert.equal(bodyFont,contextFont,'Engine explanatory text uses the same reading scale');
   await engineTools.getByRole('tab',{name:'Earnings & forecasts',exact:true}).tap();
   await page.getByRole('img',{name:'revenue actual and estimate history'}).waitFor();
   await engineTools.getByRole('tab', {name:'News',exact:true}).tap();

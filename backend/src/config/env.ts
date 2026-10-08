@@ -87,6 +87,7 @@ const EnvSchema = z.object({
   ANNOUNCEMENTS_BRIDGE_CRON: z.string().default("*/5 * * * *"), // scraper runs independently; promptly publish whatever it produced
   FINANCIAL_CANDIDATES_BRIDGE_CRON: z.string().default("*/5 * * * *"), // keep reviewable fundamental tables close behind new filings
   NEWS_BRIDGE_CRON: z.string().default("*/2 * * * *"), // keep newly scraped headlines close to real time
+  NEWS_SCRAPER_URL: z.string().url().optional(), // production Render collector is the fallback; override on other hosts
 
   // ── CORS ────────────────────────────────────────────────────────────
   // Comma-separated list of origins allowed to call this API from a browser

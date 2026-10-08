@@ -64,6 +64,8 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
   }, [news, searchQuery]);
   const symbols = useMemo(() => [...new Set(filtered.flatMap((item) => item.symbols))], [filtered]);
   const { quotes } = useLiveQuotes(symbols);
+  const newestPublishedAt = news.reduce((latest, item) => Math.max(latest, Date.parse(item.publishedAt ?? "") || 0), 0);
+  const olderFeed = newestPublishedAt > 0 && Date.now() - newestPublishedAt > 6 * 60 * 60_000;
 
   return (
     <div className="px-4 pt-3 pb-6 space-y-4">
@@ -89,6 +91,7 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
       </ScrollArea>
 
       <p className="text-[0.6875rem] text-muted-foreground" role="status">{isFetching ? "Checking headlines…" : isError ? "Showing saved headlines" : checkedAt ? `Headlines checked ${new Date(checkedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Waiting for headlines"}</p>
+      {olderFeed && !isError && <p role="status" className="text-sm text-muted-foreground">Newest available story: {new Date(newestPublishedAt).toLocaleString()}. Checking the publishers for newer financial headlines; publication dates are not changed by refreshing.</p>}
 
       {isError && <div role="status" className="text-sm text-muted-foreground">News could not refresh. {news.length ? 'Showing saved stories.' : 'Check your connection.'} <button className="underline" onClick={()=>void refetch()}>Retry</button></div>}
       {isLoading ? (

@@ -65,6 +65,22 @@ const groups: { name: string; tools: Tool[] }[] = [
     tools: ["Portfolio", "Monitoring", "Journal", "Ask Engine", "Preferences"],
   },
 ];
+const toolHelp: Record<Tool, string> = {
+  Briefing: "Start with the reported facts, then open the supporting evidence or risks that matter to you.",
+  News: "Read dated issuer stories and check the original publisher before acting.",
+  "Earnings & forecasts": "Separate reported results from estimates and inspect the periods behind each number.",
+  Valuation: "Compare model assumptions, not just the headline value. Missing inputs are shown explicitly.",
+  Ownership: "Explore disclosed shareholders. These snapshots are not a record of buying or selling.",
+  Evidence: "Review changes, source coverage and gaps before drawing a conclusion.",
+  Technicals: "Explore price history and signals, then set an alert for a level you want to follow.",
+  "Scenario lab": "Change assumptions to explore outcomes. Scenarios are not forecasts or guarantees.",
+  Peers: "Choose a peer and a specific metric to compare on a like-for-like basis.",
+  Portfolio: "Review holdings, allocation and observed income together, with coverage limits visible.",
+  Monitoring: "Track a research question, inspect check results and review triggered alerts.",
+  Journal: "Record your thesis, evidence and next review so you can revisit your decisions.",
+  "Ask Engine": "Ask a focused question about the selected company and inspect the evidence in the answer.",
+  Preferences: "Set your research focus and notification preferences.",
+};
 function toolFromParam(value: string | null): Tool {
   return tools.includes(value as Tool) ? (value as Tool) : "Briefing";
 }
@@ -88,6 +104,9 @@ export default function Engine() {
   ).toUpperCase();
   const [goal, setGoal] = useState("Balanced");
   const tool = toolFromParam(params.get("tool"));
+  const rememberedTools = useRef<Record<string, Tool>>({});
+  const group = groups.find((item) => item.tools.includes(tool))!;
+  useEffect(() => { rememberedTools.current[group.name] = tool; }, [group.name, tool]);
   const setTool = (next: Tool) =>
     setParams(
       (current) => {
@@ -97,7 +116,6 @@ export default function Engine() {
       },
       { replace: true },
     );
-  const group = groups.find((item) => item.tools.includes(tool))!;
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const queryClient = useQueryClient();
@@ -245,7 +263,6 @@ export default function Engine() {
                   onChange={(event) => {
                     const next = new URLSearchParams(params);
                     next.set("symbol", event.target.value);
-                    next.set("tool", "Briefing");
                     setParams(next);
                   }}
                   className="ml-3 max-w-52 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
@@ -284,7 +301,7 @@ export default function Engine() {
                   <button
                     key={item.name}
                     aria-pressed={group.name === item.name}
-                    onClick={() => setTool(item.tools[0])}
+                    onClick={() => setTool(rememberedTools.current[item.name] ?? item.tools[0])}
                     className={`min-h-11 border-b-2 text-sm font-semibold ${group.name === item.name ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
                   >
                     {item.name}
@@ -309,6 +326,10 @@ export default function Engine() {
                 ))}
               </div>
             </nav>
+            <div className="engine-tool-context" aria-label="Current research tool">
+              <p className="font-semibold">{tool}{["Portfolio", "Preferences"].includes(tool) ? "" : ` · ${symbol}`}</p>
+              <p className="text-sm text-muted-foreground">{toolHelp[tool]}</p>
+            </div>
             {group.name === "My workspace" ? null : query.isLoading ? (
               <p role="status" className="py-10 text-sm text-muted-foreground">
                 Preparing your analysis…
@@ -397,14 +418,14 @@ export default function Engine() {
                           Focus could not sync. Try again in Preferences.
                         </p>
                       )}
-                      <div className="flex flex-wrap gap-x-5 gap-y-3 border-y border-border/70 py-4 text-sm font-semibold text-primary">
-                        <button onClick={() => setTool("Evidence")}>
+                      <div className="flex gap-3 overflow-x-auto border-y border-border/70 py-1 text-sm font-semibold text-primary" aria-label="Briefing next steps">
+                        <button className="shrink-0 whitespace-nowrap" onClick={() => setTool("Evidence")}>
                           What changed? →
                         </button>
-                        <button onClick={() => setTool("Monitoring")}>
+                        <button className="shrink-0 whitespace-nowrap" onClick={() => setTool("Monitoring")}>
                           Monitor {symbol} →
                         </button>
-                        <button onClick={() => setTool("Journal")}>
+                        <button className="shrink-0 whitespace-nowrap" onClick={() => setTool("Journal")}>
                           Keep research notes →
                         </button>
                       </div>
@@ -674,7 +695,13 @@ function Briefing({ data, goal }: { data: EngineBundle; goal: string }) {
   );
 
   return (
-    <section className="space-y-6">
+    <section className="engine-briefing space-y-3">
+      <div className="engine-evidence-summary" aria-label="Research coverage">
+        <div><span>Annual periods</span><strong>{data.coverage.annualPeriods}</strong></div>
+        <div><span>Valuation models</span><strong>{data.coverage.valuationModels}</strong></div>
+        <div><span>Earnings records</span><strong>{data.coverage.earningsEvents}</strong></div>
+        <div><span>Analyst estimates</span><strong>{data.coverage.analystEstimates}</strong></div>
+      </div>
       <div>
         <h3 className="text-lg font-semibold">Fundamental briefing</h3>
         <p className="mt-1 text-xs text-primary">
@@ -702,8 +729,8 @@ function Briefing({ data, goal }: { data: EngineBundle; goal: string }) {
           ["Supporting evidence", data.briefing.strengths],
           ["Risks to examine", data.briefing.risks],
         ].map(([label, entries]) => (
-          <div key={label as string}>
-            <h4 className="text-sm font-semibold">{label as string}</h4>
+          <details key={label as string} open>
+            <summary>{label as string} · {(entries as string[]).length}</summary>
             {(entries as string[]).length ? (
               (entries as string[]).map((item) => (
                 <p className="mt-2 text-sm text-muted-foreground" key={item}>
@@ -715,38 +742,10 @@ function Briefing({ data, goal }: { data: EngineBundle; goal: string }) {
                 No additional signal from the available inputs.
               </p>
             )}
-          </div>
+          </details>
         ))}
       </div>
-      <p className="text-xs text-muted-foreground">
-        {data.briefing.methodology}
-      </p>
-      <div className="grid grid-cols-2 gap-4 border-t border-border/70 pt-4 text-xs text-muted-foreground">
-        <p>
-          Annual periods{" "}
-          <strong className="block text-lg text-foreground">
-            {data.coverage.annualPeriods}
-          </strong>
-        </p>
-        <p>
-          Valuation models{" "}
-          <strong className="block text-lg text-foreground">
-            {data.coverage.valuationModels}
-          </strong>
-        </p>
-        <p>
-          Earnings records{" "}
-          <strong className="block text-lg text-foreground">
-            {data.coverage.earningsEvents}
-          </strong>
-        </p>
-        <p>
-          Analyst estimates{" "}
-          <strong className="block text-lg text-foreground">
-            {data.coverage.analystEstimates}
-          </strong>
-        </p>
-      </div>
+      <details><summary>How this briefing was calculated</summary><p className="mt-1 text-sm text-muted-foreground">{data.briefing.methodology}</p></details>
     </section>
   );
 }

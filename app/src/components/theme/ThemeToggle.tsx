@@ -12,7 +12,7 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="grid w-full grid-cols-3 gap-1 rounded-full bg-muted p-1" role="group" aria-label="Theme">
+    <div className="grid w-full grid-cols-[1fr_1fr_1.4fr] gap-1 rounded-full bg-muted p-1" role="group" aria-label="Theme">
       {options.map((opt) => {
         const active = theme === opt.value;
         const Icon = opt.icon;
@@ -22,12 +22,12 @@ export function ThemeToggle() {
             data-small-target
             onClick={() => setTheme(opt.value)}
             className={cn(
-              "flex min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2 py-2 text-[0.6875rem] font-medium transition-colors",
+              "flex min-w-0 items-center justify-center gap-1 whitespace-nowrap rounded-full px-1 py-2 text-sm font-medium transition-colors",
               active ? "contrast-active" : "text-muted-foreground hover:text-foreground"
             )}
             aria-pressed={active}
           >
-            <Icon className="h-3 w-3 shrink-0" />
+            <Icon className="hidden min-[420px]:block h-3 w-3 shrink-0" />
             {opt.label}
           </button>
         );

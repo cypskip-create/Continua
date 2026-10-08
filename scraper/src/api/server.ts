@@ -12,11 +12,15 @@ import { listNeedsReview } from "../storage/extractionsRepository.js";
 import { reprocessArtifact } from "../extraction/reprocessArtifact.js";
 import { sweepUnextractedArtifacts } from "../extraction/extractionSweep.js";
 import { getCrawlStatus } from "../monitoring/crawlStatus.js";
-import { newsScheduleStatus } from "../scheduler/scheduler.js";
+import { newsScheduleStatus, refreshNewsSources } from "../scheduler/scheduler.js";
 
 export function createServer() {
   const app = express();
   app.use(express.json());
+  app.post("/news/refresh", (_req, res) => {
+    void refreshNewsSources().catch(err => logger.error({ err }, "Reader news refresh failed"));
+    res.status(202).json({ status: "accepted", ...newsScheduleStatus() });
+  });
 
   app.get("/health", async (_req, res) => {
     const health = await checkHealth();

@@ -29,14 +29,14 @@ function FairValueBar({ price, fair, currency }: { price: number; fair: number |
       <p className={`text-2xl font-bold ${!hasFair ? "text-muted-foreground" : pct >= 0 ? "text-bull" : "text-bear"}`}>
         {hasFair ? <>{Math.abs(pct).toFixed(1)}% <span className="text-sm font-semibold">{pct >= 0 ? "Undervalued" : "Overvalued"}</span></> : "N/A"}
       </p>
-      <div className="relative h-16 mt-3 rounded-lg overflow-hidden" style={{ background: hasFair ? "linear-gradient(90deg, #10b981 0%, #10b981 55%, #eab308 75%, #7f1d1d 100%)" : "hsl(var(--muted))" }}>
-        <div className="absolute top-0 bottom-0 border-l-2 border-white/80" style={{ left: `${Math.min(98, priceX)}%` }}>
-          <span className="absolute -top-1 left-1 text-[0.625rem] font-bold text-white bg-black/40 px-1 rounded">Current {currency}{price.toFixed(2)}</span>
-        </div>
+      <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
+        <div><dt className="text-muted-foreground">Current price</dt><dd className="font-semibold">{currency} {price.toFixed(2)}</dd></div>
+        <div><dt className="text-muted-foreground">Model fair value</dt><dd className="font-semibold">{hasFair ? `${currency} ${fair!.toFixed(2)}` : "Unavailable"}</dd></div>
+      </dl>
+      <div aria-hidden="true" className="relative h-8 mt-2 rounded-lg overflow-hidden" style={{ background: hasFair ? "linear-gradient(90deg, #10b981 0%, #10b981 55%, #eab308 75%, #7f1d1d 100%)" : "hsl(var(--muted))" }}>
+        <div className="absolute top-0 bottom-0 border-l-2 border-white/80" style={{ left: `${Math.min(98, priceX)}%` }} />
         {hasFair && (
-          <div className="absolute top-0 bottom-0 border-l-2 border-white" style={{ left: `${Math.min(98, fairX!)}%` }}>
-            <span className="absolute bottom-1 left-1 text-[0.625rem] font-bold text-white bg-black/40 px-1 rounded">Fair Value {currency}{fair!.toFixed(2)}</span>
-          </div>
+          <div className="absolute top-0 bottom-0 border-l-2 border-white" style={{ left: `${Math.min(98, fairX!)}%` }} />
         )}
       </div>
     </div>

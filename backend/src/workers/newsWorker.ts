@@ -14,6 +14,22 @@ import { logger } from "../monitoring/logger.js";
 import { newsRepository } from "../storage/repositories/newsRepository.js";
 let revalidationCursor = "0";
 let running = false;
+let readerRefresh: Promise<void> | null = null;
+let lastReaderRefreshAt = 0;
+
+/** Only active readers trigger this; it is not a keep-alive timer. Never hold
+ * the HTTP news response open for a sleeping collector or publisher crawl. */
+export function requestNewsCollection(): void {
+  const collector = env.NEWS_SCRAPER_URL ?? (env.NODE_ENV === "production" ? "https://continua-scraper.onrender.com" : undefined);
+  if (!collector || readerRefresh || Date.now() - lastReaderRefreshAt < 10 * 60_000) return;
+  lastReaderRefreshAt = Date.now();
+  readerRefresh = (async () => {
+    const response = await fetch(new URL("/news/refresh", collector), { method: "POST", signal: AbortSignal.timeout(65_000) });
+    if (!response.ok) throw new Error(`News collector returned HTTP ${response.status}`);
+    await response.body?.cancel();
+    await runNewsBridgeOnce();
+  })().catch(err => logger.warn({ err }, "Reader-triggered news collection failed")).finally(() => { readerRefresh = null; });
+}
 
 export async function runNewsBridgeOnce(): Promise<void> {
   if (running) return;

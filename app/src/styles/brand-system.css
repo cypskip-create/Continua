@@ -261,6 +261,28 @@
 }
 /* Match compact two-line Home stock rows. Do not shrink chart canvases,
    modal controls, bottom navigation, or marketing-page motion. */
+/* Fundamentals is the product's reading scale. Legacy utility sizes below
+   that scale must not make later report sections or other screens microscopic.
+   Scope to the product so marketing typography and SVG chart coordinates stay intact. */
+.app-shell, body:has(.app-shell) {
+  --app-body-size: 0.875rem;
+  font-size: var(--app-body-size);
+}
+body:has(.app-shell) :is(.text-xs,.text-sm,[class*="text-[0."]),
+.app-shell :is(.section-eyebrow,.engine-launch,.review-metrics small) {
+  font-size: var(--app-body-size);
+  line-height: 1.5;
+}
+.app-shell :is(p,span,small,label,button,a,th,td)[class*="text-[0."] {
+  overflow-wrap: normal;
+}
+.app-shell .sub-nav button { font-size: var(--app-body-size); }
+.app-shell .engine-tool-context { padding-block: 0.5rem; border-bottom: 1px solid hsl(var(--border)); }
+.app-shell .engine-evidence-summary { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0.5rem; padding-block: 0.5rem; border-block: 1px solid hsl(var(--border)); }
+.app-shell .engine-evidence-summary strong { display: block; font-size: 1.125rem; font-variant-numeric: tabular-nums; }
+.app-shell .engine-evidence-summary span { color: hsl(var(--muted-foreground)); }
+.app-shell .engine-briefing details { padding-block: 0.5rem; border-top: 1px solid hsl(var(--border)); }
+.app-shell .engine-briefing summary { cursor: pointer; font-weight: 600; }
 .app-shell .page-canvas :is(.space-y-3,.space-y-4,.space-y-5,.space-y-6,.space-y-8) > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; }
 .app-shell .page-canvas :is(section,article,div)[class~="py-4"],
 .app-shell .page-canvas :is(section,article,div)[class~="py-5"],

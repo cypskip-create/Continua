@@ -23,6 +23,25 @@ import { sourceSchedule } from "./newsSchedule.js";
 const scheduledTasks: ScheduledTask[] = [];
 const runningSources = new Set<string>();
 const newsRuns = new Map<string, { startedAt: string; completedAt: string | null; success: boolean | null; discovered?: number; extracted?: number }>();
+let newsRefresh: Promise<void> | null = null;
+let lastNewsRefreshAt = 0;
+/** Reader-triggered catch-up shares the cron locks and publisher throttles. */
+export function refreshNewsSources(): Promise<void> {
+  if (newsRefresh) return newsRefresh;
+  if (!env.SCHEDULER_ENABLED || Date.now() - lastNewsRefreshAt < 10 * 60_000) return Promise.resolve();
+  lastNewsRefreshAt = Date.now();
+  newsRefresh = (async () => {
+    const pending = (await listEnabledSources()).filter(source => source.adapter === "rss");
+    await Promise.all(Array.from({ length: Math.min(2, pending.length) }, async () => {
+      for (;;) {
+        const source = pending.shift();
+        if (!source) return;
+        await runSourceOnce(source);
+      }
+    }));
+  })().finally(() => { newsRefresh = null; });
+  return newsRefresh;
+}
 export function newsScheduleStatus() {
   return { enabled: env.SCHEDULER_ENABLED, cron: env.NEWS_CRAWL_CRON, running: [...runningSources].filter(id => newsRuns.has(id)), sources: [...newsRuns].map(([sourceId, state]) => ({ sourceId, ...state })) };
 }

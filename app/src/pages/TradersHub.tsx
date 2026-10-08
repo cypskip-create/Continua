@@ -459,7 +459,6 @@ export default function TradersHub() {
         </div>
       )}
 
-      <div className="desk-intro"><div><h2>TradersHub</h2><p>Ideas, evidence and conversations from the NSE community.</p></div><button className="pill-tab" onClick={() => setComposeOpen(true)}>Post an idea</button></div>
       {feedError && activeTab !== "media" && <div role="alert" className="px-4 py-3 text-sm">Your feed could not load. <button className="text-primary" onClick={() => void fetchPosts()}>Retry feed</button></div>}
       {/* Suggested people — ranked by shared TradersHub interests */}
       {activeTab === "for-you" && !searching && (

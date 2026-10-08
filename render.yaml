@@ -48,6 +48,8 @@ services:
         sync: false
       - key: CACHE_DRIVER
         value: memory
+      - key: NEWS_SCRAPER_URL
+        value: https://continua-scraper.onrender.com
       - key: API_KEY_AUTH_ENABLED
         value: "true"
       # ── Live NSE data (carried over from Railway) ──────────────────────

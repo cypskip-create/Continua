@@ -99,6 +99,25 @@ later (only revoked/reissued).
 
 ## 4. Point the Vercel frontend at the new backend
 
+### News collection on free services
+
+The scraper's cron only runs while its process is awake. Active readers of
+`GET /api/v1/news` now request a nonblocking collector catch-up at most once
+every ten minutes. The collector shares per-source locks with its scheduler,
+uses two workers for this catch-up, and retains publisher throttling and robots
+checks. The regular two-minute news bridge publishes completed extractions.
+No overnight always-on guarantee is implied on the free plan, and refreshes
+never rewrite a story's publication date.
+
+`NEWS_SCRAPER_URL` points to the scraper service origin. The production fallback
+is this project's `https://continua-scraper.onrender.com`; set the variable
+explicitly when using another deployment. Development and test environments
+do not contact that service unless the variable is set. Deploy both backend
+and scraper changes together: the collector exposes `POST /news/refresh`.
+
+The app displays the newest available publication date when a feed is older
+than six hours, separately from the time it last checked the API.
+
 In Vercel's project settings → Environment Variables, set (Production, and
 Preview if you want previews hitting the same backend too):
 

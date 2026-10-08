@@ -5,10 +5,12 @@ import { newsRepository } from "../../storage/repositories/newsRepository.js";
 import { ApiError } from "../middleware/errorHandler.js";
 import { getQuery } from "../middleware/validateQuery.js";
 import type { NewsQuerySchema, SecurityNewsQuerySchema } from "../validators/querySchemas.js";
+import { requestNewsCollection } from "../../workers/newsWorker.js";
 
 export const newsController = {
   /** GET /api/v1/news — the Media/TradersHub feed: everything recent, optionally filtered by category. */
   async listRecent(req: Request, res: Response) {
+    requestNewsCollection();
     const { category, limit } = getQuery<z.infer<typeof NewsQuerySchema>>(req);
     const items = await newsRepository.listRecent(limit, category);
     res.json({ data: items });
