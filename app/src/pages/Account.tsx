@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, LogOut, Eye, EyeOff, Type, Sparkles, Crown } from "lucide-react";
+import { User, LogOut, Eye, EyeOff, Sparkles, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -11,7 +11,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
 import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
 import { useToast } from "@/hooks/use-toast";
-import { applyFontScale, getFontScale } from "@/lib/appearance";
+import { FontSizeControl } from "@/components/theme/FontSizeControl";
 
 export default function Account() {
   const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -20,11 +20,6 @@ export default function Account() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [portfolioPublic, setPortfolioPublic] = useState(true);
-  const [fontScale, setFontScale] = useState<string>(getFontScale);
-
-  useEffect(() => {
-    applyFontScale(fontScale);
-  }, [fontScale]);
 
   useEffect(() => {
     const pp = profile?.portfolio_public;
@@ -109,25 +104,7 @@ export default function Account() {
               <ThemeToggle />
             </div>
             <div className="hairline-t pt-4">
-              <div className="flex items-center gap-3 mb-3">
-                <Type className="h-4 w-4 text-muted-foreground" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Text size</p>
-                  <p className="text-[0.6875rem] text-muted-foreground">Global scale</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 gap-1.5">
-                {[{ label: "S", val: "0.9" }, { label: "M", val: "1" }, { label: "L", val: "1.1" }, { label: "XL", val: "1.2" }].map(opt => (
-                  <button
-                    key={opt.val}
-                    onClick={() => setFontScale(opt.val)}
-                    data-small-target
-                    className={`h-9 rounded-full text-xs font-semibold transition-colors ${
-                      fontScale === opt.val ? "contrast-active" : "bg-muted text-muted-foreground hover:text-foreground"
-                    }`}
-                  >{opt.label}</button>
-                ))}
-              </div>
+              <FontSizeControl />
             </div>
           </div>
         </section>

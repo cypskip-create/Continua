@@ -93,7 +93,7 @@ export function PortfolioScorecard({ holdings, research, valuations, benchmark, 
             <PolarGrid stroke="hsl(var(--border))" />
             <PolarAngleAxis
               dataKey="metric"
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: "0.625rem", fill: "hsl(var(--muted-foreground))" }}
               tickFormatter={(v: string) => v}
             />
             <Radar dataKey="v" stroke="hsl(24 95% 53%)" fill="hsl(24 95% 53%)" fillOpacity={0.5} />

@@ -45,13 +45,13 @@ export function ResearchChart({
           />
           <XAxis
             dataKey="date"
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: "0.6875rem" }}
             minTickGap={50}
           />
           <YAxis
             width={48}
             domain={["auto", "auto"]}
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: "0.6875rem" }}
             tickFormatter={(v) => Number(v).toFixed(1)}
           />
           <Tooltip

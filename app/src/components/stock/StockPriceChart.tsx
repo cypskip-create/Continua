@@ -868,7 +868,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
                 axisLine={false}
                 tickLine={false}
                 tickCount={6}
-                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fontSize: "0.625rem", fill: "hsl(var(--muted-foreground))" }}
                 tickFormatter={(v: number) => v.toFixed(2)}
               />
               <Tooltip content={() => null} cursor={false} />
@@ -933,7 +933,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
               axisLine={false}
               tickLine={false}
               tickCount={6}
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: "0.625rem", fill: "hsl(var(--muted-foreground))" }}
               tickFormatter={(v: number) => v.toFixed(2)}
             />
             <Tooltip content={() => null} cursor={false} />

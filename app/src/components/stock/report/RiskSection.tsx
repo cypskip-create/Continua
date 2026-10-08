@@ -93,7 +93,7 @@ export function RiskSection({ symbol }: Props) {
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radar}>
                   <PolarGrid stroke="hsl(var(--border))" />
-                  <PolarAngleAxis dataKey="factor" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                  <PolarAngleAxis dataKey="factor" tick={{ fontSize: "0.5625rem", fill: "hsl(var(--muted-foreground))" }} />
                   <Radar dataKey="safety" stroke={fx.strong} fill={fx.strong} fillOpacity={0.3} />
                 </RadarChart>
               </ResponsiveContainer>

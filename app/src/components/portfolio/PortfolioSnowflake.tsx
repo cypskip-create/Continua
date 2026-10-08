@@ -73,7 +73,7 @@ export function PortfolioSnowflake({ holdings, totalValue, totalCost, gainPct }:
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart data={data} outerRadius="75%">
               <PolarGrid stroke="hsl(var(--border))" />
-              <PolarAngleAxis dataKey="metric" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+              <PolarAngleAxis dataKey="metric" tick={{ fontSize: "0.5625rem", fill: "hsl(var(--muted-foreground))" }} />
               <Radar dataKey="v" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={hasHoldings ? 0.35 : 0.08} />
             </RadarChart>
           </ResponsiveContainer>

@@ -82,7 +82,7 @@ function MetricChart({ title, metrics, history, currency, periodType }: { title:
       <div className="h-52 w-full" role="img" aria-label={`${metric.label} history`}>
         <ResponsiveContainer width="100%" height="100%"><ComposedChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 4" />
-          <XAxis dataKey="period" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} minTickGap={16} />
+          <XAxis dataKey="period" tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} minTickGap={16} />
           <YAxis yAxisId="actual" hide domain={[(minimum: number) => Math.min(0, minimum), "auto"]} />
           <YAxis yAxisId="growth" orientation="right" hide domain={["auto", "auto"]} />
           <Tooltip formatter={(v: number, name: string) => name === "YoY" || metric.percent ? `${Number(v).toFixed(1)}%` : metric.label === "EPS" || metric.label === "Current ratio" ? Number(v).toFixed(2) : compact(Number(v), currency)} contentStyle={{ background: "hsl(var(--popover))", color: "hsl(var(--popover-foreground))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />

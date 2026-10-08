@@ -43,9 +43,9 @@ export function ManagementSection({ symbol }: Props) {
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={[]}>
-              <XAxis dataKey="period" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={32} />
-              <Legend wrapperStyle={{ fontSize: 10 }} />
+              <XAxis dataKey="period" tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} width={32} />
+              <Legend wrapperStyle={{ fontSize: "0.625rem" }} />
               <Line dataKey="Total Compensation" stroke="hsl(217 91% 60%)" strokeWidth={2} />
               <Line dataKey="Salary" stroke="hsl(160 84% 58%)" strokeWidth={2} />
               <Line dataKey="Company Earnings" stroke="hsl(38 92% 50%)" strokeWidth={2} strokeDasharray="4 3" />

@@ -15,7 +15,7 @@ import {
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { applyFontScale, getFontScale } from "@/lib/appearance";
+import { FontSizeControl } from "@/components/theme/FontSizeControl";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
@@ -54,7 +54,6 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [portfolioOn, setPortfolioOn] = useState(!!profile?.portfolio_public);
-  const [fontScale, setFontScale] = useState(getFontScale());
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
 
@@ -490,19 +489,7 @@ export default function Settings() {
               <ThemeToggle />
             </div>
             <div>
-              <div className="flex items-center gap-3 mb-3">
-                <Type className="h-4 w-4 text-muted-foreground" />
-                <p className="text-sm font-medium">Text size</p>
-              </div>
-              <div className="grid grid-cols-4 gap-1.5">
-                {[{ label: "S", val: "0.9" }, { label: "M", val: "1" }, { label: "L", val: "1.1" }, { label: "XL", val: "1.2" }].map(opt => (
-                  <button
-                    key={opt.val}
-                    onClick={() => { applyFontScale(opt.val); setFontScale(opt.val); }}
-                    className={`h-9 rounded-lg text-xs font-semibold transition-colors ${fontScale === opt.val ? "brand-active" : "bg-muted text-muted-foreground hover:text-foreground"}`}
-                  >{opt.label}</button>
-                ))}
-              </div>
+              <FontSizeControl />
             </div>
           </div>
         )}

@@ -188,11 +188,11 @@ export function FundamentalsInsights({
                   dataKey="year"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tick={{ fontSize: "0.6875rem", fill: "hsl(var(--muted-foreground))" }}
                 />
                 <YAxis
                   tickFormatter={percent}
-                  tick={{ fontSize: 10 }}
+                  tick={{ fontSize: "0.625rem" }}
                   width={45}
                 />
                 <Tooltip
@@ -273,13 +273,13 @@ export function FundamentalsInsights({
                   dataKey="year"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tick={{ fontSize: "0.6875rem", fill: "hsl(var(--muted-foreground))" }}
                 />
                 <YAxis
                   tickFormatter={(value: number) =>
                     `${(value / 1e9).toFixed(1)}B`
                   }
-                  tick={{ fontSize: 10 }}
+                  tick={{ fontSize: "0.625rem" }}
                   width={48}
                 />
                 <Tooltip

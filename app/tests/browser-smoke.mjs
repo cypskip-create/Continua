@@ -322,10 +322,15 @@ try {
   assert.ok(surfaces.length > 0);
   assert.ok(surfaces.every(s => s.radius === '0px' && s.shadow === 'none' && s.border === '1px'));
   await page.locator('.bottom-nav').getByText('Profile', { exact: true }).tap();
-  await page.getByRole('button', { name: 'S', exact: true }).tap();
-  const small = await page.getByText('Text size', { exact: true }).evaluate(el => parseFloat(getComputedStyle(el).fontSize));
-  await page.getByRole('button', { name: 'XL', exact: true }).tap();
-  const large = await page.getByText('Text size', { exact: true }).evaluate(el => parseFloat(getComputedStyle(el).fontSize));
+  const textSlider = page.getByRole('slider',{name:'Text size',exact:true});
+  const setTextPercent = async percent => {
+    await textSlider.press('Home');
+    for(let value=50;value<percent;value++)await textSlider.press('ArrowRight');
+  };
+  await setTextPercent(63);
+  const small = await page.getByLabel('Text size preview',{exact:true}).evaluate(el => parseFloat(getComputedStyle(el).fontSize));
+  await setTextPercent(120);
+  const large = await page.getByLabel('Text size preview',{exact:true}).evaluate(el => parseFloat(getComputedStyle(el).fontSize));
   assert.ok(large > small * 1.25, 'Text setting must visibly scale rem labels');
   await page.reload();
   await page.getByText('Text size', { exact: true }).waitFor();
@@ -344,7 +349,20 @@ try {
   await themeControls.getByRole('button',{name:'Light',exact:true}).tap();
   await wait(350); // Capture the settled theme, not the colour transition.
   await page.screenshot({path:fileURLToPath(new URL('account-appearance.png',artifacts))});
-  await page.getByRole('button', { name: 'M', exact: true }).tap();
+  await textSlider.scrollIntoViewIfNeeded();
+  await page.screenshot({path:fileURLToPath(new URL('font-size-slider.png',artifacts))});
+  const sliderBox = await textSlider.boundingBox();
+  await page.mouse.move(sliderBox.x+sliderBox.width*.68,sliderBox.y+sliderBox.height/2);
+  await page.mouse.down();
+  await page.mouse.move(sliderBox.x+sliderBox.width*.25,sliderBox.y+sliderBox.height/2,{steps:12});
+  await page.mouse.up();
+  const draggedPercent = Number(await textSlider.inputValue());
+  assert.ok(draggedPercent>=70 && draggedPercent<=80,'Dragging selects a precise smaller text size');
+  assert.equal(await page.evaluate(()=>localStorage.getItem('app_font_scale')),String(draggedPercent/100));
+  await page.reload();
+  assert.equal(Number(await textSlider.inputValue()),draggedPercent,'Custom slider positions survive reload');
+  await page.getByRole('button',{name:'Reset text size',exact:true}).tap();
+  assert.equal(await textSlider.inputValue(),'100');
   console.log('PASS saved scroll, flat surfaces and persistent global text sizing');
 
   await page.goto('http://127.0.0.1:5188/traders-hub');
@@ -440,7 +458,7 @@ try {
   assert.equal(valuationHeadingSize,fundamentalHeadingSize,'Valuation and Fundamentals share section heading sizes');
   const fundamentalBodySize = await periodTabs.getByRole('tab',{name:'Annual',exact:true}).evaluate(el=>getComputedStyle(el).fontSize);
   const valuationBodySize = await page.getByText('P/E Ratio — used since KCB is profitable',{exact:true}).evaluate(el=>getComputedStyle(el).fontSize);
-  assert.equal(valuationBodySize,fundamentalBodySize,'Legacy valuation labels share the Fundamentals reading scale');
+  assert.ok(parseFloat(valuationBodySize)<parseFloat(fundamentalBodySize),'Small labels retain their natural hierarchy instead of a forced global font floor');
 
   await page.goto('http://127.0.0.1:5188/engine?symbol=KCB');
   await page.getByText('Fixture reported revenue increased.',{exact:true}).waitFor();
@@ -705,7 +723,7 @@ try {
     await wait(700);
     for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({width, height:844});
-    for (const scale of [0.9, 1, 1.1, 1.2]) {
+    for (const scale of [0.5, 0.63, 0.9, 1, 1.2, 1.37, 1.5]) {
       await page.evaluate(scale => { document.documentElement.style.fontSize = (16 * scale) + 'px'; }, scale);
       await wait(350);
       const layout = await page.evaluate(() => {
@@ -723,7 +741,7 @@ try {
     }
   await page.setViewportSize({width:390,height:844});
   await page.evaluate(() => { document.documentElement.style.fontSize = '16px'; });
-  console.log('PASS four font sizes: stock, portfolio, Home and Engine containment and sticky offsets');
+  console.log('PASS seven font sizes: stock, portfolio, Home and Engine containment and sticky offsets');
   const recoveryContext=await browser.newContext({viewport:{width:390,height:844},storageState:await context.storageState()});
   let blockModule=true;
   await recoveryContext.route('**/*',route=>blockModule && new URL(route.request().url()).pathname==='/src/pages/TradersHub.tsx'?route.abort():handleRoute(route));

@@ -128,8 +128,8 @@ export function PastPerformanceSection({ symbol, currency }: Props) {
               { name: "Capex", v: -(latest.capex ?? 0) / 1e9 },
               { name: "Free Cash Flow", v: (latest.freeCashFlow ?? 0) / 1e9 },
             ]}>
-              <XAxis dataKey="name" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={32} />
+              <XAxis dataKey="name" tick={{ fontSize: "0.5625rem" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} width={32} />
               <Tooltip formatter={(v: number) => [`${currency}${v.toFixed(2)}B`, ""]} contentStyle={tooltipStyle} />
               <Bar dataKey="v" radius={[4, 4, 0, 0]}>
                 {["Earnings", "Operating CF", "Capex", "Free Cash Flow"].map((n, i) => (
@@ -148,10 +148,10 @@ export function PastPerformanceSection({ symbol, currency }: Props) {
             <BarChart data={[
               { name: "1Y Earnings Growth", Company: earningsGrowth1y ?? 0, "NSE Top 15": 0 },
             ]}>
-              <XAxis dataKey="name" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={32} unit="%" />
+              <XAxis dataKey="name" tick={{ fontSize: "0.5625rem" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} width={32} unit="%" />
               <Tooltip formatter={(v: number) => [`${v.toFixed(1)}%`, ""]} contentStyle={tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: 10 }} />
+              <Legend wrapperStyle={{ fontSize: "0.625rem" }} />
               <Bar dataKey="Company" fill={fx.revenue} radius={[4, 4, 0, 0]} />
               <Bar dataKey="NSE Top 15" fill="hsl(var(--muted-foreground) / 0.3)" radius={[4, 4, 0, 0]} />
             </BarChart>

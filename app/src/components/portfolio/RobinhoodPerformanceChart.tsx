@@ -318,7 +318,7 @@ export function RobinhoodPerformanceChart({
                 minTickGap={55}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fontSize: "0.625rem", fill: "hsl(var(--muted-foreground))" }}
               />
               <YAxis
                 hide={hideValue}
@@ -326,7 +326,7 @@ export function RobinhoodPerformanceChart({
                 domain={["dataMin", "dataMax"]}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fontSize: "0.625rem", fill: "hsl(var(--muted-foreground))" }}
                 tickFormatter={(v) =>
                   mode === "performance"
                     ? `${Number(v).toFixed(0)}%`

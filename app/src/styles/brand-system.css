@@ -261,22 +261,16 @@
 }
 /* Match compact two-line Home stock rows. Do not shrink chart canvases,
    modal controls, bottom navigation, or marketing-page motion. */
-/* Fundamentals is the product's reading scale. Legacy utility sizes below
-   that scale must not make later report sections or other screens microscopic.
-   Scope to the product so marketing typography and SVG chart coordinates stay intact. */
-.app-shell, body:has(.app-shell) {
-  --app-body-size: 0.875rem;
-  font-size: var(--app-body-size);
-}
-body:has(.app-shell) :is(.text-xs,.text-sm,[class*="text-[0."]),
-.app-shell :is(.section-eyebrow,.engine-launch,.review-metrics small) {
-  font-size: var(--app-body-size);
-  line-height: 1.5;
-}
-.app-shell :is(p,span,small,label,button,a,th,td)[class*="text-[0."] {
-  overflow-wrap: normal;
-}
-.app-shell .sub-nav button { font-size: var(--app-body-size); }
+/* Preserve each component's type hierarchy. The root rem scale is controlled
+   by the user's slider, not a forced minimum size on all labels. Keep the
+   slider itself usable even when the rest of the app is at its smallest. */
+.font-size-control { font-size: 14px; line-height: 1.5; }
+.font-size-range { appearance: none; -webkit-appearance: none; flex: 1; min-width: 0; height: 44px; background-color: transparent; border-radius: 999px; cursor: pointer; touch-action: pan-y; }
+.font-size-range::-webkit-slider-runnable-track { height: 6px; }
+.font-size-range::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; margin-top: -9px; width: 24px; height: 24px; border-radius: 50%; background: hsl(var(--background)); border: 2px solid hsl(var(--primary)); box-shadow: 0 1px 3px hsl(var(--foreground) / 0.15); }
+.font-size-range::-moz-range-track { height: 6px; background: transparent; }
+.font-size-range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: hsl(var(--background)); border: 2px solid hsl(var(--primary)); }
+.font-size-range:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 6px; }
 .app-shell .engine-tool-context { padding-block: 0.5rem; border-bottom: 1px solid hsl(var(--border)); }
 .app-shell .engine-evidence-summary { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0.5rem; padding-block: 0.5rem; border-block: 1px solid hsl(var(--border)); }
 .app-shell .engine-evidence-summary strong { display: block; font-size: 1.125rem; font-variant-numeric: tabular-nums; }

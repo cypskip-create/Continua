@@ -105,7 +105,7 @@ export function DividendHistory({ holdings, dividendData, isPremium = false, sho
       <div className="h-40">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={freeData} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
-            <XAxis dataKey="label" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} interval={view === "monthly" ? 1 : 0} />
+            <XAxis dataKey="label" tick={{ fontSize: "0.5625rem" }} axisLine={false} tickLine={false} interval={view === "monthly" ? 1 : 0} />
             <Bar dataKey="value" radius={[3, 3, 0, 0]} maxBarSize={view === "monthly" ? 14 : 40}>
               {freeData.map((d) => (
                 <Cell key={d.key} fill={isPremium || !d.locked ? "hsl(var(--bull))" : "hsl(var(--muted-foreground) / 0.15)"} />

@@ -93,7 +93,7 @@ export function StockSnowflake({ symbol }: StockSnowflakeProps) {
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData} outerRadius="72%">
                 <PolarGrid stroke="hsl(var(--border))" />
-                <PolarAngleAxis dataKey="metric" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                <PolarAngleAxis dataKey="metric" tick={{ fontSize: "0.625rem", fill: "hsl(var(--muted-foreground))" }} />
                 <Radar dataKey="v" stroke="hsl(24 95% 53%)" fill="hsl(24 95% 53%)" fillOpacity={0.5} />
               </RadarChart>
             </ResponsiveContainer>
