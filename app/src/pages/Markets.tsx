@@ -999,10 +999,10 @@ export default function Markets() {
           />
           <div className="sub-nav">
             <Choices
-              values={["Overview", "Bonds", "Watch List", "Heat Map", "Calendar", "All Stocks"]}
+              values={["Overview", "Bonds", "Watchlist", "Heat Map", "Calendar", "All Stocks"]}
               value={tab}
               onChange={(value) => {
-                const routes: Record<string, string> = { "Watch List": "/watchlist", "Heat Map": "/markets/heatmap", Calendar: "/markets/economic" };
+                const routes: Record<string, string> = { "Watchlist": "/watchlist", "Heat Map": "/markets/heatmap", Calendar: "/markets/economic" };
                 if (routes[value]) navigate(routes[value]);
                 else setTab(value);
               }}

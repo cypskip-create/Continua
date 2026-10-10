@@ -9,7 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import { useStockFinancials } from "@/hooks/useStockFinancials";
-import { useValuation } from "@/hooks/useValuation";
+import { ValueSignal } from "./ValueSignal";
 import { financialNumber } from "@/lib/financialPresentation";
 
 const finite = (value: number | null | undefined): number | null =>
@@ -19,15 +19,16 @@ const percent = (value: number) => `${value.toFixed(1)}%`;
 export function FundamentalsInsights({
   symbol,
   currency,
+  basic = false,
 }: {
   symbol: string;
   currency: string;
+  basic?: boolean;
 }) {
   const { history } = useStockFinancials(symbol, {
     periodType: "annual",
     limit: 10,
   });
-  const { valuation } = useValuation(symbol);
   const [returnMetric, setReturnMetric] = useState<"ROE" | "ROA" | "ROCE">(
     "ROE",
   );
@@ -80,31 +81,6 @@ export function FundamentalsInsights({
           })),
         ]
       : [];
-  const fairModels =
-    valuation?.models.filter(
-      (model) =>
-        finite(model.fairValue) != null &&
-        finite(model.currentPrice) != null &&
-        model.currentPrice > 0,
-    ) ?? [];
-  const upside = fairModels.length
-    ? fairModels.reduce(
-        (sum, model) => sum + (model.fairValue! / model.currentPrice - 1) * 100,
-        0,
-      ) / fairModels.length
-    : null;
-  const stars =
-    upside == null
-      ? null
-      : upside >= 30
-        ? 5
-        : upside >= 10
-          ? 4
-          : upside > -10
-            ? 3
-            : upside > -30
-              ? 2
-              : 1;
   const chartProps = {
     stroke: "hsl(var(--border))",
     strokeDasharray: "3 5",
@@ -119,40 +95,7 @@ export function FundamentalsInsights({
 
   return (
     <div className="space-y-0">
-      <section className="border-t border-border/70 py-6 space-y-3">
-        <h3 className="text-lg font-semibold">Continua Value Signal</h3>
-        <p className="text-xs text-muted-foreground">
-          An app-specific, model-based valuation indicator. It is not a
-          Morningstar rating or investment recommendation.
-        </p>
-        {stars == null ? (
-          <p className="text-sm text-muted-foreground">
-            Unrated — no usable model-based fair value is on file.
-          </p>
-        ) : (
-          <>
-            <p
-              className="text-2xl text-amber-500"
-              aria-label={`${stars} out of 5 stars`}
-            >
-              {"★".repeat(stars)}
-              <span className="text-muted-foreground/40">
-                {"★".repeat(5 - stars)}
-              </span>
-            </p>
-            <p className="text-sm">
-              Average model-implied upside:{" "}
-              <strong>{upside!.toFixed(1)}%</strong> · {fairModels.length} model
-              {fairModels.length === 1 ? "" : "s"}
-            </p>
-          </>
-        )}
-        <p className="text-xs text-muted-foreground">
-          5 stars: ≥30% potential upside; 4: 10–30%; 3: within ±10%; 2: 10–30%
-          downside; 1: ≥30% downside. Equal-weighted available model fair
-          values; no margin of safety or analyst judgement is implied.
-        </p>
-      </section>
+      <ValueSignal symbol={symbol} currency={currency}/>
       <section className="border-t border-border/70 py-6 space-y-4">
         <h3 className="text-lg font-semibold">Return on capital</h3>
         <div className="flex gap-1" role="tablist" aria-label="Return metric">
@@ -315,7 +258,7 @@ export function FundamentalsInsights({
             anchor a scenario.
           </p>
         )}
-        {base!=null&&base>0&&<div className="overflow-x-auto"><h4 className="text-sm font-semibold">Growth sensitivity · {currency}</h4><table className="w-full text-xs whitespace-nowrap"><thead><tr><th className="text-left py-2">Annual growth</th>{[1,2,3].map(y=><th key={y} className="px-3 text-right">Year {y}</th>)}</tr></thead><tbody>{[Math.max(-50,growth-5),growth,Math.min(50,growth+5)].map((g,i)=><tr key={i} className="border-t border-border"><th className="text-left py-2 font-normal">{g.toFixed(1)}%</th>{[1,2,3].map(y=><td key={y} className="px-3 text-right">{financialNumber(base*(1+g/100)**y)}</td>)}</tr>)}</tbody></table><p className="text-xs text-muted-foreground">Constant compounded growth; no probability, valuation multiple or price target is implied.</p></div>}
+        {!basic&&base!=null&&base>0&&<div className="overflow-x-auto"><h4 className="text-sm font-semibold">Growth sensitivity · {currency}</h4><table className="w-full text-xs whitespace-nowrap"><thead><tr><th className="text-left py-2">Annual growth</th>{[1,2,3].map(y=><th key={y} className="px-3 text-right">Year {y}</th>)}</tr></thead><tbody>{[Math.max(-50,growth-5),growth,Math.min(50,growth+5)].map((g,i)=><tr key={i} className="border-t border-border"><th className="text-left py-2 font-normal">{g.toFixed(1)}%</th>{[1,2,3].map(y=><td key={y} className="px-3 text-right">{financialNumber(base*(1+g/100)**y)}</td>)}</tr>)}</tbody></table><p className="text-xs text-muted-foreground">Constant compounded growth; no probability, valuation multiple or price target is implied.</p></div>}
       </section>
     </div>
   );

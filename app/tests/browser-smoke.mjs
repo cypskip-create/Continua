@@ -35,6 +35,7 @@ let premiumPortfolioRequests=0,overviewRequests=0;
 let portfolioThrottle=1,overviewThrottle=1;
 let engineRequests = 0;
 let denyEngineAccess = false;
+let quotaBlocked = false;
 let enginePreferences={goal:'Balanced',horizon:'1_to_5_years',experience:'beginner',riskComfort:'unspecified',incomeNeeds:'none',sectors:[],notifications:true,learnInterests:false,interests:[]};
 let engineRules=[];
 let engineFlows=[];
@@ -66,7 +67,7 @@ const handleRoute = async (route) => {
       return json(route.request().headers().accept?.includes('object') ? fixturePosts[0] ?? null : fixturePosts);
     }
     if (url.pathname.endsWith('/auth/v1/token')) return json({ access_token: `e30.${btoa(JSON.stringify({sub:user.id,exp:4102444800,role:'authenticated'}))}.fixture`, refresh_token: 'fixture', expires_in: 3600, token_type: 'bearer', user });
-    if (url.pathname.endsWith('/rpc/record_research_view') || url.pathname.endsWith('/rpc/get_research_quota')) return json({ allowed: true, is_premium: true, already_counted: true, limit: null, remaining: null });
+    if (url.pathname.endsWith('/rpc/record_research_view') || url.pathname.endsWith('/rpc/get_research_quota')) return json({ allowed: !quotaBlocked, is_premium: profile.subscription_plan!=='free', already_counted: !quotaBlocked, limit: profile.subscription_plan==='free'?5:null, remaining: quotaBlocked?0:profile.subscription_plan==='free'?4:null });
     if (url.pathname.includes('/auth/')) return json(user);
     if (url.pathname.includes('/profiles')) return json(route.request().headers().accept?.includes('object') ? profile : [profile]);
     if (url.pathname.includes('/watchlist_folders')) return json([{ id: 'fixture-folder', user_id: user.id, name: 'Watchlist', is_default: true }]);
@@ -97,6 +98,7 @@ const handleRoute = async (route) => {
       if(denyEngineAccess) return json({error:'Premium subscription required'},403);
       return json({data:{symbol:path.split('/').at(-1),exchange:'NSE',currency:'KES',companyName:'KCB Group',generatedAt:new Date().toISOString(),quote:{lastPrice:50},history:[],earnings:[],ownership:[{holderName:'Fixture institutional holder',holderType:'institutional',percentHeld:12,asOf:'2025-12-31'}],valuation:{models:[{model:'Fixture valuation',fairValue:60,upsidePercent:20,methodology:'Fixture-only disclosed methodology'}]},briefing:{facts:['Fixture reported revenue increased.'],strengths:[],risks:[],coverage:'Two reported periods.',methodology:'Calculated from fixture financial statements.'},unavailable:[],news:[{id:'digest-test',headline:'Fixture company update',summary:'Revenue increased by 12 percent.',source:'Fixture publisher',url:'https://example.invalid/source',publishedAt:'2026-10-07',methodology:'Extractive source sentences',fullTextAvailable:true}],technicals:[],coverage:{annualPeriods:2,valuationModels:1,earningsEvents:0,analystEstimates:0}}});
     }
+    if(path.startsWith('/valuation/'))return json({data:{symbol:'KCB',exchange:'NSE',currency:'KES',currentPrice:50,caveat:'Fixture models only',models:[58,60,62].map((fairValue,i)=>({model:`Fixture model ${i+1}`,fairValue,currentPrice:50,upsidePercent:(fairValue/50-1)*100,inputs:{earningsPerShare:5},methodology:'Fixture sourced-model assumptions'}))}});
     if (path.startsWith('/quotes')) {
       quoteRequests++;
       const symbols = (url.searchParams.get('symbols') || path.split('/')[2] || 'KCB').split(',');
@@ -460,9 +462,10 @@ try {
   await page.getByRole('button', {name:'Fundamentals',exact:true}).tap();
   const categories = page.getByRole('tablist',{name:'Fundamentals category'});
   await categories.waitFor();
-  assert.deepEqual(await categories.getByRole('tab').allTextContents(),['Financials','Focus','Shareholders','Dividends','Profile']);
-  await categories.getByRole('tab',{name:'Focus',exact:true}).tap();
-  await page.getByRole('heading',{name:'Company Focus',exact:true}).waitFor();
+  assert.deepEqual(await categories.getByRole('tab').allTextContents(),['Financials','Forecast','Shareholders','Dividends','Profile']);
+  await categories.getByRole('tab',{name:'Forecast',exact:true}).tap();
+  await page.getByRole('heading',{name:'Company Forecast',exact:true}).waitFor();
+  await page.getByLabel('Expanded rating research',{exact:true}).waitFor();
   await page.getByRole('heading',{name:'Continua Value Signal',exact:true}).waitFor();
   await page.getByRole('img',{name:'revenue actual and estimate history'}).scrollIntoViewIfNeeded();
   await page.getByRole('tablist',{name:'Estimates metric'}).getByRole('tab',{name:'EPS',exact:true}).tap();
@@ -516,7 +519,7 @@ try {
   await earningsDialog.getByRole('tablist',{name:'Earnings release'}).getByRole('tab',{name:'2024/FY',exact:true}).tap();
   await earningsDialog.getByRole('heading',{name:'Earnings overview',exact:true}).waitFor();
   await earningsDialog.getByRole('button',{name:'Close',exact:true}).tap();
-  await categories.getByRole('tab',{name:'Focus',exact:true}).tap();
+  await categories.getByRole('tab',{name:'Forecast',exact:true}).tap();
   await page.getByRole('button',{name:'Open earnings move & volatility detail',exact:true}).tap();
   const moveDialog=page.getByRole('dialog',{name:'Earnings move & volatility',exact:true});
   await moveDialog.getByRole('tab',{name:'fall',exact:true}).tap();
@@ -562,9 +565,9 @@ try {
   assert.equal(bodyFont,contextFont,'Engine explanatory text uses the same reading scale');
   await engineTools.getByRole('tab',{name:'Earnings & forecasts',exact:true}).tap();
   await page.getByRole('img',{name:'revenue actual and estimate history'}).waitFor();
-  await engineTools.getByRole('tab',{name:'Focus',exact:true}).tap();
+  await engineTools.getByRole('tab',{name:'Forecast',exact:true}).tap();
   await page.getByRole('heading',{name:'Continua Value Signal',exact:true}).waitFor();
-  await page.getByRole('heading',{name:'Company Focus',exact:true}).waitFor();
+  await page.getByRole('heading',{name:'Company Forecast',exact:true}).waitFor();
   await engineTools.getByRole('tab', {name:'News',exact:true}).tap();
   await page.getByText('Revenue increased by 12 percent.', {exact:true}).waitFor();
   assert.equal(await page.getByRole('link', {name:'Fixture company update'}).getAttribute('href'), '/traders-hub?tab=media&article=digest-test');
@@ -704,9 +707,14 @@ try {
     assert.equal(await freePage.getByRole('tablist',{name:'Engine tools'}).count(),0);
     await freePage.goto('http://127.0.0.1:5188/stock/KCB');
     await freePage.getByRole('button',{name:'Fundamentals',exact:true}).tap();
-    await freePage.getByRole('tablist',{name:'Fundamentals category'}).getByRole('tab',{name:'Focus',exact:true}).tap();
-    await freePage.getByLabel('Locked Engine Focus preview',{exact:true}).waitFor();
-    assert.equal(await freePage.getByLabel('Engine Focus tools',{exact:true}).count(),0,'Free Focus never mounts paid calculations');
+    await freePage.getByRole('tablist',{name:'Fundamentals category'}).getByRole('tab',{name:'Forecast',exact:true}).tap();
+    await freePage.getByLabel('Locked Engine Forecast preview',{exact:true}).waitFor();
+    await freePage.getByLabel('Basic Continua rating',{exact:true}).getByLabel('4 out of 5 stars',{exact:true}).waitFor();
+    await freePage.getByRole('img',{name:'Basic model price forecast chart',exact:true}).waitFor();
+    await freePage.getByRole('img',{name:'Revenue scenario forecast',exact:true}).waitFor();
+    await freePage.getByRole('heading',{name:'Snowflake Score',exact:true}).waitFor();
+    await freePage.getByRole('heading',{name:'Financial estimates',exact:true}).waitFor();
+    assert.equal(await freePage.getByLabel('Expanded rating research',{exact:true}).count(),0,'Free Forecast never mounts expanded rating research');
     assert.equal(engineRequests,beforeFree,'Free stock Focus never fetches Engine output');
     await freePage.screenshot({path:fileURLToPath(new URL('focus-free.png',artifacts))});
     const paidBefore=premiumPortfolioRequests, aiBefore=assistantRequests, overviewBefore=overviewRequests;
@@ -730,11 +738,17 @@ try {
     const deniedPage=await deniedContext.newPage();
     await deniedPage.goto('http://127.0.0.1:5188/stock/KCB');
     await deniedPage.getByRole('button',{name:'Fundamentals',exact:true}).tap();
-    await deniedPage.getByRole('tablist',{name:'Fundamentals category'}).getByRole('tab',{name:'Focus',exact:true}).tap();
+    await deniedPage.getByRole('tablist',{name:'Fundamentals category'}).getByRole('tab',{name:'Forecast',exact:true}).tap();
     await deniedPage.getByText(/Engine access could not be verified/).waitFor();
-    assert.equal(await deniedPage.getByLabel('Engine Focus tools',{exact:true}).count(),0,'Server denial overrides the premium-looking profile');
+    assert.equal(await deniedPage.getByLabel('Expanded rating research',{exact:true}).count(),0,'Server denial overrides the premium-looking profile');
   } finally {denyEngineAccess=false;await deniedContext.close();}
   console.log('PASS server-denied membership never mounts Focus tools');
+  const allowanceContext=await browser.newContext({viewport:{width:390,height:844}});
+  await allowanceContext.route('**/*',handleRoute);
+  await allowanceContext.addInitScript(({user})=>{const payload=btoa(JSON.stringify({sub:user.id,exp:4102444800,role:'authenticated'}));localStorage.setItem('sb-continua-test-auth-token',JSON.stringify({access_token:`e30.${payload}.fixture`,refresh_token:'fixture',expires_at:4102444800,expires_in:3600,token_type:'bearer',user}));},{user});
+  profile.subscription_plan='free';quotaBlocked=true;
+  try {const allowancePage=await allowanceContext.newPage();await allowancePage.goto('http://127.0.0.1:5188/stock/EQTY');await allowancePage.getByRole('button',{name:'Fundamentals',exact:true}).click();await allowancePage.getByRole('heading',{name:'Your monthly Fundamentals allowance is used',exact:true}).waitFor();assert.equal(await allowancePage.getByLabel('Engine Forecast tools',{exact:true}).count(),0,'Exhausted monthly allowance cannot open another stock Forecast');}finally{quotaBlocked=false;profile.subscription_plan=savedPlan;await allowanceContext.close();}
+  console.log('PASS monthly five-stock allowance still gates free Forecast basics');
 
   // Markets research: complete routes, aligned chart, horizontally scrollable tables and source links.
   await page.goto('http://127.0.0.1:5188/markets');
@@ -770,7 +784,7 @@ try {
   await page.getByText('Fixture Kenya Bond',{exact:true}).waitFor();
   await page.screenshot({path:fileURLToPath(new URL('markets-bonds-mobile.png',artifacts))});
   await page.getByRole('button',{name:'Overview',exact:true}).tap();
-  assert.deepEqual(await page.locator('.sub-nav .market-choices button').allTextContents(),['Overview','Bonds','Watch List','Heat Map','Calendar','All Stocks']);
+  assert.deepEqual(await page.locator('.sub-nav .market-choices button').allTextContents(),['Overview','Bonds','Watchlist','Heat Map','Calendar','All Stocks']);
   assert.equal(await page.locator('.market-africa').count(),0);
   assert.equal(await page.getByRole('button',{name:'Stocks',exact:true}).count(),0);
   const marketHeadings=await page.locator('.market-section h2').allTextContents();
