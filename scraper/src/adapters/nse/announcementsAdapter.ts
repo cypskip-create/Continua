@@ -13,9 +13,8 @@
  * assuming a fixed structure (§11).
  *
  * Historical discovery follows real year/archive links exposed by the page
- * and optional `config.archiveUrls`. JavaScript-only tabs still require an
- * explicit archive URL, but a deploy can now backfill them declaratively
- * without changing adapter code.
+ * and optional `config.archiveUrls`, plus the publisher's live year-form
+ * configuration and numbered pagination (2015 onward).
  */
 import * as cheerio from "cheerio";
 import { fetchWithRetry } from "../../crawler/httpClient.js";
@@ -29,6 +28,9 @@ import { logger } from "../../monitoring/logger.js";
 import type { FetchedDocument, ParsedExtraction, SourceAdapter, SourceDocument } from "../types.js";
 import { extractPdfText } from "../../extraction/pdfText.js";
 import { env } from "../../config/index.js";
+import { archiveFormConfig, archivePageNumbers, archiveDocuments } from "./archiveDiscovery.js";
+import { archiveCheckpoint, completeArchivePage } from "../../storage/archiveCheckpointsRepository.js";
+import { enqueueDocuments } from "../../storage/documentJobsRepository.js";
 
 const ADAPTER_ID = "nse";
 const CRAWLER_VERSION = "scraper-phase6-0.1.0";
@@ -42,47 +44,6 @@ async function getRequestsPerSecond(): Promise<number> {
 
 function isPdfUrl(url: string): boolean {
   return /\.pdf(\?|#|$)/i.test(url);
-}
-
-/**
- * Walks the page in document order, tracking the most recent heading
- * text seen, and pairs it with each PDF link encountered after it. This
- * is a heuristic (§11 explicitly allows/expects this for sources without
- * a fixed structure), not a guarantee — a page that puts the PDF link
- * BEFORE its heading, or several PDFs under one heading, will pair
- * imperfectly. Titles are provenance context, not load-bearing data; the
- * PDF URL itself is exact.
- */
-function parseAnnouncementsPage(html: string, pageUrl: string): SourceDocument[] {
-  const $ = cheerio.load(html);
-  const docs: SourceDocument[] = [];
-  let lastHeading: string | null = null;
-  const seenUrls = new Set<string>();
-
-  $("h1, h2, h3, h4, a[href]").each((_, el) => {
-    const tag = (el as { tagName?: string }).tagName?.toLowerCase();
-    if (tag && /^h[1-4]$/.test(tag)) {
-      const text = $(el).text().trim();
-      if (text) lastHeading = text;
-      return;
-    }
-
-    const href = $(el).attr("href");
-    if (!href || !isPdfUrl(href)) return;
-
-    const resolved = resolveUrl(pageUrl, href);
-    if (!resolved || seenUrls.has(resolved)) return;
-    seenUrls.add(resolved);
-
-    docs.push({
-      url: resolved,
-      title: lastHeading,
-      discoveredFrom: pageUrl,
-      context: { titleHeuristic: "nearest_preceding_heading" },
-    });
-  });
-
-  return docs;
 }
 
 export function discoverArchiveLinks(html: string, pageUrl: string): string[] {
@@ -105,6 +66,7 @@ export const nseAnnouncementsAdapter: SourceAdapter = {
   id: ADAPTER_ID,
   // pdf.js' fake worker is not concurrency-safe in this Node setup.
   documentConcurrency: 1,
+  persistentBatchSize: 25,
 
   async discover(): Promise<SourceDocument[]> {
     const allowed = await isAllowedByRobots(ANNOUNCEMENTS_URL);
@@ -127,19 +89,46 @@ export const nseAnnouncementsAdapter: SourceAdapter = {
       try { const u = new URL(url); return u.protocol === 'https:' && ['nse.co.ke','www.nse.co.ke'].includes(u.hostname) && !u.username && !u.password; }
       catch { return false; }
     };
-    const archiveUrls = [...new Set([...discoverArchiveLinks(html, res.finalUrl), ...configuredArchives])].filter(officialArchive);
-    const visited = new Set([res.finalUrl]);
-    const docs = parseAnnouncementsPage(html, res.finalUrl);
+    const archiveUrls = [...new Set([res.finalUrl, "https://www.nse.co.ke/press-releases/", "https://www.nse.co.ke/corporate-actions/", "https://www.nse.co.ke/", ...discoverArchiveLinks(html, res.finalUrl), ...configuredArchives])].filter(officialArchive);
+    const visited = new Set<string>();
+    const docs: SourceDocument[] = [];
+    let pageBudget = 80;
     for (const archiveUrl of archiveUrls) {
       if (visited.has(archiveUrl)) continue;
       if (visited.size >= 40) break; // Bounded historical crawl, never an unrestricted site walk.
       visited.add(archiveUrl);
       if (!(await isAllowedByRobots(archiveUrl))) continue;
       try {
-        const archive = await fetchWithRetry(archiveUrl, { requestsPerSecond });
+        const archive = archiveUrl === res.finalUrl ? res : await fetchWithRetry(archiveUrl, { requestsPerSecond });
         if (archive.status < 400 && officialArchive(archive.finalUrl)) {
           const archiveHtml = archive.body.toString('utf-8');
-          docs.push(...parseAnnouncementsPage(archiveHtml, archive.finalUrl));
+          docs.push(...archiveDocuments(archiveHtml, archive.finalUrl));
+          const form = archiveFormConfig(archiveHtml);
+          if (form && await isAllowedByRobots(form.endpoint)) {
+            for (const year of form.years) {
+              const checkpoint = await archiveCheckpoint(ADAPTER_ID, archive.finalUrl, Number(year));
+              const pages = [...checkpoint.pages];
+              const seenPages = new Set<number>(checkpoint.completed_pages);
+              for (const page of pages) {
+                if (seenPages.has(page)) continue;
+                if (pageBudget <= 0) break;
+                pageBudget--;
+                const result = await fetchWithRetry(form.endpoint, { requestsPerSecond,
+                  form: { action: "list_dwnlds", security: form.security, nse_id: form.category,
+                    tags: year, page: String(page), limit: form.limit, expiry: form.expiry } });
+                if (result.status >= 400) throw new Error(`NSE ${year} page ${page}: HTTP ${result.status}`);
+                const body = result.body.toString("utf8");
+                if (body.trim() === "-1" || body.trim() === "0") throw new Error("NSE archive form expired or rejected; retry with fresh configuration");
+                const pageDocs = archiveDocuments(body, archive.finalUrl, { archiveYear: Number(year), archivePage: page, category: form.category });
+                await enqueueDocuments(ADAPTER_ID, pageDocs);
+                docs.push(...pageDocs);
+                const discoveredPages = archivePageNumbers(body);
+                await completeArchivePage(ADAPTER_ID, archive.finalUrl, Number(year), page, discoveredPages);
+                seenPages.add(page);
+                for (const next of discoveredPages) if (!pages.includes(next)) pages.push(next);
+              }
+            }
+          }
           for (const next of discoverArchiveLinks(archiveHtml, archive.finalUrl)) {
             if (officialArchive(next) && !visited.has(next) && !archiveUrls.includes(next)) archiveUrls.push(next);
           }
@@ -154,6 +143,7 @@ export const nseAnnouncementsAdapter: SourceAdapter = {
   },
 
   async fetch(document: SourceDocument): Promise<FetchedDocument> {
+    if (!(await isAllowedByRobots(document.url))) throw new Error("PDF disallowed by publisher robots.txt");
     const res = await fetchWithRetry(document.url, { requestsPerSecond: await getRequestsPerSecond() });
     if (res.status >= 400) {
       throw new Error(`Failed to fetch ${document.url}: HTTP ${res.status}`);

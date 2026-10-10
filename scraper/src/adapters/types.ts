@@ -63,6 +63,8 @@ export interface SourceAdapter {
   id: string;
   /** Maximum documents processed simultaneously for this adapter run. */
   documentConcurrency?: number;
+  /** Durable, resumable document batches for large historical archives. */
+  persistentBatchSize?: number;
   discover(): Promise<SourceDocument[]>;
   fetch(document: SourceDocument): Promise<FetchedDocument>;
   parse?(fetched: FetchedDocument): Promise<ParsedExtraction>;

@@ -35,6 +35,8 @@ import {
 import { screenerApi } from "@/api/screenerApi";
 import { marketQuoteSummary } from "@/lib/marketQuoteSummary";
 import { TrendResearch } from "@/components/markets/TrendResearch";
+import { InstrumentHistory } from "@/components/markets/InstrumentHistory";
+import { MarketStatisticsHistory } from "@/components/markets/MarketStatisticsHistory";
 import "./markets.css";
 
 const sections = [
@@ -147,7 +149,7 @@ export default function Markets() {
   const { isInWatchlist } = useWatchlist();
   const [monitorScope, setMonitorScope] = useState("NSE");
   const [savedTab, setTab] = usePageState<string>("markets:desk-tab", "Overview");
-  const tab = ["Overview", "Bonds", "All Stocks"].includes(savedTab)
+  const tab = ["Overview", "Bonds", "Derivatives", "USP", "All Stocks"].includes(savedTab)
     ? savedTab
     : "Overview";
   const [search, setSearch] = useState(""),
@@ -170,7 +172,7 @@ export default function Markets() {
     { indices } = useIndices();
   const { dividends, isLoading: divLoading } = useUpcomingDividends("NSE", 200);
   const needsIntelligence = (!section && tab === 'Overview') || ['heatmap','monitor'].includes(section ?? '');
-  const needsRecords = tab === 'Bonds' || ['ipos','economic','macro'].includes(section ?? '');
+  const needsRecords = (!section && tab === 'Overview') || ['Bonds','Derivatives','USP'].includes(tab) || ['ipos','economic','macro'].includes(section ?? '');
   const needsEarnings = ['earnings','earnings-beat'].includes(section ?? '');
   const needsRatios = section === 'dividends';
   const intelligence = useQuery({
@@ -1010,7 +1012,7 @@ export default function Markets() {
           />
           <div className="sub-nav">
             <Choices
-              values={["Overview", "Bonds", "Watchlist", "Heat Map", "Calendar", "All Stocks"]}
+              values={["Overview", "Bonds", "Derivatives", "USP", "Watchlist", "Heat Map", "Calendar", "All Stocks"]}
               value={tab}
               onChange={(value) => {
                 const routes: Record<string, string> = { "Watchlist": "/watchlist", "Heat Map": "/markets/heatmap", Calendar: "/markets/economic" };
@@ -1068,6 +1070,8 @@ export default function Markets() {
             </div>
             {tab === "All Stocks" ? (
               <AllStocksList search={search} />
+            ) : tab === "Derivatives" || tab === "USP" ? (
+              <InstrumentHistory records={records.filter(r => r.kind === (tab === "Derivatives" ? "derivative" : "usp"))} kind={tab} loading={recordsQuery.isLoading} failed={recordsQuery.isError} />
             ) : tab === "Bonds" ? (
               <Bonds
                 records={records.filter((r) => r.kind === "bond")}
@@ -1076,6 +1080,7 @@ export default function Markets() {
             ) : (
               <>
                 {indexStrip}
+                <MarketStatisticsHistory records={records.filter(r => r.kind === 'market_statistics')} />
                 {sections
                     .filter(([id]) => id !== "dividend-calendar")
                     .map(([id, label]) => (
@@ -1247,7 +1252,7 @@ function Bonds({
                 <th>Yield %</th>
                 <th>Coupon %</th>
                 <th>Maturity</th>
-                <th>Source / auction date</th>
+                <th>Source / report date</th>
               </tr>
             </thead>
             <tbody>

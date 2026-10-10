@@ -41,6 +41,8 @@ async function fetchPendingExtractions(limit: number): Promise<PendingExtraction
      FROM scraping.extractions e
      JOIN scraping.raw_artifacts a ON a.id = e.artifact_id
      WHERE jsonb_array_length(e.tables) > 0
+       AND a.source_id NOT IN ('cbk-bond-history','cbk-bill-history','nse-market-reports','nse-index-summary')
+       AND EXISTS (SELECT 1 FROM jsonb_array_elements(e.tables) t WHERE jsonb_typeof(t->'rows')='array')
        AND NOT EXISTS (
          SELECT 1 FROM market.financial_statement_candidates c WHERE c.scraped_extraction_id = e.id
        )
@@ -74,6 +76,7 @@ export async function runFinancialStatementCandidatesBridge(exchange = "NSE", ba
       else summary.unresolved++;
 
       for (let tableIndex = 0; tableIndex < row.tables.length; tableIndex++) {
+        if (!Array.isArray(row.tables[tableIndex]?.rows)) continue;
         await financialStatementCandidatesRepository.upsert({
           companyId: resolved?.companyId ?? null,
           securityId: resolved?.securityId ?? null,

@@ -6,14 +6,15 @@ import type { FiscalPeriodType } from "@/api/types";
  * income, balance-sheet, and cash-flow fields for each reported period.
  * Missing source fields remain null; callers must not infer a zero value.
  *
- *  Defaults to the last 5 annual periods (unchanged for every existing
- *  caller). Pass `{ periodType: "quarterly", limit: 5 }` for a quarterly
- *  series, or a smaller `limit` for a shorter annual window. */
+ *  Defaults to 20 annual or 50 quarterly periods so historical filings
+ *  from 2015 onward are available to research charts. Explicit limits
+ *  still support shorter windows. */
 export function useStockFinancials(
   symbol: string | undefined,
   opts: { periodType?: FiscalPeriodType; limit?: number } = {},
 ) {
-  const { periodType = "annual", limit = 5 } = opts;
+  const { periodType = "annual" } = opts;
+  const limit = opts.limit ?? (periodType === "annual" ? 20 : 50);
 
   const history = useQuery({
     queryKey: ["continua", "financials-history", symbol, periodType, limit],

@@ -55,6 +55,9 @@ export async function crawlSource(sourceId: string, batchSize = 20): Promise<Cra
   const source = await getSource(sourceId);
   if (!source) throw new Error(`Unknown source: ${sourceId}`);
   if (!source.enabled) throw new Error(`Source ${sourceId} is disabled`);
+  if (source.config.requiresCommercialPermission === true && !(typeof source.config.permissionReference === "string" && source.config.permissionReference.trim())) {
+    throw new Error(`Source ${sourceId} requires a written commercial permission reference before collection`);
+  }
 
   const seeds = source.config.seeds ?? [];
   const allowedDomains = source.config.allowedDomains ?? [];

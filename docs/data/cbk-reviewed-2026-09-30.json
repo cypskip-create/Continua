@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cbk:FXD3-2019-015:2026-09-30",
+    "kind": "bond",
+    "title": "FXD3-2019-015",
+    "symbol": "FXD3-2019-015",
+    "observedAt": "2026-09-30T00:00:00Z",
+    "sourceUrl": "https://www.centralbank.go.ke/uploads/historical_treasury_bond_results/250350777_RESULTS%20FOR%20FXD3-2019-015%20AND%20%20FXD1-2019-020%20DATED%2005-10-2026.pdf",
+    "payload": {
+      "tenor": 15,
+      "yield": 12.7338,
+      "coupon": 12.34,
+      "price": 100.6538,
+      "isin": "KE6000001328",
+      "maturity": "2034-07-10T00:00:00Z",
+      "unit": "KES per 100 face value",
+      "yieldBasis": "accepted_auction"
+    }
+  },
+  {
+    "id": "cbk:FXD1-2019-020:2026-09-30",
+    "kind": "bond",
+    "title": "FXD1-2019-020",
+    "symbol": "FXD1-2019-020",
+    "observedAt": "2026-09-30T00:00:00Z",
+    "sourceUrl": "https://www.centralbank.go.ke/uploads/historical_treasury_bond_results/250350777_RESULTS%20FOR%20FXD3-2019-015%20AND%20%20FXD1-2019-020%20DATED%2005-10-2026.pdf",
+    "payload": {
+      "tenor": 20,
+      "yield": 13.6016,
+      "coupon": 12.873,
+      "price": 95.6773,
+      "isin": "KE5000009984",
+      "maturity": "2039-03-21T00:00:00Z",
+      "unit": "KES per 100 face value",
+      "yieldBasis": "accepted_auction"
+    }
+  }
+]

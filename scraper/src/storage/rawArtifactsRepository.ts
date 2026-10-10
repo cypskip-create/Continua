@@ -18,6 +18,7 @@ interface RawArtifactSqlRow {
   retrieved_at: string;
   crawler_version: string;
   metadata: Record<string, unknown>;
+  is_new?: boolean;
 }
 
 function mapRow(row: RawArtifactSqlRow): RawArtifact {
@@ -64,8 +65,13 @@ export async function findById(id: number): Promise<RawArtifact | null> {
 export async function upsertArtifact(input: NewRawArtifact): Promise<{ artifact: RawArtifact; isNew: boolean }> {
   const existing = await findBySha256(input.sourceId, input.sha256);
   if (existing) {
+    // The caller has successfully persisted these identical bytes. Refresh
+    // their location after a driver migration or a year boundary; retain
+    // the artifact ID and its extraction/review provenance.
+    await query(`UPDATE scraping.raw_artifacts SET storage_path=$2, retrieved_at=now() WHERE id=$1`,
+      [existing.id, input.storagePath]);
     await recordArtifactUrl(existing.id, input.documentUrl);
-    return { artifact: existing, isNew: false };
+    return { artifact: { ...existing, storagePath: input.storagePath }, isNew: false };
   }
 
   const res = await query<RawArtifactSqlRow>(
@@ -73,7 +79,9 @@ export async function upsertArtifact(input: NewRawArtifact): Promise<{ artifact:
        (source_id, adapter, sha256, document_url, source_url, parent_url, content_type, size_bytes,
         storage_path, title, published_at, crawler_version, metadata)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-     RETURNING *`,
+     ON CONFLICT (source_id, sha256) DO UPDATE SET
+       storage_path=EXCLUDED.storage_path, retrieved_at=now()
+     RETURNING *, (xmax = 0) AS is_new`,
     [
       input.sourceId,
       input.adapter,
@@ -94,7 +102,7 @@ export async function upsertArtifact(input: NewRawArtifact): Promise<{ artifact:
   if (!row) throw new Error(`upsertArtifact: insert returned no row for ${input.documentUrl}`);
   const artifact = mapRow(row);
   await recordArtifactUrl(artifact.id, input.documentUrl);
-  return { artifact, isNew: true };
+  return { artifact, isNew: row.is_new ?? true };
 }
 
 async function recordArtifactUrl(artifactId: number, url: string): Promise<void> {

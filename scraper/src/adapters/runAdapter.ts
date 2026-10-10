@@ -6,7 +6,8 @@
  * different, simpler execution shape than the generic link-following
  * crawler.
  */
-import { insertExtraction } from "../storage/extractionsRepository.js";
+import { insertExtraction, findLatestExtraction } from "../storage/extractionsRepository.js";
+import { enqueueDocuments, claimDocuments, finishDocument } from "../storage/documentJobsRepository.js";
 import { recordDeadLetter } from "../storage/deadLettersRepository.js";
 import { logger } from "../monitoring/logger.js";
 import type { SourceAdapter } from "./types.js";
@@ -35,7 +36,10 @@ export async function runAdapter(adapter: SourceAdapter): Promise<AdapterRunSumm
   const documents = await adapter.discover();
   summary.discovered = documents.length;
 
-  const pending = [...documents];
+  const jobs = adapter.persistentBatchSize ? (await enqueueDocuments(adapter.id, documents), await claimDocuments(adapter.id, adapter.persistentBatchSize)) : null;
+  const pending = jobs ? jobs.map(job => job.document) : [...documents];
+  const jobByUrl = new Map(jobs?.map(job => [job.document.url, job]) ?? []);
+  const workCount = pending.length;
   const processNext = async (): Promise<void> => {
     for (;;) {
       const doc = pending.shift();
@@ -47,9 +51,17 @@ export async function runAdapter(adapter: SourceAdapter): Promise<AdapterRunSumm
 
       // Only bother re-parsing artifacts we haven't seen before — an
       // unchanged PDF doesn't need re-extraction (§17, §44 — idempotent).
-      if (!fetched.isNewArtifact) continue;
+      if (!fetched.isNewArtifact && await findLatestExtraction(fetched.artifactId)) {
+        const job = jobByUrl.get(doc.url);
+        if (job) await finishDocument(job.id, job.attempts);
+        continue;
+      }
 
-      if (!adapter.parse) continue;
+      if (!adapter.parse) {
+        const job = jobByUrl.get(doc.url);
+        if (job) await finishDocument(job.id, job.attempts);
+        continue;
+      }
       const parsed = await adapter.parse(fetched);
       await insertExtraction({
         artifactId: fetched.artifactId,
@@ -63,6 +75,8 @@ export async function runAdapter(adapter: SourceAdapter): Promise<AdapterRunSumm
       });
       summary.extracted++;
       if (parsed.needsReview) summary.needsReview++;
+      const job = jobByUrl.get(doc.url);
+      if (job) await finishDocument(job.id, job.attempts);
     } catch (err) {
       const reason = String((err as Error).message ?? err);
       logger.warn({ url: doc.url, reason }, "Adapter run: document failed");
@@ -71,12 +85,14 @@ export async function runAdapter(adapter: SourceAdapter): Promise<AdapterRunSumm
       // retries were exhausted, so this is the final record (§21).
       await recordDeadLetter({ sourceId: adapter.id, url: doc.url, stage: "fetch", reason });
       summary.failed++;
+      const job = jobByUrl.get(doc.url);
+      if (job) await finishDocument(job.id, job.attempts, reason);
     }
     }
   };
 
   const concurrency = Math.max(1, Math.min(adapter.documentConcurrency ?? 1, 8));
-  await Promise.all(Array.from({ length: Math.min(concurrency, documents.length) }, processNext));
+  await Promise.all(Array.from({ length: Math.min(concurrency, workCount) }, processNext));
 
   logger.info(summary, "Adapter run complete");
   return summary;

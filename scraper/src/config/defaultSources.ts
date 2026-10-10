@@ -7,6 +7,18 @@ import { insertSourceIfMissing } from "../storage/sourcesRepository.js";
  * preserved because startup only inserts missing IDs. */
 export const DEFAULT_SOURCES: SourceDefinition[] = [
   ...[
+    { id: "cbk-bond-history", name: "CBK Treasury bond auction archive", seed: "https://www.centralbank.go.ke/bills-bonds/treasury-bonds/" },
+    { id: "cbk-bill-history", name: "CBK Treasury bill auction archive", seed: "https://www.centralbank.go.ke/bills-bonds/treasury-bills/" },
+  ].map((source): SourceDefinition => ({
+    id: source.id, name: source.name, adapter: "web", enabled: true,
+    config: { seeds: [source.seed], allowedDomains: ["www.centralbank.go.ke", "centralbank.go.ke"], maxDepth: 1,
+      discoveryPaths: ["/uploads/", "/wp-content/", "/bills-bonds/"], requestsPerSecond: 0.2, concurrency: 1,
+      schedule: "0 5 * * *", documents: { pdf: true, ocr: true, tables: true } },
+    termsUrl: "https://www.centralbank.go.ke/", robotsUrl: "https://www.centralbank.go.ke/robots.txt",
+    license: null, redistributionAllowed: null, attributionRequired: true,
+    allowedUsage: "Public auction documents for review with attribution. Auction yields are not secondary-market trading yields. No full-document republication.",
+  })),
+  ...[
     { id: "techtrendske-rss", name: "TechTrends Kenya", domain: "techtrendske.co.ke", feedUrl: "https://techtrendske.co.ke/feed/" },
     { id: "soko-directory-rss", name: "Soko Directory", domain: "sokodirectory.com", feedUrl: "https://sokodirectory.com/feed/" },
     { id: "business-daily-rss", name: "Business Daily Africa", domain: "www.businessdailyafrica.com", feedUrl: "https://www.businessdailyafrica.com/service/rss/bd/1939132/feed.rss" },
@@ -18,13 +30,23 @@ export const DEFAULT_SOURCES: SourceDefinition[] = [
     allowedUsage: "Attributed headlines and short public feed summaries, subject to robots.txt and publisher terms. No paywall bypass or full-article republication.",
   })),
   {
-    id: 'nse-index-summary', name: 'NSE Official Index Summary', adapter: 'web', enabled: true,
+    id: 'nse-index-summary', name: 'NSE Official Index Summary', adapter: 'web', enabled: false,
     config: { seeds: ['https://www.nse.co.ke/'], allowedDomains: ['www.nse.co.ke', 'nse.co.ke'], maxDepth: 0,
       requestsPerSecond: 0.2, concurrency: 1, revisitAfterMinutes: 15, schedule: '*/15 * * * *',
-      documents: { pdf: false, ocr: false, tables: true } },
+      requiresCommercialPermission: true, documents: { pdf: false, ocr: false, tables: true } },
     termsUrl: 'https://www.nse.co.ke/data/', robotsUrl: 'https://www.nse.co.ke/robots.txt',
     license: null, redistributionAllowed: null, attributionRequired: true,
-    allowedUsage: 'Public end-of-day index observations with NSE attribution and observation date; no claim of licensed realtime index access.',
+    allowedUsage: 'Requires written NSE commercial permission; record permissionReference before enabling. Attribution alone is not a licence.',
+  },
+  {
+    id: "nse-market-reports", name: "NSE licensed market reports", adapter: "web", enabled: false,
+    config: { seeds: ["https://www.nse.co.ke/dataservices/market-statistics/"],
+      allowedDomains: ["www.nse.co.ke", "nse.co.ke"], maxDepth: 1,
+      discoveryPaths: ["/uploads/", ".pdf"], requiresCommercialPermission: true,
+      requestsPerSecond: 0.2, concurrency: 1, schedule: "30 18 * * 1-5", documents: { pdf: true, ocr: true, tables: true } },
+    termsUrl: "https://www.nse.co.ke/dataservices/market-statistics/", robotsUrl: "https://www.nse.co.ke/robots.txt",
+    license: null, redistributionAllowed: null, attributionRequired: true,
+    allowedUsage: "Disabled pending written NSE commercial permission. Preserve observation dates and separate equities, indices, bonds, derivatives and USP; extracted report tables require review.",
   },
   ...[
     { id: "safaricom-filings", name: "Safaricom PLC", domain: "safaricom.co.ke", seeds: ["https://www.safaricom.co.ke/investor-relations-landing/reports/financial-report/financial-results"], paths: ["/investor-relations", "/annualreport", "/images/downloads/"] },

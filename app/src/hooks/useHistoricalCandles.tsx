@@ -34,7 +34,7 @@ const TIMEFRAME_DAYS: Record<string, number | undefined> = {
   "3M": 90,
   "YTD": undefined, // computed specially, see below
   "1Y": 365,
-  "ALL": 3_600, // deepest verified range supported by the NSE adapter
+  "ALL": undefined, // explicit archive start, not a moving ten-year window
 };
 
 function formatDateLabel(date: Date, timeframe: string): string {
@@ -72,6 +72,7 @@ export function useHistoricalCandles(symbol: string | undefined, timeframe: stri
 
   const from = useMemo(() => {
     if (timeframe === "YTD") return new Date(new Date().getFullYear(), 0, 1).toISOString();
+    if (timeframe === "ALL") return "2015-01-01T00:00:00.000Z";
     if (days) return new Date(Date.now() - days * 86_400_000).toISOString();
     return undefined;
   }, [timeframe, days]);

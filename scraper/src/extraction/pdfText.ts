@@ -1,18 +1,5 @@
 /**
- * Native text extraction for text-based PDFs (§5-6 of the original spec).
- * Deliberately does NOT attempt OCR — that's a separate, heavier pipeline
- * (Phase 5). A scanned PDF will come back here with near-zero extracted
- * text; this module's job is to detect that honestly (low confidence,
- * needsReview: true) rather than pretend the extraction succeeded.
- *
- * Table extraction (§6, Phase 3): pdf-parse v2's built-in `getTable()`
- * was tried first and returned empty results against multiple synthetic
- * test tables (bordered and borderless), so financial tables here come
- * from a text-based heuristic instead — see tableExtract.ts for details
- * and its documented limitations.
- */
-/**
- * Native text extraction for text-based PDFs (§5-6 of the original spec),
+ * Isolated Poppler layout extraction for text-based PDFs,
  * with an OCR fallback (§7, Phase 5) for scanned/image-only documents
  * where native extraction comes back near-empty. OCR is deliberately
  * only attempted as a fallback, never the first attempt — it's an order
@@ -20,22 +7,24 @@
  * text) and its output is inherently less reliable, so there's no reason
  * to pay that cost on documents native extraction already handles fine.
  *
- * Table extraction (§6, Phase 3): pdf-parse v2's built-in `getTable()`
- * was tried first and returned empty results against multiple synthetic
- * test tables (bordered and borderless), so financial tables here come
- * from a text-based heuristic instead — see tableExtract.ts for details
+ * Financial tables come from a text-based heuristic: see tableExtract.ts
  * and its documented limitations. Table extraction is NOT attempted on
  * OCR'd text — confirmed against a real scanned NSE filing that OCR
  * garbles multi-column table layouts badly enough that running the table
  * heuristic on it would fabricate structure, not recover it.
  */
-import { PDFParse } from "pdf-parse";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import type { ParsedExtraction } from "../adapters/types.js";
 import { logger } from "../monitoring/logger.js";
 import { extractTablesFromText } from "./tableExtract.js";
 import { extractPdfTextViaOcr } from "./ocrText.js";
 
-export const PDF_PARSER_VERSION = "native-pdf-text-0.3.0";
+export const PDF_PARSER_VERSION = "poppler-layout-text-0.4.0";
+const run = promisify(execFile);
 
 // Below this many characters of extracted text, treat the PDF as
 // effectively unextracted (scanned/image-based PDFs typically yield
@@ -45,33 +34,26 @@ export const PDF_PARSER_VERSION = "native-pdf-text-0.3.0";
 const MIN_USABLE_TEXT_LENGTH = 50;
 
 async function extractNativePdfText(buffer: Buffer): Promise<Omit<ParsedExtraction, "entity">> {
-  const data = new Uint8Array(buffer);
-  const parser = new PDFParse({ data });
+  const directory = await mkdtemp(path.join(tmpdir(), "continua-pdf-"));
+  const input = path.join(directory, "input.pdf");
   let text = "";
   let pageCount = 0;
 
   try {
-    // pdf.js' Node fake-worker path can throw DataCloneError when multiple
-    // requests share the same MessageHandler concurrently. Keep calls
-    // sequential; otherwise real NSE PDFs fail inside structuredClone().
-    const textResult = await parser.getText();
-    const infoResult = await parser.getInfo();
-
-    text = textResult.text.trim();
-    pageCount = infoResult.total;
+    await writeFile(input, buffer);
+    // Preserve row spacing/column order. Isolated processes avoid pdf.js'
+    // shared fake-worker lifecycle failures. Poppler is installed in Docker.
+    const result = await run("pdftotext", ["-layout", "-enc", "UTF-8", "-l", "500", input, "-"],
+      { timeout: 60_000, maxBuffer: 20 * 1024 * 1024 });
+    text = result.stdout.trim();
+    pageCount = Math.max(1, result.stdout.split("\f").length - 1);
   } catch (err) {
     logger.error({ err }, "PDF text extraction threw an exception");
     return { method: "native_pdf_text", confidence: 0, text: null, tables: [], needsReview: true };
   } finally {
-    // pdf-parse 2.x can leave its internal document in a partially-created
-    // state (notably when paired with an overridden pdfjs-dist). Cleanup
-    // must never turn a successful extraction or OCR fallback into a hard
-    // failure. Keep this guard until upstream's destroy() is idempotent.
-    try {
-      await parser.destroy();
-    } catch (err) {
-      logger.warn({ err }, "PDF parser cleanup failed");
-    }
+    // directory is an OS-generated dedicated temporary directory, not a
+    // user path. Cleanup never masks extraction/OCR results.
+    await rm(directory, { recursive:true, force:true }).catch(() => {});
   }
 
   const looksUsable = text.length >= MIN_USABLE_TEXT_LENGTH;
@@ -84,7 +66,7 @@ async function extractNativePdfText(buffer: Buffer): Promise<Omit<ParsedExtracti
     confidence,
     text: looksUsable ? text : text || null,
     tables,
-    needsReview: !looksUsable,
+    needsReview: !looksUsable || pageCount >= 500,
   };
 }
 

@@ -67,7 +67,7 @@ function decompressStream(res: http.IncomingMessage): Readable {
 
 function requestOnce(
   url: URL,
-  opts: { maxBytes: number; timeoutMs: number },
+  opts: { maxBytes: number; timeoutMs: number; form?: Record<string, string> },
 ): Promise<{ status: number; headers: http.IncomingHttpHeaders; body: Buffer }> {
   return new Promise((resolve, reject) => {
     const lib = url.protocol === "https:" ? https : http;
@@ -75,11 +75,12 @@ function requestOnce(
     const req = lib.request(
       url,
       {
-        method: "GET",
+        method: opts.form ? "POST" : "GET",
         headers: {
           "User-Agent": env.CRAWLER_USER_AGENT,
           Accept: "*/*",
           "Accept-Encoding": "gzip, deflate, br",
+          ...(opts.form ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
         },
         insecureHTTPParser: true,
         timeout: opts.timeoutMs,
@@ -121,13 +122,13 @@ function requestOnce(
       reject(new Error(`Request to ${url} failed: ${err.message}`));
     });
 
-    req.end();
+    req.end(opts.form ? new URLSearchParams(opts.form).toString() : undefined);
   });
 }
 
 export async function safeFetch(
   url: string,
-  opts: { maxBytes?: number; timeoutMs?: number; requestsPerSecond?: number } = {},
+  opts: { maxBytes?: number; timeoutMs?: number; requestsPerSecond?: number; form?: Record<string, string> } = {},
 ): Promise<FetchResult> {
   const maxBytes = opts.maxBytes ?? env.MAX_RESPONSE_SIZE_BYTES;
   const timeoutMs = opts.timeoutMs ?? env.DEFAULT_REQUEST_TIMEOUT_MS;
@@ -143,11 +144,12 @@ export async function safeFetch(
     // redirect can land on a different host than the one just throttled.
     await throttleHost(validated.hostname, requestsPerSecond);
 
-    const { status, headers, body } = await requestOnce(validated, { maxBytes, timeoutMs });
+    const { status, headers, body } = await requestOnce(validated, { maxBytes, timeoutMs, form: opts.form });
 
     if (status >= 300 && status < 400) {
       const location = headers.location;
       if (!location) return { finalUrl: currentUrl, status, headers: toHeadersObject(headers), body: Buffer.alloc(0) };
+      if (opts.form) throw new Error("Form request redirected; refusing to forward form fields");
       currentUrl = new URL(location, currentUrl).toString();
       continue;
     }
@@ -174,7 +176,7 @@ function sleep(ms: number): Promise<void> {
  */
 export async function fetchWithRetry(
   url: string,
-  opts: { maxBytes?: number; timeoutMs?: number; requestsPerSecond?: number; maxRetries?: number; baseDelayMs?: number } = {},
+  opts: { maxBytes?: number; timeoutMs?: number; requestsPerSecond?: number; maxRetries?: number; baseDelayMs?: number; form?: Record<string, string> } = {},
 ): Promise<FetchResult> {
   const maxRetries = opts.maxRetries ?? env.DEFAULT_MAX_RETRIES;
   const baseDelayMs = opts.baseDelayMs ?? 1000;

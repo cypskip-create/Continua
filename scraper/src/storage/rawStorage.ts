@@ -2,12 +2,8 @@
  * Writes downloaded bytes to disk under RAW_STORAGE_LOCAL_PATH, laid out
  * by source/date/hash (§23 — raw artifacts are immutable, organized so
  * they can be reprocessed later without re-downloading). This is the
- * ONLY storage driver implemented right now; RAW_STORAGE_DRIVER=supabase
- * is validated by env.ts but not wired up yet — swap this module out
- * when artifact volume outgrows a single instance's disk, or once the
- * host's disk stops being persistent across deploys (true today on
- * Render's free web service tier — see the RAW_STORAGE_DRIVER comment
- * in config/env.ts).
+ * Local and private Supabase Storage drivers are supported. Use private
+ * object storage for history that must survive service deploys/restarts.
  */
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
@@ -38,14 +34,17 @@ export async function storeRawArtifact(params: {
   contentType: string | null;
   body: Buffer;
 }): Promise<string> {
-  if (env.RAW_STORAGE_DRIVER !== "local") {
-    throw new Error(`RAW_STORAGE_DRIVER=${env.RAW_STORAGE_DRIVER} is not implemented yet — only 'local' is wired up`);
-  }
-
   const now = new Date();
   const year = now.getUTCFullYear();
   const ext = extensionFor(params.contentType);
   const relativePath = path.join(params.sourceId, String(year), `${params.sha256}.${ext}`);
+  if (env.RAW_STORAGE_DRIVER === "supabase") {
+    const objectKey = relativePath.replaceAll("\\", "/");
+    const response = await fetch(storageUrl(objectKey), { method: "POST", redirect: "error",
+      signal: AbortSignal.timeout(60_000), headers: { ...storageHeaders(), "Content-Type": params.contentType ?? "application/octet-stream", "x-upsert": "true" }, body: new Uint8Array(params.body) });
+    if (!response.ok) throw new Error(`Private artifact upload failed: HTTP ${response.status}`);
+    return objectKey;
+  }
   const fullPath = path.join(env.RAW_STORAGE_LOCAL_PATH, relativePath);
 
   await mkdir(path.dirname(fullPath), { recursive: true });
@@ -62,9 +61,26 @@ export async function storeRawArtifact(params: {
  * storagePath is the relative path as stored in raw_artifacts.storage_path.
  */
 export async function readRawArtifact(storagePath: string): Promise<Buffer> {
-  if (env.RAW_STORAGE_DRIVER !== "local") {
-    throw new Error(`RAW_STORAGE_DRIVER=${env.RAW_STORAGE_DRIVER} is not implemented yet — only 'local' is wired up`);
+  if (env.RAW_STORAGE_DRIVER === "supabase") {
+    const response = await fetch(storageUrl(storagePath), { headers: storageHeaders(), redirect: "error", signal: AbortSignal.timeout(60_000) });
+    if (!response.ok) throw new Error(`Private artifact read failed: HTTP ${response.status}`);
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (bytes.length > env.MAX_RESPONSE_SIZE_BYTES) throw new Error("Stored artifact exceeds response limit");
+    return bytes;
   }
   const fullPath = path.join(env.RAW_STORAGE_LOCAL_PATH, storagePath);
   return readFile(fullPath);
+}
+
+function storageHeaders(): Record<string,string> {
+  if (!env.SUPABASE_SERVICE_ROLE_KEY) throw new Error("Private artifact storage requires a server-side service key");
+  return { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` };
+}
+function storageUrl(key: string): string {
+  if (!env.SUPABASE_URL) throw new Error("Private artifact storage requires SUPABASE_URL");
+  const base = new URL(env.SUPABASE_URL);
+  if (base.protocol !== "https:" || base.username || base.password || base.search || base.hash) throw new Error("Invalid storage URL");
+  const parts = key.replaceAll("\\", "/").split("/");
+  if (parts.some(part => !part || part === "." || part === "..")) throw new Error("Invalid artifact key");
+  return `${base.origin}/storage/v1/object/${encodeURIComponent(env.SUPABASE_STORAGE_BUCKET)}/${parts.map(encodeURIComponent).join("/")}`;
 }

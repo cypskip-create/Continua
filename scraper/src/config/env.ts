@@ -33,11 +33,8 @@ const EnvSchema = z.object({
   // free/starter web service tiers (Render included) — it's wiped on
   // every deploy and every restart. That's an accepted tradeoff for now:
   // these are re-fetchable staging artifacts, not the system of record
-  // (extraction writes structured data into Postgres). RAW_STORAGE_DRIVER=
-  // supabase is declared here for a future swap but NOT implemented yet
-  // (see storage/rawStorage.ts) — setting it currently just makes every
-  // storeRawArtifact() call throw, so leave this on "local" until that
-  // driver actually exists.
+  // (extraction writes structured data into Postgres). For durable historical
+  // PDFs use the implemented private Supabase driver in storage/rawStorage.ts.
   RAW_STORAGE_DRIVER: z.enum(["local", "supabase"]).default("local"),
   RAW_STORAGE_LOCAL_PATH: z.string().default("./data/raw"),
   SUPABASE_URL: z.string().optional(),

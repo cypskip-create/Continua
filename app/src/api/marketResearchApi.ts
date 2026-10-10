@@ -1,7 +1,7 @@
 import { continuaFetch } from "./client";
 export interface ResearchRecord {
   id: string;
-  kind: "ipo" | "macro" | "economic" | "bond";
+  kind: "ipo" | "macro" | "economic" | "bond" | "derivative" | "usp" | "market_statistics";
   title: string;
   symbol: string | null;
   observedAt: string;
@@ -20,7 +20,14 @@ export interface ResearchRecord {
     coupon?: number;
     maturity?: string;
     yield?: number;
+    yieldBasis?: "accepted_auction" | "secondary_market";
     indicator?: string;
+    isin?: string;
+    expiry?: string;
+    volume?: number;
+    openInterest?: number;
+    turnover?: number;
+    change?: number;
   };
 }
 export interface MarketIntelligence {
