@@ -6,8 +6,10 @@ import { ReportSection, SubWidget } from "./ReportSection";
 import { CriteriaChecklist } from "./CriteriaChecklist";
 import { KeyInfoUpdates } from "./KeyInfoUpdates";
 import { useStockFinancials } from "@/hooks/useStockFinancials";
+import { PremiumDetail } from "@/components/engine/PremiumDetail";
+import { GrowthWorkbench } from "../ForecastWorkbenches";
 
-interface Props { symbol: string }
+interface Props { symbol: string; currency?:string; basic?:boolean }
 type Metric = "revenue" | "earnings" | "eps";
 
 function pctChange(latest: number, prior: number): number | null {
@@ -35,7 +37,7 @@ function toRow(r: { fiscalYear: number; fiscalQuarter?: number | null; revenue: 
  *  labeled as trailing rather than a forecast. The chart renders its
  *  frame immediately and just shows "no history on file yet" until
  *  there are at least two fiscal years of real data to plot. */
-export function FutureGrowthSection({ symbol }: Props) {
+export function FutureGrowthSection({ symbol, currency="KES", basic=false }: Props) {
   const [metric, setMetric] = useState<Metric>("revenue");
   const { history, isLoading } = useStockFinancials(symbol);
   // Real quarterly periods (not a synthetic split of the annual figure) —
@@ -61,7 +63,7 @@ export function FutureGrowthSection({ symbol }: Props) {
     <ReportSection number={2} title="Future Growth">
       <CriteriaChecklist
         checks={[{ label: "Analyst forecast coverage", status: "unknown" }]}
-        narrative={`Continua doesn't currently have sufficient analyst coverage to forecast growth and revenue for ${symbol}. The trailing figures below are real, already-reported numbers, not a forecast.`}
+        narrative={`Forward growth rates and analyst coverage counts are not supplied for ${symbol}. Any sourced revenue/EPS estimates appear in Financial estimates. The trailing figures below are already-reported numbers, not a forecast.`}
       />
 
       {isLoading ? (
@@ -73,7 +75,7 @@ export function FutureGrowthSection({ symbol }: Props) {
             { label: "Trailing EPS growth rate", value: epsGrowth != null ? `${epsGrowth >= 0 ? "+" : ""}${epsGrowth.toFixed(1)}%` : "n/a", highlight: true },
             { label: "Trailing revenue growth rate", value: revenueGrowth != null ? `${revenueGrowth >= 0 ? "+" : ""}${revenueGrowth.toFixed(1)}%` : "n/a" },
             { label: "Forecast return on equity", value: "n/a" },
-            { label: "Analyst coverage", value: "None" },
+            { label: "Analyst coverage count", value: "Not supplied" },
             { label: "Last updated", value: "n/a" },
           ]}
           updates={[]}
@@ -106,10 +108,10 @@ export function FutureGrowthSection({ symbol }: Props) {
       </SubWidget>
 
       <p className="text-[0.6875rem] text-muted-foreground">
-        In this section Simply Wall St presents revenue and earnings growth projections based on consensus
-        analyst estimates. Continua doesn't ingest an analyst-estimates feed, so this section honestly shows
-        real trailing growth instead of an invented forecast.
+        These are reported historical values. Sourced estimates, where available, are shown separately;
+        no growth consensus or analyst coverage count is inferred from price movement.
       </p>
+      {basic&&<PremiumDetail title="Future growth research" symbol={symbol} currency={currency}><GrowthWorkbench symbol={symbol} currency={currency}/></PremiumDetail>}
     </ReportSection>
   );
 }

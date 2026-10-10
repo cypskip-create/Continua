@@ -6,8 +6,11 @@ import { useValuation } from "@/hooks/useValuation";
 import { useResearch } from "@/hooks/useResearch";
 import { useDividendHistory } from "@/hooks/useDividendHistory";
 import { useMarketBenchmark } from "@/hooks/useMarketBenchmark";
+import { PremiumDetail } from "@/components/engine/PremiumDetail";
+import { ScorecardWorkbench } from "../ForecastWorkbenches";
+import { valueSignal } from "@/lib/valueSignal";
 
-interface StockSnowflakeProps { symbol: string }
+interface StockSnowflakeProps { symbol: string; currency?:string; basic?:boolean }
 
 type Axis = "Value" | "Future" | "Past" | "Health" | "Dividend";
 const AXES: Axis[] = ["Value", "Future", "Past", "Health", "Dividend"];
@@ -23,7 +26,7 @@ interface AxisCheck { label: string; status: "pass" | "fail" | "unknown" }
  *  Where Continua has no data source yet (forward analyst growth
  *  estimates, multi-year ROE history), the check is marked "unknown"
  *  rather than guessed. */
-export function StockSnowflake({ symbol }: StockSnowflakeProps) {
+export function StockSnowflake({ symbol, currency="KES", basic=false }: StockSnowflakeProps) {
   const [selected, setSelected] = useState<Axis>("Value");
   const { valuation, isLoading: valLoading } = useValuation(symbol);
   const { research, isLoading: researchLoading } = useResearch(symbol);
@@ -32,11 +35,11 @@ export function StockSnowflake({ symbol }: StockSnowflakeProps) {
 
   const isLoading = valLoading || researchLoading || divLoading || benchLoading;
   const ratios = research?.ratios;
-  const bestModel = valuation?.models.find((m) => m.upsidePercent != null);
+  const bestModel = {upsidePercent:valueSignal(valuation).upside};
 
   const checksFor: Record<Axis, AxisCheck[]> = {
     Value: [
-      { label: "Trading below Sector P/E fair value", status: bestModel?.upsidePercent == null ? "unknown" : bestModel.upsidePercent > 10 ? "pass" : "fail" },
+      { label: "Model median implies over 10% upside", status: bestModel.upsidePercent == null ? "unknown" : bestModel.upsidePercent > 10 ? "pass" : "fail" },
       { label: "Trading below Graham Number", status: valuation?.models.find(m => m.model.includes("Graham"))?.upsidePercent == null ? "unknown" : (valuation!.models.find(m => m.model.includes("Graham"))!.upsidePercent! > 0 ? "pass" : "fail") },
       { label: "P/E below market sample", status: ratios?.pe == null || benchmark.pe == null ? "unknown" : ratios.pe < benchmark.pe ? "pass" : "fail" },
     ],
@@ -56,7 +59,7 @@ export function StockSnowflake({ symbol }: StockSnowflakeProps) {
     Dividend: [
       { label: "Pays a dividend", status: dividendHistory.length > 0 ? "pass" : "fail" },
       { label: "Yield above market sample", status: ratios?.dividendYield == null || benchmark.dividendYield == null ? "unknown" : ratios.dividendYield > benchmark.dividendYield ? "pass" : "fail" },
-      { label: "Sustainable payout ratio (below 75%)", status: ratios?.payoutRatio == null ? "unknown" : ratios.payoutRatio < 0.75 ? "pass" : "fail" },
+      { label: "Nonnegative payout ratio below 75%", status: ratios?.payoutRatio == null || ratios.payoutRatio < 0 ? "unknown" : ratios.payoutRatio < 0.75 ? "pass" : "fail" },
     ],
   };
 
@@ -75,10 +78,10 @@ export function StockSnowflake({ symbol }: StockSnowflakeProps) {
       <div className="flex items-center gap-1.5 mb-1">
         <h3 className="font-serif text-lg">Snowflake Score</h3>
         <InfoTip>
-          Five real checks per axis, scored out of 6 — Value (valuation models), Future (momentum
+          Available checks per axis, scored out of 6 — Value (valuation models), Future (momentum
           — Continua has no analyst growth forecasts yet), Past (profitability), Health (balance
           sheet), Dividend (yield, payout, reliability). A bigger, more even shape means a
-          stronger, more balanced company.
+          more passed checks among covered data, not a guarantee of company quality.
         </InfoTip>
       </div>
       <p className="text-[0.6875rem] text-muted-foreground mb-4">
@@ -99,7 +102,7 @@ export function StockSnowflake({ symbol }: StockSnowflakeProps) {
             </ResponsiveContainer>
           </div>
 
-          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 mb-3">
+          {!basic&&<><div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 mb-3">
             {AXES.map((axis) => (
               <button
                 key={axis}
@@ -126,7 +129,8 @@ export function StockSnowflake({ symbol }: StockSnowflakeProps) {
                 {c.status === "unknown" && <span className="text-[0.625rem] text-muted-foreground ml-auto">No data</span>}
               </div>
             ))}
-          </div>
+          </div></>}
+          {basic&&<PremiumDetail title="Snowflake scorecard research" symbol={symbol} currency={currency}><ScorecardWorkbench symbol={symbol}/></PremiumDetail>}
         </>
       )}
     </div>

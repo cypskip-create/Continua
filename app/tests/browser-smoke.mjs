@@ -465,7 +465,23 @@ try {
   assert.deepEqual(await categories.getByRole('tab').allTextContents(),['Financials','Forecast','Shareholders','Dividends','Profile']);
   await categories.getByRole('tab',{name:'Forecast',exact:true}).tap();
   await page.getByRole('heading',{name:'Company Forecast',exact:true}).waitFor();
+  assert.equal(await page.getByRole('navigation',{name:'Forecast shortcuts',exact:true}).count(),0,'Broken shortcut pills were removed');
+  await page.getByRole('button',{name:'Expand Continua Value Signal research',exact:true}).tap();
   await page.getByLabel('Expanded rating research',{exact:true}).waitFor();
+  await page.getByRole('dialog',{name:'Continua Value Signal research',exact:true}).getByRole('button',{name:'Close',exact:true}).tap();
+  const premiumTools=[['Price forecast research','Expanded price scenario chart'],['Scenario forecast research','Premium scenario workbench'],['Snowflake scorecard research','Premium scorecard workbench'],['Future growth research','Premium growth workbench'],['Risk snowflake research','Premium risk snowflake workbench'],['Volatility & drawdown research','Premium volatility workbench']];
+  for(const [title,label] of premiumTools){
+    const trigger=page.getByRole('button',{name:`Expand ${title}`,exact:true});await trigger.evaluate(el=>el.scrollIntoView({block:'center'}));await trigger.tap();
+    const detail=page.getByRole('dialog',{name:title,exact:true});await detail.getByLabel(label,{exact:true}).waitFor();
+    if(title==='Price forecast research'){await detail.getByLabel('Price scenario convergence',{exact:true}).fill('0');await detail.getByText('KES 50',{exact:true}).first().waitFor();await detail.getByLabel('Fair-value stress %',{exact:true}).fill('-25');await detail.getByLabel('Price scenario horizon',{exact:true}).selectOption('24');}
+    if(title==='Scenario forecast research'){await detail.getByLabel('Scenario horizon years',{exact:true}).fill('5');await detail.getByLabel('Assumed net margin %',{exact:true}).fill('-10');await detail.getByRole('cell',{name:'Year 5',exact:true}).count();}
+    if(title==='Snowflake scorecard research'){await detail.getByLabel('Minimum ROE %',{exact:true}).fill('20');await detail.getByRole('cell',{name:'15.00%',exact:true}).waitFor();}
+    if(title==='Future growth research'){await detail.getByLabel('Growth research metric',{exact:true}).selectOption('netIncome');await detail.getByLabel('Growth research coverage',{exact:true}).selectOption('10');}
+    if(title==='Risk snowflake research'||title==='Volatility & drawdown research'){await detail.getByLabel('Risk research window',{exact:true}).selectOption('730');await detail.getByLabel('Assumed price shock %',{exact:true}).fill('-40');}
+    await page.screenshot({path:fileURLToPath(new URL(`premium-${title.split(' ')[0].toLowerCase()}.png`,artifacts))});
+    await detail.getByRole('button',{name:'Close',exact:true}).tap();
+  }
+  console.log('PASS each Premium research workbench opens separately and its controls update');
   await page.getByRole('heading',{name:'Continua Value Signal',exact:true}).waitFor();
   await page.getByRole('img',{name:'revenue actual and estimate history'}).scrollIntoViewIfNeeded();
   await page.getByRole('tablist',{name:'Estimates metric'}).getByRole('tab',{name:'EPS',exact:true}).tap();
@@ -520,14 +536,16 @@ try {
   await earningsDialog.getByRole('heading',{name:'Earnings overview',exact:true}).waitFor();
   await earningsDialog.getByRole('button',{name:'Close',exact:true}).tap();
   await categories.getByRole('tab',{name:'Forecast',exact:true}).tap();
-  await page.getByRole('button',{name:'Open earnings move & volatility detail',exact:true}).tap();
+  await page.getByRole('button',{name:'Expand Earnings move & volatility',exact:true}).tap();
   const moveDialog=page.getByRole('dialog',{name:'Earnings move & volatility',exact:true});
   await moveDialog.getByRole('tab',{name:'fall',exact:true}).tap();
   await moveDialog.getByLabel('Scenario position value',{exact:true}).fill('1000');
   await moveDialog.getByText('KES 900',{exact:true}).waitFor();
+  await moveDialog.getByLabel('Earnings research window',{exact:true}).selectOption('3');
   await moveDialog.getByRole('button',{name:'Close',exact:true}).tap();
-  await page.getByRole('button',{name:'Open forecasts & analyst coverage detail',exact:true}).tap();
+  await page.getByRole('button',{name:'Expand Forecasts & analyst coverage',exact:true}).tap();
   const forecastDialog=page.getByRole('dialog',{name:'Forecasts & analyst coverage',exact:true});
+  await forecastDialog.getByLabel('Estimate audit metric',{exact:true}).selectOption('eps');
   await forecastDialog.getByRole('tab',{name:'Consensus ratings',exact:true}).tap();
   await forecastDialog.getByRole('tablist',{name:'Analyst rating filter'}).getByRole('tab',{name:'Buy',exact:true}).tap();
   await forecastDialog.getByText(/No verified buy ratings/).waitFor();
@@ -708,13 +726,18 @@ try {
     await freePage.goto('http://127.0.0.1:5188/stock/KCB');
     await freePage.getByRole('button',{name:'Fundamentals',exact:true}).tap();
     await freePage.getByRole('tablist',{name:'Fundamentals category'}).getByRole('tab',{name:'Forecast',exact:true}).tap();
-    await freePage.getByLabel('Locked Engine Forecast preview',{exact:true}).waitFor();
+    await freePage.getByRole('button',{name:'Expand Continua Value Signal research',exact:true}).waitFor();
     await freePage.getByLabel('Basic Continua rating',{exact:true}).getByLabel('4 out of 5 stars',{exact:true}).waitFor();
     await freePage.getByRole('img',{name:'Basic model price forecast chart',exact:true}).waitFor();
     await freePage.getByRole('img',{name:'Revenue scenario forecast',exact:true}).waitFor();
     await freePage.getByRole('heading',{name:'Snowflake Score',exact:true}).waitFor();
     await freePage.getByRole('heading',{name:'Financial estimates',exact:true}).waitFor();
     assert.equal(await freePage.getByLabel('Expanded rating research',{exact:true}).count(),0,'Free Forecast never mounts expanded rating research');
+    for(const title of ['Continua Value Signal research',...premiumTools.map(([title])=>title),'Earnings move & volatility','Forecasts & analyst coverage']){
+      const trigger=freePage.getByRole('button',{name:`Expand ${title}`,exact:true});await trigger.evaluate(el=>el.scrollIntoView({block:'center'}));await trigger.tap();
+      const upgrade=freePage.getByRole('dialog',{name:'Unlock Premium research',exact:true});await upgrade.waitFor();assert.equal(await freePage.getByRole('dialog',{name:title,exact:true}).count(),0,'Locked tool never opens its detail view');await upgrade.getByRole('link',{name:'Upgrade to unlock Engine',exact:true}).waitFor();await upgrade.getByRole('button',{name:'Close',exact:true}).tap();
+    }
+    console.log('PASS all nine Free expansion buttons prompt upgrade without mounting research');
     assert.equal(engineRequests,beforeFree,'Free stock Focus never fetches Engine output');
     await freePage.screenshot({path:fileURLToPath(new URL('focus-free.png',artifacts))});
     const paidBefore=premiumPortfolioRequests, aiBefore=assistantRequests, overviewBefore=overviewRequests;
@@ -739,6 +762,7 @@ try {
     await deniedPage.goto('http://127.0.0.1:5188/stock/KCB');
     await deniedPage.getByRole('button',{name:'Fundamentals',exact:true}).tap();
     await deniedPage.getByRole('tablist',{name:'Fundamentals category'}).getByRole('tab',{name:'Forecast',exact:true}).tap();
+    await deniedPage.getByRole('button',{name:'Expand Continua Value Signal research',exact:true}).tap();
     await deniedPage.getByText(/Engine access could not be verified/).waitFor();
     assert.equal(await deniedPage.getByLabel('Expanded rating research',{exact:true}).count(),0,'Server denial overrides the premium-looking profile');
   } finally {denyEngineAccess=false;await deniedContext.close();}

@@ -9,8 +9,10 @@ import { useMarketBenchmark } from "@/hooks/useMarketBenchmark";
 import { InfoTip } from "@/components/portfolio/InfoTip";
 import { dailyReturns, annualizedVolatility, maxDrawdown } from "@/lib/portfolioMetrics";
 import { ReportSection, SubWidget } from "./ReportSection";
+import { PremiumDetail } from "@/components/engine/PremiumDetail";
+import { RiskWorkbench } from "../ForecastWorkbenches";
 
-interface Props { symbol: string }
+interface Props { symbol: string; currency?:string; basic?:boolean }
 
 type RiskLevel = "Low" | "Medium" | "High" | "Unknown";
 interface RiskFactor { label: string; note: string; level: RiskLevel }
@@ -27,7 +29,7 @@ const levelColor = (l: RiskLevel) => (l === "Low" ? fx.strong : l === "Medium" ?
  *  Continua can't evaluate render as "Unknown" — not a fabricated
  *  "Medium" — and are excluded from the radar rather than silently
  *  plotted as a real neutral score. */
-export function RiskSection({ symbol }: Props) {
+export function RiskSection({ symbol, currency="KES", basic=false }: Props) {
   const candlesQuery = useQuery({
     queryKey: ["continua", "candles", symbol, "risk-180"],
     queryFn: () => historicalApi.getCandles(symbol, { interval: "1d", from: new Date(Date.now() - 180 * 86_400_000).toISOString().slice(0, 10) }),
@@ -37,7 +39,7 @@ export function RiskSection({ symbol }: Props) {
   const { valuation } = useValuation(symbol);
   const { averages: benchmark } = useMarketBenchmark();
 
-  const closes = (candlesQuery.data ?? []).map((c) => c.close);
+  const closes = [...(candlesQuery.data ?? [])].filter(c=>Number.isFinite(c.close)&&c.close>0).sort((a,b)=>a.timestamp.localeCompare(b.timestamp)).map((c) => c.close);
   const returns = dailyReturns(closes);
   const volatility = returns.length >= 5 ? annualizedVolatility(returns) : null;
   const drawdown = closes.length >= 2 ? maxDrawdown(closes) : null;
@@ -58,7 +60,7 @@ export function RiskSection({ symbol }: Props) {
     },
     {
       label: "Leverage risk",
-      note: ratios?.debtToEquity != null ? `Debt/equity ${ratios.debtToEquity.toFixed(0)}% vs market sample ${benchmark.debtToEquity?.toFixed(0) ?? "—"}%` : "No debt/equity data on file",
+      note: ratios?.debtToEquity != null ? `Debt/equity ${(ratios.debtToEquity*100).toFixed(0)}% vs market sample ${benchmark.debtToEquity==null?"—":(benchmark.debtToEquity*100).toFixed(0)}%` : "No debt/equity data on file",
       level: ratios?.debtToEquity == null || benchmark.debtToEquity == null ? "Unknown" : ratios.debtToEquity > benchmark.debtToEquity * 1.5 ? "High" : ratios.debtToEquity > benchmark.debtToEquity ? "Medium" : "Low",
     },
     {
@@ -105,6 +107,7 @@ export function RiskSection({ symbol }: Props) {
         )}
       </SubWidget>
 
+      {basic&&<PremiumDetail title="Risk snowflake research" symbol={symbol} currency={currency}><RiskWorkbench symbol={symbol} mode="snowflake"/></PremiumDetail>}
       <SubWidget number="5.2" title="Volatility &amp; Drawdown" description="Real, computed straight from daily price history — there's no sector-level series to benchmark against yet.">
         {candlesQuery.isLoading ? (
           <p className="text-xs text-muted-foreground py-2">Loading price history…</p>
@@ -130,7 +133,8 @@ export function RiskSection({ symbol }: Props) {
         )}
       </SubWidget>
 
-      <SubWidget number="5.3" title="Key Risk Factors" description="Unknown means Continua doesn't have the data to evaluate that factor yet — not a real assessment.">
+      {basic&&<PremiumDetail title="Volatility & drawdown research" symbol={symbol} currency={currency}><RiskWorkbench symbol={symbol}/></PremiumDetail>}
+      {!basic&&<SubWidget number="5.3" title="Key Risk Factors" description="Unknown means Continua doesn't have the data to evaluate that factor yet — not a real assessment.">
         <div className="divide-y divide-border/40">
           {factors.map((r) => (
             <div key={r.label} className="flex items-start justify-between gap-3 py-3">
@@ -142,7 +146,7 @@ export function RiskSection({ symbol }: Props) {
             </div>
           ))}
         </div>
-      </SubWidget>
+      </SubWidget>}
     </ReportSection>
   );
 }

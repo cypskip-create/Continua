@@ -1,4 +1,7 @@
 import { FUNDAMENTAL_BAR_SIZE } from '@/lib/financialPresentation';
+import { PremiumDetail } from "@/components/engine/PremiumDetail";
+import { ResearchTable } from "./ForecastWorkbenches";
+import { releaseWindowResearch } from "@/lib/forecastResearch";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -8,7 +11,7 @@ import { historicalApi } from "@/api/historicalApi";
 import { newsApi } from "@/api/newsApi";
 import { useStockFinancials } from "@/hooks/useStockFinancials";
 import { finiteFinancial, financialNumber, financialPercent, financialPeriod, growthPercent } from "@/lib/financialPresentation";
-import { FundamentalDetail, FundamentalHeading } from "./FundamentalDetail";
+import { FundamentalDetail } from "./FundamentalDetail";
 import { financialTab } from "./FinancialStatementExplorer";
 
 export function EarningsOverview({event,history,currency}: {event:StockEarningsEvent;history:FinancialHistoryEntry[];currency:string}) {
@@ -33,20 +36,25 @@ export function EarningsDetailButton({symbol,currency,events}: {symbol:string;cu
   </FundamentalDetail></>;
 }
 export function observedEarningsMoves(events:StockEarningsEvent[],candles:Candle[]) {
-  const sorted=[...candles].sort((a,b)=>a.timestamp.localeCompare(b.timestamp));
-  return events.filter(e=>e.reportedDate).map(e=>{
-    const date=e.reportedDate!.slice(0,10),before=sorted.filter(c=>c.timestamp.slice(0,10)<date).at(-1),after=sorted.find(c=>c.timestamp.slice(0,10)>date);
-    const gap=before&&after?(new Date(after.timestamp).getTime()-new Date(before.timestamp).getTime())/86_400_000:null;
-    return {period:financialPeriod(e),move:gap!=null&&gap<=7?growthPercent(after?.close,before?.close):null,date};
-  }).filter(p=>p.move!=null).sort((a,b)=>a.date.localeCompare(b.date)).slice(-5);
+  return releaseWindowResearch(events,candles,1).filter(r=>r.move!=null&&r.from&&r.to&&(Date.parse(r.to)-Date.parse(r.from))/86400000<=7).map(r=>({period:financialPeriod(r.event),move:r.move,date:r.event.reportedDate!.slice(0,10)})).slice(-5);
 }
 export function EarningsMovePreview({symbol,currency,events}: {symbol:string;currency:string;events:StockEarningsEvent[]}) {
-  const [open,setOpen]=useState(false),[direction,setDirection]=useState("flat"),[change,setChange]=useState(0),[amount,setAmount]=useState(10000);
-  const {data:candles=[]}=useQuery({queryKey:["continua","candles",symbol,"earnings-moves"],queryFn:()=>historicalApi.getCandles(symbol,{from:new Date(Date.now()-730*86_400_000).toISOString().slice(0,10)}),enabled:open,staleTime:15*60_000,retry:1});
+  return <section className="border-t border-border py-4 space-y-3"><h3 className="text-lg font-semibold">Earnings move & volatility</h3><p className="text-xs text-muted-foreground">${events.filter(e=>e.reportedDate).length} dated releases on file. Premium adds event windows, observed reactions and a share-position stress lab.</p><PremiumDetail title="Earnings move & volatility" symbol={symbol} currency={currency}><EarningsMoveWorkbench symbol={symbol} currency={currency} events={events}/></PremiumDetail></section>;
+}
+function EarningsMoveWorkbench({symbol,currency,events}: {symbol:string;currency:string;events:StockEarningsEvent[]}) {
+  const [direction,setDirection]=useState("flat"),[change,setChange]=useState(0),[amount,setAmount]=useState(10000);
+  const {data:candles=[]}=useQuery({queryKey:["continua","candles",symbol,"earnings-moves"],queryFn:()=>historicalApi.getCandles(symbol,{from:new Date(Date.now()-730*86_400_000).toISOString().slice(0,10)}),staleTime:15*60_000,retry:1});
   const moves=observedEarningsMoves(events,candles),average=moves.length?moves.reduce((s,m)=>s+Math.abs(m.move!),0)/moves.length:null;
-  return <section className="border-t border-border py-3 space-y-2"><FundamentalHeading title="Earnings move & volatility" onOpen={()=>setOpen(true)}/><p className="text-xs text-muted-foreground">Observed release-day price reactions and a share-only scenario lab</p><FundamentalDetail title="Earnings move & volatility" symbol={symbol} currency={currency} open={open} onOpenChange={setOpen}>
+  return <div className="space-y-3" aria-label="Premium earnings move workbench">
     <section className="py-3"><h3 className="text-lg font-semibold">Earnings move</h3><p className="text-sm py-2">Average absolute observed move: <strong>{average==null?"Not available":`${average.toFixed(2)}%`}</strong></p>{moves.length?<div className="h-56" role="img" aria-label="Observed earnings price moves"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={moves}><CartesianGrid vertical={false} stroke="hsl(var(--border))"/><XAxis dataKey="period" tick={{fontSize:"0.625rem"}}/><YAxis tickFormatter={v=>`${v}%`} width={44} tick={{fontSize:"0.625rem"}}/><Tooltip contentStyle={{background:"hsl(var(--popover))",border:"1px solid hsl(var(--border))"}} formatter={(v:number)=>`${Number(v).toFixed(2)}%`}/><Bar barSize={FUNDAMENTAL_BAR_SIZE} dataKey="move" name="Observed close-to-close move" fill="#4f7cf5" isAnimationActive={false}/></ComposedChart></ResponsiveContainer></div>:<p className="text-sm text-muted-foreground py-2">No matching release dates and nearby closing prices. Price movements are never filled with synthetic candles.</p>}<p className="text-xs text-muted-foreground">Last close before the release date to first close after it, at most 7 calendar days apart. Release times are unknown; this includes other market news and is not an earnings-only causal effect.</p></section>
     <section className="border-t border-border py-3"><h3 className="text-lg font-semibold">Expected vs actual move</h3><p className="text-sm text-muted-foreground py-2">An options-implied expected-move feed is not supplied for NSE shares. We show observed moves without invented expected ranges or backtest probabilities.</p></section>
     <section className="border-t border-border py-3 space-y-2"><h3 className="text-lg font-semibold">Strategy Lab</h3><p className="text-xs text-muted-foreground">Illustrative share-value scenario. Not an options strategy or recommendation.</p><div role="tablist" aria-label="Scenario direction" className="flex gap-1">{["rise","flat","fall"].map(d=><button key={d} role="tab" aria-selected={direction===d} className={financialTab(direction===d)} onClick={()=>{setDirection(d);setChange(d==="rise"?10:d==="fall"?-10:0);}}>{d}</button>)}</div><label className="block text-sm">Position value · {currency}<input className="ml-2 w-28 bg-background border border-border rounded-md p-1" aria-label="Scenario position value" type="number" min="0" value={amount} onChange={e=>setAmount(Math.max(0,Number(e.target.value)||0))}/></label><label className="block text-sm">Price change %<input className="ml-2 w-24 bg-background border border-border rounded-md p-1" aria-label="Earnings scenario price change" type="number" min="-100" max="500" value={change} onChange={e=>setChange(Math.max(-100,Math.min(500,Number(e.target.value)||0)))}/></label><div className="h-40" role="img" aria-label="Share scenario payoff"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={[-50,-25,0,25,50].map(p=>({change:p,gain:amount*p/100}))}><XAxis dataKey="change" tickFormatter={v=>`${v}%`} tick={{fontSize:"0.625rem"}}/><YAxis tickFormatter={v=>financialNumber(v)} width={50} tick={{fontSize:"0.625rem"}}/><Tooltip formatter={(v:number)=>financialNumber(v,currency)}/><Line dataKey="gain" name="Illustrative gain/loss" stroke="#4f7cf5" dot={false} isAnimationActive={false}/></ComposedChart></ResponsiveContainer></div><p className="text-sm">Illustrative position: <strong>{financialNumber(amount*(1+change/100),currency)}</strong> · Change: <strong className={change>=0?"text-bull":"text-bear"}>{financialNumber(amount*change/100,currency)}</strong></p><p className="text-xs text-muted-foreground">Excludes fees, dividends, cash flows and taxes. No probability or price forecast is implied.</p></section>
-  </FundamentalDetail></section>;
+    <EarningsWindowResearch events={events} candles={candles}/>
+  </div>;
+}
+
+function EarningsWindowResearch({events,candles}: {events:StockEarningsEvent[];candles:Candle[]}) {
+  const [sessions,setSessions]=useState(1);
+  const rows=releaseWindowResearch(events,candles,sessions),covered=rows.filter(r=>r.move!=null);
+  return <section className="border-t border-border py-4 space-y-3"><h3 className="text-lg font-semibold">Event-window comparison</h3><label className="text-sm">After-release observations<select aria-label="Earnings research window" className="border border-border rounded bg-background p-2 ml-2" value={sessions} onChange={e=>setSessions(Number(e.target.value))}>{[1,3,5].map(n=><option key={n} value={n}>{n} subsequent close(s)</option>)}</select></label><p className="text-sm">{covered.length}/{rows.length} dated releases covered · Mean absolute observed move: {covered.length?financialPercent(covered.reduce((s,r)=>s+Math.abs(r.move!),0)/covered.length):"—"}</p><ResearchTable headers={["Release","Prior close","Window end","Observed move"]} rows={rows.map(r=>[financialPeriod(r.event),r.from??"—",r.to??"—",financialPercent(r.move)])}/><p className="text-xs text-muted-foreground">No release times or adjusted-price assurance are supplied. Prior close must be within 7 calendar days and the chosen subsequent close within 14. Rows without adequate nearby prices remain unavailable. These small samples cannot establish earnings causality, options-implied moves or reliable trading probabilities.</p></section>;
 }
