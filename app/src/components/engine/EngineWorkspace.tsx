@@ -12,6 +12,7 @@ import { PortfolioReviewDesk } from "./PortfolioReviewDesk";
 import { ResearchChart } from "@/components/markets/ResearchChart";
 import { engineReadRetry } from "@/api/engineRetry";
 import { FocusedComparison } from "./FocusedComparison";
+import { ExportResearch, MonitoringReview, PortfolioDiagnostics, PeerResearchMatrix } from "./EngineResearchTools";
 const control =
   "rounded-lg border border-border bg-background px-3 py-2 text-sm min-w-0";
 const action =
@@ -307,6 +308,9 @@ export function EngineAssistantPanel({
   const [question, setQuestion] = useState(""),
     [scope, setScope] = useState(initialScope),
     [compare, setCompare] = useState("");
+  const [lens,setLens]=useState("Earnings quality"),[challenge,setChallenge]=useState(true);
+  const [submitted,setSubmitted]=useState<{symbol:string;exchange:string;scope:string;question:string;compare:string;submittedAt:string}|null>(null);
+  const prepareQuestion=()=>setQuestion(`Research ${scope==="portfolio"?"my covered portfolio":symbol} through the lens of ${lens.toLowerCase()}. Separate reported facts, calculations and assumptions. Compare matching periods and currencies; cite each material claim with its source date. ${challenge?"Include the strongest counter-evidence, alternative explanations and what would invalidate the conclusion. ":""}State missing inputs and give a short next-evidence checklist. Do not invent analyst estimates or recommend a trade.`);
   const usage = useQuery({
     queryKey: ["continua", "engine-usage", user?.id],
     queryFn: engineWorkspaceApi.usage,
@@ -314,6 +318,7 @@ export function EngineAssistantPanel({
   });
   const client = useQueryClient();
   const ask = useMutation({
+    onMutate:()=>setSubmitted({symbol,exchange,scope,question,compare,submittedAt:new Date().toISOString()}),
     mutationFn: () =>
       engineWorkspaceApi.ask(
         question,
@@ -342,6 +347,12 @@ export function EngineAssistantPanel({
         dated evidence from the selected research scope.
       </p>
       <div className="flex flex-wrap gap-2">{["Compare revenue growth","Review cash conversion and debt risk","What changed in company news?","Summarize technical observations"].map(prompt=><button key={prompt} type="button" className={control} onClick={()=>setQuestion(prompt)}>{prompt}</button>)}</div>
+      <div className="space-y-3 border-y border-border py-4">
+        <h4 className="text-sm font-semibold">Build a research question</h4>
+        <label className="block text-sm">Research lens<select aria-label="Assistant research lens" className={control+" block mt-1"} value={lens} onChange={e=>setLens(e.target.value)}>{["Earnings quality","Valuation assumptions","Growth durability","Ownership disclosure gaps","Price risk and drawdown","Portfolio concentration","Changes since the last evidence"].map(v=><option key={v}>{v}</option>)}</select></label>
+        <label className="flex gap-2 text-sm"><input type="checkbox" checked={challenge} onChange={e=>setChallenge(e.target.checked)}/>Include a counter-evidence review</label>
+        <button type="button" className={control} onClick={prepareQuestion}>Prepare question</button><p className="text-xs text-muted-foreground">Preparing or editing a question does not call AI. Review the scope and submit explicitly.</p>
+      </div>
       <form
         className="space-y-3"
         onSubmit={(e) => {
@@ -410,6 +421,9 @@ export function EngineAssistantPanel({
       )}
       {ask.data && (
         <article className="border-t border-border pt-4 space-y-3">
+          <h4 className="text-sm font-semibold">Research response · {submitted?.scope==="portfolio"?"My portfolio":submitted?.symbol??symbol}</h4>
+          <p className="text-xs text-muted-foreground">{ask.data.sources.length} evidence sources · {ask.data.sources.filter(s=>s.asOf).length} dated · {ask.data.citations.length} citation references. Counts do not establish accuracy; inspect the underlying evidence.</p>
+          <ExportResearch name={`${submitted?.symbol??symbol}-assistant-research`} data={{request:submitted,answer:ask.data}}/>
           <p className="text-sm leading-relaxed whitespace-pre-wrap">
             {ask.data.answer}
           </p>
@@ -463,6 +477,7 @@ export function EngineMonitoringPanel({
   const check = useMutation({mutationFn:()=>engineWorkspaceApi.checkRules(symbol,exchange),onSuccess:value=>{client.setQueryData(key,value);void client.invalidateQueries({queryKey:[...key,"activity"]});void client.invalidateQueries({queryKey:["notifications"]});}});
   const [kind, setKind] = useState("material_change"),
     [threshold, setThreshold] = useState("");
+  const [ruleFilter,setRuleFilter]=useState("all");
   const save = useMutation({
     mutationFn: (rule: Omit<MonitorRule, "id">) =>
       engineWorkspaceApi.saveRule(rule),
@@ -475,6 +490,7 @@ export function EngineMonitoringPanel({
   return (
     <section className="space-y-4">
       <h3 className="text-lg font-semibold">Monitor your research</h3>
+      {rules.data && <MonitoringReview rules={rules.data}/>}
       <p className="text-sm text-muted-foreground">
         Automatic checks run every 10 minutes while the backend is running. In-app notifications appear when a threshold is
         crossed or tracked research changes materially. Unchanged states stay
@@ -543,7 +559,8 @@ export function EngineMonitoringPanel({
         </button>
       </form>
       <Notice value={rules.error ?? save.error ?? remove.error ?? check.error} />
-      {rules.data?.map((rule) => (
+      <label className="block text-sm">Review rules<select aria-label="Monitoring rule filter" className={control+" block mt-1"} value={ruleFilter} onChange={e=>setRuleFilter(e.target.value)}><option value="all">All rules</option><option value="company">Selected company</option><option value="active">Active</option><option value="paused">Paused</option><option value="attention">Missing inputs / errors / awaiting check</option></select></label>
+      {rules.data?.filter(r=>ruleFilter==="all"||ruleFilter==="company"&&r.symbol===symbol&&r.exchange===exchange||ruleFilter==="active"&&r.enabled||ruleFilter==="paused"&&!r.enabled||ruleFilter==="attention"&&r.enabled&&(!r.last_state?.checkedAt||r.last_state?.unavailable||r.last_state?.error)).map((rule) => (
         <div
           key={rule.id}
           className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3"
@@ -648,6 +665,7 @@ export function EnginePortfolioPanel({ exchange }: { exchange: string }) {
             </p>
           ))}
           <PortfolioReviewDesk data={p} />
+          <PortfolioDiagnostics data={p}/>
           {p.snapshots && p.snapshots.length > 1 && (
             <div>
               <h4 className="text-sm">Recorded invested value</h4>
@@ -832,6 +850,7 @@ export function EnginePeersPanel({
         Compare reporting years before interpreting differences.
       </p>
       <Notice value={peers.error} />
+      {peers.data&&<PeerResearchMatrix peers={peers.data}/>}
       {peers.data?.map((p) => (
         <div key={p.symbol} className="border-t border-border pt-3">
           <h4 className="text-sm font-semibold">

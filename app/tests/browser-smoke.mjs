@@ -139,6 +139,60 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const artifacts = new URL('../../.qa-artifacts/', import.meta.url);
 await mkdir(artifacts, { recursive: true });
 try {
+  if(process.argv.includes('--engine-only')) {
+    await page.goto('http://127.0.0.1:5188/engine?symbol=KCB&tool=Forecast');
+    const nav=page.getByRole('navigation',{name:'Engine navigation'});
+    const tabs=page.getByRole('tablist',{name:'Engine tools'});
+    const openTool=async(tool,group)=>{await nav.getByRole('button',{name:group,exact:true}).tap();await tabs.getByRole('tab',{name:tool,exact:true}).tap();};
+    await page.getByLabel('Forecast workbench',{exact:true}).selectOption('Value signal research');
+    await page.getByRole('heading',{name:'Continua Value Signal',exact:true}).waitFor();
+    await page.getByLabel('Expanded rating research',{exact:true}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'Expand Continua Value Signal research',exact:true}).count(),0,'Engine verified users see the rating research directly');
+    await page.getByLabel('Forecast workbench',{exact:true}).selectOption('Price paths');
+    await page.getByLabel('Price scenario convergence',{exact:true}).fill('50');
+    await page.getByLabel('Price research model',{exact:true}).selectOption('Fixture model 1');
+    await page.getByLabel('Fair-value stress %',{exact:true}).fill('-10');
+    await page.screenshot({path:fileURLToPath(new URL('engine-forecast-workbench.png',artifacts))});
+    await openTool('Earnings & Reports','Company');
+    await page.getByRole('heading',{name:'Profit-to-cash period bridge',exact:true}).waitFor();
+    await page.getByLabel('Reports statement',{exact:true}).selectOption('Balance sheet');
+    await page.getByLabel('Reports period',{exact:true}).selectOption('quarterly');
+    await page.getByRole('heading',{name:'Profit-to-cash period bridge',exact:true}).waitFor();
+    await openTool('Valuation','Company');
+    await page.getByLabel('Assumed P/E multiple',{exact:true}).fill('15');
+    await page.getByLabel('EPS stress %',{exact:true}).fill('-20');
+    await openTool('Ownership','Company');
+    await page.getByLabel('Ownership holder type',{exact:true}).selectOption('institutional');
+    await openTool('Evidence','Analysis');
+    await page.getByLabel('Filter evidence ledger',{exact:true}).fill('publisher');
+    await page.getByRole('cell',{name:/Fixture publisher/}).waitFor();
+    const evidenceDownload=page.waitForEvent('download');await page.getByRole('button',{name:'Export research snapshot',exact:true}).tap();assert.equal((await evidenceDownload).suggestedFilename(),'KCB-evidence.json');
+    await openTool('Technicals','Analysis');
+    await page.getByLabel('Technical research lens',{exact:true}).selectOption('Risk evidence');
+    await page.getByLabel('Risk research window',{exact:true}).selectOption('730');
+    await openTool('Scenario lab','Analysis');
+    await page.getByLabel('Base annual growth %',{exact:true}).fill('15');
+    await page.getByLabel('Assumed net margin %',{exact:true}).fill('12');
+    await page.getByRole('img',{name:'Premium revenue scenario paths',exact:true}).waitFor();
+    await page.screenshot({path:fileURLToPath(new URL('engine-scenario-workbench.png',artifacts))});
+    await openTool('Peers','Analysis');
+    await page.getByLabel('Peer matrix metric',{exact:true}).selectOption('debtToEquity');
+    await page.getByLabel('Peer matrix fiscal year',{exact:true}).selectOption('2025');
+    await openTool('Portfolio','My workspace');
+    await page.getByRole('heading',{name:'Portfolio research queue',exact:true}).waitFor();
+    await page.getByRole('checkbox',{name:'Only companies with risks or evidence gaps',exact:true}).check();
+    await page.getByText('Co-movement review',{exact:true}).tap();
+    await page.getByLabel('Minimum absolute correlation',{exact:true}).fill('.8');
+    await openTool('Monitoring','My workspace');
+    await page.getByLabel('Monitoring rule filter',{exact:true}).selectOption('attention');
+    await openTool('Journal','My workspace');
+    await page.getByRole('button',{name:'Append research template',exact:true}).tap();
+    assert.ok((await page.getByLabel('Research notes',{exact:true}).inputValue()).includes('Assumptions (not facts)'));
+    await openTool('Ask Engine','My workspace');
+    await page.getByRole('button',{name:'Prepare question',exact:true}).tap();assert.equal(assistantRequests,0);
+    assert.deepEqual(errors,[]);
+    console.log('PASS focused Engine workbenches, rating access, source export, controls, workspace tools and no automatic AI');
+  } else {
   const loginContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await loginContext.route('**/*', handleRoute);
   const loginPage = await loginContext.newPage();
@@ -314,7 +368,13 @@ try {
   await page.getByRole('button', { name: 'Share Portfolio', exact: true }).tap();
   await dialog.waitFor();
   assert.equal(await dialog.evaluate((el) => getComputedStyle(el).animationName), 'panel-rise');
-  await dialog.getByRole('button', { name: 'Close', exact: true }).tap();
+  await wait(300);
+  // Tap the visible target without Playwright's scroll-to-target step, which
+  // can shift this fixed header after the preceding mobile viewport changes.
+  const shareClose=dialog.getByRole('button',{name:'Close',exact:true});
+  const sharePoint=await shareClose.evaluate(el=>{const b=el.getBoundingClientRect();const x=b.x+b.width/2,y=b.y+b.height/2;return {x,y,hit:el.contains(document.elementFromPoint(x,y))};});
+  assert.ok(sharePoint.hit,'Visible sharing close target receives touch');
+  await page.touchscreen.tap(sharePoint.x,sharePoint.y);
   await dialog.waitFor({ state: 'hidden' });
   console.log('PASS interactive metric selection, dark-mode contrast and bottom-up portfolio sharing');
 
@@ -466,6 +526,9 @@ try {
   await categories.getByRole('tab',{name:'Forecast',exact:true}).tap();
   await page.getByRole('heading',{name:'Company Forecast',exact:true}).waitFor();
   assert.equal(await page.getByRole('navigation',{name:'Forecast shortcuts',exact:true}).count(),0,'Broken shortcut pills were removed');
+  const paidResearchButton=page.getByRole('button',{name:'Expand Continua Value Signal research',exact:true});
+  assert.equal((await paidResearchButton.innerText()).replace(/\s+/g,' ').trim(),'Detailed Research ›');
+  assert.equal(await paidResearchButton.locator('svg').count(),0,'Paid research buttons have no lock');
   await page.getByRole('button',{name:'Expand Continua Value Signal research',exact:true}).tap();
   await page.getByLabel('Expanded rating research',{exact:true}).waitFor();
   await page.getByRole('dialog',{name:'Continua Value Signal research',exact:true}).getByRole('button',{name:'Close',exact:true}).tap();
@@ -564,7 +627,7 @@ try {
   await page.getByText('Fixture reported revenue increased.',{exact:true}).waitFor();
   const engineTools = page.getByRole('tablist',{name:'Engine tools'});
   const openEngineTool = async (tool) => {
-    const group = ['Briefing','News','Earnings & forecasts','Valuation','Ownership'].includes(tool) ? 'Company' : ['Evidence','Technicals','Scenario lab','Peers'].includes(tool) ? 'Analysis' : 'My workspace';
+    const group = ['Briefing','Forecast','News','Earnings & Reports','Valuation','Ownership'].includes(tool) ? 'Company' : ['Evidence','Technicals','Scenario lab','Peers'].includes(tool) ? 'Analysis' : 'My workspace';
     await page.getByRole('navigation',{name:'Engine navigation'}).getByRole('button',{name:group,exact:true}).tap();
     await engineTools.getByRole('tab',{name:tool,exact:true}).tap();
   };
@@ -572,6 +635,8 @@ try {
   await page.getByText('Fixture valuation',{exact:true}).waitFor();
   await engineTools.getByRole('tab',{name:'Ownership',exact:true}).tap();
   await page.getByText('Fixture institutional holder',{exact:true}).waitFor();
+  await page.getByLabel('Ownership disclosure date',{exact:true}).selectOption('2025-12-31');
+  await page.getByLabel('Ownership holder type',{exact:true}).selectOption('institutional');
   await openEngineTool('Monitoring');
   await page.getByRole('navigation',{name:'Engine navigation'}).getByRole('button',{name:'Company',exact:true}).tap();
   assert.equal(await engineTools.getByRole('tab',{name:'Ownership',exact:true}).getAttribute('aria-selected'),'true','Engine remembers the last Company tool');
@@ -581,15 +646,28 @@ try {
   const bodyFont = await page.getByText('Fixture institutional holder',{exact:true}).evaluate(el => getComputedStyle(el).fontSize);
   const contextFont = await page.getByLabel('Current research tool',{exact:true}).locator('p').last().evaluate(el => getComputedStyle(el).fontSize);
   assert.equal(bodyFont,contextFont,'Engine explanatory text uses the same reading scale');
-  await engineTools.getByRole('tab',{name:'Earnings & forecasts',exact:true}).tap();
-  await page.getByRole('img',{name:'revenue actual and estimate history'}).waitFor();
+  await engineTools.getByRole('tab',{name:'Earnings & Reports',exact:true}).tap();
+  await page.getByRole('heading',{name:'Profit-to-cash period bridge',exact:true}).waitFor();
+  assert.equal(await page.getByRole('heading',{name:'Financial estimates',exact:true}).count(),0,'Reports exclude forward estimates');
+  await page.getByLabel('Reports period',{exact:true}).selectOption('quarterly');
+  await page.getByLabel('Reports statement',{exact:true}).selectOption('Cash flows');
   await engineTools.getByRole('tab',{name:'Forecast',exact:true}).tap();
-  await page.getByRole('heading',{name:'Continua Value Signal',exact:true}).waitFor();
   await page.getByRole('heading',{name:'Company Forecast',exact:true}).waitFor();
+  await page.getByRole('img',{name:'Expanded price scenario chart',exact:true}).waitFor();
+  await page.getByLabel('Forecast workbench',{exact:true}).selectOption('Estimates & coverage');
+  await page.getByRole('img',{name:'revenue actual and estimate history'}).waitFor();
+  assert.equal(await page.getByRole('heading',{name:'Latest earnings',exact:true}).count(),0,'Forecast excludes reported earnings');
+  await page.getByLabel('Forecast workbench',{exact:true}).selectOption('Value signal research');
+  await page.getByLabel('Expanded rating research',{exact:true}).waitFor();
+  await page.getByLabel('Forecast workbench',{exact:true}).selectOption('Growth quality');
+  await page.getByLabel('Growth research metric',{exact:true}).selectOption('eps');
+  await page.getByLabel('Forecast workbench',{exact:true}).selectOption('Company scorecard');
+  await page.getByLabel('Minimum ROE %',{exact:true}).fill('20');
   await engineTools.getByRole('tab', {name:'News',exact:true}).tap();
   await page.getByText('Revenue increased by 12 percent.', {exact:true}).waitFor();
   assert.equal(await page.getByRole('link', {name:'Fixture company update'}).getAttribute('href'), '/traders-hub?tab=media&article=digest-test');
   await engineTools.getByRole('tab', {name:'Briefing',exact:true}).tap();
+  await page.getByRole('heading',{name:'Research readiness',exact:true}).waitFor();
   await page.getByLabel('Research goal', {exact:true}).selectOption('Income');
   await page.getByText('Evidence ordered for your income research goal', {exact:true}).waitFor();
   await page.reload();
@@ -600,8 +678,8 @@ try {
   await page.waitForFunction(() => !document.querySelector('[aria-label="Refresh Engine analysis"]')?.disabled);
   assert.ok(engineRequests > requestsBeforeRefresh,'Engine refresh requests fresh analysis');
   await openEngineTool('Scenario lab');
-  await page.getByRole('spinbutton',{name:'Scenario annual growth percent'}).fill('15');
-  await page.getByRole('img',{name:'Revenue scenario forecast'}).waitFor();
+  await page.getByRole('spinbutton',{name:'Base annual growth %',exact:true}).fill('15');
+  await page.getByRole('img',{name:'Premium revenue scenario paths'}).waitFor();
   await page.screenshot({path:fileURLToPath(new URL('engine-scenario.png',artifacts))});
   console.log('PASS paid Engine briefing, valuation, ownership, sourced estimates, scenarios and refresh');
   await openEngineTool('Preferences');
@@ -615,6 +693,7 @@ try {
   await page.getByRole('button',{name:'Pause',exact:true}).waitFor();
   await page.getByRole('button',{name:'Check KCB now',exact:true}).tap();
   await page.getByText(/Checked .*No crossing/).waitFor();
+  await page.getByRole('heading',{name:'Monitoring health',exact:true}).waitFor();
   await page.getByRole('button',{name:'Pause',exact:true}).tap();
   await page.getByRole('button',{name:'Resume',exact:true}).waitFor();
   await page.getByRole('button',{name:'Remove',exact:true}).tap();
@@ -627,6 +706,8 @@ try {
   await page.getByRole('button',{name:'Retry alert history',exact:true}).tap();
   await page.getByText('No Engine alerts yet. New alerts appear here and in Notifications.',{exact:true}).waitFor();
   await openEngineTool('Peers');
+  await page.getByLabel('Peer matrix fiscal year',{exact:true}).selectOption('2025');
+  await page.getByLabel('Peer matrix metric',{exact:true}).selectOption('cashConversion');
   await page.getByRole('heading',{name:/EQTY · Fixture peer/}).waitFor();
   await page.getByLabel('Focused comparison metric',{exact:true}).selectOption('debtToEquity');
   await page.getByRole('heading',{name:'Compare one metric',exact:true}).waitFor();
@@ -662,6 +743,10 @@ try {
   await page.getByRole('button',{name:'Remove',exact:true}).waitFor({state:'hidden'});
   await engineTools.getByRole('tab',{name:'Ask Engine',exact:true}).tap();
   assert.equal(assistantRequests,0,'AI never runs automatically');
+  await page.getByLabel('Assistant research lens',{exact:true}).selectOption('Valuation assumptions');
+  await page.getByRole('button',{name:'Prepare question',exact:true}).tap();
+  assert.ok((await page.getByLabel('Research question',{exact:true}).inputValue()).includes('counter-evidence'));
+  assert.equal(assistantRequests,0,'Preparing a question does not call AI');
   await page.getByLabel('Research question',{exact:true}).fill('What do the reported results show?');
   await page.getByRole('button',{name:'Ask Engine',exact:true}).tap();
   await page.getByText('The fixture filing reports 12% revenue growth.',{exact:true}).waitFor();
@@ -687,6 +772,8 @@ try {
   await page.getByRole('checkbox',{name:'Check the reporting period',exact:true}).check();
   await page.getByText('Saved on this device',{exact:true}).waitFor();
   await page.getByLabel('Journal evidence log',{exact:true}).fill('2026-10-07 · fixture filing · revenue growth evidence');
+  await page.getByLabel('Journal counter-evidence',{exact:true}).fill('Cash conversion needs another comparable filing.');
+  await page.getByLabel('Journal next evidence',{exact:true}).fill('Check the next annual cash-flow statement.');
   await page.getByRole('button',{name:'Save thesis snapshot',exact:true}).tap();
   const journalDownload=page.waitForEvent('download');
   await page.getByRole('button',{name:'Export journal',exact:true}).tap();
@@ -694,6 +781,8 @@ try {
   await page.reload();
   await page.getByLabel('Research notes',{exact:true}).waitFor();
   assert.equal(await page.getByLabel('Research notes',{exact:true}).inputValue(),'Review the next dated filing before revising my thesis.');
+  assert.equal(await page.getByLabel('Journal counter-evidence',{exact:true}).inputValue(),'Cash conversion needs another comparable filing.');
+  assert.equal(await page.getByLabel('Journal next evidence',{exact:true}).inputValue(),'Check the next annual cash-flow statement.');
   assert.equal(await page.getByRole('checkbox',{name:'Check the reporting period',exact:true}).isChecked(),true);
   assert.equal(new URL(page.url()).searchParams.get('tool'),'Journal');
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Engine must fit mobile width');
@@ -914,6 +1003,7 @@ try {
   console.log('PASS failed device verification keeps private screens unmounted');
   assert.deepEqual(errors, [], `Browser errors: ${errors.join('\n')}`);
   console.log('PASS no uncaught browser exceptions. Unprovided fixture endpoints:', [...unknown].join(', '));
+  }
 } catch (error) {
   console.error('Uncaught browser errors:', errors);
   console.error('Last touch events:', await page.evaluate(() => window.__tapEvents));

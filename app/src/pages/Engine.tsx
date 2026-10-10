@@ -25,16 +25,14 @@ import { useInstruments } from "@/hooks/useInstruments";
 import { navigateBack } from "@/lib/navigation";
 import { TechnicalsTab } from "@/components/stock/tabs/TechnicalsTab";
 import { StockAlertDialog } from "@/components/alerts/StockAlertDialog";
-import { FundamentalsInsights } from "@/components/stock/FundamentalsInsights";
-import { EarningsFundamentals } from "@/components/stock/EarningsFundamentals";
-import { CompanyForecast } from "@/components/engine/CompanyFocus";
+import { EngineForecastDesk, EngineReportsDesk, BriefingDecisionDesk, EvidenceLedger, ValuationSensitivityDesk, OwnershipAuditDesk, TechnicalResearchDesk, ScenarioWorkbench } from "@/components/engine/EngineResearchTools";
 import { ValuationPreview } from "@/components/stock/FundamentalResearch";
 
 const tools = [
   "Briefing",
   "Forecast",
   "News",
-  "Earnings & forecasts",
+  "Earnings & Reports",
   "Valuation",
   "Ownership",
   "Technicals",
@@ -55,7 +53,7 @@ const groups: { name: string; tools: Tool[] }[] = [
       "Briefing",
       "Forecast",
       "News",
-      "Earnings & forecasts",
+      "Earnings & Reports",
       "Valuation",
       "Ownership",
     ],
@@ -70,10 +68,10 @@ const groups: { name: string; tools: Tool[] }[] = [
   },
 ];
 const toolHelp: Record<Tool, string> = {
-  Forecast: "Explore basic ratings and forecasts, then expand into Premium rating research and price sensitivity.",
+  Forecast: "Explore estimates, growth diagnostics, model research and price sensitivity. Separate evidence from assumptions.",
   Briefing: "Start with the reported facts, then open the supporting evidence or risks that matter to you.",
   News: "Read dated issuer stories and check the original publisher before acting.",
-  "Earnings & forecasts": "Separate reported results from estimates and inspect the periods behind each number.",
+  "Earnings & Reports": "Inspect reported results, cash conversion and statements. Forward estimates are in Forecast.",
   Valuation: "Compare model assumptions, not just the headline value. Missing inputs are shown explicitly.",
   Ownership: "Explore disclosed shareholders. These snapshots are not a record of buying or selling.",
   Evidence: "Review changes, source coverage and gaps before drawing a conclusion.",
@@ -88,6 +86,7 @@ const toolHelp: Record<Tool, string> = {
 };
 function toolFromParam(value: string | null): Tool {
   if (value === "Focus") return "Forecast";
+  if (value === "Earnings & forecasts") return "Earnings & Reports";
   return tools.includes(value as Tool) ? (value as Tool) : "Briefing";
 }
 const money = (value: number | null | undefined, currency: string) =>
@@ -436,10 +435,12 @@ export default function Engine() {
                         </button>
                       </div>
                       <Briefing data={data} goal={goal} />
+                      <BriefingDecisionDesk key={symbol} data={data}/>
                     </>
                   )}
                   {tool === "Evidence" && (
                     <>
+                      <EvidenceLedger key={symbol} data={data}/>
                       {data.quality ? (
                         <EngineInsights data={data} />
                       ) : (
@@ -528,22 +529,12 @@ export default function Engine() {
                       )}
                     </section>
                   )}
-                  {tool === "Forecast" && <CompanyForecast symbol={symbol} currency={data.currency}/>}
-                  {tool === "Earnings & forecasts" && (
-                    <>
-                      <EarningsFundamentals
-                        symbol={symbol}
-                        currency={data.currency}
-                      />
-                      <FundamentalsInsights
-                        symbol={symbol}
-                        currency={data.currency}
-                      />
-                    </>
-                  )}
+                  {tool === "Forecast" && <EngineForecastDesk key={symbol} symbol={symbol} currency={data.currency}/>}
+                  {tool === "Earnings & Reports" && <EngineReportsDesk key={symbol} data={data}/>}
                   {tool === "Valuation" && (
                     <section className="divide-y divide-border/70">
                       <ValuationPreview symbol={symbol} currency={data.currency} name={data.companyName} sector={instruments.find(item=>item.symbol===symbol)?.sector??""} price={Number(data.quote?.lastPrice??0)}/>
+                      <ValuationSensitivityDesk key={symbol} data={data}/>
                       {data.valuation?.models.map((model) => (
                         <div key={model.model} className="py-4 space-y-2">
                           <div className="flex justify-between gap-3">
@@ -570,50 +561,11 @@ export default function Engine() {
                       )}
                     </section>
                   )}
-                  {tool === "Ownership" && (
-                    <section>
-                      <h3 className="text-lg font-semibold">
-                        Smart money tracker
-                      </h3>
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        Company-disclosed shareholders and ownership
-                        percentages.
-                      </p>
-                      <div className="mt-4 divide-y divide-border/70">
-                        {data.ownership.map((holder) => (
-                          <div
-                            key={holder.holderName}
-                            className="flex justify-between gap-3 py-3 text-sm"
-                          >
-                            <div>
-                              <p className="font-semibold">
-                                {holder.holderName}
-                              </p>
-                              <p className="text-xs capitalize text-muted-foreground">
-                                {holder.holderType} ·{" "}
-                                {new Date(holder.asOf).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <span className="font-semibold">
-                              {Number(holder.percentHeld).toFixed(2)}%
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      {!data.ownership.length && (
-                        <p className="py-6 text-sm text-muted-foreground">
-                          No shareholder disclosures are on file yet.
-                        </p>
-                      )}
-                      <p className="mt-4 text-xs text-muted-foreground">
-                        Insider transaction history is unavailable; ownership
-                        snapshots do not show purchases or sales.
-                      </p>
-                    </section>
-                  )}
+                  {tool === "Ownership" && <OwnershipAuditDesk key={symbol} data={data}/>}
                   {tool === "Technicals" && (
                     <>
                       <TechnicalsTab symbol={symbol} currency={data.currency} />
+                      <TechnicalResearchDesk key={symbol} symbol={symbol}/>
                       <button
                         className="rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background"
                         onClick={() => setAlertsOpen(true)}
@@ -622,12 +574,7 @@ export default function Engine() {
                       </button>
                     </>
                   )}
-                  {tool === "Scenario lab" && (
-                    <FundamentalsInsights
-                      symbol={symbol}
-                      currency={data.currency}
-                    />
-                  )}
+                  {tool === "Scenario lab" && <ScenarioWorkbench key={symbol} symbol={symbol} currency={data.currency}/>}
                   <div className="flex gap-4 border-t border-border/70 pt-4 text-xs font-semibold text-primary">
                     <Link to={`/stock/${encodeURIComponent(symbol)}`}>
                       Open stock Fundamentals →

@@ -16,6 +16,8 @@ interface Entry {
   invalidation: string;
   revisions: {at:string;notes:string;invalidation:string}[];
   evidence: string;
+  counterEvidence: string;
+  nextAction: string;
 }
 const empty: Entry = {
   notes: "",
@@ -26,6 +28,8 @@ const empty: Entry = {
   invalidation: "",
   revisions: [],
   evidence: "",
+  counterEvidence: "",
+  nextAction: "",
 };
 
 /** Account and exchange isolation prevents notes leaking into another workspace. */
@@ -59,6 +63,8 @@ function Journal({
       if (typeof value?.notes === "string" && Array.isArray(value.checked))
         return {
           ...empty,
+          counterEvidence:typeof value.counterEvidence==="string"?value.counterEvidence.slice(0,2000):"",
+          nextAction:typeof value.nextAction==="string"?value.nextAction.slice(0,1000):"",
           evidence:typeof value.evidence==="string"?value.evidence.slice(0,3000):"",
           revisions:Array.isArray(value.revisions)?value.revisions.filter((r:Entry["revisions"][number])=>typeof r?.at==="string"&&typeof r.notes==="string"&&typeof r.invalidation==="string").slice(0,5).map((r:Entry["revisions"][number])=>({at:r.at,notes:r.notes.slice(0,5000),invalidation:r.invalidation.slice(0,1000)})):[],
           notes: value.notes.slice(0, 5000),
@@ -194,6 +200,10 @@ function Journal({
           className="mt-2 min-h-48 w-full resize-y rounded-lg border border-border bg-background p-3 text-sm font-normal leading-relaxed"
         />
       </label>
+      <button type="button" className="border border-border rounded-lg px-3 py-2 text-sm" disabled={entry.notes.length>4500} onClick={()=>update({notes:[entry.notes,"Hypothesis:\n\nReported evidence:\n\nAssumptions (not facts):\n\nAlternative explanation:\n\nNext filing or disclosure to check:"].filter(Boolean).join("\n\n").slice(0,5000)})}>Append research template</button>
+      <label className="block text-sm">Strongest counter-evidence<textarea aria-label="Journal counter-evidence" maxLength={2000} value={entry.counterEvidence} onChange={e=>update({counterEvidence:e.target.value})} placeholder="Which dated fact challenges your thesis? What alternative explanation fits?" className="block mt-2 w-full border border-border bg-background p-3 min-h-24 text-sm"/></label>
+      <label className="block text-sm">Next evidence to collect<textarea aria-label="Journal next evidence" maxLength={1000} value={entry.nextAction} onChange={e=>update({nextAction:e.target.value})} placeholder="Source, reporting period and question to resolve before your next review" className="block mt-2 w-full border border-border bg-background p-3 min-h-20 text-sm"/></label>
+      <p className="text-xs text-muted-foreground">Research structure: {[entry.notes.trim(),entry.evidence.trim(),entry.counterEvidence.trim(),entry.invalidation.trim(),entry.nextAction.trim()].filter(Boolean).length}/5 fields recorded. Completeness is not investment conviction or data quality.</p>
       <div className="flex justify-between gap-3 text-xs text-muted-foreground">
         <p role="status">{status}</p>
         <span>{entry.notes.length}/5000</span>

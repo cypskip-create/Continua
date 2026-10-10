@@ -12,7 +12,7 @@ import { financialTab } from "./FinancialStatementExplorer";
 
 export function ForecastDetail({symbol,currency,events}: {symbol:string;currency:string;events:StockEarningsEvent[]}) {
   const estimates=events.filter(e=>e.revenueEstimate!=null||e.epsEstimate!=null);
-  return <section className="border-t border-border py-4 space-y-3"><h3 className="text-lg font-semibold">Forecasts & analyst coverage</h3><p className="text-sm">${estimates.length} releases with sourced revenue or EPS estimates.</p><p className="text-xs text-muted-foreground">Basic estimates remain free. Premium adds coverage audits, reported estimate differences and price-history context.</p><PremiumDetail title="Forecasts & analyst coverage" symbol={symbol} currency={currency}><ForecastResearchWorkbench symbol={symbol} currency={currency} events={events}/></PremiumDetail></section>;
+  return <section className="border-t border-border py-4 space-y-3"><h3 className="text-lg font-semibold">Forecasts & analyst coverage</h3><p className="text-sm">{estimates.length} releases with sourced revenue or EPS estimates.</p><p className="text-xs text-muted-foreground">Basic estimates remain free. Premium adds coverage audits, reported estimate differences and price-history context.</p><PremiumDetail title="Forecasts & analyst coverage" symbol={symbol} currency={currency}><ForecastResearchWorkbench symbol={symbol} currency={currency} events={events}/></PremiumDetail></section>;
 }
 function ForecastResearchWorkbench({symbol,currency,events}: {symbol:string;currency:string;events:StockEarningsEvent[]}) {
   const [tab,setTab]=useState("Financial estimates"),[filter,setFilter]=useState("All");

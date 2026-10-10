@@ -11,7 +11,7 @@ function compact(value: number, currency: string) {
   return financialNumber(value,currency);
 }
 
-export function EarningsFundamentals({ symbol, currency, mode = "all" }: { symbol: string; currency: string; mode?: "reported" | "analysis" | "all" }) {
+export function EarningsFundamentals({ symbol, currency, mode = "all" }: { symbol: string; currency: string; mode?: "reported" | "analysis" | "forecast" | "all" }) {
   const [metric, setMetric] = useState<"revenue" | "eps" | "netIncome" | "ebit">("revenue");
   const {history} = useStockFinancials(symbol,{periodType:"annual",limit:10});
   const { data: earnings = [] } = useQuery({
@@ -31,7 +31,7 @@ export function EarningsFundamentals({ symbol, currency, mode = "all" }: { symbo
   }));
   const format = (value: number) => metric === "eps" ? Number(value).toFixed(2) : financialNumber(value,currency);
   return <>
-    {mode !== "analysis" && <section className="border-t border-border/70 py-6 space-y-4">
+    {mode !== "analysis" && mode !== "forecast" && <section className="border-t border-border/70 py-6 space-y-4">
       <div className="flex items-center justify-between gap-2"><h3 className="text-lg font-semibold">Latest earnings</h3><EarningsDetailButton symbol={symbol} currency={currency} events={earnings}/></div>
       {latest ? <>
         <EarningsOverview event={latest} history={history} currency={currency}/>
@@ -44,7 +44,7 @@ export function EarningsFundamentals({ symbol, currency, mode = "all" }: { symbo
       {points.some(point => point.actual != null || point.estimate != null) && <><div className="h-52" role="img" aria-label={`${metric} actual and estimate history`}><ResponsiveContainer width="100%" height="100%"><LineChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}><CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 4" /><XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fontSize: "0.625rem" }} /><YAxis hide domain={["auto", "auto"]} /><Tooltip formatter={(value: number) => format(value)} contentStyle={{ background: "hsl(var(--popover))", color: "hsl(var(--popover-foreground))", border: "1px solid hsl(var(--border))" }} /><Line dataKey="actual" name="Actual" stroke="#4f7cf5" strokeWidth={2} dot={{ r: 3 }} connectNulls={false} isAnimationActive={false} /><Line dataKey="estimate" name="Estimate" stroke="#f97316" strokeWidth={2} strokeDasharray="5 4" dot={{ r: 3 }} connectNulls={false} isAnimationActive={false} /></LineChart></ResponsiveContainer></div><p className="text-center text-xs text-muted-foreground"><span className="text-blue-500">●</span> Actual · <span className="text-orange-500">●</span> Sourced estimate</p></>}
       {estimated.length ? <div className="mt-4 divide-y divide-border/60">{estimated.slice(-5).map(event => <div key={event.id} className="grid grid-cols-3 gap-2 py-3 text-sm"><span>{event.fiscalQuarter ? `Q${event.fiscalQuarter}` : "FY"} {event.fiscalYear}</span><span className="text-right">{event.revenueEstimate == null ? "—" : compact(Number(event.revenueEstimate), currency)}<span className="block text-xs text-muted-foreground">Revenue est.</span></span><span className="text-right">{event.epsEstimate == null ? "—" : Number(event.epsEstimate).toFixed(2)}<span className="block text-xs text-muted-foreground">EPS est.</span></span></div>)}</div> : <p className="mt-3 text-sm text-muted-foreground">No verified analyst estimates are on file for this stock.</p>}
     </section>
-    <EarningsMovePreview symbol={symbol} currency={currency} events={earnings}/>
+    {mode !== "forecast" && <EarningsMovePreview symbol={symbol} currency={currency} events={earnings}/>}
     <ForecastDetail symbol={symbol} currency={currency} events={earnings}/>
     </>}
   </>;

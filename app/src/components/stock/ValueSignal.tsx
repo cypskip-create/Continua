@@ -7,14 +7,14 @@ import { modelPricePath, valueSignal } from "@/lib/valueSignal";
 import { PremiumDetail } from "@/components/engine/PremiumDetail";
 import { ResearchNumber, ResearchTable } from "./ForecastWorkbenches";
 
-export function ValueSignal({symbol,currency}: {symbol:string;currency:string}) {
+export function ValueSignal({symbol,currency,expanded=false}: {symbol:string;currency:string;expanded?:boolean}) {
   const {valuation,isLoading,isError}=useValuation(symbol);
   const s=valueSignal(valuation);
   return <section className="border-t border-border py-5 space-y-3" aria-label="Basic Continua rating">
     <h3 className="text-lg font-semibold">Continua Value Signal</h3>
     {isLoading?<p role="status">Calculating rating…</p>:s.stars==null?<p className="text-sm text-muted-foreground">{isError?"Rating feed could not be loaded.":"Unrated — no usable positive model fair value and matching price."}</p>:<><p className="text-2xl text-amber-500" aria-label={`${s.stars} out of 5 stars`}>{"★".repeat(s.stars)}<span className="text-muted-foreground/40">{"★".repeat(5-s.stars)}</span></p><div className="grid grid-cols-2 gap-3 text-sm"><div><span className="block text-muted-foreground">Model fair value</span><strong>{financialNumber(s.fair,currency)}</strong></div><div><span className="block text-muted-foreground">Model-implied upside</span><strong>{s.upside!.toFixed(1)}%</strong></div></div><p className="text-xs text-muted-foreground">{s.models.length} usable model(s) · {s.agreement.toLowerCase()} agreement · provisional model signal</p></>}
     <p className="text-xs text-muted-foreground">Continua v2 uses median fair value rather than an average, and wider rating bands when models disagree or only one is available. It is not a Morningstar rating or a buy/sell recommendation.</p>
-    <PremiumDetail title="Continua Value Signal research" symbol={symbol} currency={currency}><RatingResearch symbol={symbol} currency={currency}/></PremiumDetail>
+    {expanded?<RatingResearch symbol={symbol} currency={currency}/>:<PremiumDetail title="Continua Value Signal research" symbol={symbol} currency={currency}><RatingResearch symbol={symbol} currency={currency}/></PremiumDetail>}
   </section>;
 }
 
