@@ -11,15 +11,15 @@ const postgresUrl = ["postgres:", "postgresql:"].includes(target.protocol);
 console.log(JSON.stringify({
   databaseConfigured: true, postgresUrl,
   knownAppProject: target.hostname.includes("jjsetogmnumoudrovpzn") || decodeURIComponent(target.username).includes("jjsetogmnumoudrovpzn"),
-  testKey: process.env.PAYSTACK_SECRET_KEY?.startsWith("sk_test_") === true,
-  testCheckoutFlag: process.env.PAYSTACK_TEST_CHECKOUT_ENABLED === "true",
+  liveKey: process.env.PAYSTACK_SECRET_KEY?.startsWith("sk_live_") === true,
+  liveCheckoutFlag: process.env.PAYSTACK_LIVE_CHECKOUT_ENABLED === "true",
   callbackConfigured: !!process.env.PAYSTACK_CALLBACK_URL,
 }));
 if (!postgresUrl) process.exit(1);
 const client = new pg.Client({ connectionString: raw, connectionTimeoutMillis: 10_000, statement_timeout: 10_000 });
 try {
   await client.connect();
-  const result = await client.query("SELECT to_regclass('public.profiles') IS NOT NULL AS profiles_exist, to_regclass('public.paystack_test_orders') IS NOT NULL AS test_orders_exist");
+  const result = await client.query("SELECT to_regclass('public.profiles') IS NOT NULL AS profiles_exist, to_regclass('public.paystack_live_orders') IS NOT NULL AS live_orders_exist");
   console.log(JSON.stringify({ connected: true, ...result.rows[0] }));
 } catch (error) {
   console.log(JSON.stringify({ connected: false, errorCode: (error as { code?: string }).code ?? "connection_error" }));

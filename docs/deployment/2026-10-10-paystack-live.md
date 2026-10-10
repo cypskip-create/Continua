@@ -23,7 +23,7 @@ must not be published until their payments can be linked to authenticated orders
 
 Set the callback/webhook in Paystack's live developer settings. Backend settings:
 `PAYSTACK_SECRET_KEY` (private live secret), `PAYSTACK_LIVE_CHECKOUT_ENABLED=true`,
-`PAYSTACK_TEST_CHECKOUT_ENABLED=false`, and `PAYSTACK_CALLBACK_URL` as above.
+and `PAYSTACK_CALLBACK_URL` as above. Test-checkout settings are removed.
 Never commit a secret, put it in a Vite variable, or paste it into chat.
 
 ## Migration and security
@@ -58,10 +58,18 @@ expiry-aware access. Legacy manually granted paid tiers with no expiry remain in
 - Frontend regression tests: 59 passing.
 - Never submit a real payment during deployment checks. The owner performs that final test.
 
-## Key rotation requirement
+## Key rotation and test retirement
 
 During Render environment editing, browser accessibility output unexpectedly
 included credential values despite visually masked controls. Rotate the exposed
 live Paystack secret before accepting real payments, replace it privately in Render,
 then enable `PAYSTACK_LIVE_CHECKOUT_ENABLED`. Checkout must remain disabled until
 that rotation is complete. Do not record old/new key values in documentation.
+
+The owner subsequently confirmed rotation and saved the replacement in ignored
+`backend/.env.local`. The active test checkout service, test configuration flag,
+test-checkout UI and obsolete test migration runner are removed. Common price,
+redirect and signature safety tests remain, alongside live-payment tests that
+reject test-domain transactions and test key fixtures. Historical migration SQL
+and protected test receipts are retained as an audit trail, not an active checkout.
+No further database migration is required for this retirement.

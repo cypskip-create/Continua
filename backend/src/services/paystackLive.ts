@@ -3,7 +3,7 @@ import { z } from "zod";
 import { env } from "../config/index.js";
 import { query } from "../storage/db.js";
 import { ApiError } from "../api/middleware/errorHandler.js";
-import { checkoutInput, prices, validCheckoutUrl } from "./paystackTest.js";
+import { checkoutInput, prices, validCheckoutUrl } from "./paystackCommon.js";
 
 export const liveReferencePattern = /^continua-live-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 export function liveCheckoutEnabled() {
