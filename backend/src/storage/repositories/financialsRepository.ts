@@ -90,6 +90,7 @@ export const financialsRepository = {
               p.period_end as "periodEnd", p.reported_at as "reportedAt", p.currency,
               i.revenue, i.net_income as "netIncome", i.eps,
               i.gross_profit as "grossProfit", i.operating_income as "operatingIncome", i.ebitda,
+              i.cost_of_revenue as "costOfRevenue", i.operating_expenses as "operatingExpenses",
               b.total_assets as "totalAssets", b.total_liabilities as "totalLiabilities",
               b.total_equity as "totalEquity", b.cash, b.total_debt as "totalDebt",
               b.current_assets as "currentAssets", b.current_liabilities as "currentLiabilities",

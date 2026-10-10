@@ -35,5 +35,7 @@ export function useStockFinancials(
     history: history.data ?? [],
     latest: latest.data,
     isLoading: history.isLoading || latest.isLoading,
+    historyError: history.error,
+    refetchHistory: history.refetch,
   };
 }

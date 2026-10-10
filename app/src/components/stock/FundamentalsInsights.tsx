@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { useStockFinancials } from "@/hooks/useStockFinancials";
 import { useValuation } from "@/hooks/useValuation";
+import { financialNumber } from "@/lib/financialPresentation";
 
 const finite = (value: number | null | undefined): number | null =>
   value != null && Number.isFinite(Number(value)) ? Number(value) : null;
@@ -284,7 +285,7 @@ export function FundamentalsInsights({
                 />
                 <Tooltip
                   formatter={(value: number) =>
-                    `${currency} ${Number(value).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+                    financialNumber(value, currency)
                   }
                   contentStyle={tooltipStyle}
                 />
@@ -314,7 +315,7 @@ export function FundamentalsInsights({
             anchor a scenario.
           </p>
         )}
-        {base!=null&&base>0&&<div className="overflow-x-auto"><h4 className="text-sm font-semibold">Growth sensitivity · {currency}</h4><table className="w-full text-xs whitespace-nowrap"><thead><tr><th className="text-left py-2">Annual growth</th>{[1,2,3].map(y=><th key={y} className="px-3 text-right">Year {y}</th>)}</tr></thead><tbody>{[Math.max(-50,growth-5),growth,Math.min(50,growth+5)].map((g,i)=><tr key={i} className="border-t border-border"><th className="text-left py-2 font-normal">{g.toFixed(1)}%</th>{[1,2,3].map(y=><td key={y} className="px-3 text-right">{(base*(1+g/100)**y).toLocaleString(undefined,{maximumFractionDigits:0})}</td>)}</tr>)}</tbody></table><p className="text-xs text-muted-foreground">Constant compounded growth; no probability, valuation multiple or price target is implied.</p></div>}
+        {base!=null&&base>0&&<div className="overflow-x-auto"><h4 className="text-sm font-semibold">Growth sensitivity · {currency}</h4><table className="w-full text-xs whitespace-nowrap"><thead><tr><th className="text-left py-2">Annual growth</th>{[1,2,3].map(y=><th key={y} className="px-3 text-right">Year {y}</th>)}</tr></thead><tbody>{[Math.max(-50,growth-5),growth,Math.min(50,growth+5)].map((g,i)=><tr key={i} className="border-t border-border"><th className="text-left py-2 font-normal">{g.toFixed(1)}%</th>{[1,2,3].map(y=><td key={y} className="px-3 text-right">{financialNumber(base*(1+g/100)**y)}</td>)}</tr>)}</tbody></table><p className="text-xs text-muted-foreground">Constant compounded growth; no probability, valuation multiple or price target is implied.</p></div>}
       </section>
     </div>
   );

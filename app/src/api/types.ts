@@ -126,6 +126,8 @@ export interface FinancialPeriodBundle {
 }
 
 export interface FinancialHistoryEntry {
+  costOfRevenue?: number | null;
+  operatingExpenses?: number | null;
   fiscalYear: number;
   fiscalQuarter?: number | null;
   periodEnd?: string;

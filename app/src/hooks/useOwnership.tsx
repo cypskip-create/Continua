@@ -40,5 +40,5 @@ export function useOwnership(symbol: string | undefined) {
     [query.data]
   );
 
-  return { ownership, topShareholders, isLoading: query.isLoading };
+  return { ownership, topShareholders, records: query.data ?? [], isLoading: query.isLoading, error: query.error };
 }
