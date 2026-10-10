@@ -18,7 +18,14 @@ its database save failed. It now waits for a successful save, reports failure
 without changing displayed visibility, and blocks duplicate toggles while saving.
 Removed the stale "unlimited AI" membership claim from the same screen.
 
-Verification: 63 frontend tests passed, frontend build and TypeScript checks
+Production smoke testing reproduced a retired deployment chunk when moving to
+Portfolio from a tab opened before the next release. Reload restored Portfolio.
+Page imports now retry once and, only for chunk transport errors, refresh the
+document once with a session-storage guard (three-minute cooldown). Disabled
+storage and application exceptions retain the normal recovery screen; the
+guard prevents persistent offline failures from reloading in a loop.
+
+Verification: 65 frontend tests passed, frontend build and TypeScript checks
 passed; 215 backend tests passed, six database integration tests skipped.
 The first sandboxed backend run could not create temporary test files; rerunning
 outside the sandbox passed. Production ledger read confirmed a recent paid
