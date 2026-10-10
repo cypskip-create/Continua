@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { MainLayout } from "./components/layout/MainLayout";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
@@ -44,6 +44,11 @@ const Engine = lazy(() => import("./pages/Engine"));
 
 const queryClient = new QueryClient();
 
+function AccountAlias() {
+  const location = useLocation();
+  return <Navigate to={`/account${location.search}${location.hash}`} replace />;
+}
+
 function EntryPage() {
   const { user, loading } = useAuth();
   if (loading) return <div role="status" className="min-h-screen bg-background p-6">Loading…</div>;
@@ -77,13 +82,13 @@ const App = () => (
                   <Route path="/landing" element={<Landing />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/admin/financials-review" element={<AdminFinancialsReview />} />
-                  <Route path="/*" element={<MainLayout />}>
-                    <Route index element={<Home />} />
+                  <Route element={<MainLayout />}>
                     <Route path="markets" element={<Markets />} />
                     <Route path="markets/:section" element={<Markets />} />
                     <Route path="discover" element={<Discover />} />
 
                     <Route path="account" element={<Account />} />
+                    <Route path="profile" element={<AccountAlias />} />
                     <Route path="upgrade" element={<Upgrade />} />
                     <Route path="engine" element={<Engine />} />
                     <Route path="settings" element={<Settings />} />

@@ -272,7 +272,7 @@ export default function Settings() {
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigateBack(navigate, "/profile")} aria-label="Back">
+          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigateBack(navigate, "/account")} aria-label="Back">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-bold text-foreground">Settings</h1>

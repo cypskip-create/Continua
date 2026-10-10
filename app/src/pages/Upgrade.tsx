@@ -45,7 +45,7 @@ export default function Upgrade() {
     finally{setBusy(null);}
   };
   return <div className="min-h-screen bg-background pb-24">
-    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b"><div className="flex items-center gap-3 px-4 py-3"><Button variant="ghost" size="icon" aria-label="Back" onClick={()=>navigateBack(navigate,"/profile")}><ArrowLeft/></Button><h1 className="text-lg font-bold">Choose your Continua plan</h1></div></header>
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b"><div className="flex items-center gap-3 px-4 py-3"><Button variant="ghost" size="icon" aria-label="Back" onClick={()=>reference ? navigate("/account",{replace:true}) : navigateBack(navigate,"/account")}><ArrowLeft/></Button><h1 className="text-lg font-bold">Choose your Continua plan</h1></div></header>
     <main className="mx-auto max-w-5xl px-4 py-8 space-y-7">
       <div className="text-center space-y-3"><Crown className="mx-auto text-primary"/><h2 className="text-2xl font-semibold">Start simple. Research more deeply.</h2><p className="text-sm text-muted-foreground">Free keeps the essentials. Premium expands stock research. Premium Plus unlocks the whole Engine.</p></div>
       {paymentStatus.data?.enabled&&<section className="rounded-xl border p-4 text-sm" role="status"><strong>Secure checkout with Paystack</strong><p>Payments charge real money and activate your selected membership after verification. Renewals are manual; we won’t automatically charge you. Renewing the same tier extends its expiry; switching tiers starts a new term with no prorated credit.</p></section>}
