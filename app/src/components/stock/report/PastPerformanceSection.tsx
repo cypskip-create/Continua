@@ -1,3 +1,4 @@
+import { FUNDAMENTAL_BAR_SIZE } from '@/lib/financialPresentation';
 import { useMemo } from "react";
 import { Sankey, ResponsiveContainer, Layer, Rectangle, XAxis, YAxis, Tooltip, BarChart, Bar, Legend, Cell } from "recharts";
 import { ReportSection, SubWidget } from "./ReportSection";
@@ -131,7 +132,7 @@ export function PastPerformanceSection({ symbol, currency }: Props) {
               <XAxis dataKey="name" tick={{ fontSize: "0.5625rem" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} width={32} />
               <Tooltip formatter={(v: number) => [`${currency}${v.toFixed(2)}B`, ""]} contentStyle={tooltipStyle} />
-              <Bar dataKey="v" radius={[4, 4, 0, 0]}>
+              <Bar barSize={FUNDAMENTAL_BAR_SIZE} dataKey="v" radius={[4, 4, 0, 0]}>
                 {["Earnings", "Operating CF", "Capex", "Free Cash Flow"].map((n, i) => (
                   <Cell key={n} fill={[fx.earnings, fx.revenue, fx.negative, "#a855f7"][i]} />
                 ))}
@@ -152,8 +153,8 @@ export function PastPerformanceSection({ symbol, currency }: Props) {
               <YAxis tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} width={32} unit="%" />
               <Tooltip formatter={(v: number) => [`${v.toFixed(1)}%`, ""]} contentStyle={tooltipStyle} />
               <Legend wrapperStyle={{ fontSize: "0.625rem" }} />
-              <Bar dataKey="Company" fill={fx.revenue} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="NSE Top 15" fill="hsl(var(--muted-foreground) / 0.3)" radius={[4, 4, 0, 0]} />
+              <Bar barSize={FUNDAMENTAL_BAR_SIZE} dataKey="Company" fill={fx.revenue} radius={[4, 4, 0, 0]} />
+              <Bar barSize={FUNDAMENTAL_BAR_SIZE} dataKey="NSE Top 15" fill="hsl(var(--muted-foreground) / 0.3)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

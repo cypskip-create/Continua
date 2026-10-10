@@ -27,9 +27,12 @@ import { TechnicalsTab } from "@/components/stock/tabs/TechnicalsTab";
 import { StockAlertDialog } from "@/components/alerts/StockAlertDialog";
 import { FundamentalsInsights } from "@/components/stock/FundamentalsInsights";
 import { EarningsFundamentals } from "@/components/stock/EarningsFundamentals";
+import { CompanyFocus } from "@/components/engine/CompanyFocus";
+import { ValuationPreview } from "@/components/stock/FundamentalResearch";
 
 const tools = [
   "Briefing",
+  "Focus",
   "News",
   "Earnings & forecasts",
   "Valuation",
@@ -50,6 +53,7 @@ const groups: { name: string; tools: Tool[] }[] = [
     name: "Company",
     tools: [
       "Briefing",
+      "Focus",
       "News",
       "Earnings & forecasts",
       "Valuation",
@@ -66,6 +70,7 @@ const groups: { name: string; tools: Tool[] }[] = [
   },
 ];
 const toolHelp: Record<Tool, string> = {
+  Focus: "Explore the private value signal, company scorecard, research, financial estimates and scenario tools in one place.",
   Briefing: "Start with the reported facts, then open the supporting evidence or risks that matter to you.",
   News: "Read dated issuer stories and check the original publisher before acting.",
   "Earnings & forecasts": "Separate reported results from estimates and inspect the periods behind each number.",
@@ -522,6 +527,7 @@ export default function Engine() {
                       )}
                     </section>
                   )}
+                  {tool === "Focus" && <CompanyFocus symbol={symbol} currency={data.currency}/>}
                   {tool === "Earnings & forecasts" && (
                     <>
                       <EarningsFundamentals
@@ -536,6 +542,7 @@ export default function Engine() {
                   )}
                   {tool === "Valuation" && (
                     <section className="divide-y divide-border/70">
+                      <ValuationPreview symbol={symbol} currency={data.currency} name={data.companyName} sector={instruments.find(item=>item.symbol===symbol)?.sector??""} price={Number(data.quote?.lastPrice??0)}/>
                       {data.valuation?.models.map((model) => (
                         <div key={model.model} className="py-4 space-y-2">
                           <div className="flex justify-between gap-3">

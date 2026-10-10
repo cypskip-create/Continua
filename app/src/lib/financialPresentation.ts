@@ -61,3 +61,5 @@ export function metricPoints(history: FinancialHistoryEntry[], metric: Financial
     liabilities: finiteFinancial(row.totalLiabilities), ratio: ratio(row.totalLiabilities,row.totalAssets,100),
   }));
 }
+/** Shared thickness for all Fundamentals bar series, including grouped bars. */
+export const FUNDAMENTAL_BAR_SIZE = 22;

@@ -1,3 +1,4 @@
+import { EngineAccess } from '@/components/engine/EngineAccess';
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -66,7 +67,7 @@ function ValuationExplorer({symbol,sector,currency,price,preview=false}: {symbol
 }
 export function ValuationPreview(props: {symbol:string;name:string;sector:string;price:number;currency:string}) {
   const [open,setOpen]=useState(false);const {research}=useResearch(props.symbol);
-  return <section className="border-t border-border py-3 space-y-2"><FundamentalHeading title="Valuation" onOpen={()=>setOpen(true)}/><ValuationExplorer {...props} preview/><p className="text-xs text-muted-foreground">Historical distributions, reported growth and peer comparisons</p><FundamentalDetail title="Valuation" symbol={props.symbol} currency={props.currency} open={open} onOpenChange={setOpen}>{open&&<><ValuationExplorer {...props}/><details className="border-t border-border py-3"><summary className="font-semibold cursor-pointer">Fair value models and evidence</summary><ValuationSection {...props}/></details></>}</FundamentalDetail></section>;
+  return <section className="border-t border-border py-3 space-y-2"><FundamentalHeading title="Valuation" onOpen={()=>setOpen(true)}/><ValuationExplorer {...props} preview/><p className="text-xs text-muted-foreground">Historical distributions, reported growth and peer comparisons</p><FundamentalDetail title="Valuation" symbol={props.symbol} currency={props.currency} open={open} onOpenChange={setOpen}>{open&&<><ValuationExplorer {...props}/><details className="border-t border-border py-3"><summary className="font-semibold cursor-pointer">Fair value models and evidence</summary><EngineAccess symbol={props.symbol}><ValuationSection {...props}/></EngineAccess></details></>}</FundamentalDetail></section>;
 }
 export function ResearchPreview({symbol,currency}: {symbol:string;currency:string}) {
   const [open,setOpen]=useState(false);const {valuation}=useValuation(symbol),{research}=useResearch(symbol);

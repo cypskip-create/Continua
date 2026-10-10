@@ -34,6 +34,7 @@ let portfolioRequests = 0;
 let premiumPortfolioRequests=0,overviewRequests=0;
 let portfolioThrottle=1,overviewThrottle=1;
 let engineRequests = 0;
+let denyEngineAccess = false;
 let enginePreferences={goal:'Balanced',horizon:'1_to_5_years',experience:'beginner',riskComfort:'unspecified',incomeNeeds:'none',sectors:[],notifications:true,learnInterests:false,interests:[]};
 let engineRules=[];
 let engineFlows=[];
@@ -93,6 +94,7 @@ const handleRoute = async (route) => {
     if (path.startsWith('/engine/')) {
       engineRequests++;
       assert.ok(route.request().headers()['x-user-token'], 'Engine sends the authenticated session');
+      if(denyEngineAccess) return json({error:'Premium subscription required'},403);
       return json({data:{symbol:path.split('/').at(-1),exchange:'NSE',currency:'KES',companyName:'KCB Group',generatedAt:new Date().toISOString(),quote:{lastPrice:50},history:[],earnings:[],ownership:[{holderName:'Fixture institutional holder',holderType:'institutional',percentHeld:12,asOf:'2025-12-31'}],valuation:{models:[{model:'Fixture valuation',fairValue:60,upsidePercent:20,methodology:'Fixture-only disclosed methodology'}]},briefing:{facts:['Fixture reported revenue increased.'],strengths:[],risks:[],coverage:'Two reported periods.',methodology:'Calculated from fixture financial statements.'},unavailable:[],news:[{id:'digest-test',headline:'Fixture company update',summary:'Revenue increased by 12 percent.',source:'Fixture publisher',url:'https://example.invalid/source',publishedAt:'2026-10-07',methodology:'Extractive source sentences',fullTextAvailable:true}],technicals:[],coverage:{annualPeriods:2,valuationModels:1,earningsEvents:0,analystEstimates:0}}});
     }
     if (path.startsWith('/quotes')) {
@@ -139,6 +141,21 @@ try {
   await loginContext.route('**/*', handleRoute);
   const loginPage = await loginContext.newPage();
   await loginPage.goto('http://127.0.0.1:5188/auth');
+  await loginPage.getByRole('heading',{name:'See more. Understand more.'}).waitFor();
+  await loginPage.waitForFunction(()=>Number(getComputedStyle(document.querySelector('.auth-card')).opacity)===1);
+  await loginPage.screenshot({path:fileURLToPath(new URL('auth-mobile.png',artifacts))});
+  assert.ok(await loginPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Authentication fits the mobile viewport');
+  await loginPage.setViewportSize({width:1440,height:1000});
+  await loginPage.screenshot({path:fileURLToPath(new URL('auth-desktop.png',artifacts))});
+  assert.ok(await loginPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Authentication fits desktop too');
+  await loginPage.setViewportSize({width:390,height:844});
+  await loginPage.getByRole('button',{name:'Sign Up',exact:true}).first().tap();
+  await loginPage.getByRole('heading',{name:'Create your account',exact:true}).waitFor();
+  await loginPage.getByLabel('Full name',{exact:true}).fill('Test Investor');
+  await loginPage.getByRole('button',{name:'Log In',exact:true}).first().tap();
+  await loginPage.getByRole('button',{name:'Forgot password?',exact:true}).tap();
+  await loginPage.getByRole('heading',{name:'Reset your password',exact:true}).waitFor();
+  await loginPage.getByRole('button',{name:/Back to.*sign|Back to.*log/i}).tap();
   await loginPage.locator('input[type="email"]').first().fill(user.email);
   await loginPage.locator('input[type="password"]').first().fill('FixturePassword123!');
   await loginPage.locator('form').getByRole('button', { name: /Sign In|Log In|Login/i, exact: true }).tap();
@@ -443,12 +460,24 @@ try {
   await page.getByRole('button', {name:'Fundamentals',exact:true}).tap();
   const categories = page.getByRole('tablist',{name:'Fundamentals category'});
   await categories.waitFor();
+  assert.deepEqual(await categories.getByRole('tab').allTextContents(),['Financials','Focus','Shareholders','Dividends','Profile']);
+  await categories.getByRole('tab',{name:'Focus',exact:true}).tap();
+  await page.getByRole('heading',{name:'Company Focus',exact:true}).waitFor();
+  await page.getByRole('heading',{name:'Continua Value Signal',exact:true}).waitFor();
   await page.getByRole('img',{name:'revenue actual and estimate history'}).scrollIntoViewIfNeeded();
   await page.getByRole('tablist',{name:'Estimates metric'}).getByRole('tab',{name:'EPS',exact:true}).tap();
   await page.getByRole('img',{name:'eps actual and estimate history'}).waitFor();
+  await page.screenshot({path:fileURLToPath(new URL('focus-premium.png',artifacts))});
+  await categories.getByRole('tab',{name:'Financials',exact:true}).tap();
   const periodTabs = page.getByRole('tablist',{name:'Financial period'});
   await periodTabs.getByRole('tab',{name:'Quarterly',exact:true}).tap();
   await page.getByRole('img',{name:'Revenue history',exact:true}).first().scrollIntoViewIfNeeded();
+  const renderedBars=page.getByRole('img',{name:'Revenue history',exact:true}).first().locator('.recharts-bar-rectangle path');
+  await renderedBars.first().waitFor({state:'visible'});
+  // Recharts emits the actual rectangle geometry as SVG attributes. getBBox
+  // can report zero for SVGs inside offscreen/containment-optimized sections.
+  const barWidths=await renderedBars.evaluateAll(nodes=>nodes.map(node=>Number(node.getAttribute('width'))));
+  assert.ok(barWidths.length>0&&barWidths.every(width=>Math.abs(width-22)<.1),`Financial bar widths share the 22px standard: ${JSON.stringify(barWidths)}`);
   assert.equal(await periodTabs.getByRole('tab',{name:'Quarterly',exact:true}).getAttribute('aria-selected'),'true');
   const sticky = await categories.boundingBox();
   assert.ok(sticky.y >= 90 && sticky.y < 120, `Fundamentals subnav stays under primary tabs: ${sticky.y}`);
@@ -487,6 +516,7 @@ try {
   await earningsDialog.getByRole('tablist',{name:'Earnings release'}).getByRole('tab',{name:'2024/FY',exact:true}).tap();
   await earningsDialog.getByRole('heading',{name:'Earnings overview',exact:true}).waitFor();
   await earningsDialog.getByRole('button',{name:'Close',exact:true}).tap();
+  await categories.getByRole('tab',{name:'Focus',exact:true}).tap();
   await page.getByRole('button',{name:'Open earnings move & volatility detail',exact:true}).tap();
   const moveDialog=page.getByRole('dialog',{name:'Earnings move & volatility',exact:true});
   await moveDialog.getByRole('tab',{name:'fall',exact:true}).tap();
@@ -532,6 +562,9 @@ try {
   assert.equal(bodyFont,contextFont,'Engine explanatory text uses the same reading scale');
   await engineTools.getByRole('tab',{name:'Earnings & forecasts',exact:true}).tap();
   await page.getByRole('img',{name:'revenue actual and estimate history'}).waitFor();
+  await engineTools.getByRole('tab',{name:'Focus',exact:true}).tap();
+  await page.getByRole('heading',{name:'Continua Value Signal',exact:true}).waitFor();
+  await page.getByRole('heading',{name:'Company Focus',exact:true}).waitFor();
   await engineTools.getByRole('tab', {name:'News',exact:true}).tap();
   await page.getByText('Revenue increased by 12 percent.', {exact:true}).waitFor();
   assert.equal(await page.getByRole('link', {name:'Fixture company update'}).getAttribute('href'), '/traders-hub?tab=media&article=digest-test');
@@ -669,6 +702,13 @@ try {
     await freePage.getByText('Engine is included with Premium',{exact:true}).waitFor();
     assert.equal(engineRequests,beforeFree,'Free users never fetch Engine output');
     assert.equal(await freePage.getByRole('tablist',{name:'Engine tools'}).count(),0);
+    await freePage.goto('http://127.0.0.1:5188/stock/KCB');
+    await freePage.getByRole('button',{name:'Fundamentals',exact:true}).tap();
+    await freePage.getByRole('tablist',{name:'Fundamentals category'}).getByRole('tab',{name:'Focus',exact:true}).tap();
+    await freePage.getByLabel('Locked Engine Focus preview',{exact:true}).waitFor();
+    assert.equal(await freePage.getByLabel('Engine Focus tools',{exact:true}).count(),0,'Free Focus never mounts paid calculations');
+    assert.equal(engineRequests,beforeFree,'Free stock Focus never fetches Engine output');
+    await freePage.screenshot({path:fileURLToPath(new URL('focus-free.png',artifacts))});
     const paidBefore=premiumPortfolioRequests, aiBefore=assistantRequests, overviewBefore=overviewRequests;
     await freePage.goto('http://127.0.0.1:5188/track-investments');
     await freePage.getByRole('heading',{name:'Engine portfolio overview',exact:true}).waitFor();
@@ -682,6 +722,19 @@ try {
     assert.ok(overviewRequests>overviewBefore,'Free portfolio gets Engine overview');
   } finally {profile.subscription_plan=savedPlan; await freeContext.close();}
   console.log('PASS free Engine lock prevents fetching paid analysis');
+  const deniedContext=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+  await deniedContext.route('**/*',handleRoute);
+  await deniedContext.addInitScript(({user})=>{const payload=btoa(JSON.stringify({sub:user.id,exp:4102444800,role:'authenticated'}));localStorage.setItem('sb-continua-test-auth-token',JSON.stringify({access_token:`e30.${payload}.fixture`,refresh_token:'fixture',expires_at:4102444800,expires_in:3600,token_type:'bearer',user}));},{user});
+  denyEngineAccess=true;
+  try {
+    const deniedPage=await deniedContext.newPage();
+    await deniedPage.goto('http://127.0.0.1:5188/stock/KCB');
+    await deniedPage.getByRole('button',{name:'Fundamentals',exact:true}).tap();
+    await deniedPage.getByRole('tablist',{name:'Fundamentals category'}).getByRole('tab',{name:'Focus',exact:true}).tap();
+    await deniedPage.getByText(/Engine access could not be verified/).waitFor();
+    assert.equal(await deniedPage.getByLabel('Engine Focus tools',{exact:true}).count(),0,'Server denial overrides the premium-looking profile');
+  } finally {denyEngineAccess=false;await deniedContext.close();}
+  console.log('PASS server-denied membership never mounts Focus tools');
 
   // Markets research: complete routes, aligned chart, horizontally scrollable tables and source links.
   await page.goto('http://127.0.0.1:5188/markets');

@@ -1,3 +1,4 @@
+import { FUNDAMENTAL_BAR_SIZE } from '@/lib/financialPresentation';
 import { useState } from "react";
 import { Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { FinancialHistoryEntry, FiscalPeriodType } from "@/api/types";
@@ -16,8 +17,8 @@ export function FinancialTrend({history,metric,title,balance=false}: {history:Fi
       <XAxis dataKey="period" tick={{fontSize:"0.625rem"}} axisLine={false} tickLine={false} minTickGap={8}/>
       <YAxis yAxisId="value" hide domain={[(min:number)=>Math.min(0,min),"auto"]}/><YAxis yAxisId="growth" hide orientation="right" domain={["auto","auto"]}/>
       <Tooltip formatter={(v:number,name:string)=>name==="YoY"||name==="Liabilities / assets"?`${Number(v).toFixed(1)}%`:metricNumber(v,metric)} contentStyle={{background:"hsl(var(--popover))",color:"hsl(var(--popover-foreground))",border:"1px solid hsl(var(--border))",fontSize:"0.75rem"}}/>
-      <Bar yAxisId="value" dataKey="value" name={metric.label} fill="#4f7cf5" maxBarSize={26} isAnimationActive={false}/>
-      {balance&&<Bar yAxisId="value" dataKey="liabilities" name="Liabilities" fill="#22c3d6" maxBarSize={18} isAnimationActive={false}/>}
+      <Bar barSize={FUNDAMENTAL_BAR_SIZE} yAxisId="value" dataKey="value" name={metric.label} fill="#4f7cf5" isAnimationActive={false}/>
+      {balance&&<Bar barSize={FUNDAMENTAL_BAR_SIZE} yAxisId="value" dataKey="liabilities" name="Liabilities" fill="#22c3d6" isAnimationActive={false}/>}
       <Line yAxisId="growth" dataKey={balance?"ratio":"yoy"} name={balance?"Liabilities / assets":"YoY"} stroke="#f97316" strokeWidth={2} dot={{r:3}} connectNulls={false} isAnimationActive={false}/>
     </ComposedChart></ResponsiveContainer></div>
     <div className="overflow-x-auto"><table className="financial-values w-full table-fixed text-center text-xs tabular-nums"><caption className="sr-only">{title} chart values</caption><thead><tr>{points.map(p=><th className="font-normal py-1" key={p.period}>{p.period}</th>)}</tr></thead><tbody><tr>{points.map(p=><td className="text-blue-500 py-1" key={p.period}>{metricNumber(p.value,metric)}</td>)}</tr>{balance&&<tr>{points.map(p=><td className="text-cyan-500 py-1" key={p.period}>{metricNumber(p.liabilities,metric)}</td>)}</tr>}<tr>{points.map(p=><td className={`py-1 ${balance?"text-orange-500":(p.yoy??0)>=0?"text-bull":"text-bear"}`} key={p.period}>{balance?(p.ratio==null?"—":`${p.ratio.toFixed(1)}%`):financialPercent(p.yoy)}</td>)}</tr></tbody></table></div>

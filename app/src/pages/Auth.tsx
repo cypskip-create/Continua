@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -9,19 +9,13 @@ import {
   Eye, EyeOff, Loader2, Mail, Lock, User, ArrowLeft,
   ShieldCheck, TrendingUp, CheckCircle2,
 } from 'lucide-react';
-import { Logo } from '@/components/shared/Logo';
+import { ContinuaMark } from '@/components/shared/ContinuaMark';
+import './auth.css';
 import { lovable } from '@/integrations/lovable';
 import { useTouchClick } from '@/hooks/useTouchClick';
 
 type Mode = 'signin' | 'signup' | 'reset';
 
-// Rotates under the logo so the page feels alive even before anyone types
-// anything — same brand voice as the landing page, just a few flavors of it.
-const TAGLINES = [
-  'Track the Nairobi Securities Exchange, securely',
-  'Where Kenyan investors talk numbers',
-  'Research first. React second.',
-];
 
 function getPasswordStrength(password: string) {
   if (!password) return { score: 0, label: '', barClass: '' };
@@ -52,7 +46,6 @@ export default function Auth() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [taglineIndex, setTaglineIndex] = useState(0);
 
   const { signUp, signIn, resetPassword, user, loading: sessionLoading } = useAuth();
   const navigate = useNavigate();
@@ -63,12 +56,6 @@ export default function Auth() {
   const isSignUp = mode === 'signup';
   const passwordStrength = useMemo(() => getPasswordStrength(password), [password]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTaglineIndex((i) => (i + 1) % TAGLINES.length);
-    }, 3200);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     // AppLockGate remounts this screen when the account changes. Redirect
@@ -141,35 +128,15 @@ export default function Auth() {
   const switchMode = (next: Mode) => { setMode(next); setResetSent(false); };
 
   return (
-    <div className="app-shell page-canvas min-h-screen bg-background flex flex-col relative overflow-hidden">
-
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 relative">
-        {/* Brand */}
-        <motion.div
-          className="mb-8 flex flex-col items-center text-center"
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-        >
-          <Logo size="lg" />
-          <div className="mt-4 flex items-center gap-1.5 text-[0.6875rem] font-semibold text-primary bg-primary/10 rounded-full px-3 py-1 min-w-[240px] justify-center">
-            <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={taglineIndex}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.3 }}
-              >
-                {TAGLINES[taglineIndex]}
-              </motion.span>
-            </AnimatePresence>
-          </div>
-        </motion.div>
+    <div className="continua-auth min-h-screen">
+      <header className="auth-header"><Link to="/landing" className="auth-brand"><ContinuaMark size={36} appearance="light"/><span>continua<span className="auth-dot">.</span></span></Link><Link to="/landing" className="auth-home"><ArrowLeft size={16}/> Back to website</Link></header>
+      <main className="auth-layout">
+        <aside className="auth-story"><p className="auth-eyebrow">YOUR NEXT CHAPTER</p><h2>See more.<br/><span>Understand more.</span></h2><p className="auth-intro">Your portfolio deserves more than a price. A clearer perspective starts here.</p><div className="auth-art" aria-hidden="true"><img src="/landing/engine-core.png" alt=""/><span className="auth-art-caption">Research first. React second.</span></div><div className="auth-benefits"><span><TrendingUp size={17}/> Follow the NSE</span><span><ShieldCheck size={17}/> Keep your research private</span></div><p className="auth-risk">Research and portfolio tracking. No trading execution. Capital is at risk.</p></aside>
+      <div className="auth-form-column flex flex-col items-center justify-center relative">
+        <p className="auth-eyebrow mb-4">MAKE IT YOURS</p>
 
         <motion.div
-          className="flat-section relative w-full max-w-sm rounded-3xl border border-border bg-card shadow-xl overflow-hidden"
+          className="auth-card relative w-full overflow-hidden"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
@@ -278,6 +245,8 @@ export default function Auth() {
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                               type="text"
+                              aria-label="Full name"
+                              autoComplete="name"
                               value={fullName}
                               onChange={(e) => setFullName(e.target.value)}
                               placeholder="Full name"
@@ -293,6 +262,8 @@ export default function Auth() {
                       <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         type="email"
+                        aria-label="Email address"
+                        autoComplete="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Email address"
@@ -306,6 +277,8 @@ export default function Auth() {
                         <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                           type={showPassword ? 'text' : 'password'}
+                          aria-label="Password"
+                          autoComplete={isSignUp ? 'new-password' : 'current-password'}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Password"
@@ -314,6 +287,7 @@ export default function Auth() {
                         />
                         <button
                           type="button"
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
                           className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
                           onClick={() => setShowPassword(!showPassword)}
                         >
@@ -388,6 +362,8 @@ export default function Auth() {
                       <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         type="email"
+                        aria-label="Email address"
+                        autoComplete="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Email address"
@@ -417,13 +393,14 @@ export default function Auth() {
 
         <div className="flex items-center gap-1.5 mt-6 text-[0.6875rem] text-muted-foreground">
           <TrendingUp className="h-3 w-3" />
-          Real-time research on NSE-listed companies
+          Evidence-led research on NSE-listed companies
         </div>
 
         <p className="text-[0.6875rem] text-muted-foreground/80 mt-3 text-center max-w-xs">
           By continuing, you agree to our Terms of Service and Privacy Policy
         </p>
       </div>
+      </main>
     </div>
   );
 }

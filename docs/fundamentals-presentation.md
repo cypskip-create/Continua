@@ -40,3 +40,11 @@ explicit coverage states, not AMD data or invented NSE equivalents.
 
 Financial numbers use K/M/B/T units. All missing inputs remain em dashes; zero is
 a real value. Income-based quarterly returns are not silently annualised.
+
+## Focus and premium access
+
+Fundamentals categories are Financials, Focus, Shareholders, Dividends and Profile. Financials groups reported earnings, statements, indicators, operations, financial health and descriptive valuation history. Focus collects the proprietary value signal, scorecard, research, financial estimates, growth/risk context and scenarios. The same CompanyFocus component powers the Engine Focus tool.
+
+Stock Focus checks the profile and then the authenticated, subscriber-protected Engine endpoint before mounting analytical children. Free previews contain only static placeholder shapes, not blurred sensitive output. API failures and server membership denials fail closed. Free reported Fundamentals and the existing monthly allowance remain unchanged. Model evidence inside descriptive valuation details is gated as well.
+
+Fundamentals bar series share a 22px thickness, including grouped assets/liabilities and horizontal comparison bars. Price-chart candle and volume widths are intentionally separate.

@@ -11,7 +11,7 @@ function compact(value: number, currency: string) {
   return financialNumber(value,currency);
 }
 
-export function EarningsFundamentals({ symbol, currency }: { symbol: string; currency: string }) {
+export function EarningsFundamentals({ symbol, currency, mode = "all" }: { symbol: string; currency: string; mode?: "reported" | "analysis" | "all" }) {
   const [metric, setMetric] = useState<"revenue" | "eps" | "netIncome" | "ebit">("revenue");
   const {history} = useStockFinancials(symbol,{periodType:"annual",limit:10});
   const { data: earnings = [] } = useQuery({
@@ -31,13 +31,13 @@ export function EarningsFundamentals({ symbol, currency }: { symbol: string; cur
   }));
   const format = (value: number) => metric === "eps" ? Number(value).toFixed(2) : financialNumber(value,currency);
   return <>
-    <section className="border-t border-border/70 py-6 space-y-4">
+    {mode !== "analysis" && <section className="border-t border-border/70 py-6 space-y-4">
       <div className="flex items-center justify-between gap-2"><h3 className="text-lg font-semibold">Latest earnings</h3><EarningsDetailButton symbol={symbol} currency={currency} events={earnings}/></div>
       {latest ? <>
         <EarningsOverview event={latest} history={history} currency={currency}/>
       </> : <p className="text-sm text-muted-foreground">No reported earnings event is on file yet.</p>}
-    </section>
-    <section className="border-t border-border/70 py-6">
+    </section>}
+    {mode !== "reported" && <><section className="border-t border-border/70 py-6">
       <h3 className="text-lg font-semibold">Financial estimates</h3>
       <div role="tablist" aria-label="Estimates metric" className="flex gap-1 py-2 overflow-x-auto">{(["revenue", "netIncome", "eps", "ebit"] as const).map(value => <button key={value} role="tab" aria-selected={metric === value} onClick={() => setMetric(value)} className={`shrink-0 px-3 py-1.5 text-xs font-semibold rounded-full ${metric === value ? "contrast-active" : "text-muted-foreground"}`}>{value === "revenue" ? "Revenue" : value === "eps" ? "EPS" : value === "ebit" ? "EBIT" : "Net income"}</button>)}</div>
       {(metric === "netIncome" || metric === "ebit") && <p className="text-sm text-muted-foreground">No sourced {metric === "ebit" ? "EBIT" : "net income"} estimate feed is available. Reported values are in Financial detail.</p>}
@@ -46,5 +46,6 @@ export function EarningsFundamentals({ symbol, currency }: { symbol: string; cur
     </section>
     <EarningsMovePreview symbol={symbol} currency={currency} events={earnings}/>
     <ForecastDetail symbol={symbol} currency={currency} events={earnings}/>
+    </>}
   </>;
 }

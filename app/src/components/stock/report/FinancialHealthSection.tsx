@@ -1,3 +1,4 @@
+import { FUNDAMENTAL_BAR_SIZE } from '@/lib/financialPresentation';
 import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { ReportSection, SubWidget } from "./ReportSection";
 import { CriteriaChecklist } from "./CriteriaChecklist";
@@ -66,8 +67,8 @@ export function FinancialHealthSection({ symbol, currency }: Props) {
               <YAxis tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} width={32} />
               <Tooltip formatter={(v: number) => [`${currency}${v.toFixed(2)}B`, ""]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: "0.6875rem", color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
               <Legend wrapperStyle={{ fontSize: "0.625rem" }} />
-              <Bar dataKey="Assets" fill="hsl(217 91% 60%)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Liabilities" fill="hsl(160 84% 58%)" radius={[4, 4, 0, 0]} />
+              <Bar barSize={FUNDAMENTAL_BAR_SIZE} dataKey="Assets" fill="hsl(217 91% 60%)" radius={[4, 4, 0, 0]} />
+              <Bar barSize={FUNDAMENTAL_BAR_SIZE} dataKey="Liabilities" fill="hsl(160 84% 58%)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

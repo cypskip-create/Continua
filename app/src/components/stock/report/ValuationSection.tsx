@@ -1,3 +1,4 @@
+import { FUNDAMENTAL_BAR_SIZE } from '@/lib/financialPresentation';
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine } from "recharts";
 import { ReportSection, SubWidget } from "./ReportSection";
@@ -109,7 +110,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
               <YAxis type="category" dataKey="symbol" tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} width={48} />
               <Tooltip formatter={(v: number) => [`${v.toFixed(1)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: "0.6875rem", color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
               {peerAvg != null && <ReferenceLine x={peerAvg} stroke="hsl(38 92% 50%)" strokeDasharray="4 3" />}
-              <Bar dataKey="pe" radius={[0, 4, 4, 0]} maxBarSize={18}>
+              <Bar barSize={FUNDAMENTAL_BAR_SIZE} dataKey="pe" radius={[0, 4, 4, 0]}>
                 {peerChartData.map((p) => <Cell key={p.symbol} fill={p.isSelf ? "hsl(217 91% 60%)" : "hsl(var(--bull))"} />)}
               </Bar>
             </BarChart>
@@ -151,7 +152,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
                   <XAxis type="number" hide />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: "0.6875rem" }} axisLine={false} tickLine={false} width={78} />
                   <Tooltip formatter={(v: number) => [`${v.toFixed(1)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: "0.6875rem", color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
-                  <Bar dataKey="pe" radius={[0, 4, 4, 0]} maxBarSize={28}>
+                  <Bar barSize={FUNDAMENTAL_BAR_SIZE} dataKey="pe" radius={[0, 4, 4, 0]}>
                     <Cell fill="hsl(217 91% 60%)" />
                     <Cell fill="hsl(var(--muted-foreground) / 0.5)" />
                   </Bar>
