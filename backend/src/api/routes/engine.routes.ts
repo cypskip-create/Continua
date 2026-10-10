@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { requireSubscriber, requirePremiumPlus } from "../middleware/requireSubscriber.js";
+import { requireSubscriber } from "../middleware/requireSubscriber.js";
 import { asyncHandler, ApiError } from "../middleware/errorHandler.js";
 import { validateQuery, getQuery } from "../middleware/validateQuery.js";
 import { ExchangeQuery } from "../validators/querySchemas.js";
@@ -16,7 +16,9 @@ engineRoutes.get("/engine/basic/:symbol", requireSubscriber, validateQuery(Excha
   const b=await getEngineBundle(symbol,exchange);
   res.json({data:{symbol:b.symbol,companyName:b.companyName,currency:b.currency,quote:b.quote,generatedAt:b.generatedAt,briefing:b.briefing,estimates:b.estimates.map(e=>({fiscalYear:e.fiscalYear,fiscalQuarter:e.fiscalQuarter,epsEstimate:e.epsEstimate,revenueEstimate:e.revenueEstimate})),coverage:b.coverage,unavailable:b.unavailable}});
 }));
-engineRoutes.get("/engine/:symbol", requirePremiumPlus, validateQuery(ExchangeQuery), asyncHandler(async (req,res)=>{
+// Company research also powers Premium Fundamentals expansions. Personal
+// workspace endpoints retain their independent Premium Plus checks.
+engineRoutes.get("/engine/:symbol", requireSubscriber, validateQuery(ExchangeQuery), asyncHandler(async (req,res)=>{
   const {exchange}=getQuery<z.infer<typeof ExchangeQuery>>(req);
   const symbol=String(req.params.symbol).toUpperCase();
   if(!/^[A-Z0-9.\-]{1,20}$/.test(symbol))throw new ApiError(400,"Invalid stock symbol");

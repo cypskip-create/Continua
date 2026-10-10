@@ -1,6 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Newspaper, ExternalLink, ChevronRight } from "lucide-react";
-import { AIThesisCard } from "@/components/stock/AIThesisCard";
 import { formatTimestamp } from "@/lib/formatTimestamp";
 import { useQuery } from "@tanstack/react-query";
 import { announcementsApi } from "@/api/announcementsApi";
@@ -19,7 +18,7 @@ interface Props {
 }
 
 export function NewsEventsTab(props: Props) {
-  const { symbol, name, sector, price, changePercent, pe, eps, dividend } = props;
+  const { symbol } = props;
   const filingsQuery = useQuery({
     queryKey: ["continua", "announcements", symbol, "news-tab"],
     queryFn: () => announcementsApi.getForSymbol(symbol, { limit: 8 }),
@@ -31,18 +30,6 @@ export function NewsEventsTab(props: Props) {
 
   return (
     <div className="space-y-3">
-      <AIThesisCard
-        mode="news_summary"
-        symbol={symbol}
-        name={name}
-        sector={sector}
-        price={price}
-        changePercent={changePercent}
-        pe={pe} eps={eps} dividend={dividend}
-        headlines={news.map(n => n.headline)}
-        title="AI News Summary"
-      />
-
       <Card className="soft-card">
         <CardContent className="p-4">
           <div className="flex items-center gap-1.5 mb-2">

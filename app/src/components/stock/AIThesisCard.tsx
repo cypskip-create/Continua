@@ -16,8 +16,6 @@ interface Props {
   dividend: string | number;
   marketCap?: string;
   scores?: ContinuaScores;
-  mode?: "thesis" | "news_summary" | "market_insight";
-  headlines?: string[];
   title?: string;
 }
 
@@ -32,7 +30,7 @@ export function AIThesisCard(props: Props) {
     try {
       const { data, error } = await supabase.functions.invoke("stock-thesis", {
         body: {
-          mode: props.mode || "thesis",
+          mode: "thesis",
           symbol: props.symbol,
           name: props.name,
           sector: props.sector,
@@ -43,7 +41,6 @@ export function AIThesisCard(props: Props) {
           dividend: props.dividend,
           marketCap: props.marketCap,
           scores: props.scores,
-          headlines: props.headlines,
         },
       });
       if (error) throw error;
@@ -58,7 +55,7 @@ export function AIThesisCard(props: Props) {
   useEffect(() => {
     fetchThesis();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.symbol, props.mode]);
+  }, [props.symbol]);
 
   return (
     <Card className="grouped-card border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">

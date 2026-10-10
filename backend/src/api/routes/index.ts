@@ -19,6 +19,7 @@ import { valuationRoutes } from "./valuation.routes.js";
 import { engineWorkbenchRoutes } from "./engineWorkbench.routes.js";
 import { engineRoutes } from "./engine.routes.js";
 import { marketResearchRoutes } from "./marketResearch.routes.js";
+import { billingRoutes } from "./billing.routes.js";
 
 /** Every route is mounted under /api/v1. Versioning from day one — the app,
  *  TradersHub, and Media all consume this same v1 contract; a v2 later can
@@ -29,6 +30,7 @@ import { marketResearchRoutes } from "./marketResearch.routes.js";
  *  infra probes (load balancer health checks, uptime monitors) never need
  *  an API key and never count against anyone's rate limit. */
 export const apiRouter = Router();
+apiRouter.use(billingRoutes);
 apiRouter.use(quotesRoutes);
 apiRouter.use(historicalRoutes);
 apiRouter.use(companiesRoutes);

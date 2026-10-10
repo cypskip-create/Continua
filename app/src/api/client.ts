@@ -95,7 +95,7 @@ function buildUrl(path: string, params?: ContinuaRequestOptions["params"]): stri
  *  instead of re-parsing the response body everywhere. */
 export async function continuaFetch<T>(path: string, options: ContinuaRequestOptions = {}): Promise<T> {
   let subscriberHeaders: Record<string, string> = {};
-  if (/^\/(engine|backtest|volume-profile)(\/|$)/.test(path)) {
+  if (/^\/(engine|billing|backtest|volume-profile)(\/|$)/.test(path)) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new ContinuaApiError("Sign in to use Continua Engine", 401, path, "session");
     subscriberHeaders = { "X-User-Token": session.access_token, "X-Supabase-Key": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY };
@@ -104,7 +104,7 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
   const controller = new AbortController();
   // Company bundles can wait for profile + optional feeds + snapshot storage.
   // A 12-second client timeout used to abort valid Engine responses mid-flight.
-  const timeout = window.setTimeout(() => controller.abort(new DOMException("Request timed out", "TimeoutError")), path.startsWith("/engine/") || path.startsWith("/market-research/") ? 45_000 : 12_000);
+  const timeout = window.setTimeout(() => controller.abort(new DOMException("Request timed out", "TimeoutError")), path.startsWith("/engine/") || path.startsWith("/market-research/") || path.startsWith("/billing/") ? 45_000 : 12_000);
   const forwardAbort = () => controller.abort(options.signal?.reason);
   if (options.signal?.aborted) forwardAbort();
   else options.signal?.addEventListener("abort", forwardAbort, { once: true });

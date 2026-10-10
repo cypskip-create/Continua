@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import { rateLimit } from "express-rate-limit";
 import { apiRouter } from "./routes/index.js";
 import { healthRoutes } from "./routes/health.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -14,6 +15,7 @@ import { logger } from "../monitoring/logger.js";
 import { isAllowedBrowserOrigin } from "./corsPolicy.js";
 import { ApiError } from "./middleware/errorHandler.js";
 import { verifyEngineRateLimitIdentity } from "./middleware/requireSubscriber.js";
+import { paystackWebhook } from "./routes/billing.routes.js";
 
 // Requests are already gated behind an API key (see apiKeyAuth below), so an
 // open CORS policy was never a data-access hole — but leaving `cors()` with
@@ -50,6 +52,7 @@ export function createServer() {
   app.set("trust proxy", env.NODE_ENV === "production" ? env.TRUST_PROXY_HOPS : 0);
   app.use(helmet());
   app.use(cors(corsOptions));
+  app.post("/api/v1/billing/paystack/webhook", rateLimit({ windowMs: 60_000, limit: 120 }), express.raw({ type: "application/json", limit: "64kb" }), paystackWebhook);
   app.use(express.json());
   app.use(requestLogger);
 

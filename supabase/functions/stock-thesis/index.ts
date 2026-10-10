@@ -1,6 +1,6 @@
 import "../deno.d.ts";
 
-// Lovable AI Gateway - Stock Thesis + News Summary edge function
+// Stock Thesis edge function. Home insights and news summaries are retired.
 // Returns a concise investment thesis for a given Kenyan stock, given basic metrics.
 
 const corsHeaders = {
@@ -25,21 +25,6 @@ interface ThesisRequest {
 }
 
 function buildPrompt(body: ThesisRequest): { system: string; user: string } {
-  const mode = body.mode || "thesis";
-  if (mode === "news_summary") {
-    return {
-      system:
-        "You are a Kenyan equity-research analyst. Summarize headlines in 2-3 short sentences. No emojis. Plain English. No financial advice disclaimers.",
-      user: `Stock: ${body.symbol} (${body.name})\nHeadlines:\n${(body.headlines || []).map((h, i) => `${i + 1}. ${h}`).join("\n")}\n\nWrite a 2-3 sentence plain-English summary of what these headlines mean for the stock.`,
-    };
-  }
-  if (mode === "market_insight") {
-    return {
-      system:
-        "You are an NSE market analyst writing one short daily insight for Kenyan retail investors. 2 sentences max. No fluff.",
-      user: `Write today's NSE market insight in 2 sentences max. Focus on Safaricom, banking sector, and overall market mood.`,
-    };
-  }
   return {
     system:
       "You are an equity-research analyst covering the Nairobi Securities Exchange (NSE). Write concise, plain-English investment theses. No emojis, no buy/sell advice, no disclaimers. Use 3 short paragraphs labeled 'Bull case:', 'Bear case:', and 'Verdict:' (one sentence each).",
@@ -82,6 +67,13 @@ Deno.serve(async (req) => {
     }
 
     const body: ThesisRequest = await req.json();
+    // Old clients must not spend API credits on removed features.
+    if (body.mode === "news_summary" || body.mode === "market_insight") {
+      return new Response(JSON.stringify({ error: "This feature is no longer available." }), {
+        status: 410,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {

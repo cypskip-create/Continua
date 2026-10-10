@@ -18,13 +18,14 @@ export async function requireEngineUser(req: Request, res: Response, next: NextF
     });
     if (response.status === 401 || response.status === 403) throw new ApiError(401, "Your session expired. Sign in again.");
     if (!response.ok) throw new ApiError(503, "Unable to verify Engine access. Please retry.");
-    const user = await response.json() as { id?: string };
+    const user = await response.json() as { id?: string; email?: string };
     if (!user.id || !/^[0-9a-f-]{36}$/i.test(user.id)) throw new ApiError(401, "Invalid user session");
     const profile = await query<{ subscription_plan: string }>(
       "SELECT subscription_plan FROM public.profiles WHERE user_id = $1", [user.id],
     );
     res.locals ??= {};
     res.locals.engineUserId = user.id;
+    res.locals.engineUserEmail = user.email;
     res.locals.enginePlan = profile.rows[0]?.subscription_plan ?? "free";
     res.locals.engineIdentityVerified = true;
     next();
@@ -34,7 +35,7 @@ export async function requireEngineUser(req: Request, res: Response, next: NextF
 /** Isolate verified Engine users from the public market-data key's bucket.
  * Never derive a limiter identity from unverified JWT claims or user headers. */
 export function verifyEngineRateLimitIdentity(req: Request, res: Response, next: NextFunction) {
-  if (!/^\/engine(?:\/|$)/.test(req.path)) return next();
+  if (!/^\/(engine|billing)(?:\/|$)/.test(req.path)) return next();
   return requireEngineUser(req, res, next);
 }
 

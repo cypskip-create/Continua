@@ -27,7 +27,7 @@ import { TechnicalsTab } from "@/components/stock/tabs/TechnicalsTab";
 import { StockAlertDialog } from "@/components/alerts/StockAlertDialog";
 import { EngineForecastDesk, EngineReportsDesk, BriefingDecisionDesk, EvidenceLedger, ValuationSensitivityDesk, OwnershipAuditDesk, TechnicalResearchDesk, ScenarioWorkbench } from "@/components/engine/EngineResearchTools";
 import { ValuationPreview } from "@/components/stock/FundamentalResearch";
-import { EngineBasic } from "@/components/engine/EngineBasic";
+import { premiumEngineTools, canUseEngineTool } from "@/lib/subscription";
 import { ToolHelp } from "@/components/shared/ToolHelp";
 
 const tools = [
@@ -142,10 +142,11 @@ export default function Engine() {
     profile?.subscription_plan ?? "",
   );
   const fullEngine = profile?.subscription_plan === "premium_plus";
+  const toolAllowed = canUseEngineTool(profile?.subscription_plan, tool);
   const query = useQuery({
     queryKey: ["continua", "engine", user?.id, profile?.subscription_plan, exchange, symbol],
     queryFn: () => engineApi.get(symbol, exchange),
-    enabled: fullEngine && !!user && !profileLoading && group.name !== "My workspace",
+    enabled: paid && toolAllowed && !!user && !profileLoading && group.name !== "My workspace",
     staleTime: 60_000,
     retry: engineReadRetry,
     refetchInterval: tool === "News" ? 60_000 : false,
@@ -224,7 +225,7 @@ export default function Engine() {
           <p role="status" className="py-10 text-sm text-muted-foreground">
             Checking membership…
           </p>
-        ) : paid && !fullEngine ? <EngineBasic symbol={symbol} exchange={exchange}/> : !paid ? (
+        ) : !paid ? (
           <section className="py-6 space-y-5">
             <h3 className="text-lg font-semibold">
               Full Engine is included with Premium Plus
@@ -262,6 +263,7 @@ export default function Engine() {
           </section>
         ) : (
           <>
+            {!fullEngine && <p className="py-4 text-sm text-muted-foreground">Premium includes all company research and the Evidence ledger. Premium Plus adds technical analysis, scenario labs, peer comparisons and personal workspace tools.</p>}
             <section className="flex items-center justify-between gap-3 border-b border-border/70 py-4">
               <label className="text-xs text-muted-foreground">
                 Stock · {exchangeMeta.code}
@@ -325,11 +327,13 @@ export default function Engine() {
                   <button
                     key={item}
                     role="tab"
+                    aria-label={`${item}${!fullEngine && !premiumEngineTools.includes(item) ? ' · Plus' : ''}`}
                     aria-selected={tool === item}
                     onClick={() => setTool(item)}
                     className={`min-h-10 shrink-0 rounded-full px-4 text-sm ${tool === item ? "bg-foreground font-semibold text-background" : "text-muted-foreground hover:bg-muted"}`}
                   >
                     {item}
+                    {!fullEngine && !premiumEngineTools.includes(item) && <span className="ml-2 text-xs">· Plus</span>}
                   </button>
                 ))}
               </div>
@@ -338,7 +342,7 @@ export default function Engine() {
               <p className="font-semibold flex items-center gap-2">{tool}{["Portfolio", "Preferences"].includes(tool) ? "" : ` · ${symbol}`}<ToolHelp tool={tool} description={toolHelp[tool]}/></p>
               <p className="text-sm text-muted-foreground">{toolHelp[tool]}</p>
             </div>
-            {group.name === "My workspace" ? null : query.isLoading ? (
+            {!toolAllowed ? <section className="py-6 space-y-3"><h3 className="text-lg font-semibold">{tool} is included with Premium Plus</h3><p className="text-sm text-muted-foreground">Your Premium company research and all expanded Fundamentals Forecast details remain available.</p><Link to="/upgrade" className="text-primary font-semibold">Explore Premium Plus →</Link></section> : group.name === "My workspace" ? null : query.isLoading ? (
               <p role="status" className="py-10 text-sm text-muted-foreground">
                 Preparing your analysis…
               </p>
@@ -596,7 +600,7 @@ export default function Engine() {
               "Monitoring",
               "Preferences",
               "Journal",
-            ].includes(tool) && (
+            ].includes(tool) && toolAllowed && (
               <div className="py-5">
                 {tool === "Journal" && (
                   <ResearchJournal
@@ -626,7 +630,7 @@ export default function Engine() {
             )}
           </>
         )}
-        {paid && <EngineConnectionCheck target={tool === "Portfolio" ? "portfolio" : tool === "Monitoring" ? "monitoring" : "preferences"} exchange={exchange} />}
+        {fullEngine && <EngineConnectionCheck target={tool === "Portfolio" ? "portfolio" : tool === "Monitoring" ? "monitoring" : "preferences"} exchange={exchange} />}
       </main>
       {paid && (
         <StockAlertDialog

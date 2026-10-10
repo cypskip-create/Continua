@@ -1,10 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { TrendingUp, Sparkles, Calendar, Coins, ArrowUpRight, ChevronRight } from "lucide-react";
-import { AIThesisCard } from "@/components/stock/AIThesisCard";
+import { TrendingUp, Calendar, Coins, ArrowUpRight, ChevronRight } from "lucide-react";
 import { getDivYield, getStockName } from "@/lib/stockPrices";
 import { STOCK_POOL } from "@/lib/homeSymbolPools";
-import { useExchange } from "@/hooks/useExchange";
 import { getFundamentals } from "@/data/stockFundamentals";
 import type { Quote } from "@/api/types";
 
@@ -25,7 +23,6 @@ interface CommandCenterSectionsProps {
 
 export function CommandCenterSections({ quotes }: CommandCenterSectionsProps) {
   const navigate = useNavigate();
-  const { exchange, exchangeMeta } = useExchange();
 
   // Derive every displayed number — and which stocks even qualify — from the
   // shared price/fundamentals data, then rank and take the top few. Nothing
@@ -134,14 +131,6 @@ export function CommandCenterSections({ quotes }: CommandCenterSectionsProps) {
         ))}
       </Section>
 
-      <div>
-        <p className="section-eyebrow mb-2 flex items-center gap-1.5"><Sparkles className="h-3 w-3 text-primary" /> AI Insight of the Day</p>
-        <AIThesisCard
-          mode="market_insight" symbol={exchange} name={`${exchangeMeta.name} Market`} sector="Market"
-          price={0} changePercent={0} pe="" eps="" dividend=""
-          title={`Today's ${exchange} Insight`}
-        />
-      </div>
     </div>
   );
 }

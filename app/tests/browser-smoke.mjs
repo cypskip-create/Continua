@@ -40,6 +40,7 @@ let enginePreferences={goal:'Balanced',horizon:'1_to_5_years',experience:'beginn
 let engineRules=[];
 let engineFlows=[];
 let assistantRequests=0;
+let retiredAiRequests=0;
 
 const unknown = new Set();
 const handleRoute = async (route) => {
@@ -50,6 +51,11 @@ const handleRoute = async (route) => {
   if(url.pathname==='/api/v1/engine/portfolio/overview' && overviewThrottle>0){overviewThrottle--;overviewRequests++;return json({error:'Rate limit exceeded'},429,{'retry-after':'0'});}
   if(url.pathname==='/api/v1/engine/portfolio' && portfolioThrottle>0){portfolioThrottle--;premiumPortfolioRequests++;return json({error:'Rate limit exceeded'},429,{'retry-after':'0'});}
   if (url.hostname === 'continua-test.supabase.co') {
+    if (url.pathname.endsWith('/functions/v1/stock-thesis')) {
+      const mode=route.request().postDataJSON()?.mode;
+      if (mode==='market_insight'||mode==='news_summary') retiredAiRequests++;
+      return json({text:'Fixture investment thesis'});
+    }
     if (url.pathname.includes('/storage/v1/object/public/')) return route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="purple"/></svg>'});
     if (url.pathname.includes('/storage/v1/object/post-images/')) { uploadRequests++; return json({Key:'fixture-image'}); }
     if (url.pathname.endsWith('/rpc/post_poll_result')) {
@@ -151,13 +157,30 @@ try {
   const limitedBefore=engineRequests;
   try {
     await page.goto('http://127.0.0.1:5188/engine?symbol=KCB');
-    await page.getByText('Fixture basic briefing',{exact:true}).waitFor();
-    assert.equal(await page.getByRole('navigation',{name:'Engine navigation'}).count(),0);
-    assert.equal(engineRequests,limitedBefore,'Premium cannot load the full Engine bundle');
-    await page.getByRole('button',{name:'Forecast',exact:true}).click();
-    await page.getByText('No verified analyst estimates are available for this company yet.',{exact:true}).waitFor();
+    await page.getByText('Fixture reported revenue increased.',{exact:true}).waitFor();
+    assert.equal(await page.getByRole('navigation',{name:'Engine navigation'}).count(),1);
+    assert.ok(engineRequests>limitedBefore,'Premium loads company research');
+    await page.getByRole('tab',{name:'Forecast',exact:true}).click();
+    await page.getByLabel('Forecast workbench',{exact:true}).waitFor();
+    await page.getByLabel('Forecast workbench',{exact:true}).selectOption('Value signal research');
+    await page.getByLabel('Expanded rating research',{exact:true}).waitFor();
+    await page.getByRole('button',{name:'Analysis',exact:true}).click();
+    await page.getByRole('tab',{name:'Technicals · Plus',exact:true}).click();
+    await page.getByText('Technicals is included with Premium Plus',{exact:true}).waitFor();
   } finally {profile.subscription_plan=originalPlan;}
-  console.log('PASS KES 830/month annual display and limited Premium Engine');
+  console.log('PASS annual pricing, expanded Premium research and Plus-only tool boundary');
+  await page.goto('http://127.0.0.1:5188/');
+  await page.getByRole('heading',{name:'Market Snapshot',exact:true}).waitFor();
+  assert.equal(await page.getByText('AI Insight of the Day',{exact:true}).count(),0);
+  await page.goto('http://127.0.0.1:5188/stock/KCB');
+  await page.getByRole('button',{name:'News',exact:true}).click();
+  await page.getByText('Recent Company Filings',{exact:true}).waitFor();
+  assert.equal(await page.getByText('AI News Summary',{exact:true}).count(),0);
+  assert.equal(retiredAiRequests,0,'Home and stock news make no retired AI calls');
+  assert.deepEqual(errors,[],'Premium navigation has no uncaught browser exceptions');
+  await page.screenshot({path:fileURLToPath(new URL('premium-news-no-ai.png',artifacts))});
+  console.log('PASS home/news AI removal without provider requests');
+  if(process.argv.includes('--plans-only')) process.exit(0);
   if(process.argv.includes('--follows-only')) {
     const followedId='66666666-6666-4666-8666-666666666666';
     const followedProfile={...profile,id:followedId,user_id:followedId,full_name:'Already followed investor'};
