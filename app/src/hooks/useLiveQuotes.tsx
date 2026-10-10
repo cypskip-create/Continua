@@ -6,29 +6,7 @@ import { useExchange } from "@/hooks/useExchange";
 import type { Quote } from "@/api/types";
 import { readQuoteSnapshot, writeQuoteSnapshot } from "@/lib/quoteSnapshotCache";
 
-/**
- * The single hook every screen should use to get live Continua quotes.
- * REST gives the initial snapshot (and a periodic safety-net refetch);
- * the shared WebSocket connection (api/websocketClient.ts) layers live
- * ticks on top as they arrive. Multiple components calling this with
- * overlapping symbol sets share the same underlying WS subscriptions.
- *
- * `exchange` defaults to the app's globally-selected market (see
- * hooks/useExchange.tsx) and is threaded through to the REST call. The
- * WebSocket layer (websocketClient.ts's subscribeQuote) does NOT yet take
- * an exchange param — it was built when NSE was the only exchange, and
- * generalizing the streaming protocol to be exchange-aware is backend work
- * outside this change (see docs/architecture/MARKET_DATA_ENGINE.md). In
- * practice this matters little for non-NSE exchanges: Mansa's own data is
- * ~30-minute-refresh, not tick-level, so the REST poll below (staleTime
- * 15s, refetchInterval 30s) already reflects Mansa-backed quotes about as
- * promptly as a live tick would.
- *
- * Symbols the Data Layer doesn't know about (outside the current NSE mock
- * universe, or a future exchange not yet onboarded) simply won't appear in
- * `quotes` — callers should treat a missing symbol as "not covered yet",
- * not as an error, and fall back to their own display data if needed.
- */
+/** NSE research data. Coverage depends on the available sources; missing values remain unavailable. */
 export function useLiveQuotes(symbols: string[], exchange?: string) {
   const { exchange: selectedExchange } = useExchange();
   const activeExchange = exchange ?? selectedExchange;

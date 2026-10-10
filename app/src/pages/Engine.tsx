@@ -27,6 +27,8 @@ import { TechnicalsTab } from "@/components/stock/tabs/TechnicalsTab";
 import { StockAlertDialog } from "@/components/alerts/StockAlertDialog";
 import { EngineForecastDesk, EngineReportsDesk, BriefingDecisionDesk, EvidenceLedger, ValuationSensitivityDesk, OwnershipAuditDesk, TechnicalResearchDesk, ScenarioWorkbench } from "@/components/engine/EngineResearchTools";
 import { ValuationPreview } from "@/components/stock/FundamentalResearch";
+import { EngineBasic } from "@/components/engine/EngineBasic";
+import { ToolHelp } from "@/components/shared/ToolHelp";
 
 const tools = [
   "Briefing",
@@ -139,10 +141,11 @@ export default function Engine() {
   const paid = ["premium", "premium_plus"].includes(
     profile?.subscription_plan ?? "",
   );
+  const fullEngine = profile?.subscription_plan === "premium_plus";
   const query = useQuery({
-    queryKey: ["continua", "engine", user?.id, exchange, symbol],
+    queryKey: ["continua", "engine", user?.id, profile?.subscription_plan, exchange, symbol],
     queryFn: () => engineApi.get(symbol, exchange),
-    enabled: paid && !!user && group.name !== "My workspace",
+    enabled: fullEngine && !!user && !profileLoading && group.name !== "My workspace",
     staleTime: 60_000,
     retry: engineReadRetry,
     refetchInterval: tool === "News" ? 60_000 : false,
@@ -161,14 +164,14 @@ export default function Engine() {
   useEffect(() => {
     const key = user?.id + ":" + exchange + ":" + symbol;
     if (
-      paid &&
+      fullEngine &&
       researchPreferences.learnInterests &&
       lastVisit.current !== key
     ) {
       lastVisit.current = key;
       void engineWorkspaceApi.visit(symbol, exchange).catch(() => {});
     }
-  }, [paid, user?.id, exchange, symbol, researchPreferences.learnInterests]);
+  }, [fullEngine, user?.id, exchange, symbol, researchPreferences.learnInterests]);
   return (
     <div
       ref={stickyRef}
@@ -188,7 +191,7 @@ export default function Engine() {
           </button>
           <Zap className="h-5 w-5 text-primary" />
           <h1 className="text-lg font-semibold">Continua Engine</h1>
-          <span className="ml-auto text-xs text-muted-foreground">Premium</span>
+          <span className="ml-auto text-xs text-muted-foreground">{fullEngine ? 'Premium Plus' : 'Premium'}</span>
         </div>
       </header>
       <main className="mx-auto max-w-3xl px-4">
@@ -221,10 +224,10 @@ export default function Engine() {
           <p role="status" className="py-10 text-sm text-muted-foreground">
             Checking membership…
           </p>
-        ) : !paid ? (
+        ) : paid && !fullEngine ? <EngineBasic symbol={symbol} exchange={exchange}/> : !paid ? (
           <section className="py-6 space-y-5">
             <h3 className="text-lg font-semibold">
-              Engine is included with Premium
+              Full Engine is included with Premium Plus
             </h3>
             <div className="divide-y divide-border/70">
               {[
@@ -332,7 +335,7 @@ export default function Engine() {
               </div>
             </nav>
             <div className="engine-tool-context" aria-label="Current research tool">
-              <p className="font-semibold">{tool}{["Portfolio", "Preferences"].includes(tool) ? "" : ` · ${symbol}`}</p>
+              <p className="font-semibold flex items-center gap-2">{tool}{["Portfolio", "Preferences"].includes(tool) ? "" : ` · ${symbol}`}<ToolHelp tool={tool} description={toolHelp[tool]}/></p>
               <p className="text-sm text-muted-foreground">{toolHelp[tool]}</p>
             </div>
             {group.name === "My workspace" ? null : query.isLoading ? (

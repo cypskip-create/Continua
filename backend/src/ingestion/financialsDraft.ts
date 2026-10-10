@@ -21,8 +21,8 @@ export const FIELD_KEYWORDS: Record<"income" | "balance" | "cashflow", Record<st
     operatingExpenses: ["operating expense"],
     operatingIncome: ["operating income", "operating profit"],
     netIncome: ["net income", "net profit", "profit for the year", "profit after tax"],
-    eps: ["earnings per share", "eps"],
     dilutedEps: ["diluted earnings per share", "diluted eps"],
+    eps: ["earnings per share", "eps"],
     ebitda: ["ebitda"],
   },
   balance: {
@@ -90,6 +90,7 @@ export function guessFiscalYear(...texts: (string | null)[]): number | null {
 export function mapRowsToFields(
   rows: DetectedTableRow[],
   statementType: "income" | "balance" | "cashflow",
+  columnIndex = 0,
 ): { mapped: Record<string, number | null>; unmapped: DetectedTableRow[] } {
   const mapped: Record<string, number | null> = {};
   const unmapped: DetectedTableRow[] = [];
@@ -105,10 +106,19 @@ export function mapRowsToFields(
       }
     }
     if (matchedField) {
-      mapped[matchedField] = parseNumber(row.values[0]);
+      // Duplicate labels may represent group/company or continuing/total
+      // statements. The reviewer must disambiguate them.
+      if (Object.hasOwn(mapped, matchedField)) mapped[matchedField] = null;
+      else mapped[matchedField] = parseNumber(row.values[columnIndex]);
     } else {
       unmapped.push(row);
     }
   }
   return { mapped, unmapped };
+}
+
+/** Keep every comparative column. Dates, units and scope require review. */
+export function historicalColumnDrafts(rows: DetectedTableRow[], type: "income"|"balance"|"cashflow") {
+  const count=Math.min(20,Math.max(0,...rows.map(r=>r.values.length)));
+  return Array.from({length:count},(_,columnIndex)=>({columnIndex,...mapRowsToFields(rows,type,columnIndex)}));
 }

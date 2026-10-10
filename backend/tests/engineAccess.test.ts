@@ -2,8 +2,16 @@ import { afterEach, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
 const mocks = vi.hoisted(() => ({ query: vi.fn() }));
 vi.mock("../src/storage/db.js", () => ({ query: mocks.query }));
-import { requireSubscriber } from "../src/api/middleware/requireSubscriber.js";
+import { requireSubscriber, requirePremiumPlus } from "../src/api/middleware/requireSubscriber.js";
 afterEach(() => { vi.unstubAllGlobals(); vi.clearAllMocks(); });
+it.each(["free", "premium", "premium_plus"])("full Engine is restricted for %s", async plan => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({id:"11111111-1111-4111-8111-111111111111"}))));
+  mocks.query.mockResolvedValue({rows:[{subscription_plan:plan}]});
+  const next=vi.fn();
+  await requirePremiumPlus(req({"x-user-token":"verified","x-supabase-key":"public"}), {} as Response, next);
+  if(plan === "premium_plus") expect(next).toHaveBeenCalledWith();
+  else expect(next.mock.calls[0]?.[0]).toMatchObject({status:403});
+});
 const req = (headers: Record<string, string>) => ({ header: (key: string) => headers[key] }) as Request;
 it("rejects missing sessions before querying subscription status", async () => {
   const next = vi.fn();

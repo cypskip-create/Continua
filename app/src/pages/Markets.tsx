@@ -33,6 +33,7 @@ import {
   type ResearchRecord,
 } from "@/api/marketResearchApi";
 import { screenerApi } from "@/api/screenerApi";
+import { marketQuoteSummary } from "@/lib/marketQuoteSummary";
 import { TrendResearch } from "@/components/markets/TrendResearch";
 import "./markets.css";
 
@@ -168,28 +169,38 @@ export default function Markets() {
   const { quotes } = useLiveQuotes(CANONICAL_SYMBOLS, "NSE"),
     { indices } = useIndices();
   const { dividends, isLoading: divLoading } = useUpcomingDividends("NSE", 200);
+  const needsIntelligence = (!section && tab === 'Overview') || ['heatmap','monitor'].includes(section ?? '');
+  const needsRecords = tab === 'Bonds' || ['ipos','economic','macro'].includes(section ?? '');
+  const needsEarnings = ['earnings','earnings-beat'].includes(section ?? '');
+  const needsRatios = section === 'dividends';
   const intelligence = useQuery({
     queryKey: ["continua", "market-intelligence"],
     queryFn: marketResearchApi.intelligence,
+    enabled: needsIntelligence,
     staleTime: 60_000,
     refetchInterval: 60_000,
-    retry: 1,
+    retry: 2,
+    refetchIntervalInBackground: false,
   });
+  const marketSnapshot = (intelligence.data?.coverage ?? 0) > 0 ? intelligence.data : marketQuoteSummary(Object.values(quotes), STOCK_META) ?? intelligence.data;
   const recordsQuery = useQuery({
     queryKey: ["continua", "market-records"],
     queryFn: marketResearchApi.records,
+    enabled: needsRecords,
     staleTime: 600_000,
     retry: 1,
   });
   const earningsQuery = useQuery({
     queryKey: ["continua", "market-earnings"],
     queryFn: marketResearchApi.earnings,
+    enabled: needsEarnings,
     staleTime: 600_000,
     retry: 1,
   });
   const ratios = useQuery({
     queryKey: ["continua", "market-screener"],
     queryFn: () => screenerApi.run({ limit: 200 }),
+    enabled: needsRatios,
     staleTime: 300_000,
     retry: 1,
   });
@@ -871,7 +882,7 @@ export default function Markets() {
     if (id === "heatmap")
       return (
         <MarketHeatmap
-          sectors={intelligence.data?.sectors ?? []}
+          sectors={marketSnapshot?.sectors ?? []}
           quotes={Object.values(quotes)}
           compact={!full}
         />
@@ -888,7 +899,7 @@ export default function Markets() {
           <p className="market-note">
             Engine snapshot monitor · movements, not inferred block trades.
           </p>
-          {intelligence.data?.monitor
+          {marketSnapshot?.monitor
             .filter(
               (r) =>
                 matches(r.symbol, names(r.symbol)) &&
@@ -909,7 +920,7 @@ export default function Markets() {
                 </div>
               </div>
             ))}
-          {!intelligence.data?.monitor.filter(
+          {!marketSnapshot?.monitor.filter(
             (r) => monitorScope === "NSE" || isInWatchlist(r.symbol),
           ).length && (
             <Empty>
@@ -1036,10 +1047,10 @@ export default function Markets() {
                 size="icon"
                 aria-label="Refresh market research"
                 onClick={() => {
-                  void intelligence.refetch();
-                  void recordsQuery.refetch();
-                  void earningsQuery.refetch();
-                  void ratios.refetch();
+                  if (needsIntelligence) void intelligence.refetch();
+                  if (needsRecords) void recordsQuery.refetch();
+                  if (needsEarnings) void earningsQuery.refetch();
+                  if (needsRatios) void ratios.refetch();
                 }}
               >
                 <RefreshCw className="h-4 w-4" />
@@ -1096,7 +1107,7 @@ export default function Markets() {
                     <section className="market-section">
                       <h2 className="mb-2">Market breadth</h2>
                       <div className="market-breadth">
-                        {intelligence.data?.distribution.map((d, i) => (
+                        {marketSnapshot?.distribution.map((d, i) => (
                           <div key={d.label}>
                             <strong>{d.count}</strong>
                             <div
@@ -1105,7 +1116,7 @@ export default function Markets() {
                                   2,
                                   (d.count /
                                     (Math.max(
-                                      ...intelligence.data!.distribution.map(
+                                      ...marketSnapshot!.distribution.map(
                                         (d) => d.count,
                                       ),
                                     ) || 1)) *
@@ -1124,17 +1135,15 @@ export default function Markets() {
                         ))}
                       </div>
                       <p className="market-note">
-                        {intelligence.data?.coverage ?? 0} covered issuers ·{" "}
-                        {intelligence.data?.advancing ?? 0} advancing ·{" "}
-                        {intelligence.data?.declining ?? 0} declining
+                        {marketSnapshot ? `${marketSnapshot.coverage} covered issuers · ${marketSnapshot.advancing} advancing · ${marketSnapshot.declining} declining` : intelligence.isPending ? 'Loading the latest market snapshot…' : 'Market snapshot is temporarily unavailable. Quotes remain available above.'}
                       </p>
                       <p className="market-note">
-                        {intelligence.data?.methodology}
+                        {marketSnapshot?.methodology}
                       </p>
                     </section>
                     <section className="market-section">
                       <h2>Kenyan sectors</h2>
-                      {intelligence.data?.sectors.map((s) => (
+                      {marketSnapshot?.sectors.map((s) => (
                         <button
                           key={s.name}
                           className="market-row w-full text-left"
@@ -1156,20 +1165,20 @@ export default function Markets() {
             )}
           </>
         )}
-        {(intelligence.isError ||
-          recordsQuery.isError ||
-          earningsQuery.isError ||
-          ratios.isError) && (
+        {((needsIntelligence && intelligence.isError && !marketSnapshot) ||
+          (needsRecords && recordsQuery.isError && !recordsQuery.data) ||
+          (needsEarnings && earningsQuery.isError && !earningsQuery.data) ||
+          (needsRatios && ratios.isError && !ratios.data)) && (
           <div className="market-error" role="status">
             Some market research could not load. Existing quotes remain
             available.{" "}
             <Button
               variant="ghost"
               onClick={() => {
-                void intelligence.refetch();
-                void recordsQuery.refetch();
-                void earningsQuery.refetch();
-                void ratios.refetch();
+                if (needsIntelligence) void intelligence.refetch();
+                if (needsRecords) void recordsQuery.refetch();
+                if (needsEarnings) void earningsQuery.refetch();
+                if (needsRatios) void ratios.refetch();
               }}
             >
               Retry research

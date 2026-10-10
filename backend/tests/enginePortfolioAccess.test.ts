@@ -46,10 +46,10 @@ it.each([["/engine/portfolio", "GET"], ["/engine/assistant", "POST"], ["/engine/
   expect((await request("free", path, method)).status).toBe(403);
   expect(mocks.portfolio).not.toHaveBeenCalled(); expect(mocks.ask).not.toHaveBeenCalled();
 });
-it("allows premium portfolio research with the server-verified owner", async () => {
-  expect((await request("premium", "/engine/portfolio?exchange=NSE&userId=another-account")).status).toBe(200);
+it("allows Premium Plus portfolio research with the server-verified owner", async () => {
+  expect((await request("premium_plus", "/engine/portfolio?exchange=NSE&userId=another-account")).status).toBe(200);
   expect(mocks.portfolio).toHaveBeenCalledWith(verifiedId, "NSE"); expect(mocks.ask).not.toHaveBeenCalled();
 });
-it("checks only the verified owner's selected symbol and exchange",async()=>{const result=await request("premium","/engine/monitoring/check","POST",true,{symbol:"KCB",exchange:"NSE",userId:"forged"});expect(result.status).toBe(200);expect(mocks.check).toHaveBeenCalledWith(verifiedId,"KCB","NSE");expect(mocks.rules).toHaveBeenCalledWith(verifiedId);});
+it("checks only the verified owner's selected symbol and exchange",async()=>{const result=await request("premium_plus","/engine/monitoring/check","POST",true,{symbol:"KCB",exchange:"NSE",userId:"forged"});expect(result.status).toBe(200);expect(mocks.check).toHaveBeenCalledWith(verifiedId,"KCB","NSE");expect(mocks.rules).toHaveBeenCalledWith(verifiedId);});
 it("keeps monitoring check subscriber-only",async()=>{expect((await request("free","/engine/monitoring/check","POST",true,{symbol:"KCB"})).status).toBe(403);expect(mocks.check).not.toHaveBeenCalled();});
-it("scopes alert history to the authenticated owner",async()=>{expect((await request("premium","/engine/monitoring/activity?userId=forged")).status).toBe(200);expect(mocks.query).toHaveBeenLastCalledWith(expect.stringContaining("WHERE user_id=$1 AND type='engine'"),[verifiedId]);});
+it("scopes alert history to the authenticated owner",async()=>{expect((await request("premium_plus","/engine/monitoring/activity?userId=forged")).status).toBe(200);expect(mocks.query).toHaveBeenLastCalledWith(expect.stringContaining("WHERE user_id=$1 AND type='engine'"),[verifiedId]);});

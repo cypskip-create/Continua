@@ -15,8 +15,9 @@ import { financialStatementCandidatesRepository } from "../../storage/repositori
 import { financialsRepository } from "../../storage/repositories/financialsRepository.js";
 import { securitiesRepository } from "../../storage/repositories/securitiesRepository.js";
 import { normalizeIncomeStatement, normalizeCashFlow, checkBalanceSheetIntegrity } from "../../normalization/financials/normalizeFinancials.js";
-import { guessStatementType, mapRowsToFields, guessFiscalYear } from "../../ingestion/financialsDraft.js";
+import { guessStatementType, mapRowsToFields, guessFiscalYear, historicalColumnDrafts } from "../../ingestion/financialsDraft.js";
 import { ApiError } from "../middleware/errorHandler.js";
+import { confirmHistoricalColumns } from "../../ingestion/confirmHistoricalColumns.js";
 
 function periodId(securityId: string, fiscalYear: number, fiscalQuarter?: number | null): string {
   const [exchange, symbol] = securityId.split(":");
@@ -54,6 +55,14 @@ const ConfirmBodySchema = z.object({
 const RejectBodySchema = z.object({ note: z.string().optional() });
 
 export const adminFinancialsController = {
+  async confirmHistory(req: Request, res: Response) {
+    try { res.json({data:await confirmHistoricalColumns(String(req.params.id),req.body)}); }
+    catch(error) {
+      if(error instanceof z.ZodError) throw new ApiError(400,error.issues.map(i=>i.message).join('; '));
+      if((error as {code?:string}).code==='42P01') throw new ApiError(503,'Apply the historical filing review migration before publishing history.');
+      throw error;
+    }
+  },
   /** GET /admin/financials/candidates?limit=50 — same rows as `npm run financials:review`. */
   async listPending(req: Request, res: Response) {
     const limit = req.query.limit ? Number(req.query.limit) : 100;
@@ -80,6 +89,8 @@ export const adminFinancialsController = {
         fiscalYear,
         mapped,
         unmapped,
+        historicalColumns: historicalColumnDrafts(rows,statementType),
+        reviewWarning: 'Verify each column’s period, scope and units against the source filing. Drafts are not published facts.',
       },
     });
   },

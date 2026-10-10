@@ -1,8 +1,7 @@
 /**
  * Verified Engine users each get an independent bucket. Market-data reads
- * retain per-API-key rate limiting (falls back to per-IP when auth is disabled or
- * a request has no key — e.g. a 401 short-circuited before this ever runs
- * in the normal case, but this stays IP-based defensively either way).
+ * use per-API-key and client-IP limits so visitors cannot exhaust one shared website bucket.
+ * Hosts must configure the trusted proxy count.
  * Each key's own `rate_limit_per_min` (set at key-creation time) is used
  * when available, so a higher-tier customer can be issued a higher limit
  * without a code change — just a different value in `market.api_keys`.
@@ -22,7 +21,9 @@ export function apiRateLimit() {
     // normal case) bypasses this entirely.
     keyGenerator: (req: Request, res) => {
       if (res.locals.engineIdentityVerified === true) return `engine:${req.apiKey?.id ?? "authenticated"}:${res.locals.engineUserId}`;
-      return req.apiKey?.id ?? ipKeyGenerator(req.ip ?? "unknown");
+      // The website uses a first-party public key. A key-only bucket made
+      // unrelated visitors throttle each other and broke periodic Markets reads.
+      return `${req.apiKey?.id ?? "public"}:${ipKeyGenerator(req.ip ?? "unknown")}`;
     },
     standardHeaders: true,
     legacyHeaders: false,

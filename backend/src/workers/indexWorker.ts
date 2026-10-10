@@ -1,12 +1,4 @@
-/**
- * Keeps market.indices fresh. Same shape as priceWorker.ts — pull-based on
- * a fixed interval, respects each exchange's trading calendar so mock mode
- * doesn't synthesize index moves overnight/on weekends — but runs far less
- * often (INDEX_POLL_INTERVAL_MS defaults to 5 minutes vs. price's default
- * of a few seconds) since an index is a derived/composite number, not
- * something users watch tick-by-tick the way an individual quote is, and
- * because Mansa's own index data doesn't refresh faster than that anyway.
- */
+/** NSE research data. Coverage depends on the available sources; missing values remain unavailable. */
 import { getAllAdapters } from "../adapters/registry.js";
 import { runIndexIngestion } from "../ingestion/pipelines/indexIngestionPipeline.js";
 import { isMarketOpen } from "../config/tradingCalendar.js";

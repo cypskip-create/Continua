@@ -6,5 +6,6 @@ export const adminFinancialsRoutes = Router();
 adminFinancialsRoutes.get("/financials/candidates", asyncHandler(adminFinancialsController.listPending));
 adminFinancialsRoutes.get("/financials/candidates/:id", asyncHandler(adminFinancialsController.getOne));
 adminFinancialsRoutes.post("/financials/candidates/:id/confirm", asyncHandler(adminFinancialsController.confirm));
+adminFinancialsRoutes.post("/financials/candidates/:id/confirm-history", asyncHandler(adminFinancialsController.confirmHistory));
 adminFinancialsRoutes.post("/financials/candidates/:id/reject", asyncHandler(adminFinancialsController.reject));
 adminFinancialsRoutes.get("/securities", asyncHandler(adminFinancialsController.listSecurities));

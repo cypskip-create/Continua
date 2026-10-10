@@ -8,6 +8,18 @@ import { apiRateLimit } from "../src/api/middleware/rateLimit.js";
 import { verifyEngineRateLimitIdentity, requireSubscriber } from "../src/api/middleware/requireSubscriber.js";
 import { errorHandler } from "../src/api/middleware/errorHandler.js";
 const realFetch=globalThis.fetch;
+it('isolates public visitors sharing the website API key',async()=>{
+  const app=express();app.set('trust proxy',1);
+  app.use((req,_res,next)=>{req.apiKey={id:'browser',name:'website',active:true,rateLimitPerMin:2};next();});
+  app.use(apiRateLimit());app.get('/research',(_req,res)=>res.json({data:[]}));
+  server=await new Promise<Server>(resolve=>{const listening=app.listen(0,'127.0.0.1',()=>resolve(listening));});
+  const address=server.address() as {port:number};
+  const get=(ip:string)=>realFetch(`http://127.0.0.1:${address.port}/research`,{headers:{'x-forwarded-for':ip}});
+  expect((await get('192.0.2.1')).status).toBe(200);
+  expect((await get('192.0.2.1')).status).toBe(200);
+  expect((await get('192.0.2.1')).status).toBe(429);
+  expect((await get('192.0.2.2')).status).toBe(200);
+});
 let server:Server|undefined;
 afterEach(async()=>{vi.unstubAllGlobals();vi.clearAllMocks();if(server){server.closeAllConnections();await new Promise<void>(resolve=>server!.close(()=>resolve()));server=undefined;}});
 it("public traffic and other users cannot exhaust a verified user's Engine allowance",async()=>{

@@ -54,7 +54,7 @@ export default function TradersHub() {
   const { user } = useAuth();
   const { profile, updateProfile } = useProfile();
   const { posts, loading, error: feedError, fetchPosts, createPost, bookmarkPost, reactToPost, deletePost, editPost, reportPost, hidePost } = usePosts();
-  const { isFollowing, toggleFollow, followingIds } = useFollows();
+  const { isFollowing, toggleFollow, followingIds, loading: followsLoading } = useFollows();
   const { portfolio } = usePortfolio();
   const { watchlist } = useWatchlist();
   const { notifications } = useNotifications();
@@ -461,7 +461,7 @@ export default function TradersHub() {
 
       {feedError && activeTab !== "media" && <div role="alert" className="px-4 py-3 text-sm">Your feed could not load. <button className="text-primary" onClick={() => void fetchPosts()}>Retry feed</button></div>}
       {/* Suggested people — ranked by shared TradersHub interests */}
-      {activeTab === "for-you" && !searching && (
+      {activeTab === "for-you" && !searching && user && !followsLoading && (
         <SuggestedForYou
           currentUserId={user?.id}
           myInterests={profile?.interests || []}

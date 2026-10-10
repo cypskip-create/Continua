@@ -25,9 +25,9 @@ export function EngineAccess({symbol,children}: {symbol:string;children:ReactNod
   const {user}=useAuth();
   const {exchange}=useExchange();
   const paid=["premium","premium_plus"].includes(profile?.subscription_plan??"");
-  const query=useQuery({queryKey:["continua","engine",user?.id,exchange,symbol],queryFn:()=>engineApi.get(symbol,exchange),enabled:paid&&!!user&&!loading,staleTime:60_000,retry:engineReadRetry});
+  const query=useQuery({queryKey:["continua","research-access",user?.id,profile?.subscription_plan,exchange,symbol],queryFn:()=>engineApi.researchAccess(symbol,exchange),enabled:paid&&!!user&&!loading,staleTime:60_000,retry:engineReadRetry});
   if(loading || (paid&&query.isLoading)) return <p role="status" className="py-6 text-sm text-muted-foreground">Checking Engine access…</p>;
   if(!paid || !user) return <EnginePreview symbol={symbol}/>;
-  if(query.isError || !query.data) return <section className="py-6 space-y-3"><p role="alert" className="text-sm text-muted-foreground">Engine access could not be verified. Your reported financials remain available.</p><button className="text-sm font-semibold text-primary" onClick={()=>void query.refetch()}>Retry Engine access</button></section>;
+  if(query.isError || query.data?.allowed !== true) return <section className="py-6 space-y-3"><p role="alert" className="text-sm text-muted-foreground">Engine access could not be verified. Your reported financials remain available.</p><button className="text-sm font-semibold text-primary" onClick={()=>void query.refetch()}>Retry Engine access</button></section>;
   return <>{children}</>;
 }

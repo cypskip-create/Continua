@@ -1,33 +1,4 @@
-/**
- * INseClient backed by live scraping of afx.kwayisi.org — a free public
- * site meant for human readers, not an API. This does NOT go through the
- * scraper service's compliance pipeline (crawler/robotsCheck.ts, per-source
- * rate limiting, scraping.sources licensing metadata) since it's a
- * request-per-symbol live client like MansaClient, not a discover/fetch/
- * parse crawl job — so robots.txt respect and rate limiting are
- * reimplemented inline here, deliberately, rather than skipped.
- *
- * IMPORTANT — verification status: the parsing logic in afxRawParser.ts
- * was written against the actual text/table content of one real page
- * (https://afx.kwayisi.org/nse/cgen.html, fetched 2026-09-06), but that
- * fetch went through a tool that renders HTML into cleaned markdown/text
- * rather than returning raw tags — so table vs. dl/dt/dd markup, exact
- * class names, etc. are a reasonable inference from that rendered output,
- * not a confirmed reading of the actual HTML source. Treat this as an
- * untested first pass: run `previewQuote()` against a couple of real
- * tickers and compare the output to the live page by eye before trusting
- * this in production, and expect to adjust selectors in afxRawParser.ts
- * once you can see the real markup (e.g. via curl or view-source).
- *
- * Coverage is intentionally partial — see fetchFinancials/
- * fetchCorporateActions/fetchEarningsEvents/fetchOwnership below. The
- * page only ever showed EPS/PE/DPS/dividend yield as snapshot figures,
- * nowhere near the full income statement / balance sheet / cash flow
- * NseRawFinancialPeriod needs, and no dividend-history or ownership
- * breakdown at all. Returning fabricated figures for those would be
- * exactly the kind of fabrication this project has explicitly ruled out
- * elsewhere — so those methods return empty rather than invent data.
- */
+/** NSE research data. Coverage depends on the available sources; missing values remain unavailable. */
 import { env } from "../../config/index.js";
 import { logger } from "../../monitoring/logger.js";
 import { parseAfxQuote, parseAfxSecurityProfile, parseAfxDailyHistory } from "./afxRawParser.js";
@@ -237,7 +208,7 @@ export class AfxClient implements INseClient {
 
   // Not available from this source — see module doc comment. Empty,
   // not fabricated, matching how RealNseClient already handles the gaps
-  // in its own upstream (Mansa).
+  // in its own upstream (the previous provider).
   async fetchFinancials(_symbol: string): Promise<NseRawFinancialPeriod[]> { return []; }
   async fetchCorporateActions(_symbol: string | null, _since: string): Promise<NseRawCorporateAction[]> { return []; }
   async fetchEarningsEvents(_symbol: string | null, _since: string): Promise<NseRawEarningsEvent[]> { return []; }

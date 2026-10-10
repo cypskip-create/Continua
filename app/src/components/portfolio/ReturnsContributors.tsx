@@ -66,7 +66,7 @@ export function ReturnsContributors({
       <div className="flex items-center justify-between mb-1">
         <h3 className="font-serif text-lg flex items-center gap-1.5">
           Contributors to Returns
-          <InfoTip>Ranks each holding by its dollar contribution to your total unrealized gain or loss — not by percentage return.</InfoTip>
+          <InfoTip>Ranks each holding by its shilling contribution to your total unrealized gain or loss — not by percentage return.</InfoTip>
         </h3>
       </div>
 

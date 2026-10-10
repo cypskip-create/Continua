@@ -85,14 +85,14 @@ function parseAnnouncementsPage(html: string, pageUrl: string): SourceDocument[]
   return docs;
 }
 
-function discoverArchiveLinks(html: string, pageUrl: string): string[] {
+export function discoverArchiveLinks(html: string, pageUrl: string): string[] {
   const $ = cheerio.load(html);
   const page = new URL(pageUrl);
   const links = new Set<string>();
   $("a[href]").each((_, el) => {
     const label = $(el).text().trim();
     const href = $(el).attr("href");
-    if (!href || !/^(19|20)\d{2}$/.test(label)) return;
+    if (!href || !(/^(19|20)\d{2}$/.test(label) || /^(next|older|previous|\d+)\s*(page|[›»→])?$/i.test(label))) return;
     const resolved = resolveUrl(pageUrl, href);
     if (!resolved) return;
     const candidate = new URL(resolved);
@@ -123,13 +123,27 @@ export const nseAnnouncementsAdapter: SourceAdapter = {
     const configuredArchives = Array.isArray(source?.config.archiveUrls)
       ? source.config.archiveUrls.filter((url): url is string => typeof url === "string")
       : [];
-    const archiveUrls = [...new Set([...discoverArchiveLinks(html, res.finalUrl), ...configuredArchives])];
+    const officialArchive = (url: string) => {
+      try { const u = new URL(url); return u.protocol === 'https:' && ['nse.co.ke','www.nse.co.ke'].includes(u.hostname) && !u.username && !u.password; }
+      catch { return false; }
+    };
+    const archiveUrls = [...new Set([...discoverArchiveLinks(html, res.finalUrl), ...configuredArchives])].filter(officialArchive);
+    const visited = new Set([res.finalUrl]);
     const docs = parseAnnouncementsPage(html, res.finalUrl);
     for (const archiveUrl of archiveUrls) {
+      if (visited.has(archiveUrl)) continue;
+      if (visited.size >= 40) break; // Bounded historical crawl, never an unrestricted site walk.
+      visited.add(archiveUrl);
       if (!(await isAllowedByRobots(archiveUrl))) continue;
       try {
         const archive = await fetchWithRetry(archiveUrl, { requestsPerSecond });
-        if (archive.status < 400) docs.push(...parseAnnouncementsPage(archive.body.toString("utf-8"), archive.finalUrl));
+        if (archive.status < 400 && officialArchive(archive.finalUrl)) {
+          const archiveHtml = archive.body.toString('utf-8');
+          docs.push(...parseAnnouncementsPage(archiveHtml, archive.finalUrl));
+          for (const next of discoverArchiveLinks(archiveHtml, archive.finalUrl)) {
+            if (officialArchive(next) && !visited.has(next) && !archiveUrls.includes(next)) archiveUrls.push(next);
+          }
+        }
       } catch (err) {
         logger.warn({ archiveUrl, err }, "NSE archive discovery failed — continuing with other years");
       }

@@ -6,6 +6,7 @@ export interface CandidateDraft {
   fiscalYear: number | null;
   mapped: Record<string, number | null>;
   unmapped: { label: string; values: string[] }[];
+  historicalColumns?: {columnIndex:number;mapped:Record<string,number|null>;unmapped:{label:string;values:string[]}[]}[];
 }
 
 export interface ConfirmPayload {
@@ -26,6 +27,7 @@ export interface ConfirmPayload {
 }
 
 export const adminFinancialsApi = {
+  confirmHistory: (id:string,payload:unknown) => adminFetch<{data:{periodIds:string[];sourceUrl:string}}>(`/financials/candidates/${id}/confirm-history`,{method:'POST',body:payload}).then(r=>r.data),
   listPending: (limit = 100) =>
     adminFetch<{ data: FinancialStatementCandidate[] }>("/financials/candidates", { params: { limit } }).then((r) => r.data),
 

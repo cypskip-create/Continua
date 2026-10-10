@@ -49,13 +49,7 @@ export const financialsRepository = {
     );
   },
 
-  /** Convenience wrapper for callers (like the Mansa/NSE ingestion
-   *  pipeline) that always have all three statements at once. The review
-   *  confirm script writes period + a single statement individually
-   *  instead — see upsertPeriod/upsertIncomeStatement/etc — since a
-   *  scraped candidate is usually only one statement type, and writing
-   *  fabricated zeros into the other two to satisfy this signature would
-   *  violate the "never fabricate" rule that whole pipeline exists for. */
+  /** NSE research data. Coverage depends on the available sources; missing values remain unavailable. */
   async upsertPeriodBundle(period: FinancialPeriod, income: IncomeStatement, balance: BalanceSheet, cashFlow: CashFlowStatement): Promise<void> {
     await this.upsertPeriod(period);
     await this.upsertIncomeStatement(income);
@@ -97,7 +91,7 @@ export const financialsRepository = {
               b.shares_outstanding as "sharesOutstanding",
               c.operating_cash_flow as "operatingCashFlow", c.investing_cash_flow as "investingCashFlow",
               c.financing_cash_flow as "financingCashFlow", c.free_cash_flow as "freeCashFlow", c.capex
-       FROM market.financial_periods p JOIN market.income_statements i ON i.period_id = p.id
+       FROM market.financial_periods p LEFT JOIN market.income_statements i ON i.period_id = p.id
        LEFT JOIN market.balance_sheets b ON b.period_id = p.id
        LEFT JOIN market.cash_flow_statements c ON c.period_id = p.id
        WHERE p.security_id = $1 AND p.period_type = $2

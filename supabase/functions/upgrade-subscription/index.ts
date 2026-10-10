@@ -63,6 +63,15 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    const amountKes = plan === "premium_plus" ? (billingCycle === "yearly" ? 9960 : 1000) : (billingCycle === "yearly" ? 7980 : 800);
+    // Explicit opt-in for test environments only. Never silently grant unpaid
+    // production access while a payment provider has not been integrated.
+    if (Deno.env.get("ALLOW_MOCK_SUBSCRIPTION_CHECKOUT") !== "true") {
+      return new Response(JSON.stringify({error:"Checkout is not available yet. No payment was taken and your plan has not changed."}), {
+        status:503, headers:{...corsHeaders,"Content-Type":"application/json"},
+      });
+    }
+
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -106,7 +115,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    return new Response(JSON.stringify({ success: true, plan, billingCycle }), {
+    return new Response(JSON.stringify({ success: true, mock:true, plan, billingCycle, amountKes, currency:"KES" }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

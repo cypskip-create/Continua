@@ -28,6 +28,7 @@ const EnvSchema = z.object({
   ENGINE_MONITOR_ENABLED: booleanEnv(true),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(4000),
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
   WS_PORT: z.coerce.number().default(4001),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 
@@ -59,26 +60,8 @@ const EnvSchema = z.object({
   // (adapters/nse/nseClient.ts's SEED list) rather than guessing others.
   AFX_TICKERS: z.string().optional(),
 
-  // ── Mansa API ───────────────────────────────────────────────────────
-  // Pan-African market data (mansaapi.com) — the live data source behind
-  // every exchange adapter in adapters/mansa/. One key covers all
-  // exchanges; ADAPTER_MODE below lets a deployment run entirely on the
-  // NSE mock (no key needed) until a Mansa key is actually issued.
-  MANSA_API_BASE_URL: z.string().default("https://mansaapi.com"),
-  MANSA_API_KEY: z.string().optional(),
-  MANSA_API_IP: z.string().optional(),
-  // "mock" keeps every exchange on the existing seeded NSE mock client
-  // (default — works with zero setup). "live" routes every ACTIVE_EXCHANGES
-  // entry through the Mansa adapter and requires MANSA_API_KEY to be set.
-  ADAPTER_MODE: z.enum(["mock", "live"]).default("mock"),
-
-  // Which adapter NSE specifically resolves to when ADAPTER_MODE=live.
-  // Default "mansa" preserves existing behavior (NSE alongside every
-  // other ACTIVE_EXCHANGES entry, via MansaAdapter). "nse_client" routes
-  // NSE through NseAdapter instead — i.e. through createNseClient(),
-  // meaning NSE_CLIENT_MODE actually takes effect in live mode. See the
-  // long comment in adapters/registry.ts for why this exists.
-  NSE_ADAPTER_SOURCE: z.enum(["mansa", "nse_client"]).default("mansa"),
+  // Live NSE sources are selected by NSE_CLIENT_MODE; legacy live resolves to MyStocks.
+  ADAPTER_MODE: z.enum(["mock", "live"]).default("live"),
 
   PRICE_POLL_INTERVAL_MS: z.coerce.number().default(5000),
   INDEX_POLL_INTERVAL_MS: z.coerce.number().default(300_000), // 5 min — see workers/indexWorker.ts

@@ -154,8 +154,7 @@ export function KeyMetricsBenchmarks({ holdings, research, valuations, growth, d
         <h3 className="font-serif text-lg">Key Metrics &amp; Benchmarks</h3>
         <InfoTip>
           Your value-weighted portfolio average compared against the {benchmark.sampleLabel} — a
-          market-cap sample, not the full exchange, so we're not calling 60+ endpoints on every
-          page load.
+          market-cap sample, not the full exchange. Missing figures are left out of the comparison.
         </InfoTip>
         {isLoading && <span className="ml-auto h-2 w-2 animate-pulse rounded-full bg-primary" aria-label="Updating benchmark data" />}
       </div>

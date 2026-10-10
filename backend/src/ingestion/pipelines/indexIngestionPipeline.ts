@@ -1,15 +1,4 @@
-/**
- * The index pipeline: collect (with retry) → normalize → validate →
- * store → cache → audit-log. Simpler than priceIngestionPipeline.ts —
- * no plausibility check against a previous tick (an index's "previous
- * tick" concept doesn't map as cleanly as a single security's does, and
- * indices already get a coarser 30-min-ish refresh cadence via Mansa) and
- * no live-tick broadcast (the movers/quote WebSocket layer was built
- * around individual securities; broadcasting index ticks would need its
- * own event type — not done here, see docs/architecture/MARKET_DATA_ENGINE.md).
- * Failures are still dead-lettered and every run still gets an
- * ingestion_logs row, matching the price pipeline's audit guarantees.
- */
+/** NSE research data. Coverage depends on the available sources; missing values remain unavailable. */
 import type { IExchangeAdapter } from "../../adapters/types.js";
 import { indexCollector } from "../collectors/indexCollector.js";
 import { normalizeIndex } from "../../normalization/indices/normalizeIndex.js";

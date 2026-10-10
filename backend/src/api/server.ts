@@ -45,6 +45,9 @@ const corsOptions: cors.CorsOptions = {
 
 export function createServer() {
   const app = express();
+  // Render terminates TLS at its reverse proxy. Trust only the configured
+  // number of hops so per-client rate limits use the actual visitor address.
+  app.set("trust proxy", env.NODE_ENV === "production" ? env.TRUST_PROXY_HOPS : 0);
   app.use(helmet());
   app.use(cors(corsOptions));
   app.use(express.json());

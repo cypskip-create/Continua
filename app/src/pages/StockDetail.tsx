@@ -513,21 +513,8 @@ export default function StockDetail() {
         </div>
       </div>
 
-      {/* CHART — embedded, no card wrapper */}
-      <div className="relative">
-        <div className="px-1">
-          {hasHistoricalData ? (
-            <StockPriceChart symbol={symbol} timeframe={selectedTimeframe} chartType={chartType} onHoverPrice={handleChartHover} data={periodData} indicators={indicatorSettings} mainHeight={280} />
-          ) : (
-            <div className="h-[280px] flex flex-col items-center justify-center px-8 text-center">
-              <LineChartIcon className="h-7 w-7 text-muted-foreground/35 mb-2" />
-              <p className="text-xs font-semibold">Historical chart unavailable</p>
-              <p className="text-[0.625rem] text-muted-foreground mt-1">No verified {TIMEFRAME_LABELS[selectedTimeframe].toLowerCase()} OHLCV series is available yet. The live quote above is still current.</p>
-            </div>
-          )}
-        </div>
         {/* Chart tool row */}
-        <div className="absolute top-2 right-3 z-10 flex items-center gap-1">
+        <div className="flex items-center justify-end gap-1 px-3 pb-2">
           <Button
             variant="ghost" size="icon" aria-label="Chart indicators"
             className={`h-7 w-7 rounded-full ${anyIndicatorsOn(indicatorSettings) ? "text-primary" : "text-muted-foreground"}`}
@@ -559,6 +546,21 @@ export default function StockDetail() {
             <Maximize2 className="h-3.5 w-3.5" />
           </Button>
         </div>
+
+      {/* CHART — embedded, no card wrapper */}
+      <div className="relative">
+        <div className="px-1">
+          {hasHistoricalData ? (
+            <StockPriceChart symbol={symbol} timeframe={selectedTimeframe} chartType={chartType} onHoverPrice={handleChartHover} data={periodData} indicators={indicatorSettings} mainHeight={280} />
+          ) : (
+            <div className="h-[280px] flex flex-col items-center justify-center px-8 text-center">
+              <LineChartIcon className="h-7 w-7 text-muted-foreground/35 mb-2" />
+              <p className="text-xs font-semibold">Historical chart unavailable</p>
+              <p className="text-[0.625rem] text-muted-foreground mt-1">No verified {TIMEFRAME_LABELS[selectedTimeframe].toLowerCase()} OHLCV series is available yet. The live quote above is still current.</p>
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* Timeframe pills */}

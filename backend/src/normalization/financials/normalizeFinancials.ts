@@ -26,7 +26,7 @@ export function checkBalanceSheetIntegrity(b: BalanceSheet): { ok: boolean; delt
 export function normalizeCashFlow(c: CashFlowStatement): CashFlowStatement {
   return {
     ...c,
-    // operatingCashFlow is optional now — not every provider (e.g. Mansa)
+    // operatingCashFlow is optional now — not every provider (e.g. the previous provider)
     // supplies a cash flow statement at all. Only round/derive when it's
     // actually present; leave it undefined otherwise rather than treating
     // absence as zero.

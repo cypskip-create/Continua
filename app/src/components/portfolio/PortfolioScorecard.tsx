@@ -78,9 +78,9 @@ export function PortfolioScorecard({ holdings, research, valuations, benchmark, 
       <div className="flex items-center gap-1.5 mb-1">
         <h3 className="font-serif text-lg">Portfolio Scorecard</h3>
         <InfoTip>
-          Your portfolio scored out of 6 on five measures at once. A larger, more even shape means
-          stronger, better balanced holdings. Select a point to see which holdings lift that score
-          and which hold it back.
+          This chart brings five screening measures together. Select a measure to see the
+          holdings behind it. A larger shape means more checks passed, not a guarantee of
+          better returns. Missing information can limit the score.
         </InfoTip>
       </div>
       <p className="text-[0.6875rem] text-muted-foreground mb-4">

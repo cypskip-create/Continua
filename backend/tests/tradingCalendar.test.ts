@@ -34,6 +34,6 @@ describe("tradingCalendar (NSE)", () => {
   it("treats an unregistered exchange as always open rather than blocking on a missing calendar", () => {
     // "JSE" is a valid ExchangeCode (future exchange) but has no calendar
     // entry yet — isMarketOpen should not block on that, just pass through.
-    expect(isMarketOpen("JSE", new Date())).toBe(true);
+    expect(isMarketOpen("UNKNOWN" as never, new Date())).toBe(true);
   });
 });

@@ -12,6 +12,7 @@ import { adminFinancialsApi, type ConfirmPayload } from "@/api/adminFinancialsAp
 import type { FinancialStatementCandidate } from "@/api/types";
 import { ContinuaApiError } from "@/api/client";
 import { ExternalLink, ShieldCheck, LogOut } from "lucide-react";
+import { HistoricalFilingReview } from "@/components/stock/HistoricalFilingReview";
 
 /**
  * Browser-based replacement for `npm run financials:review` /
@@ -180,6 +181,7 @@ function CandidateReviewForm({ candidateId, onDone }: { candidateId: string; onD
           </div>
         </div>
 
+        {!!data.draft.historicalColumns?.length && <HistoricalFilingReview key={candidateId} candidateId={candidateId} draft={data.draft} securityId={securityId} onDone={onDone}/>}
         {!candidate.securityId && (
           <div>
             <Label className="text-[0.625rem]">Security (unresolved — pick one)</Label>

@@ -54,9 +54,9 @@ export function ShareDilution({ holdings }: ShareDilutionProps) {
       <div className="flex items-center gap-1.5 mb-1">
         <h3 className="font-serif text-lg">Share Dilution</h3>
         <InfoTip>
-          Shares outstanding aren't directly disclosed in Continua's data feed, so this is implied
-          from reported net income ÷ EPS across the two most recent annual periods — a derived
-          figure, not a direct company disclosure.
+          This estimates whether the share count grew or shrank by dividing reported profit
+          by earnings per share in two annual periods. It is a calculation, not a disclosed
+          share count; losses, rounding and different EPS definitions can distort it.
         </InfoTip>
       </div>
       <p className="text-[0.6875rem] text-muted-foreground mb-4">How much each holding's implied share count grew or shrank year over year.</p>

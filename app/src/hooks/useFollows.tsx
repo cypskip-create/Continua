@@ -16,6 +16,7 @@ export function useFollows() {
   const [following, setFollowing] = useState<FollowUser[]>([]);
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
 
   const fetchFollowing = useCallback(async (userId?: string) => {
     const targetUserId = userId || user?.id;
@@ -64,38 +65,49 @@ export function useFollows() {
   const fetchMyFollowingIds = useCallback(async () => {
     if (!user) return new Set<string>();
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('user_follows')
       .select('following_id')
       .eq('follower_id', user.id);
 
+    if (error) throw error;
     return new Set(data?.map(f => f.following_id) || []);
   }, [user]);
 
   useEffect(() => {
+    let cancelled = false;
     const loadData = async () => {
       if (!user) {
         setFollowers([]);
         setFollowing([]);
         setFollowingIds(new Set());
         setLoading(false);
+        setResolvedUserId(null);
         return;
       }
 
       setLoading(true);
+      try {
       const [followersData, followingData, ids] = await Promise.all([
         fetchFollowers(),
         fetchFollowing(),
         fetchMyFollowingIds()
       ]);
       
+      if (cancelled) return;
       setFollowers(followersData);
       setFollowing(followingData);
       setFollowingIds(ids);
       setLoading(false);
+      setResolvedUserId(user.id);
+      } catch {
+        // A failed lookup must not be mistaken for "follows nobody".
+        if (!cancelled) setResolvedUserId(null);
+      }
     };
 
     loadData();
+    return () => { cancelled = true; };
   }, [user, fetchFollowers, fetchFollowing, fetchMyFollowingIds]);
 
   const followUser = async (targetUserId: string) => {
@@ -146,7 +158,7 @@ export function useFollows() {
     followers,
     following,
     followingIds,
-    loading,
+    loading: loading || (!!user && resolvedUserId !== user.id),
     followUser,
     unfollowUser,
     isFollowing,
@@ -162,6 +174,8 @@ export function useFollows() {
       setFollowers(followersData);
       setFollowing(followingData);
       setFollowingIds(ids);
+      setResolvedUserId(user?.id ?? null);
+      setLoading(false);
     }
   };
 }

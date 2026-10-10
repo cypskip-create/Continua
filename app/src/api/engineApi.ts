@@ -21,5 +21,6 @@ export interface EngineBundle {
   coverage: { annualPeriods: number; earningsEvents: number; shareholderDisclosures: number; valuationModels: number; analystEstimates: number; insiderTransactions: boolean; orderDepth: boolean; optionsData: boolean };
 }
 export const engineApi = {
+  researchAccess(symbol: string, exchange: string) { return continuaFetch<{allowed:boolean}>(`/engine/research-access/${encodeURIComponent(symbol)}`, {params:{exchange}}); },
   get(symbol: string, exchange: string) { return continuaFetch<EngineBundle>(`/engine/${encodeURIComponent(symbol)}`, { params: { exchange } }); },
 };

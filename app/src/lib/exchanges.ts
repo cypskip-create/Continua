@@ -14,12 +14,6 @@ export interface ExchangeMeta {
 
 export const EXCHANGES: ExchangeMeta[] = [
   { code: "NSE", name: "Nairobi Securities Exchange", country: "Kenya", currency: "KES", flag: "🇰🇪" },
-  { code: "NGX", name: "Nigerian Exchange", country: "Nigeria", currency: "NGN", flag: "🇳🇬" },
-  { code: "GSE", name: "Ghana Stock Exchange", country: "Ghana", currency: "GHS", flag: "🇬🇭" },
-  { code: "JSE", name: "Johannesburg Stock Exchange", country: "South Africa", currency: "ZAR", flag: "🇿🇦" },
-  { code: "LuSE", name: "Lusaka Securities Exchange", country: "Zambia", currency: "ZMW", flag: "🇿🇲" },
-  { code: "DSE", name: "Dar es Salaam Stock Exchange", country: "Tanzania", currency: "TZS", flag: "🇹🇿" },
-  { code: "BRVM", name: "Bourse Régionale des Valeurs Mobilières", country: "Côte d'Ivoire & West Africa", currency: "XOF", flag: "🇨🇮" },
 ];
 
 export const DEFAULT_EXCHANGE = "NSE";

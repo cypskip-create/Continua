@@ -161,11 +161,7 @@ export interface BalanceSheet {
 
 export interface CashFlowStatement {
   periodId: string;
-  /** Optional because not every exchange adapter's data source provides a
-   *  cash flow statement (e.g. Mansa's fundamentals endpoint doesn't) —
-   *  undefined means "unavailable from this provider", not "zero". Any
-   *  ratio/screener calculation using this must skip rather than treat
-   *  missing as 0. */
+  /** NSE research data. Coverage depends on the available sources; missing values remain unavailable. */
   operatingCashFlow?: number;
   investingCashFlow?: number;
   financingCashFlow?: number;

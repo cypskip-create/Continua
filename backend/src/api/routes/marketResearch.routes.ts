@@ -43,7 +43,7 @@ marketResearchRoutes.get(
     e.fiscal_quarter AS "fiscalQuarter", e.expected_date AS "expectedDate", e.reported_date AS "reportedDate",
     e.eps_actual AS "epsActual", e.eps_estimate AS "epsEstimate", e.revenue_actual AS "revenueActual", e.revenue_estimate AS "revenueEstimate"
     FROM market.earnings_events e JOIN market.securities s ON s.id=e.security_id JOIN market.companies c ON c.id=s.company_id
-    WHERE s.exchange='NSE' ORDER BY COALESCE(e.reported_date,e.expected_date) DESC NULLS LAST LIMIT 300`);
+    WHERE s.exchange='NSE' AND s.status <> 'delisted' ORDER BY COALESCE(e.reported_date,e.expected_date) DESC NULLS LAST LIMIT 300`);
     res.json({ data: result.rows });
   }),
 );

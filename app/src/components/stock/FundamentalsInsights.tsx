@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ToolHelp } from "@/components/shared/ToolHelp";
 import {
   CartesianGrid,
   Line,
@@ -99,7 +100,7 @@ export function FundamentalsInsights({
     <div className="space-y-0">
       <ValueSignal symbol={symbol} currency={currency}/>
       <section className="border-t border-border/70 py-6 space-y-4">
-        <h3 className="text-lg font-semibold">Return on capital</h3>
+        <div className="flex items-center gap-2"><h3 className="text-lg font-semibold">Return on capital</h3> <ToolHelp tool="Return on capital"/></div>
         <div className="flex gap-1" role="tablist" aria-label="Return metric">
           {(["ROE", "ROA", "ROCE"] as const).map((metric) => (
             <button
@@ -164,7 +165,7 @@ export function FundamentalsInsights({
         )}
       </section>
       <section className="border-t border-border/70 py-6 space-y-4">
-        <h3 className="text-lg font-semibold">Scenario forecast</h3>
+        <div className="flex items-center gap-2"><h3 className="text-lg font-semibold">Scenario forecast</h3> <ToolHelp tool="Scenario forecast"/></div>
         <p className="text-xs text-muted-foreground">
           Illustrative calculation from the latest filed figure, not an analyst
           consensus or a prediction.

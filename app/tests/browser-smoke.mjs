@@ -92,6 +92,8 @@ const handleRoute = async (route) => {
     if(path === '/engine/peers')return json({data:[{symbol:'EQTY',name:'Fixture peer',period:2025,metrics:{revenueGrowth:10,cashConversion:1.2,debtToEquity:.4}}]});
     if(path === '/engine/portfolio/overview'){overviewRequests++;return json({data:{available:true,reason:null,totalValue:500,totalCost:400,unrealized:100,sessionPnl:10,sessionDate:'2026-10-07',holdingCount:1,pricedCount:1,coverage:'1/1',currency:'KES',warnings:[],positions:[],methodology:'Calculated holdings; no OpenAI request.',generatedAt:'2026-10-07'}});}
     if(path === '/engine/portfolio') {premiumPortfolioRequests++;return json({data:{available:true,reason:null,totalValue:500,sessionPnl:10,coverage:'1/1',currency:'KES',warnings:[],historyWarnings:[],positions:[{symbol:'KCB',sector:'Banking',value:500,weight:1,sessionContribution:10,asOf:'2026-10-07'}],sectors:[{sector:'Banking',weight:1}],correlations:{pairs:[],methodology:'Identical dates required.'},performance:{twr:10,moneyWeighted:null,reason:'Fixture dated snapshots.'},dividends:[{symbol:'KCB',trailingIncome:20,upcoming:[]}],flows:engineFlows,methodology:'Covered holdings only.',researchBriefing:{covered:1,requested:1,limit:20,companies:[{symbol:'KCB',weight:1,period:2025,metrics:{},findings:['Fixture cash conversion improved.'],risks:[],qualityWarnings:[],unavailable:[],changes:[]}],news:[],methodology:'Company-specific periods.'}}});}
+    if(path.startsWith('/engine/research-access/'))return denyEngineAccess?json({error:'Subscription required'},403):json({data:{allowed:true}});
+    if(path.startsWith('/engine/basic/'))return json({data:{companyName:'KCB Group',briefing:{facts:['Fixture basic briefing']},estimates:[],coverage:{annualPeriods:2}}});
     if (path.startsWith('/engine/')) {
       engineRequests++;
       assert.ok(route.request().headers()['x-user-token'], 'Engine sends the authenticated session');
@@ -139,7 +141,65 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const artifacts = new URL('../../.qa-artifacts/', import.meta.url);
 await mkdir(artifacts, { recursive: true });
 try {
-  if(process.argv.includes('--engine-only')) {
+  await page.goto('http://127.0.0.1:5188/upgrade');
+  await page.getByRole('button',{name:'Annual · save 17%',exact:true}).click();
+  const plusCard=page.locator('section').filter({has:page.getByRole('heading',{name:'Premium Plus',exact:true})});
+  await plusCard.getByText('Billed KES 9,960 once a year',{exact:true}).waitFor();
+  assert.match(await plusCard.innerText(),/KES 830/);
+  const originalPlan=profile.subscription_plan;
+  profile.subscription_plan='premium';
+  const limitedBefore=engineRequests;
+  try {
+    await page.goto('http://127.0.0.1:5188/engine?symbol=KCB');
+    await page.getByText('Fixture basic briefing',{exact:true}).waitFor();
+    assert.equal(await page.getByRole('navigation',{name:'Engine navigation'}).count(),0);
+    assert.equal(engineRequests,limitedBefore,'Premium cannot load the full Engine bundle');
+    await page.getByRole('button',{name:'Forecast',exact:true}).click();
+    await page.getByText('No verified analyst estimates are available for this company yet.',{exact:true}).waitFor();
+  } finally {profile.subscription_plan=originalPlan;}
+  console.log('PASS KES 830/month annual display and limited Premium Engine');
+  if(process.argv.includes('--follows-only')) {
+    const followedId='66666666-6666-4666-8666-666666666666';
+    const followedProfile={...profile,id:followedId,user_id:followedId,full_name:'Already followed investor'};
+    let releaseFollows;
+    const followsReady=new Promise(resolve=>{releaseFollows=resolve;});
+    let followRequests=0,suggestionRequests=0;
+    await page.route('**/rest/v1/**',async route=>{
+      const url=new URL(route.request().url());
+      const json=body=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(body),headers:{'access-control-allow-origin':'*'}});
+      if(url.pathname.endsWith('/user_follows')) {
+        followRequests++;
+        await followsReady;
+        return json(url.searchParams.has('follower_id')?[{following_id:followedId}]:[]);
+      }
+      if(url.pathname.endsWith('/profiles') && url.searchParams.get('user_id')?.startsWith('neq.')) {
+        suggestionRequests++;
+        return json([followedProfile]);
+      }
+      if(url.pathname.endsWith('/profiles_public') && url.searchParams.get('user_id')?.startsWith('in.')) return json([followedProfile]);
+      return handleRoute(route);
+    });
+    await page.addInitScript(()=>{
+      window.__suggestionFlash=false;
+      new MutationObserver(()=>{
+        if(document.body?.innerText.includes('Suggested for you'))window.__suggestionFlash=true;
+      }).observe(document,{subtree:true,childList:true});
+    });
+    await page.goto('http://127.0.0.1:5188/traders-hub');
+    await page.locator('.bottom-nav').waitFor();
+    await wait(500);
+    assert.ok(followRequests>0,'Following relationships are being resolved');
+    assert.equal(suggestionRequests,0,'Suggestions must not be requested before following resolves');
+    assert.equal(await page.getByText('Suggested for you',{exact:true}).count(),0);
+    releaseFollows();
+    for(let i=0;i<30 && suggestionRequests===0;i++)await wait(100);
+    assert.ok(suggestionRequests>0,'Unfollowed candidates can be checked after relationships resolve');
+    await wait(300);
+    assert.equal(await page.getByText('Suggested for you',{exact:true}).count(),0,'An already-followed candidate is never offered');
+    assert.equal(await page.evaluate(()=>window.__suggestionFlash),false);
+    assert.deepEqual(errors,[]);
+    console.log('PASS delayed following lookup never flashes already-followed suggestions');
+  } else if(process.argv.includes('--engine-only')) {
     await page.goto('http://127.0.0.1:5188/engine?symbol=KCB&tool=Forecast');
     const nav=page.getByRole('navigation',{name:'Engine navigation'});
     const tabs=page.getByRole('tablist',{name:'Engine tools'});
@@ -478,7 +538,22 @@ try {
   assert.equal(fixturePosts[0].image_urls.length,5);
   assert.ok(fixturePosts[0].image_urls.every(url=>url.startsWith('https://')));
   await page.setViewportSize({width:390,height:844});
-  await page.getByRole('button',{name:'Open image 5 of 5'}).waitFor();
+  await page.getByRole('button',{name:'Open image 3 of 5'}).waitFor();
+  assert.equal(await page.getByRole('button',{name:/Open image [45] of 5/}).count(),0);
+  await page.getByRole('button',{name:'Open image 3 of 5'}).click();
+  await page.getByAltText('Post image 3 of 5').waitFor();
+  const gallerySurface=page.getByAltText('Post image 3 of 5').locator('..');
+  await gallerySurface.evaluate(el=>{
+    const touch=(x)=>new Touch({identifier:1,target:el,clientX:x,clientY:300});
+    el.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,touches:[touch(300)],targetTouches:[touch(300)],changedTouches:[touch(300)]}));
+    el.dispatchEvent(new TouchEvent('touchmove',{bubbles:true,touches:[touch(70)],targetTouches:[touch(70)],changedTouches:[touch(70)]}));
+    el.dispatchEvent(new TouchEvent('touchend',{bubbles:true,touches:[],changedTouches:[touch(70)]}));
+  });
+  await page.getByAltText('Post image 4 of 5').waitFor();
+  await page.getByRole('button',{name:'Next image',exact:true}).click();
+  await page.getByAltText('Post image 5 of 5').waitFor();
+  assert.equal(await page.getByRole('button',{name:'Next image',exact:true}).isDisabled(),true);
+  await page.getByRole('button',{name:'Close image gallery'}).click();
   await page.getByRole('button',{name:'Charts',exact:true}).tap();
   await page.getByText('1 votes',{exact:false}).waitFor();
   assert.equal(pollChoice,0);
@@ -643,6 +718,8 @@ try {
   await page.getByRole('combobox',{name:'Engine stock',exact:true}).selectOption('EQTY');
   assert.equal(new URL(page.url()).searchParams.get('tool'),'Ownership','Changing company preserves the selected tool');
   await page.getByRole('combobox',{name:'Engine stock',exact:true}).selectOption('KCB');
+  await page.getByText('Fixture institutional holder',{exact:true}).waitFor();
+  await wait(300);
   const bodyFont = await page.getByText('Fixture institutional holder',{exact:true}).evaluate(el => getComputedStyle(el).fontSize);
   const contextFont = await page.getByLabel('Current research tool',{exact:true}).locator('p').last().evaluate(el => getComputedStyle(el).fontSize);
   assert.equal(bodyFont,contextFont,'Engine explanatory text uses the same reading scale');
@@ -809,7 +886,7 @@ try {
   const beforeFree=engineRequests;
   try {
     await freePage.goto('http://127.0.0.1:5188/engine?symbol=KCB');
-    await freePage.getByText('Engine is included with Premium',{exact:true}).waitFor();
+    await freePage.getByText('Full Engine is included with Premium Plus',{exact:true}).waitFor();
     assert.equal(engineRequests,beforeFree,'Free users never fetch Engine output');
     assert.equal(await freePage.getByRole('tablist',{name:'Engine tools'}).count(),0);
     await freePage.goto('http://127.0.0.1:5188/stock/KCB');

@@ -47,3 +47,12 @@ export async function requireSubscriber(req: Request, res: Response, next: NextF
     next();
   });
 }
+
+/** Full workspace tools are Plus-only; expanded Fundamentals stays available on Premium. */
+export async function requirePremiumPlus(req: Request, res: Response, next: NextFunction) {
+  await requireEngineUser(req, res, error => {
+    if (error) return next(error);
+    if (res.locals.enginePlan !== "premium_plus") return next(new ApiError(403, "Upgrade to Premium Plus to use the full Continua Engine."));
+    next();
+  });
+}

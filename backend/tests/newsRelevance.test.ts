@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { analyzeNewsIssuers, articleEvidenceText } from "../src/services/research/newsRelevance.js";
 const directory = [
   ["KQ", "Kenya Airways PLC"], ["KCB", "KCB Group PLC"], ["ABSA", "Absa Bank Kenya PLC"],
-  ["KPLC", "Kenya Power and Lighting Company PLC"], ["SCOM", "Safaricom PLC"], ["SAFCOM", "Safaricom PLC"],
+  ["KPLC", "Kenya Power and Lighting Company PLC"], ["SCOM", "Safaricom PLC"], ["INVALID", "Safaricom PLC"],
   ["EQTY", "Equity Group Holdings PLC"], ["JUB", "Jubilee Holdings PLC"], ["TOTL", "TotalEnergies Marketing Kenya PLC"],
 ] as const;
 const issuers = directory.map(([symbol, companyName]) => ({securityId: symbol, symbol, companyName}));

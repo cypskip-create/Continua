@@ -1,20 +1,4 @@
-/**
- * Volume Profile: how much volume traded at each price level over a range
- * — the horizontal histogram Moomoo's Technical Engine shows alongside a
- * chart, letting you see where the "real" support/resistance is (high-
- * volume price levels), not just where price happened to close.
- *
- * HONEST LIMITATION: a proper volume profile is built from intraday tick
- * or at least intraday-bar data, distributing each bar's volume across
- * its true price range. No adapter in this system provides intraday bars
- * (Mansa's /history is daily-only — see mansaAdapter.ts). So this is a
- * genuine, coarser approximation: each DAY's volume is distributed evenly
- * across that day's own high-low range, then binned into buckets across
- * the whole requested date range. This gives a directionally correct
- * "where did volume concentrate" picture over weeks/months (which is
- * where volume profile is most useful anyway) but is not a substitute for
- * an intraday profile on a single trading day.
- */
+/** NSE research data. Coverage depends on the available sources; missing values remain unavailable. */
 import { candlesRepository } from "../../storage/repositories/candlesRepository.js";
 import type { ExchangeCode } from "../../config/index.js";
 

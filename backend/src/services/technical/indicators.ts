@@ -1,19 +1,4 @@
-/**
- * Pure, side-effect-free technical indicator math. Every function takes a
- * chronologically-ordered Candle[] (oldest first — matches
- * candlesRepository.getCandles()'s ORDER BY bar_time ASC) and returns one
- * number per input candle (null where there isn't enough history yet for
- * that index, e.g. SMA(20) has no value until the 20th candle).
- *
- * All computed server-side from real ingested OHLCV — Mansa's daily
- * candles for live mode, the seeded mock for NSE mock mode. Nothing here
- * is estimated or invented; an indicator with insufficient history returns
- * null for that point rather than a misleading partial-period average.
- *
- * Shared by: services/technical/indicatorsService.ts (the /indicators
- * endpoint), services/technical/backtestService.ts (strategy signals), and
- * (via the /indicators endpoint) the indicator-alerts Edge Function.
- */
+/** NSE research data. Coverage depends on the available sources; missing values remain unavailable. */
 import type { Candle } from "../../types/market.js";
 
 export type IndicatorSeries = (number | null)[];

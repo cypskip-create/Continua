@@ -52,7 +52,7 @@ export default function Account() {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <h2 className="text-lg font-semibold truncate">{profile?.full_name || user?.email?.split('@')[0] || 'Guest'}</h2>
-              {isPremium && <Badge className="h-4 px-1.5 text-[0.5625rem] brand-active border-0"><Crown className="h-2.5 w-2.5 mr-0.5" />Premium</Badge>}
+              {isPremium && <Badge className="h-4 px-1.5 text-[0.5625rem] brand-active border-0"><Crown className="h-2.5 w-2.5 mr-0.5" />{profile?.subscription_plan === "premium_plus" ? "Premium Plus" : "Premium"}</Badge>}
             </div>
             <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             <button
@@ -80,7 +80,7 @@ export default function Account() {
                 {isPremium ? <Crown className="h-4 w-4" /> : <Sparkles className="h-4 w-4 text-muted-foreground" />}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold">{isPremium ? 'Premium' : 'Free plan'}</p>
+                <p className="text-sm font-semibold">{isPremium ? (profile?.subscription_plan === 'premium_plus' ? 'Premium Plus' : 'Premium') : 'Free plan'}</p>
                 <p className="text-[0.6875rem] text-muted-foreground truncate">
                   {isPremium ? 'Real-time prices, unlimited AI, long-form posts' : 'Upgrade for real-time prices & more'}
                 </p>

@@ -16,17 +16,17 @@ export interface RetryOptions {
 }
 
 // 401/403/404/429 all mean "this call will not succeed no matter how many
-// times you repeat it right now" for a provider like Mansa: 401/403/404 are
+// times you repeat it right now" for a provider like the previous provider: 401/403/404 are
 // permanent auth/entitlement/not-found conditions, and 429 here specifically
-// means "you've used your 100-requests/day allowance" (Mansa's free tier is
+// means "you've used your 100-requests/day allowance" (the provider's free tier is
 // a flat daily cap, not a per-second burst limiter) — so a 300-600ms backoff
 // retry can't fix it either, it just spends 2-3x the quota to arrive at the
 // identical failure, every symbol, every run. Duck-typed on `.status`
-// (rather than importing e.g. MansaApiError) so this stays generic across
+// (rather than importing e.g. a provider error) so this stays generic across
 // every adapter's own error type, present or future.
 //
 // NOTE: this assumes 429 == "quota exhausted for the day", which is true
-// for Mansa's documented free-tier limit. A provider whose 429 instead means
+// for the provider's documented free-tier limit. A provider whose 429 instead means
 // "you're bursting too fast, slow down" would want 429 retried with backoff,
 // not skipped — if withRetry is ever reused for such a provider, split this
 // into a per-provider policy rather than assuming this rule generically.

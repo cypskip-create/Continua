@@ -1,5 +1,5 @@
 // Company reference data lives in data/nseSecurities.ts, verified against
-// Mansa's real /exchanges/NSE/stocks response — names/sectors/aliases below
+// the provider's real /exchanges/NSE/stocks response — names/sectors/aliases below
 // are derived from that file, not hand-duplicated, so they can't drift out
 // of sync. Live price/change/volume/market cap are NOT here — see the note
 // further down on why that data was removed from this file.
@@ -13,7 +13,7 @@
 import { NSE_SECURITIES, LEGACY_TICKER_ALIASES, NSE_TICKER_SET } from "@/data/nseSecurities";
 export { NSE_TICKER_SET };
 
-// Trailing dividend yield (%) — used for portfolio income estimates. Mansa's
+// Trailing dividend yield (%) — used for portfolio income estimates. the provider's
 // stocks endpoint doesn't return this, so only the handful Continua has
 // verified real figures for are listed; everything else correctly falls
 // back to 0 via getDivYield() rather than a fabricated number.
@@ -46,11 +46,7 @@ export const STOCK_NAMES: Record<string, string> = Object.fromEntries(
   Object.entries(STOCK_META).map(([symbol, meta]) => [symbol, meta.name])
 );
 
-/** Resolves a legacy/colloquial spelling (SCOM, DTB, STANBIC...) to its real
- *  Mansa ticker, or returns the input unchanged if it's already canonical (or
- *  unrecognized). Every getter below normalizes through this first — this is
- *  the ONE place that needs to know about legacy spellings, instead of every
- *  data object needing a duplicate entry for each alias. */
+/** NSE research data. Coverage depends on the available sources; missing values remain unavailable. */
 const resolveTicker = (symbol: string): string => {
   const key = symbol?.toUpperCase();
   return (key && ALIAS_OF[key]) || key;

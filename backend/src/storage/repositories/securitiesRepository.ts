@@ -52,7 +52,7 @@ export const securitiesRepository = {
   async getBySymbol(exchange: string, symbol: string): Promise<Security | null> {
     const res = await query<any>(
       `SELECT id, symbol, exchange, company_id as "companyId", currency, status, isin, listed_at as "listedAt"
-       FROM market.securities WHERE exchange = $1 AND symbol = $2`,
+       FROM market.securities WHERE exchange = $1 AND status <> 'delisted' AND symbol = $2`,
       [exchange, symbol]
     );
     return res.rows[0] ?? null;
@@ -65,7 +65,7 @@ export const securitiesRepository = {
     if (symbols.length === 0) return [];
     const res = await query<any>(
       `SELECT id, symbol, exchange, company_id as "companyId", currency, status, isin, listed_at as "listedAt"
-       FROM market.securities WHERE exchange = $1 AND symbol = ANY($2)`,
+       FROM market.securities WHERE exchange = $1 AND status <> 'delisted' AND symbol = ANY($2)`,
       [exchange, symbols.map((s) => s.toUpperCase())]
     );
     return res.rows;
@@ -74,7 +74,7 @@ export const securitiesRepository = {
   async listByExchange(exchange: string): Promise<Security[]> {
     const res = await query<any>(
       `SELECT id, symbol, exchange, company_id as "companyId", currency, status, isin, listed_at as "listedAt"
-       FROM market.securities WHERE exchange = $1 ORDER BY symbol`,
+       FROM market.securities WHERE exchange = $1 AND status <> 'delisted' ORDER BY symbol`,
       [exchange]
     );
     return res.rows;
@@ -88,7 +88,7 @@ export const securitiesRepository = {
        FROM market.securities s
        JOIN market.companies c ON c.id = s.company_id
        LEFT JOIN market.sectors sec ON sec.id = c.sector_id
-       WHERE s.exchange = $1 AND s.symbol = $2`,
+       WHERE s.exchange = $1 AND s.status <> 'delisted' AND s.symbol = $2`,
       [exchange, symbol]
     );
     const row = res.rows[0];
@@ -123,7 +123,7 @@ export const securitiesRepository = {
        FROM market.securities s
        JOIN market.companies c ON c.id = s.company_id
        LEFT JOIN market.sectors sec ON sec.id = c.sector_id
-       WHERE s.exchange = $1
+       WHERE s.exchange = $1 AND s.status <> 'delisted'
        ORDER BY s.symbol`,
       [exchange]
     );

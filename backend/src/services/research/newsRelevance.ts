@@ -39,8 +39,9 @@ export function analyzeNewsIssuers(headline: string, raw: string, directory: New
   const matches: IssuerEvidence[] = [];
   for (const issuer of directory) {
     const symbol = issuer.symbol.toUpperCase();
-    if (symbol === "SAFCOM" && directory.some(i => i.symbol === "SCOM")) continue;
-    const canonical = symbol === "SAFCOM" ? "SCOM" : symbol;
+    // Safaricom has one canonical NSE ticker. Ignore erroneous directory rows.
+    if (/^safaricom\b/i.test(issuer.companyName) && symbol !== "SCOM") continue;
+    const canonical = symbol;
     // Market-wide exchange reporting is not automatically issuer news for
     // the listed exchange operator. Require its own corporate development.
     if (canonical === "NSE" && !/\b(?:NSE|Nairobi Securities Exchange)(?:\s+PLC)?\s+(?:reports?|posts?|announces?|declares?)\b.*\b(?:profit|earnings|revenue|dividend|results)\b/i.test(headline + " " + body)) continue;
