@@ -46,3 +46,11 @@ test('back navigation uses replacement fallback for direct visits and app histor
     else Reflect.deleteProperty(globalThis, 'window');
   }
 });
+
+test('account privacy does not claim a failed save succeeded or promise unlimited AI', () => {
+  const source = readFileSync(new URL('../src/pages/Account.tsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /unlimited AI/);
+  assert.match(source, /disabled=\{savingPrivacy\}/);
+  assert.match(source, /if \(result.error\) \{[\s\S]*?return;[\s\S]*?setPortfolioPublic\(checked\)/);
+  assert.ok(source.indexOf('await updateProfile({ portfolio_public: checked })') < source.indexOf('setPortfolioPublic(checked)'));
+});

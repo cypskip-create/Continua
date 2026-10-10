@@ -20,6 +20,7 @@ export default function Account() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [portfolioPublic, setPortfolioPublic] = useState(true);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
 
   useEffect(() => {
     const pp = profile?.portfolio_public;
@@ -82,7 +83,7 @@ export default function Account() {
               <div className="min-w-0">
                 <p className="text-sm font-semibold">{isPremium ? (profile?.subscription_plan === 'premium_plus' ? 'Premium Plus' : 'Premium') : 'Free plan'}</p>
                 <p className="text-[0.6875rem] text-muted-foreground truncate">
-                  {isPremium ? 'Real-time prices, unlimited AI, long-form posts' : 'Upgrade for real-time prices & more'}
+                  {profile?.subscription_plan === 'premium_plus' ? 'Full Engine, expanded research and workspace tools' : isPremium ? 'Expanded research, company Engine and long-form posts' : 'Upgrade for expanded research and Engine tools'}
                 </p>
               </div>
             </div>
@@ -120,10 +121,19 @@ export default function Account() {
                 <p className="text-[0.6875rem] text-muted-foreground">{portfolioPublic ? "Public — visible on your profile" : "Private — only you"}</p>
               </div>
             </div>
-            <Switch checked={portfolioPublic} onCheckedChange={async (checked) => {
-              setPortfolioPublic(checked);
-              await updateProfile({ portfolio_public: checked });
-              toast({ title: checked ? "Portfolio public" : "Portfolio private" });
+            <Switch checked={portfolioPublic} disabled={savingPrivacy} onCheckedChange={async (checked) => {
+              setSavingPrivacy(true);
+              try {
+                const result = await updateProfile({ portfolio_public: checked });
+                if (result.error) {
+                  toast({ title: "Privacy setting not saved", description: "Your portfolio visibility has not changed. Please try again.", variant: "destructive" });
+                  return;
+                }
+                setPortfolioPublic(checked);
+                toast({ title: checked ? "Portfolio public" : "Portfolio private" });
+              } finally {
+                setSavingPrivacy(false);
+              }
             }} />
           </div>
         </section>

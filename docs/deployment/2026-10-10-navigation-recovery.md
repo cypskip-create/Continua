@@ -13,7 +13,12 @@ public user-profile screen. Reproduced the production 404 at `/profile`.
   Home opens the website and signed-in Home opens the app as intended.
 - Unknown routes still render 404; this does not hide genuine missing pages.
 
-Verification: 62 frontend tests passed, frontend build and TypeScript checks
+The account smoke check also found a privacy toggle reporting success even when
+its database save failed. It now waits for a successful save, reports failure
+without changing displayed visibility, and blocks duplicate toggles while saving.
+Removed the stale "unlimited AI" membership claim from the same screen.
+
+Verification: 63 frontend tests passed, frontend build and TypeScript checks
 passed; 215 backend tests passed, six database integration tests skipped.
 The first sandboxed backend run could not create temporary test files; rerunning
 outside the sandbox passed. Production ledger read confirmed a recent paid
