@@ -37,7 +37,7 @@ export const researchService = {
       corporateActionsRepository.getDividendsBySecurity(securityId),
     ]);
     if (!latest) return null;
-    const prior = history.length >= 2 ? history[0] : null;
+    const prior = history.find(period => period.fiscalYear === latest.fiscalYear - 1) ?? null;
     const priceHistory90d = candles.map(c => c.close);
     const ttmDividend = trailingDividendPerShare(dividends, to);
 

@@ -45,7 +45,8 @@ export function PastPerformanceSection({ symbol, currency }: Props) {
     [quarterlyHistory],
   );
 
-  const [mostRecent, prior] = [...history].sort((a, b) => b.fiscalYear - a.fiscalYear);
+  const [mostRecent] = [...history].sort((a, b) => b.fiscalYear - a.fiscalYear);
+  const prior = mostRecent ? history.find(period => period.fiscalYear === mostRecent.fiscalYear - 1) : undefined;
   const earningsGrowth1y = mostRecent && prior ? pctChange(mostRecent.netIncome, prior.netIncome) : null;
 
   const sankeyData = latest ? {
