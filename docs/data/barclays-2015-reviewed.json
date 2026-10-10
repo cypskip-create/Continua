@@ -1,0 +1,31 @@
+{
+  "artifactId":5389,
+  "sha256":"09ece05e1fafbb461382a7c621dc6f438a29f9ab289f7a919afacfaa60a55e95",
+  "documentUrl":"https://www.nse.co.ke/wp-content/uploads/barclays-bank-of-kenya-ltd-audited-results-for-the-period-ended-31st-december-2015.pdf",
+  "identitySourceUrl":"https://www.absabank.co.ke/investor-relations/",
+  "entries":[
+    {
+      "tableIndex":0,
+      "table":{"title":"Statement of comprehensive income","headerLine":"Bank 2014, Bank 2015, Group 2014, Group 2015; Shs '000 except EPS (Shs)","rows":[
+        {"label":"Total operating income","values":["28288488","29461760","28288488","29461760"]},
+        {"label":"Profit after tax and exceptional items","values":["8387346","8403582","8387346","8403582"]},
+        {"label":"Earnings per share (Shs)","values":["1.54","1.55","1.54","1.55"]}
+      ]},
+      "confirmation":{"securityId":"NSE:ABSA","statementType":"income","unitsVerified":true,"periods":[
+        {"columnIndex":2,"period":{"periodType":"annual","fiscalYear":2014,"periodEnd":"2014-12-31","reportedAt":"2016-03-04","currency":"KES"},"income":{"revenue":28288488000,"netIncome":8387346000,"eps":1.54},"sourcePage":1,"note":"Visually verified GROUP comparative column, not BANK. Monetary amounts in Shs '000 multiplied by 1,000; EPS remains Shs per share. Revenue is reported total operating income (banking basis). Source approved 4 March 2016. Absa confirms the historical Barclays identity on its official investor-relations page."},
+        {"columnIndex":3,"period":{"periodType":"annual","fiscalYear":2015,"periodEnd":"2015-12-31","reportedAt":"2016-03-04","currency":"KES"},"income":{"revenue":29461760000,"netIncome":8403582000,"eps":1.55},"sourcePage":1,"note":"Visually verified GROUP 2015 column. Shs '000 amounts multiplied by 1,000; EPS remains Shs per share. Total operating income is net interest income plus non-interest income, not gross interest income. Source approved 4 March 2016. Barclays Bank of Kenya is the historical name of Absa Bank Kenya, verified against the official issuer archive."}
+      ]}
+    },
+    {
+      "tableIndex":1,
+      "table":{"title":"Statement of financial position","headerLine":"Bank 2014, Bank 2015, Group 2014, Group 2015; Shs '000. Only Group 2015 transcribed; blank cells are not zero.","rows":[
+        {"label":"Total assets","values":["","","","240877020"]},
+        {"label":"Total liabilities","values":["","","","201160649"]},
+        {"label":"Total shareholders' fund","values":["","","","39716371"]}
+      ]},
+      "confirmation":{"securityId":"NSE:ABSA","statementType":"balance","unitsVerified":true,"periods":[
+        {"columnIndex":3,"period":{"periodType":"annual","fiscalYear":2015,"periodEnd":"2015-12-31","reportedAt":"2016-03-04","currency":"KES"},"balance":{"totalAssets":240877020000,"totalLiabilities":201160649000,"totalEquity":39716371000},"sourcePage":1,"note":"Visually verified GROUP 2015 column, not BANK. Shs '000 multiplied by 1,000. Assets equal liabilities plus shareholders' funds exactly. Comparative balance figures remain untranscribed because the scan needs further checking. Source approved 4 March 2016; historical Barclays identity verified at Absa's official investor-relations archive."}
+      ]}
+    }
+  ]
+}

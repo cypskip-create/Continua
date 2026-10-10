@@ -37,6 +37,7 @@ import { marketQuoteSummary } from "@/lib/marketQuoteSummary";
 import { TrendResearch } from "@/components/markets/TrendResearch";
 import { InstrumentHistory } from "@/components/markets/InstrumentHistory";
 import { MarketStatisticsHistory } from "@/components/markets/MarketStatisticsHistory";
+import { BondHistory } from "@/components/markets/BondHistory";
 import "./markets.css";
 
 const sections = [
@@ -1295,6 +1296,7 @@ function Bonds({
         Different auction dates are not a same-day secondary-market yield curve.
         Check each observation's source date before comparing.
       </p>
+      <BondHistory records={records}/>
     </section>
   );
 }

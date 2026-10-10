@@ -23,10 +23,10 @@ export function ResearchChart({
   lines: { key: string; label: string; color: string; dashed?: boolean }[];
   band?: boolean;
 }) {
-  if (data.length < 2)
+  if (data.length === 0)
     return (
       <p className="py-4 text-sm text-muted-foreground">
-        At least two dated observations are needed to draw this chart.
+        No verified observations are available for this chart yet.
       </p>
     );
   const Chart = band ? ComposedChart : LineChart;
@@ -78,7 +78,7 @@ export function ResearchChart({
               name={line.label}
               stroke={line.color}
               strokeWidth={2}
-              dot={false}
+              dot={data.length === 1 ? { r: 4 } : false}
               strokeDasharray={line.dashed ? "4 4" : undefined}
               isAnimationActive={false}
               connectNulls={false}
@@ -87,6 +87,7 @@ export function ResearchChart({
           {band && <ReferenceLine y={100} stroke="hsl(var(--border))" />}
         </Chart>
       </ResponsiveContainer>
+      {data.length === 1 && <p className="text-xs text-muted-foreground text-center mb-3">One reported observation; not enough history to establish a trend.</p>}
       <div className="flex flex-wrap gap-4 text-xs justify-center">
         {lines.map((line) => (
           <span key={line.key}>

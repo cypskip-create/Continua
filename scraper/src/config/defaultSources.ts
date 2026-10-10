@@ -52,6 +52,7 @@ export const DEFAULT_SOURCES: SourceDefinition[] = [
     { id: "safaricom-filings", name: "Safaricom PLC", domain: "safaricom.co.ke", seeds: ["https://www.safaricom.co.ke/investor-relations-landing/reports/financial-report/financial-results"], paths: ["/investor-relations", "/annualreport", "/images/downloads/"] },
     { id: "kcb-filings", name: "KCB Group PLC", domain: "kcbgroup.com", seeds: ["https://kcbgroup.com/investor-relations/", "https://kcbgroup.com/financial-statements"], paths: ["/investor", "/financial", "/annual", ".pdf"] },
     { id: "equity-filings", name: "Equity Group Holdings PLC", domain: "equitygroupholdings.com", seeds: ["https://equitygroupholdings.com/investor-relation/?cat=financial-results"], paths: ["/investor", "/wp-content/uploads/", "financial-results", "annual-report"] },
+    { id: "absa-filings", name: "Absa Bank Kenya PLC", domain: "absabank.co.ke", seeds: ["https://www.absabank.co.ke/investor-relations/"], paths: ["/investor-relations", "/content/dam/", ".pdf"] },
   ].map((issuer, index): SourceDefinition => ({
     id: issuer.id, name: `${issuer.name} historical filings`, adapter: "web", enabled: true,
     config: {
