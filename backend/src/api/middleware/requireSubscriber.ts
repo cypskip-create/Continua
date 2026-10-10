@@ -21,7 +21,7 @@ export async function requireEngineUser(req: Request, res: Response, next: NextF
     const user = await response.json() as { id?: string; email?: string };
     if (!user.id || !/^[0-9a-f-]{36}$/i.test(user.id)) throw new ApiError(401, "Invalid user session");
     const profile = await query<{ subscription_plan: string }>(
-      "SELECT subscription_plan FROM public.profiles WHERE user_id = $1", [user.id],
+      "SELECT public.effective_subscription_plan($1) AS subscription_plan", [user.id],
     );
     res.locals ??= {};
     res.locals.engineUserId = user.id;

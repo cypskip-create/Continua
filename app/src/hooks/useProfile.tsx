@@ -20,6 +20,7 @@ export interface Profile {
   followers_count: number | null;
   following_count: number | null;
   subscription_plan: string;
+  subscription_expires_at?: string | null;
   tradershub_onboarded: boolean;
   interests: string[] | null;
   trading_experience: string | null;
@@ -60,14 +61,15 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, user_id, full_name, avatar_url, banner_url, bio, handle, portfolio_public, portfolio_hide_amounts, portfolio_hide_gains, portfolio_top_holdings_only, portfolio_followers_only, followers_count, following_count, subscription_plan, tradershub_onboarded, interests, trading_experience, created_at, updated_at')
+        .select('id, user_id, full_name, avatar_url, banner_url, bio, handle, portfolio_public, portfolio_hide_amounts, portfolio_hide_gains, portfolio_top_holdings_only, portfolio_followers_only, followers_count, following_count, subscription_plan, subscription_expires_at, tradershub_onboarded, interests, trading_experience, created_at, updated_at')
         .eq('user_id', user.id)
         .single();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching profile:', error);
       } else {
-        setProfile(data as Profile);
+        const next = data as unknown as Profile;
+        setProfile(next?.subscription_expires_at && Date.parse(next.subscription_expires_at)<=Date.now() ? {...next,subscription_plan:'free'} : next);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -86,7 +88,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         .from('profiles')
         .update(updates as any)
         .eq('user_id', user.id)
-        .select('id, user_id, full_name, avatar_url, banner_url, bio, handle, portfolio_public, portfolio_hide_amounts, portfolio_hide_gains, portfolio_top_holdings_only, portfolio_followers_only, followers_count, following_count, subscription_plan, tradershub_onboarded, interests, trading_experience, created_at, updated_at')
+        .select('id, user_id, full_name, avatar_url, banner_url, bio, handle, portfolio_public, portfolio_hide_amounts, portfolio_hide_gains, portfolio_top_holdings_only, portfolio_followers_only, followers_count, following_count, subscription_plan, subscription_expires_at, tradershub_onboarded, interests, trading_experience, created_at, updated_at')
         .single();
 
       if (error) {
@@ -94,8 +96,9 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
-      setProfile(data as Profile);
-      return { data: data as Profile };
+      const next = data as unknown as Profile;
+      setProfile(next?.subscription_expires_at && Date.parse(next.subscription_expires_at)<=Date.now() ? {...next,subscription_plan:'free'} : next);
+      return { data: next };
     } catch (error) {
       console.error('Error updating profile:', error);
       return { error };

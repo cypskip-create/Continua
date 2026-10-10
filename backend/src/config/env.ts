@@ -24,6 +24,7 @@ export function booleanEnv(defaultValue: boolean) {
 const EnvSchema = z.object({
   PAYSTACK_SECRET_KEY: z.string().optional(),
   PAYSTACK_TEST_CHECKOUT_ENABLED: booleanEnv(false),
+  PAYSTACK_LIVE_CHECKOUT_ENABLED: booleanEnv(false),
   PAYSTACK_CALLBACK_URL: z.string().url().optional(),
   OPENAI_API_KEY: z.string().optional(),
   ENGINE_AI_MONTHLY_BUDGET_USD: z.coerce.number().min(0).max(1000).default(5),

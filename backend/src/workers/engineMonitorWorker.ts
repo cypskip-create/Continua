@@ -9,7 +9,7 @@ export async function runEngineMonitoringOnce(userId:string|null=null,symbol:str
   const rules=(await query<MonitorRule&{id:string;user_id:string;symbol:string;exchange:ExchangeCode;notify_enabled:boolean}>(`SELECT r.*,COALESCE((pref.settings->>'notifications')::boolean,true) AS notify_enabled FROM market.engine_monitor_rules r
     JOIN public.profiles p ON p.user_id=r.user_id
     LEFT JOIN public.engine_preferences pref ON pref.user_id=r.user_id
-    WHERE r.enabled AND p.subscription_plan = 'premium_plus'
+    WHERE r.enabled AND public.effective_subscription_plan(p.user_id) = 'premium_plus'
     AND ($1::text IS NULL OR r.user_id::text=$1) AND ($2::text IS NULL OR r.symbol=$2) AND ($3::text IS NULL OR r.exchange=$3)
     ORDER BY r.created_at LIMIT 500`,[userId,symbol,exchange])).rows;
   for(const rule of rules){try{
