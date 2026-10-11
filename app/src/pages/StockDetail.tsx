@@ -20,9 +20,8 @@ import { PriceAlertsManager } from "@/components/alerts/PriceAlertsManager";
 import { StockAlertDialog } from "@/components/alerts/StockAlertDialog";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { AddInvestmentDialog } from "@/components/portfolio/AddInvestmentDialog";
-import { ContinuaScoreCard, computeScores } from "@/components/stock/ContinuaScore";
-import { AIThesisCard } from "@/components/stock/AIThesisCard";
-import { STOCK_META, DIV_YIELD, getStockFundamentals } from "@/lib/stockPrices";
+import { ContinuaScoreCard } from "@/components/stock/ContinuaScore";
+import { STOCK_META } from "@/lib/stockPrices";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NewsEventsTab } from "@/components/stock/tabs/NewsEventsTab";
 import { CommunityTab } from "@/components/stock/tabs/CommunityTab";
@@ -33,6 +32,7 @@ import { formatTimestamp } from "@/lib/formatTimestamp";
 import { useLiveQuote } from "@/hooks/useLiveQuotes";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { useResearch } from "@/hooks/useResearch";
+import { useStockFinancials } from "@/hooks/useStockFinancials";
 import { useHistoricalCandles } from "@/hooks/useHistoricalCandles";
 import { useDividendHistory } from "@/hooks/useDividendHistory";
 import { useCorporateActions } from "@/hooks/useCorporateActions";
@@ -41,10 +41,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import type { ContinuaScores } from "@/components/stock/ContinuaScore";
 
 
-// Price, change, sector, and key stats all come from the shared stockPrices.ts source
-// (the same one Markets, the Screener, Compare, and AllStocksList read from) so this page
-// can never show a different number than the list the person tapped through from — and
-// every NSE symbol in STOCK_META gets real stats here instead of falling back to "N/A".
+// Static metadata identifies the issuer; quotes and financial statistics come
+// from the Engine. Missing source coverage is never a demonstration estimate.
 
 const companyInfo: Record<string, { description: string; headquarters: string; ceo: string; employees: string; founded: string }> = {
   SCOM: { description: "Safaricom PLC is Kenya's largest mobile network operator, best known for M-Pesa mobile money, voice, data and fibre.", headquarters: "Nairobi, Kenya", ceo: "Peter Ndegwa", employees: "6,500+", founded: "1997" },
@@ -113,12 +111,12 @@ export default function StockDetail() {
 
   // Live Continua Data Layer quote for this symbol, when it's in the
   // Data Layer's current universe (see docs/api/API.md /instruments) —
-  // overlaid onto the static reference stats below so this page shows the
-  // same live price as Watchlist/Markets, and falls back gracefully
+  // so this page shows the same live price as Watchlist/Markets, and fails gracefully
   // (rather than erroring) for a symbol the backend doesn't cover yet.
   const { quote: liveQuote } = useLiveQuote(upperSymbol || undefined);
   const { profile: liveProfile } = useCompanyProfile(upperSymbol || undefined);
   const { research: liveResearch } = useResearch(upperSymbol || undefined);
+  const { latest: reportedFinancials } = useStockFinancials(upperSymbol || undefined);
   const { actions: corporateActions, isLoading: actionsLoading } = useCorporateActions(upperSymbol || undefined);
   const [infoSheet, setInfoSheet] = useState<{ title: string; body: React.ReactNode } | null>(null);
   // Indicator choices are a chart preference, not a per-stock one — they're loaded
@@ -132,7 +130,6 @@ export default function StockDetail() {
   const [indicatorsSheetOpen, setIndicatorsSheetOpen] = useState(false);
 
   const stock = stockMeta ? (() => {
-    const f = getStockFundamentals(upperSymbol);
     // price/change/pct come ONLY from the live quote — 0 here is a neutral
     // loading placeholder for internal math (chart scrubbing etc.), never
     // shown directly: every JSX spot that renders these renders a loading
@@ -140,15 +137,19 @@ export default function StockDetail() {
     const price = liveQuote?.lastPrice ?? 0;
     const change = liveQuote?.change ?? 0;
     const pct = liveQuote?.changePercent ?? 0;
-    const dividend = +(price * ((DIV_YIELD[upperSymbol] ?? 0) / 100)).toFixed(2);
-    const eps = f.pe > 0 ? +(price / f.pe).toFixed(2) : 0;
+    // Financial statistics share the reviewed Engine inputs. Never reverse-
+    // engineer EPS or a 52-week range from static demonstration multiples.
+    const eps = reportedFinancials?.eps;
+    const pe = eps != null && eps > 0 && price > 0 ? price / eps : null;
+    const dividend = liveResearch?.ratios.dividendYield != null && price > 0
+      ? price * liveResearch.ratios.dividendYield : null;
     return {
       name: stockMeta.name, price, change, changePercent: pct.toFixed(2), isUp: change >= 0,
       marketCap: liveQuote?.marketCap ? String(liveQuote.marketCap) : null,
-      pe: f.pe.toFixed(1), eps: eps.toFixed(2), dividend: dividend.toFixed(2),
-      high52: (price * 1.12).toFixed(2), low52: (price * 0.85).toFixed(2),
+      pe: pe?.toFixed(2) ?? "—", eps: eps?.toFixed(2) ?? "—", dividend: dividend?.toFixed(2) ?? "—",
+      high52: "—", low52: "—",
       exchange: "NSE", sector: stockMeta.sector,
-      volume: liveQuote?.volume ?? null, beta: f.beta.toFixed(2), avgVolume: f.avgVolume,
+      volume: liveQuote?.volume ?? null, beta: "—", avgVolume: "—",
       isLive: !!liveQuote,
     };
   })() : {
@@ -222,7 +223,7 @@ export default function StockDetail() {
   // (e.g. 0.0493), not a percentage — see backend/src/services/research/ratiosEngine.ts.
   const divYield = liveResearch?.ratios.dividendYield != null
     ? (liveResearch.ratios.dividendYield * 100).toFixed(1)
-    : stock.pe !== "N/A" ? ((parseFloat(stock.dividend) / stock.price) * 100).toFixed(1) : "0.0";
+    : null;
 
   // Gain/loss for the whole selected timeframe — first vs. last point of that period's
   // series. This is the same series the chart itself renders, so the header numbers and
@@ -312,17 +313,10 @@ export default function StockDetail() {
   const dayChangeNum = Number(stock.changePercent);
   const dayChangeIsUp = dayChangeNum >= 0;
 
-  const scoreInputs = {
-    price: stock.price, pe: stock.pe, eps: stock.eps, dividend: stock.dividend,
-    changePercent: stock.changePercent, beta: stock.beta,
-    high52: stock.high52, low52: stock.low52, marketCap: stock.marketCap,
-  };
   // Prefer the Data Layer's own AfriScore calculation
   // (backend/src/services/research/afriScoreService.ts) when this symbol is
-  // covered; otherwise fall back to the client-side heuristic estimate so
-  // the card still renders something for symbols outside the current
-  // backend universe.
-  const scores: ContinuaScores = liveResearch
+  // covered. A missing Engine response does not become a heuristic score.
+  const scores: ContinuaScores | null = liveResearch
     ? {
         value: liveResearch.score.afriValue,
         growth: liveResearch.score.afriGrowth,
@@ -332,7 +326,7 @@ export default function StockDetail() {
         position: liveResearch.score.afriMomentum,
         overall: liveResearch.score.afriScore,
       }
-    : computeScores(scoreInputs);
+    : null;
   // "Recent News" preview + NewsEventsTab both use real scraped news for
   // this symbol now — see useSecurityNews.ts. Opens externally since only
   // an excerpt is stored, not the full article body (see NewsItem type).
@@ -777,10 +771,10 @@ export default function StockDetail() {
               {([
                 ["Market Cap", stock.marketCap],
                 ["P/E Ratio", stock.pe],
-                ["EPS", stock.isLive ? `KES ${stock.eps}` : null],
-                ["Dividend Yield", stock.isLive ? `${divYield}%` : null],
-                ["52W High", stock.isLive ? `KES ${stock.high52}` : null],
-                ["52W Low", stock.isLive ? `KES ${stock.low52}` : null],
+                ["EPS", stock.eps !== "—" && stock.eps !== "N/A" ? `KES ${stock.eps}` : "—"],
+                ["Dividend Yield", divYield != null ? `${divYield}%` : "—"],
+                ["52W High", "—"],
+                ["52W Low", "—"],
                 ["Volume", stock.volume != null ? stock.volume.toLocaleString() : null],
                 ["Beta", stock.beta || "—"],
               ] as [string, string | number | null][]).map(([k, v]) => (
@@ -796,16 +790,9 @@ export default function StockDetail() {
             </div>
           </div>
 
-          <AIThesisCard
-            symbol={symbol || ""} name={stock.name} sector={stock.sector}
-            price={stock.price} changePercent={stock.changePercent}
-            pe={stock.pe} eps={stock.eps} dividend={stock.dividend}
-            marketCap={stock.marketCap ?? "—"} scores={scores}
-          />
-
           <div>
             <Eyebrow>Investment Health Score</Eyebrow>
-            <ContinuaScoreCard scores={scores} />
+            {scores ? <ContinuaScoreCard scores={scores} /> : <p className="text-sm text-muted-foreground">Engine research is not available yet. No placeholder score is shown.</p>}
           </div>
 
           {stockNews.length > 0 && (

@@ -12,6 +12,7 @@
 - Missing EPS/CFO are permitted as null, not fabricated zero. Partial source-backed income/cash-flow history remains usable.
 - Financial history returns reviewed source URLs; the app and Engine report coverage and gaps. Publication refreshes shared ratios, score and Engine caches.
 - Earnings actuals and reporting dates use the same reviewed statements rather than a stale calendar snapshot. Missing reviewed EPS remains unknown; future reported events are not shown as completed results.
+- Stock Overview no longer derives EPS, P/E, 52-week bounds or beta from static demonstration assumptions. EPS/P/E use the filed result/current quote, unknown range/beta stay unavailable, and scores come from Engine only. The unconfigured stock AI thesis call is removed.
 
 ## Verified production publication
 
