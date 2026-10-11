@@ -9,8 +9,11 @@ import { pricesRepository } from '../../storage/repositories/pricesRepository.js
 import { researchService } from '../../services/research/researchService.js';
 import { cache, CacheKeys } from '../../storage/cache.js';
 import { validateSafaricomPressReport, SAFARICOM_PRESS_VERSION } from '../normalizers/safaricomPressReport.js';
+import {validateKakuziGroupReport,KAKUZI_GROUP_VERSION} from '../normalizers/kakuziGroupReport.js';
+import {validateKcbGroupReport,KCB_GROUP_VERSION} from '../normalizers/kcbGroupReport.js';
+import {validateKakuziHtmlRecord,KAKUZI_HTML_VERSION} from '../normalizers/kakuziHtmlRecord.js';
 
-export const DOCUMENT_VALIDATOR_VERSION=`${NATIVE_ANNUAL_VERSION}:${CONDENSED_GROUP_VERSION}:${SAFARICOM_PRESS_VERSION}:canonical-nse-v3:cbk-reopened-v1`;
+export const DOCUMENT_VALIDATOR_VERSION=`${NATIVE_ANNUAL_VERSION}:${CONDENSED_GROUP_VERSION}:${SAFARICOM_PRESS_VERSION}:${KAKUZI_GROUP_VERSION}:${KCB_GROUP_VERSION}:${KAKUZI_HTML_VERSION}:canonical-nse-v4:cbk-reopened-v1`;
 let active:Promise<unknown>|undefined;
 /** Bounded, versioned, automatic publication after deterministic validation.
  * OCR, unknown layouts and canonical conflicts retain their review state.
@@ -22,9 +25,9 @@ export function runAutomaticDocumentPublication(limit=25,extractionIds?:number[]
   return active;
 }
 async function run(limit:number,extractionIds?:number[]) {
-  const pending=await query(`SELECT e.id,e.artifact_id,e.method,e.text,e.extracted_at,a.sha256,a.document_url,a.source_id,
+  const pending=await query(`SELECT e.id,e.artifact_id,e.method,e.text,e.tables,e.extracted_at,a.retrieved_at,a.sha256,a.document_url,a.source_id,
     a.title,s.config FROM scraping.extractions e JOIN scraping.raw_artifacts a ON a.id=e.artifact_id
-    JOIN scraping.sources s ON s.id=a.source_id WHERE s.enabled AND a.content_type LIKE '%application/pdf%'
+    JOIN scraping.sources s ON s.id=a.source_id WHERE s.enabled AND (a.content_type LIKE '%application/pdf%' OR (a.source_id='kakuzi-record-filings' AND a.content_type LIKE '%text/html%'))
     AND a.sha256 ~ '^[a-f0-9]{64}$' AND e.text IS NOT NULL
     AND (a.source_id='nse' OR a.source_id='cbk-bond-history' OR a.source_id LIKE '%-filings')
     AND ($3::bigint[] IS NULL OR e.id=ANY($3))
@@ -34,6 +37,7 @@ async function run(limit:number,extractionIds?:number[]) {
   const changed=new Map<string,string>();
   for(const row of pending.rows) {
     try {
+      let committedIssuer:{id:string;symbol:string}|undefined;
       await withTransaction(async db=>{
         const lock=await db.query("SELECT pg_try_advisory_xact_lock(hashtextextended('document-validation:' || $1::text,0)) AS locked",[row.id]);
         if(!lock.rows[0]?.locked)return;
@@ -41,10 +45,12 @@ async function run(limit:number,extractionIds?:number[]) {
         let outcome:'published'|'review'='review',reason='Unsupported extraction',result:unknown={};
         await db.query('SAVEPOINT canonical_publication');
         try {
-          if(row.method!=='native_pdf_text')throw new Error('OCR or non-native extraction requires visual review');
+          const isKakuziHtml=row.method==='html'&&row.source_id==='kakuzi-record-filings';
+          if(row.method!=='native_pdf_text'&&!isKakuziHtml)throw new Error('OCR or unknown non-native extraction requires visual review');
           const url=new URL(row.document_url);
           if(url.protocol!=='https:' || url.username || url.password)throw new Error('Official HTTPS provenance required');
           const host=url.hostname.replace(/^www\./,'');
+          if(isKakuziHtml&&(host!=='kakuzi.co.ke'||url.pathname!=='/five-year-record'||url.search||url.hash))throw new Error('Exact registered Kakuzi record URL required');
           if(row.source_id==='cbk-bond-history') {
             if(!/^RESULTS FOR REOPENED\b/i.test(row.text.trim()) || !/Director,?\s+Financial Markets/i.test(row.text))throw new Error('Unsupported CBK signed-results layout');
             const records=draftCbkBondReport(row.text,row.document_url);
@@ -64,12 +70,14 @@ async function run(limit:number,extractionIds?:number[]) {
             const normalize=(value:string)=>value.toLowerCase().replace(/[^a-z0-9]/g,'');
             const header=normalize(row.text.slice(0,4000));
             const explicitSafaricom=/^\s*SAFARICOM\s+PLC\s+CONDENSED AUDITED RESULTS FOR THE\s*$/im.test(row.text) || /SAFARICOM LIMITED ANNOUNCES AUDITED RESULTS FOR THE YEAR ENDED 31 MARCH 2016/i.test(row.text);
+            const explicitKakuzi=/^\s*KAKUZI PLC\s*$/im.test(row.text)&&/ANNOUNCEMENT OF GROUP RESULTS FOR THE YEAR ENDED\s+31 DECEMBER 2017/i.test(row.text);
+            const explicitKcb=/KCB GROUP PLC AUDITED RESULTS AND OTHER DISCLOSURES/.test(row.text)&&/FOR THE YEAR ENDED 31ST DECEMBER 2017/.test(row.text);
             // A verified statement masthead takes precedence over incidental
             // issuer names in commentary or shareholder disclosures.
-            const matches=names.filter(c=>explicitSafaricom ? c.id==='NSE:SCOM' : header.includes(normalize(c.name)));
+            const matches=names.filter(c=>isKakuziHtml ? c.id==='NSE:KUKZ' : explicitSafaricom ? c.id==='NSE:SCOM' : explicitKakuzi ? normalize(c.name)==='kakuziplc' : explicitKcb ? c.id==='NSE:KCB' : header.includes(normalize(c.name)));
             if(matches.length!==1)throw new Error('Unique exact issuer identity required');
             const issuer=matches[0]!;
-            const entries=issuer.id==='NSE:SCOM' && /CONDENSED AUDITED RESULTS FOR THE/.test(row.text)
+            const entries=isKakuziHtml ? validateKakuziHtmlRecord(row.text,row.tables,issuer.id,new Date(row.extracted_at).toISOString().slice(0,10)) : explicitKcb ? validateKcbGroupReport(row.text,issuer.id) : explicitKakuzi ? validateKakuziGroupReport(row.text,issuer.id) : issuer.id==='NSE:SCOM' && /CONDENSED AUDITED RESULTS FOR THE/.test(row.text)
               ? validateCondensedGroupReport(row.text,issuer.name,issuer.id)
               : issuer.id==='NSE:SCOM' && /SAFARICOM LIMITED ANNOUNCES AUDITED RESULTS FOR THE YEAR ENDED 31 MARCH 2016/i.test(row.text)
                 ? validateSafaricomPressReport(row.text,new Date(row.extracted_at).toISOString().slice(0,10))
@@ -85,12 +93,13 @@ async function run(limit:number,extractionIds?:number[]) {
                 detectedTable:entry.table,detectionConfidence:1,scrapedArtifactId:row.artifact_id,scrapedExtractionId:row.id});
               const candidate=(await db.query('SELECT id::text FROM market.financial_statement_candidates WHERE scraped_extraction_id=$1 AND table_index=$2',[row.id,tableIndex])).rows[0];
               await confirmHistoricalColumns(candidate.id,entry.confirmation,db);ids.push(candidate.id);
-              changed.set(issuer.id,issuer.id.slice(4));
             }
             result={candidateIds:ids};
+            committedIssuer={id:issuer.id,symbol:issuer.id.slice(4)};
           }
-          outcome='published';reason='Native template and accounting checks passed; canonical records published without restatement';
+          outcome='published';reason='Registered source template and accounting checks passed; canonical records published without restatement';
         } catch(error) {
+          committedIssuer=undefined;
           await db.query('ROLLBACK TO SAVEPOINT canonical_publication');
           reason=error instanceof Error?error.message.slice(0,400):'Validation requires review';
         }
@@ -98,6 +107,7 @@ async function run(limit:number,extractionIds?:number[]) {
           VALUES($1,$2,$3,$4,$5,$6,$7)`,[row.id,DOCUMENT_VALIDATOR_VERSION,row.sha256,row.document_url,outcome,reason,JSON.stringify(result)]);
         summary[outcome]++;
       });
+      if(committedIssuer)changed.set(committedIssuer.id,committedIssuer.symbol);
     } catch { summary.failed++; }
   }
   // A published filing must refresh the same research used by the app and
@@ -108,6 +118,7 @@ async function run(limit:number,extractionIds?:number[]) {
     await cache.del(CacheKeys.ratios('NSE',symbol));
     await cache.del(CacheKeys.afriScore('NSE',symbol));
     await cache.del(`engine:v3:NSE:${symbol}`);
+    await cache.del(`engine:v4:NSE:${symbol}`);
     await cache.del(`engine:last-good:v1:NSE:${symbol}`);
   }catch(error){logger.warn({securityId:id,error:String(error)},'Published financials retained; research refresh will retry');}
   logger.info(summary,'Automatic document validation completed');

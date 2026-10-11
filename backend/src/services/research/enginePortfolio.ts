@@ -31,15 +31,19 @@ export function performance(points:PerformancePoint[],datedFlows?:{date:string;a
   if(years>0 && finite(npv(lo)) && finite(npv(hi)) && npv(lo)*npv(hi)<0){for(let i=0;i<100;i++){const mid=(lo+hi)/2;if(npv(lo)*npv(mid)<=0)hi=mid;else lo=mid;}weighted=(lo+hi)/2;}
   return {twr:(product-1)*100,moneyWeighted:weighted==null?null:weighted*100,reason:"End-of-period external-flow convention. Money-weighted return is annualized; snapshots exclude unrecorded cash and dividends."};
 }
+export function dailyCloseMap(bars:{timestamp:string;close:number}[]) {
+ return new Map([...bars].filter(b=>finite(b.close)&&b.close>0&&Number.isFinite(Date.parse(b.timestamp))).sort((a,b)=>Date.parse(a.timestamp)-Date.parse(b.timestamp)).map(b=>[b.timestamp.slice(0,10),b.close]));
+}
 export function alignedReturns(series:Record<string,{timestamp:string;close:number}[]>) {
-  const maps=Object.fromEntries(Object.entries(series).map(([symbol,bars])=>[symbol,new Map(bars.filter(b=>finite(b.close)&&b.close>0).map(b=>[b.timestamp.slice(0,10),b.close]))]));
+  const maps=Object.fromEntries(Object.entries(series).map(([symbol,bars])=>[symbol,dailyCloseMap(bars)]));
   const symbols=Object.keys(maps),first=symbols[0];
   const dates=first?[...maps[first]!.keys()].filter(d=>symbols.every(s=>maps[s]!.has(d))).sort():[];
-  const returns=Object.fromEntries(symbols.map(s=>[s,dates.slice(1).map((date,i)=>maps[s]!.get(date)!/maps[s]!.get(dates[i]!)!-1)]));
+  const intervals=dates.slice(1).map((date,i)=>({date,before:dates[i]!})).filter(v=>Date.parse(v.date)-Date.parse(v.before)<=4*86400000);
+  const returns=Object.fromEntries(symbols.map(s=>[s,intervals.map(({date,before})=>maps[s]!.get(date)!/maps[s]!.get(before)!-1)]));
   const pairs:{a:string;b:string;correlation:number|null}[]=[];
   for(let i=0;i<symbols.length;i++)for(let j=i+1;j<symbols.length;j++){const a=symbols[i]!,b=symbols[j]!,x=returns[a]!,y=returns[b]!,n=x.length;
     const mx=n?x.reduce((s,v)=>s+v,0)/n:0,my=n?y.reduce((s,v)=>s+v,0)/n:0;
     const cov=x.reduce((s,v,k)=>s+(v-mx)*(y[k]!-my),0),den=Math.sqrt(x.reduce((s,v)=>s+(v-mx)**2,0)*y.reduce((s,v)=>s+(v-my)**2,0));
     pairs.push({a,b,correlation:n>=20&&den>0?cov/den:null});}
-  return {dates,pairs,methodology:"Pearson correlation using identical common trading-date intervals; at least 20 overlapping returns required."};
+  return {dates,pairs,methodology:"Pearson correlation using identical common short trading-date intervals and the chronologically last close per day. Gaps over four calendar days are excluded; at least 20 overlapping returns required."};
 }

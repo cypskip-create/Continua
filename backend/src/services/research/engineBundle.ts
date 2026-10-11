@@ -22,6 +22,7 @@ import {
 } from "./engineAnalytics.js";
 import { engineRepository } from "../../storage/repositories/engineRepository.js";
 import { trailingDividendPerShare } from "./dividendMetrics.js";
+import {companyDiagnostics} from './companyDiagnostics.js';
 const pendingBundles=new Map<string,Promise<Awaited<ReturnType<typeof loadEngineBundle>>>>();
 export async function getEngineBundle(symbol:string,exchange:ExchangeCode) {
   const key=`${exchange}:${symbol}`;
@@ -46,7 +47,7 @@ export async function getEngineBundle(symbol:string,exchange:ExchangeCode) {
   return job;
 }
 async function loadEngineBundle(symbol: string, exchange: ExchangeCode) {
-  return cache.getOrSet(`engine:v3:${exchange}:${symbol}`, 60_000, async () => {
+  return cache.getOrSet(`engine:v4:${exchange}:${symbol}`, 60_000, async () => {
     const profile = await securitiesRepository.getCompanyProfile(
       exchange,
       symbol,
@@ -205,6 +206,7 @@ async function loadEngineBundle(symbol: string, exchange: ExchangeCode) {
     };
     const briefing = buildCompanyBriefing({ symbol, latest, prior, ratios });
     return {
+      diagnostics:companyDiagnostics(sorted),
       quality,
       financialAnalysis,
       changes,

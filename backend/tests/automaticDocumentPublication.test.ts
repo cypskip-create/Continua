@@ -40,3 +40,25 @@ it('preserves a conflicting existing observation rather than silently restating 
   expect(await runAutomaticDocumentPublication()).toEqual({published:0,review:1,failed:0});
   expect(mocks.db.mock.calls.some(([sql])=>sql.includes('INSERT INTO market.research_records'))).toBe(false);
 });
+const htmlRow={...row,id:3,method:'html',source_id:'kakuzi-record-filings',document_url:'https://www.kakuzi.co.ke/five-year-record',extracted_at:'2026-10-11T10:00:00Z',config:{allowedDomains:['kakuzi.co.ke']},text:"Five Year Record All amounts are stated in Kenyan shillings thousands (shs’000) except where otherwise indicated.",tables:[{title:null,headerLine:" | 2025 Shs'000 | 2024 Shs'000 | 2023 Shs'000 | 2022 Shs'000 | 2021 Shs'000",method:'html_table_v1',confidence:.7,rows:[
+ {label:'Turnover',values:Array(5).fill('100')},
+ {label:'(Loss)/Profit attributable to the members of Kakuzi Plc',values:Array(5).fill('10')},
+ {label:'Basic earnings per ordinary share (Shs)',values:Array(5).fill('1')},
+ {label:'Other comprehensive income',values:Array(5).fill('2')},
+ {label:'Total comprehensive(Loss)/income',values:Array(5).fill('12')},
+]}]};
+it('publishes only the registered reconciled HTML template into canonical history',async()=>{
+ mocks.query.mockResolvedValueOnce({rows:[htmlRow]}).mockResolvedValue({rows:[]});
+ mocks.db.mockImplementation(async(sql:string)=>sql.includes('pg_try_advisory')?{rows:[{locked:true}]}:sql.includes('SELECT s.id,s.company_id')?{rows:[{id:'NSE:KUKZ',company_id:'NSE:company:KUKZ',name:'Kakuzi PLC'}]}:sql.startsWith('SELECT id::text FROM market.financial_statement_candidates')?{rows:[{id:'99'}]}:{rows:[],rowCount:0});
+ expect(await runAutomaticDocumentPublication()).toEqual({published:1,review:0,failed:0});
+ expect(mocks.confirm).toHaveBeenCalledWith('99',expect.objectContaining({statementType:'income',periods:expect.arrayContaining([expect.objectContaining({income:{revenue:100000,netIncome:10000,eps:1}})])}),expect.anything());
+});
+it.each([
+ {...htmlRow,source_id:'nse'},
+ {...htmlRow,document_url:'https://www.kakuzi.co.ke/unknown'},
+ {...htmlRow,document_url:'https://example.org/five-year-record'},
+])('keeps unregistered HTML provenance or paths in review',async invalid=>{
+ mocks.query.mockResolvedValue({rows:[invalid]});
+ expect(await runAutomaticDocumentPublication()).toEqual({published:0,review:1,failed:0});
+ expect(mocks.confirm).not.toHaveBeenCalled();
+});

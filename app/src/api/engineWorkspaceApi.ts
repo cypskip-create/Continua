@@ -1,4 +1,8 @@
 import { continuaFetch } from "./client";
+export interface StressResult {totalValue:number;pnl:number;stressedValue:number;returnPercent:number|null;contributions:{symbol:string;sector:string;value:number;shock:number;pnl:number;stressedValue:number;asOf?:string|null}[];methodology:string;coverage:string;datedQuoteCoverage:string;warnings:string[];generatedAt:string}
+export interface BondResult {dirtyPrice:number;cleanPrice:number;accruedInterest:number;modifiedDuration:number;convexity:number;dv01:number;stressedDirtyPrice:number;pnl:number;approximatePnl:number;cashFlows:{date:string;amount:number;presentValue:number}[];basis:string}
+export interface FuturesResult {notional:number;pnl:number;stressPnl:number;marginBalance:number;stressedMarginBalance:number;effectiveLeverage:number|null;expired:boolean;basis:string}
+export interface RiskAttribution {coveredWeight:number;observations:number;contributions:{symbol:string;weight:number;varianceContribution:number;riskShare:number}[];historicalVaR95:number|null;expectedShortfall95:number|null;tailObservations:number;methodology:string}
 export interface EnginePreferences {
   goal:string;horizon:string;experience:string;riskComfort:string;incomeNeeds:string;sectors:string[];
   notifications:boolean;learnInterests:boolean;interests:{symbol:string;exchange:string;visits:number}[];
@@ -8,7 +12,7 @@ export interface MonitorRule {id:string;exchange:string;symbol:string;kind:strin
 export interface AssistantAnswer {answer:string;citations:string[];limitations:string[];cached:boolean;sources:{id:string;title:string;asOf:string|null;url:string|null}[]}
 export interface EnginePortfolio {
   snapshots?:{date:string;value:number;flow:number}[];
-  risk?:{available:boolean;reason:string;symbols:string[];observations:number;coveredWeight:number;excludedIntervals:number;metrics:null|{portfolioVolatility:number;marketVolatility:number;portfolioMaxDrawdown:number;portfolioBeta:number|null;sharpe:null;sortino:null;volatilityByHolding:{symbol:string;volatility:number}[];drawdownByHolding:{symbol:string;drawdown:number}[]}};
+  risk?:{available:boolean;reason:string;symbols:string[];observations:number;coveredWeight:number;excludedIntervals:number;metrics:null|{attribution?:RiskAttribution|null;portfolioVolatility:number;marketVolatility:number;portfolioMaxDrawdown:number;portfolioBeta:number|null;sharpe:null;sortino:null;volatilityByHolding:{symbol:string;volatility:number}[];drawdownByHolding:{symbol:string;drawdown:number}[]}};
   researchBriefing?:{covered:number;requested:number;limit:number;methodology:string;companies:{symbol:string;weight:number;period:number|null;metrics:Record<string,number|null>;findings:string[];sectorNote?:string|null;facts?:string[];risks:string[];qualityWarnings:string[];unavailable:string[];changes:{topic:string;text:string;material:boolean}[]}[];news:{id:string;symbol:string;headline:string;summary:string;url:string;publishedAt:string|null;source:string}[]};
   available:boolean;reason:string|null;totalValue:number;sessionPnl:number|null;coverage:string;currency:string|null;warnings:string[];methodology:string;historyWarnings:string[];
   positions:{symbol:string;sector:string;value:number;weight:number;sessionContribution:number|null;asOf:string|null}[];
@@ -23,6 +27,9 @@ export interface EnginePortfolioOverview {
   positions:{symbol:string;value:number;weight:number;asOf:string|null}[];
 }
 export const engineWorkspaceApi={
+  stress:(body:{marketShock:number;sectorShocks:Record<string,number>})=>continuaFetch<StressResult>("/engine/labs/stress",{method:"POST",body}),
+  bond:(body:{settlement:string;previousCoupon:string;nextCoupon:string;couponPerPeriod:number;yieldPercent:number;frequency:1|2|4;cashFlows:{date:string;amount:number}[];shockBps:number})=>continuaFetch<BondResult>("/engine/labs/bond",{method:"POST",body}),
+  futures:(body:{entry:number;settlement:number;multiplier:number;contracts:number;side:'long'|'short';margin:number;expiry:string;asOf:string;shockPercent:number})=>continuaFetch<FuturesResult>("/engine/labs/futures",{method:"POST",body}),
   preferences:()=>continuaFetch<EnginePreferences>("/engine/preferences"),
   savePreferences:(settings:EnginePreferences)=>continuaFetch<EnginePreferences>("/engine/preferences",{method:"POST",body:settings}),
   visit:(symbol:string,exchange:string,reset=false)=>continuaFetch<EnginePreferences>("/engine/interests",{method:"POST",body:{symbol,exchange,reset}}),

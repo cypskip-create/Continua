@@ -1,6 +1,8 @@
 import { Router } from "express";
 import type { Request,Response } from "express";
 import { z } from "zod";
+import {StressSchema,BondLabSchema,FuturesLabSchema} from '../../services/research/engineLabSchemas.js';
+import {stressPortfolio,bondRisk,futuresRisk} from '../../services/research/engineRiskLab.js';
 import { ACTIVE_EXCHANGES,env } from "../../config/index.js";
 import { requirePremiumPlus, requireEngineUser } from "../middleware/requireSubscriber.js";
 import { asyncHandler,ApiError } from "../middleware/errorHandler.js";
@@ -18,6 +20,16 @@ const symbolSchema=z.string().trim().toUpperCase().regex(/^[A-Z0-9.\-]{1,20}$/);
 const user=(res:Response)=>String(res.locals.engineUserId);
 const handle=(fn:(req:Request,res:Response)=>Promise<void>)=>asyncHandler(async(req,res)=>{try{await fn(req,res);}catch(error){if((error as {code?:string}).code==="42P01")throw new ApiError(503,"Engine persistence requires the latest database migration. Ask the administrator to deploy it.");throw error;}});
 const parse=<S extends z.ZodTypeAny>(schema:S,value:unknown):z.output<S>=>{const result=schema.safeParse(value);if(!result.success)throw new ApiError(400,"Invalid Engine request: "+result.error.issues.map(i=>i.message).join(", "));return result.data;};
+engineWorkbenchRoutes.post('/engine/labs/stress',requirePremiumPlus,handle(async(req,res)=>{
+  const body=parse(StressSchema,req.body),portfolio=await getPortfolioOverview(user(res),'NSE');
+  const positions=portfolio.positions.filter(p=>p.asOf&&Number.isFinite(Date.parse(p.asOf))&&Date.parse(p.asOf)<=Date.now());
+  if(!portfolio.available||!positions.length)throw new ApiError(422,'Dated priced holdings are required for portfolio stress');
+  const sectors=new Set(positions.map(p=>p.sector));
+  if(Object.keys(body.sectorShocks).some(s=>!sectors.has(s)))throw new ApiError(400,'Select a sector present in your portfolio');
+  res.json({data:{...stressPortfolio(positions,body.marketShock,body.sectorShocks),coverage:portfolio.coverage,datedQuoteCoverage:`${positions.length}/${portfolio.positions.length}`,warnings:[...portfolio.warnings,...(positions.length!==portfolio.positions.length?['Undated or future-dated holdings were excluded from this scenario.']:[])],generatedAt:new Date().toISOString()}});
+}));
+engineWorkbenchRoutes.post('/engine/labs/bond',requirePremiumPlus,handle(async(req,res)=>{const assumptions=parse(BondLabSchema,req.body);res.json({data:{...bondRisk(assumptions),assumptions,generatedAt:new Date().toISOString()}});}));
+engineWorkbenchRoutes.post('/engine/labs/futures',requirePremiumPlus,handle(async(req,res)=>{const assumptions=parse(FuturesLabSchema,req.body);res.json({data:{...futuresRisk(assumptions),assumptions,generatedAt:new Date().toISOString()}});}));
 engineWorkbenchRoutes.get("/engine/preferences",requirePremiumPlus,handle(async(_req,res)=>{res.json({data:await engineRepository.preferences(user(res))});}));
 engineWorkbenchRoutes.post("/engine/preferences",requirePremiumPlus,handle(async(req,res)=>{const settings=parse(EnginePreferencesSchema,req.body);res.json({data:await engineRepository.savePreferences(user(res),settings)});}));
 engineWorkbenchRoutes.post("/engine/interests",requirePremiumPlus,handle(async(req,res)=>{
@@ -54,7 +66,8 @@ engineWorkbenchRoutes.post("/engine/assistant",requirePremiumPlus,handle(async(r
     evidence.push({id:"portfolio",title:"Your portfolio research",asOf:new Date().toISOString(),url:null,facts:{positions:portfolio.positions,sectors:portfolio.sectors,warnings:portfolio.warnings,performance:portfolio.performance,correlations:portfolio.correlations,risk:portfolio.risk,dividends:portfolio.dividends,researchBriefing:portfolio.researchBriefing,coverage:portfolio.coverage,methodology:portfolio.methodology}});
   }else for(const symbol of [...new Set(body.symbols)]){
     const data=await getEngineBundle(symbol,body.exchange);
-    evidence.push({id:symbol+":company",title:data.companyName+" financial analysis",asOf:data.quality.filedAt,url:null,facts:{briefing:data.briefing,quality:data.quality,financial:data.financialAnalysis,valuation:data.valuation?.models,scenarios:data.scenarios,missing:data.unavailable}});
+    const filingUrl=data.diagnostics.trends.at(-1)?.sourceUrls.find(url=>/^https:\/\//i.test(url))??null;
+    evidence.push({id:symbol+":company",title:data.companyName+" financial analysis",asOf:data.quality.filedAt,url:filingUrl,facts:{briefing:data.briefing,quality:data.quality,financial:data.financialAnalysis,diagnostics:data.diagnostics,valuation:data.valuation?.models,scenarios:data.scenarios,missing:data.unavailable}});
     evidence.push({id:symbol+":technical",title:symbol+" dated technical observations",asOf:data.quote?.timestamp??null,url:null,facts:data.synthesis});
     for(const n of data.news.slice(0,4))evidence.push({id:symbol+":news:"+n.id,title:n.headline,asOf:n.publishedAt,url:/^https?:\/\//i.test(n.url)?n.url:null,facts:{summary:n.summary,methodology:n.methodology}});
   }

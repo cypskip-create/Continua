@@ -30,6 +30,8 @@ import { ValuationPreview } from "@/components/stock/FundamentalResearch";
 import { premiumEngineTools, canUseEngineTool } from "@/lib/subscription";
 import { useEngineBundle } from '@/hooks/useEngineBundle';
 import { ToolHelp } from "@/components/shared/ToolHelp";
+import { EngineRiskLab } from "@/components/engine/EngineRiskLab";
+import { CompanyEvidenceDesk } from "@/components/engine/CompanyEvidenceDesk";
 
 const tools = [
   "Briefing",
@@ -40,6 +42,7 @@ const tools = [
   "Ownership",
   "Technicals",
   "Scenario lab",
+  "Risk lab",
   "Peers",
   "Portfolio",
   "Ask Engine",
@@ -63,7 +66,7 @@ const groups: { name: string; tools: Tool[] }[] = [
   },
   {
     name: "Analysis",
-    tools: ["Evidence", "Technicals", "Scenario lab", "Peers"],
+    tools: ["Evidence", "Technicals", "Scenario lab", "Risk lab", "Peers"],
   },
   {
     name: "My workspace",
@@ -80,6 +83,7 @@ const toolHelp: Record<Tool, string> = {
   Evidence: "Review changes, source coverage and gaps before drawing a conclusion.",
   Technicals: "Explore price history and signals, then set an alert for a level you want to follow.",
   "Scenario lab": "Change assumptions to explore outcomes. Scenarios are not forecasts or guarantees.",
+  "Risk lab": "Test portfolio shocks, bond cash flows and futures exposure. See the assumptions and limits beside each result.",
   Peers: "Choose a peer and a specific metric to compare on a like-for-like basis.",
   Portfolio: "Review holdings, allocation and observed income together, with coverage limits visible.",
   Monitoring: "Track a research question, inspect check results and review triggered alerts.",
@@ -144,7 +148,7 @@ export default function Engine() {
   );
   const fullEngine = profile?.subscription_plan === "premium_plus";
   const toolAllowed = canUseEngineTool(profile?.subscription_plan, tool);
-  const query = useEngineBundle(symbol,exchange,toolAllowed&&group.name!=='My workspace',tool==='News');
+  const query = useEngineBundle(symbol,exchange,toolAllowed&&group.name!=='My workspace'&&tool!=='Risk lab',tool==='News');
   const data = query.data;
   const {
     settings: researchPreferences,
@@ -337,7 +341,7 @@ export default function Engine() {
               <p className="font-semibold flex items-center gap-2">{tool}{["Portfolio", "Preferences"].includes(tool) ? "" : ` · ${symbol}`}<ToolHelp tool={tool} description={toolHelp[tool]}/></p>
               <p className="text-sm text-muted-foreground">{toolHelp[tool]}</p>
             </div>
-            {!toolAllowed ? <section className="py-6 space-y-3"><h3 className="text-lg font-semibold">{tool} is included with Premium Plus</h3><p className="text-sm text-muted-foreground">Your Premium company research and all expanded Fundamentals Forecast details remain available.</p><Link to="/upgrade" className="text-primary font-semibold">Explore Premium Plus →</Link></section> : group.name === "My workspace" ? null : query.isLoading ? (
+            {!toolAllowed ? <section className="py-6 space-y-3"><h3 className="text-lg font-semibold">{tool} is included with Premium Plus</h3><p className="text-sm text-muted-foreground">Your Premium company research and all expanded Fundamentals Forecast details remain available.</p><Link to="/upgrade" className="text-primary font-semibold">Explore Premium Plus →</Link></section> : group.name === "My workspace" || tool==='Risk lab' ? null : query.isLoading ? (
               <p role="status" className="py-10 text-sm text-muted-foreground">
                 Preparing your analysis…
               </p>
@@ -445,6 +449,7 @@ export default function Engine() {
                   {tool === "Evidence" && (
                     <>
                       <EvidenceLedger key={symbol} data={data}/>
+                      <CompanyEvidenceDesk data={data}/>
                       {data.quality ? (
                         <EngineInsights data={data} />
                       ) : (
@@ -534,7 +539,7 @@ export default function Engine() {
                     </section>
                   )}
                   {tool === "Forecast" && <EngineForecastDesk key={symbol} symbol={symbol} currency={data.currency}/>}
-                  {tool === "Earnings & Reports" && <EngineReportsDesk key={symbol} data={data}/>}
+                  {tool === "Earnings & Reports" && <><EngineReportsDesk key={symbol} data={data}/><CompanyEvidenceDesk data={data}/></>}
                   {tool === "Valuation" && (
                     <section className="divide-y divide-border/70">
                       <ValuationPreview symbol={symbol} currency={data.currency} name={data.companyName} sector={instruments.find(item=>item.symbol===symbol)?.sector??""} price={Number(data.quote?.lastPrice??0)}/>
@@ -597,8 +602,10 @@ export default function Engine() {
               "Monitoring",
               "Preferences",
               "Journal",
+              "Risk lab",
             ].includes(tool) && toolAllowed && (
               <div className="py-5">
+                {tool === "Risk lab" && <EngineRiskLab />}
                 {tool === "Journal" && (
                   <ResearchJournal
                     account={user?.id ?? "guest"}

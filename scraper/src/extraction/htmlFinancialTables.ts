@@ -8,9 +8,12 @@ export function extractHtmlFinancialTables(html: string) {
     const rows: { label: string; values: string[] }[] = [];
     const headers: string[] = [];
     $(table).find('tr').each((_, tr) => {
-      const cells = $(tr).children('th,td').map((_, cell) => $(cell).text().replace(/\s+/g, ' ').trim()).get();
+      const cells = $(tr).children('th,td').map((_, cell) => {
+        const copy = $(cell).clone(); copy.find('br').replaceWith(' ');
+        return copy.text().replace(/\s+/g, ' ').trim();
+      }).get();
       if (cells.length < 2) return;
-      if ($(tr).children('th').length > 1 || cells.slice(1).every((cell) => /^(?:FY\s*)?20\d{2}$/.test(cell))) {
+      if ($(tr).children('th').length > 1 || cells.slice(1).every((cell) => /^(?:FY\s*)?20\d{2}(?:\s*Shs['’]000)?$/.test(cell))) {
         headers.push(cells.join(' | ')); return;
       }
       if (cells[0] && /[a-z]/i.test(cells[0]) && cells.slice(1).some((cell) => /^\(?-?\d[\d, .]*\)?%?$/.test(cell)))

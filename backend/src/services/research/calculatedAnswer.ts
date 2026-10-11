@@ -16,12 +16,19 @@ export function calculatedAnswer(question:string,evidence:Evidence[]) {
         const n=metrics[key];lines.push(`${key.replace(/([A-Z])/g," $1")}: ${typeof n==="number"&&Number.isFinite(n)?(key==="returnOnAssets"?n*100:n).toFixed(2)+(/Growth/.test(key)||key==="returnOnAssets"?"%":" ×"):"Unavailable"} (FY ${financial.period??"unknown"}).`);
       }
       if(/risk|change|quality/.test(q))lines.push(...strings(briefing.risks),...strings(financial.findings),...strings(obj(f.quality).warnings));
+      if(/quality|cash|evidence|check/.test(q)){const d=obj(f.diagnostics);if(Array.isArray(d.checks))for(const check of d.checks.slice(0,6)){const c=obj(check);lines.push(`${c.label}: ${c.result==='pass'?'met':c.result==='flag'?'review':'unknown'}. ${c.reason??''}`);}}
       if(/scenario/.test(q)&&Array.isArray(f.scenarios))for(const s of f.scenarios.slice(0,3)){const v=obj(s);lines.push(`${v.name}: illustrative growth ${v.growthPercent}%; revenue ${v.revenue??"unavailable"}; net income ${v.netIncome??"unavailable"}. ${v.assumption??""}`);}
       if(/missing|coverage/.test(q))lines.push(...strings(f.missing));
     }else if(e.id==="portfolio"){
       if(Array.isArray(f.positions))for(const p of [...f.positions].sort((a,b)=>Number(obj(b).weight)-Number(obj(a).weight)).slice(0,5)){const v=obj(p);lines.push(`${v.symbol}: ${typeof v.weight==="number"?(v.weight*100).toFixed(1)+"%":"unavailable"} portfolio weight; valued ${v.asOf??"date unavailable"}.`);}
       lines.push(...strings(f.warnings));
       if(typeof f.coverage==="string")lines.push(`Coverage: ${f.coverage}.`);
+      if(/risk|volatil|loss|drawdown/.test(q)){
+        const risk=obj(f.risk),metrics=obj(risk.metrics),a=obj(metrics.attribution);
+        lines.push(`Risk coverage: ${risk.observations??0} aligned observations. ${risk.reason??''}`);
+        if(Array.isArray(a.contributions))for(const contribution of a.contributions.slice(0,10)){const c=obj(contribution);if(typeof c.riskShare==='number')lines.push(`${c.symbol}: ${(c.riskShare*100).toFixed(1)}% of measured variance, not capital or guaranteed future risk.`);}
+        lines.push(`Historical 1-day VaR (95%): ${a.historicalVaR95??'unavailable'}%; expected shortfall (95%): ${a.expectedShortfall95??'unavailable'}%. Both are backward-looking, not maximum loss.`);
+      }
       if(/return|performance/.test(q)){const p=obj(f.performance);lines.push(`Recorded time-weighted return: ${p.twr??"unavailable"}%; money-weighted return: ${p.moneyWeighted??"unavailable"}%. ${p.reason??""}`);}
     }else if(e.id.includes(":news:")&&/news|change|risk/.test(q)){
       if(typeof f.summary==="string")lines.push(f.summary.slice(0,1000));

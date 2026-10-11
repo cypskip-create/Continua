@@ -6,6 +6,14 @@ import { insertSourceIfMissing } from "../storage/sourcesRepository.js";
  * articles. Operators can disable or edit any seeded row and that choice is
  * preserved because startup only inserts missing IDs. */
 export const DEFAULT_SOURCES: SourceDefinition[] = [
+  {
+    id: 'kakuzi-record-filings', name: 'Kakuzi official five-year record', adapter: 'web', enabled: true,
+    config: { seeds: ['https://www.kakuzi.co.ke/five-year-record'], allowedDomains: ['kakuzi.co.ke'], maxDepth: 0,
+      requestsPerSecond: 0.2, concurrency: 1, revisitAfterMinutes: 1440, schedule: '40 6 * * *', documents: { pdf: false, ocr: false, tables: true } },
+    termsUrl: 'https://www.kakuzi.co.ke/terms-of-use', robotsUrl: 'https://www.kakuzi.co.ke/robots.txt',
+    license: null, redistributionAllowed: null, attributionRequired: true,
+    allowedUsage: 'Public issuer financial facts with provenance; exact reviewed HTML layout only. No full-document republication.',
+  },
   ...[
     { id: "cbk-bond-history", name: "CBK Treasury bond auction archive", seed: "https://www.centralbank.go.ke/bills-bonds/treasury-bonds/" },
     { id: "cbk-bill-history", name: "CBK Treasury bill auction archive", seed: "https://www.centralbank.go.ke/bills-bonds/treasury-bills/" },
@@ -51,6 +59,7 @@ export const DEFAULT_SOURCES: SourceDefinition[] = [
   ...[
     { id: "safaricom-filings", name: "Safaricom PLC", domain: "safaricom.co.ke", seeds: ["https://www.safaricom.co.ke/investor-relations-landing/reports/financial-report/financial-results"], paths: ["/investor-relations", "/annualreport", "/images/downloads/"] },
     { id: "kcb-filings", name: "KCB Group PLC", domain: "kcbgroup.com", seeds: ["https://kcbgroup.com/investor-relations/", "https://kcbgroup.com/financial-statements"], paths: ["/investor", "/financial", "/annual", ".pdf"] },
+    { id: "kakuzi-filings", name: "Kakuzi PLC", domain: "kakuzi.co.ke", seeds: ["https://www.kakuzi.co.ke/company-reports"], paths: ["/company-reports", "/pages/", ".pdf"] },
     { id: "equity-filings", name: "Equity Group Holdings PLC", domain: "equitygroupholdings.com", seeds: ["https://equitygroupholdings.com/investor-relation/?cat=financial-results"], paths: ["/investor", "/wp-content/uploads/", "financial-results", "annual-report"] },
     { id: "absa-filings", name: "Absa Bank Kenya PLC", domain: "absabank.co.ke", seeds: ["https://www.absabank.co.ke/investor-relations/"], paths: ["/investor-relations", "/content/dam/", ".pdf"] },
     { id: "eabl-filings", name: "East African Breweries PLC", domain: "eabl.com", seeds: ["https://www.eabl.com/investors/annual-reports"], paths: ["/investors/", "/sites/", ".pdf"] },

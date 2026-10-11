@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PortfolioRiskAttribution } from './PortfolioRiskAttribution';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useEnginePreferences } from "@/hooks/useEnginePreferences";
@@ -666,6 +667,7 @@ export function EnginePortfolioPanel({ exchange }: { exchange: string }) {
           ))}
           <PortfolioReviewDesk data={p} />
           <PortfolioDiagnostics data={p}/>
+          <PortfolioRiskAttribution data={p.risk?.metrics?.attribution}/>
           {p.snapshots && p.snapshots.length > 1 && (
             <div>
               <h4 className="text-sm">Recorded invested value</h4>

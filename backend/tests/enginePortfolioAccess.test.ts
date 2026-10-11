@@ -18,7 +18,7 @@ afterEach(() => { vi.unstubAllGlobals(); vi.clearAllMocks(); });
 
 async function request(plan: string, path: string, method = "GET", authenticated = true,body?:unknown) {
   mocks.query.mockResolvedValue({ rows: [{ subscription_plan: plan }] });
-  mocks.overview.mockResolvedValue({ totalValue: 500, coverage: "1/1" });
+  mocks.overview.mockResolvedValue({ available:true,totalValue: 500, coverage: "1/1",positions:[{symbol:'KCB',sector:'Banking',value:500,asOf:'2026-10-10T00:00:00Z'}],warnings:[] });
   mocks.portfolio.mockResolvedValue({ risk: { available: false } });
   mocks.rules.mockResolvedValue([]);
   mocks.bundle.mockResolvedValue({symbol:'KCB',history:[],valuation:{models:[]}});
@@ -63,4 +63,13 @@ it.each(['free','premium','premium_plus'])('company research and Forecast expans
 });
 it.each(['/engine/portfolio','/engine/peers?symbol=KCB','/engine/monitoring','/engine/preferences','/engine/usage'])('Premium still cannot access Plus workspace endpoint %s', async path => {
   expect((await request('premium',path)).status).toBe(403);
+});
+it.each(['/engine/labs/stress','/engine/labs/bond','/engine/labs/futures'])('requires Plus for %s even with a forged header',async path=>{
+ expect((await request('premium',path,'POST',true,{})).status).toBe(403);
+});
+it('stress uses only verified holdings and rejects forged body ownership',async()=>{
+ const valid=await request('premium_plus','/engine/labs/stress','POST',true,{marketShock:-.1});
+ expect(valid.status).toBe(200);expect(mocks.overview).toHaveBeenCalledWith(verifiedId,'NSE');expect((valid.body as {data:{pnl:number}}).data.pnl).toBeCloseTo(-50);
+ expect((await request('premium_plus','/engine/labs/stress','POST',true,{marketShock:-.1,userId:'forged'})).status).toBe(400);
+ expect((await request('premium_plus','/engine/labs/stress','POST',true,{marketShock:-.1,sectorShocks:{Energy:-.2}})).status).toBe(400);
 });

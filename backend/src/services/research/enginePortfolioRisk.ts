@@ -1,4 +1,5 @@
-import { alignedReturns } from "./enginePortfolio.js";
+import { alignedReturns,dailyCloseMap } from "./enginePortfolio.js";
+import {riskContributions} from './engineRiskLab.js';
 
 type Bar = { timestamp: string; close: number };
 const mean = (values: number[]) => values.reduce((sum, v) => sum + v, 0) / values.length;
@@ -17,7 +18,7 @@ export function portfolioRisk(series: Record<string, Bar[]>, weights: Record<str
   const usable = Object.fromEntries(Object.entries(series).filter(([symbol, bars]) =>
     (weights[symbol] ?? 0) > 0 && bars.filter(b => Number.isFinite(b.close) && b.close > 0).length >= 21));
   const aligned = alignedReturns(usable), symbols = Object.keys(usable);
-  const maps = Object.fromEntries(symbols.map(symbol => [symbol, new Map(usable[symbol]!.filter(b => Number.isFinite(b.close) && b.close > 0).map(b => [b.timestamp.slice(0, 10), b.close]))]));
+  const maps = Object.fromEntries(symbols.map(symbol => [symbol,dailyCloseMap(usable[symbol]!)]));
   const returns: Record<string, number[]> = Object.fromEntries(symbols.map(s => [s, []]));
   let excludedIntervals = 0;
   for (let i = 1; i < aligned.dates.length; i++) {
@@ -42,6 +43,7 @@ export function portfolioRisk(series: Record<string, Bar[]>, weights: Record<str
     available: true as const, reason: "Hypothetical daily-rebalanced current-weight basket; excluded gaps are omitted. Beta compares your holdings' equal-weight basket, not an exchange index. Sharpe and Sortino require a verified risk-free-rate feed and are unavailable.",
     symbols, observations: count, excludedIntervals, coveredWeight,
     metrics: {
+      attribution:riskContributions(returns,weights),
       portfolioVolatility: volatility(weighted), marketVolatility: volatility(basket), portfolioMaxDrawdown: drawdown(curve),
       portfolioBeta: variance > 0 ? covariance / variance : null, sharpe: null, sortino: null,
       volatilityByHolding: symbols.map(symbol => ({ symbol, volatility: volatility(returns[symbol]!) })),

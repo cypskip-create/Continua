@@ -3,6 +3,7 @@ import type { FinancialHistoryEntry, OwnershipRecord, Quote, StockEarningsEvent,
 import type { ValuationResult } from "./valuationApi";
 
 export interface EngineBundle {
+  diagnostics?: {trends:{year:number;netMargin:number|null;roe:number|null;cashConversion:number|null;accrualsToAssets:number|null;sourceUrls:string[];reportedAt:string|null}[];checks:{id:string;label:string;result:'pass'|'flag'|'unknown';reason:string}[];knownChecks:number;totalChecks:number;evidence:{year:number;field:string;value:number;periodEnd:string|null;availableAt:string|null;sourceUrls:string[];basis:string}[];methodology:string};
   symbol: string; exchange: string; currency: string; companyName: string; generatedAt: string;
   quote: Quote | null; history: FinancialHistoryEntry[]; earnings: StockEarningsEvent[];
   ownership: OwnershipRecord[]; valuation: ValuationResult | null;
