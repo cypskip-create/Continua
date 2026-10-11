@@ -1,5 +1,6 @@
 import { query } from "./db.js";
 import type { Extraction, ExtractionMethod } from "../types.js";
+import { env } from "../config/index.js";
 
 interface ExtractionSqlRow {
   id: number;
@@ -100,9 +101,16 @@ export async function findUnextracted(limit = 50): Promise<UnextractedArtifact[]
      LEFT JOIN scraping.extractions e ON e.artifact_id = a.id
      WHERE e.id IS NULL
        AND (a.content_type ILIKE '%pdf%' OR a.content_type ILIKE '%html%')
-     ORDER BY a.discovered_at ASC
+       AND ($2::boolean = false OR EXISTS (
+         SELECT 1 FROM storage.objects o WHERE o.bucket_id=$3
+           AND o.name=replace(a.storage_path,chr(92),'/')
+       ))
+       AND NOT EXISTS (SELECT 1 FROM scraping.dead_letters d
+         WHERE d.source_id=a.source_id AND d.url=a.document_url AND d.stage='parse'
+           AND d.last_failed > now()-interval '1 hour')
+     ORDER BY (a.content_type ILIKE '%pdf%') DESC, a.discovered_at ASC
      LIMIT $1`,
-    [limit],
+    [limit, env.RAW_STORAGE_DRIVER === 'supabase', env.SUPABASE_STORAGE_BUCKET],
   );
   return res.rows.map((row) => ({
     artifactId: row.artifact_id,

@@ -36,7 +36,16 @@ export interface ExtractionSweepSummary {
   failed: number;
 }
 
-export async function sweepUnextractedArtifacts(limit = 50): Promise<ExtractionSweepSummary> {
+let activeSweep: Promise<ExtractionSweepSummary> | undefined;
+/** Cron and manual triggers share one bounded sweep in this service process. */
+export function sweepUnextractedArtifacts(limit = 50): Promise<ExtractionSweepSummary> {
+  if (activeSweep) return activeSweep;
+  if (!Number.isInteger(limit) || limit < 1 || limit > 100) return Promise.reject(new Error('Extraction batch size must be 1–100'));
+  activeSweep = runSweep(limit).finally(() => { activeSweep = undefined; });
+  return activeSweep;
+}
+
+async function runSweep(limit: number): Promise<ExtractionSweepSummary> {
   const pending = await findUnextracted(limit);
   const summary: ExtractionSweepSummary = { examined: 0, extracted: 0, needsReview: 0, skippedUnsupported: 0, failed: 0 };
 

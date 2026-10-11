@@ -40,4 +40,10 @@ Operator collection commands: `npm run history:backfill -- --discover-only` and 
 
 ## Remaining work before claiming comprehensive coverage
 
+### Extraction backlog repair, 11 October 2026
+
+The private archive audit identified legacy records whose bytes were not retained during the storage-driver move. The sweep now selects only objects actually present in the configured private bucket, prioritises PDFs, backs off failed parses for one hour, and coalesces overlapping manual/cron calls within the service process. Missing records remain intact for provenance, not replaced with invented extraction text.
+
+`backend/scripts/recoverMissingArchive.ts 100` reports missing enabled-source PDFs; add `--requeue` to make their original URLs eligible for guarded crawling again. Two missing NSE PDFs were requeued at this checkpoint. Recovered identical bytes retain the original artifact ID; changed publisher content becomes a different hashed artifact. Automatic extraction is not automatic publication: financial figures still require period, unit, scope and source review through the protected confirmation workflow.
+
 Finish deploying services, drain the remaining documents, review the 330 pending financial candidates and historical issuer identity changes, verify financial columns against rendered PDFs and chart values, connect the licensed price/index/statistics delivery format, broaden CBK layout coverage, and monitor per-company/year coverage. Pending financial candidates are not published audited facts. Six-month/YTD periods must not be mislabelled as standalone quarters. No new historical equity figures are claimed published at this checkpoint. Restricted NSE market collection remains disabled pending written permission, even for private product testing.
