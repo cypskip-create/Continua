@@ -109,6 +109,7 @@ export interface MarketIndex {
 export type CandleInterval = "1m" | "5m" | "15m" | "1h" | "1d" | "1w" | "1M" | "1y";
 
 export interface Candle {
+  sourceUrl?:string|null;
   securityId: string;
   interval: CandleInterval;
   timestamp: string;          // candle open time, ISO 8601 UTC

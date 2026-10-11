@@ -3,12 +3,11 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { CartesianGrid, Cell, ComposedChart, Line, Pie, PieChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from "recharts";
-import { dailyValuationCloses } from '@/lib/valuationHistory';
+import {continuaFetch} from '@/api/client';
 import { useResearch } from "@/hooks/useResearch";
 import { useValuation } from "@/hooks/useValuation";
 import { useStockFinancials } from "@/hooks/useStockFinancials";
 import { screenerApi } from "@/api/screenerApi";
-import { historicalApi } from "@/api/historicalApi";
 import { financialNumber, finiteFinancial, financialPeriod } from "@/lib/financialPresentation";
 import type { ComputedRatios, ScreenerRow } from "@/api/types";
 import { FundamentalDetail, FundamentalHeading } from "./FundamentalDetail";
@@ -18,6 +17,8 @@ import { ValuationSection } from "./report/ValuationSection";
 const colors=["#4f7cf5","#22c3d6","#84cc16","#facc15","#fb923c","#f97316"];
 const tooltipStyle={background:"hsl(var(--popover))",color:"hsl(var(--popover-foreground))",border:"1px solid hsl(var(--border))",fontSize:"0.75rem"};
 type RatioKey="pe"|"pb"|"ps";
+type DatedRatio={date:string;time:number;ratio:number|null;price:number;fiscalYear:number|null;reportedAt:string|null;denominator:number|null;sourceUrls:string[]};
+type ValuationHistory={current:DatedRatio|null;points:DatedRatio[];lastHistoricalDate:string|null;basis:string};
 export function DisclosureDonut({rows,label}: {rows:{name:string;value:number}[];label:string}) {
   return <div className="grid grid-cols-[minmax(100px,1fr)_minmax(0,1.5fr)] items-center gap-2 py-2">
     <div className="h-36" role="img" aria-label={label}><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={rows} dataKey="value" nameKey="name" innerRadius="62%" outerRadius="90%" stroke="hsl(var(--background))" isAnimationActive={false}>{rows.map((r,i)=><Cell key={r.name} fill={colors[i%colors.length]}/>)}</Pie><Tooltip formatter={(v:number)=>`${Number(v).toFixed(2)}%`} contentStyle={tooltipStyle}/></PieChart></ResponsiveContainer></div>
@@ -30,19 +31,11 @@ function AverageBars({current,average,median,symbol}: {current:number|null;avera
 }
 function ValuationExplorer({symbol,sector,currency,price,preview=false}: {symbol:string;sector:string;currency:string;price:number;preview?:boolean}) {
   const [key,setKey]=useState<RatioKey>("pe"),[years,setYears]=useState(5);
-  const {research}=useResearch(symbol);
   const {history}=useStockFinancials(symbol,{periodType:"annual",limit:10});
   const {data:market=[]}=useQuery({queryKey:["continua","screener","valuation-sample"],queryFn:()=>screenerApi.run({limit:200,sortBy:"marketCap",sortDirection:"desc"}),staleTime:15*60_000,retry:1});
-  const {data:candles=[]}=useQuery({queryKey:["continua","candles",symbol,"fundamental-valuation",years],queryFn:()=>historicalApi.getCandles(symbol,{from:new Date(Date.now()-years*365.25*86_400_000).toISOString().slice(0,10)}),staleTime:15*60_000,retry:1});
-  const ratios=research?.ratios, current=finiteFinancial(ratios?.[key]);
-  // Use disclosure dates, never today's EPS against prices before it was filed.
-  const disclosed=history.filter(r=>r.reportedAt).sort((a,b)=>String(a.reportedAt).localeCompare(String(b.reportedAt)));
-  const points=dailyValuationCloses(candles).map(c=>{
-    const r=disclosed.filter(r=>String(r.reportedAt).slice(0,10)<=c.timestamp.slice(0,10)).sort((a,b)=>a.fiscalYear-b.fiscalYear || (a.fiscalQuarter??0)-(b.fiscalQuarter??0)).at(-1);
-    const shares=r?finiteFinancial(r.sharesOutstanding):null;
-    const denom=r?(key==="pe"?finiteFinancial(r.eps):key==="pb"?shares&&Number(r.totalEquity)>0?Number(r.totalEquity)/shares:null:shares&&Number(r.revenue)>0?Number(r.revenue)/shares:null):null;
-    return {date:c.timestamp.slice(0,10),time:Date.parse(c.timestamp.slice(0,10)),ratio:denom!=null&&denom>0?c.close/denom:null};
-  });
+  const {data:valuationHistory,isError:valuationError}=useQuery({queryKey:['continua','dated-valuation',symbol,key,years],queryFn:()=>continuaFetch<ValuationHistory>(`/valuation/${encodeURIComponent(symbol)}/history`,{params:{ratio:key,years}}),staleTime:5*60_000,retry:1});
+  const current=valuationHistory?.current?.ratio??null;
+  const points=valuationHistory?.points??[];
   const valid=points.flatMap(p=>p.ratio!=null?[p.ratio]:[]).sort((a,b)=>a-b);
   const percentile=current!=null&&valid.length?valid.filter(v=>v<=current).length/valid.length*100:null;
   const lower=valid.length?valid[Math.floor((valid.length-1)*.25)]:null, upper=valid.length?valid[Math.floor((valid.length-1)*.75)]:null;
@@ -59,6 +52,9 @@ function ValuationExplorer({symbol,sector,currency,price,preview=false}: {symbol
     <div role="tablist" aria-label="Valuation ratio" className="flex gap-1 py-2">{(["pe","pb","ps"] as const).map(k=><button key={k} role="tab" aria-selected={key===k} onClick={()=>setKey(k)} className={financialTab(key===k)}>{k==="pe"?"P/E":k==="pb"?"P/B":"P/S"}</button>)}</div>
     <div className="flex items-center justify-between"><h3 className="text-lg font-semibold">Historical distribution</h3><select aria-label="Valuation history range" className="bg-background border border-border rounded-md p-1 text-xs" value={years} onChange={e=>setYears(Number(e.target.value))}><option value={1}>1 year</option><option value={3}>3 years</option><option value={5}>5 years</option></select></div>
     <dl className="grid grid-cols-3 gap-2 py-3 text-sm"><div><dt className="text-muted-foreground">Current {key.toUpperCase()}</dt><dd className="text-xl font-semibold">{current?.toFixed(2)??"—"}</dd></div><div><dt className="text-muted-foreground">Percentile</dt><dd className="text-xl font-semibold">{percentile?.toFixed(0)??"—"}{percentile!=null?"%":""}</dd></div><div><dt className="text-muted-foreground">Forward ratio</dt><dd className="font-semibold">Not covered</dd></div></dl>
+    {valuationError&&<p className="text-sm text-destructive">Dated valuation could not load. No substitute ratio is shown.</p>}
+    {valuationHistory?.current&&<p className="text-xs text-muted-foreground pb-2">Quote {valuationHistory.current.date}: {financialNumber(valuationHistory.current.price,currency)} · FY{valuationHistory.current.fiscalYear??'—'} denominator {valuationHistory.current.denominator?.toFixed(2)??'—'}. {valuationHistory.lastHistoricalDate&&valuationHistory.lastHistoricalDate!==valuationHistory.current.date?`The historical line ends ${valuationHistory.lastHistoricalDate}; it is not today's quote.`:''}</p>}
+    {valuationHistory?.current?.fiscalYear!=null&&new Date().getUTCFullYear()-valuationHistory.current.fiscalYear>2&&<p className="text-xs text-amber-700 pb-2">Financial coverage is old (FY{valuationHistory.current.fiscalYear}). This is not a current-year earnings multiple.</p>}
     {valid.length>1?<div className="h-56" role="img" aria-label="Historical valuation distribution"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={points} margin={{top:12,right:12,left:0,bottom:0}}><CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 4"/><XAxis dataKey="time" type="number" scale="time" domain={['dataMin','dataMax']} minTickGap={50} tickFormatter={v=>new Date(v).toLocaleDateString('en',{month:'short',year:'2-digit',timeZone:'UTC'})} tick={{fontSize:"0.625rem"}} axisLine={false} tickLine={false}/><YAxis width={44} tick={{fontSize:"0.625rem"}} domain={["auto","auto"]} tickFormatter={v=>Number(v).toFixed(1)} axisLine={false} tickLine={false}/><Tooltip labelFormatter={v=>new Date(Number(v)).toISOString().slice(0,10)} formatter={(v:number)=>Number(v).toFixed(2)} contentStyle={tooltipStyle}/>{lower!=null&&upper!=null&&<ReferenceArea y1={lower} y2={upper} fill="#4f7cf5" fillOpacity={.08} stroke="none"/>}<ReferenceLine y={valid.reduce((s,v)=>s+v,0)/valid.length} stroke="#94a3b8" strokeDasharray="3 3"/><Line type="linear" dataKey="ratio" name={key.toUpperCase()} stroke="#4f7cf5" strokeWidth={2} dot={false} activeDot={{r:4}} connectNulls={false} isAnimationActive={false}/>{peerStats.avg!=null&&<ReferenceLine y={peerStats.avg} stroke="#22c3d6" strokeDasharray="4 4"/>}</ComposedChart></ResponsiveContainer></div>:<p className="py-3 text-sm text-muted-foreground">Historical ratios need price history and dated annual disclosures{key!=="pe"?" with shares outstanding":" with positive EPS"}. Missing disclosure dates are not guessed.</p>}
     <p className="text-xs text-muted-foreground py-2">Historical band is the middle 50% of observations—not a fair-value range. Ratios use the latest annual filing available on each date, not a TTM or forward estimate. Share-count changes can affect comparability.</p>
     {!preview&&<><section className="border-t border-border py-3"><h3 className="text-lg font-semibold">Earnings growth</h3>{growth.length>1?<><div className="h-48" role="img" aria-label="Reported income growth multiple"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={growth}><XAxis dataKey="period" tick={{fontSize:"0.625rem"}}/><YAxis width={40} tickFormatter={v=>`${v.toFixed(1)}x`} tick={{fontSize:"0.625rem"}}/><Tooltip contentStyle={tooltipStyle} formatter={(v:number)=>`${Number(v).toFixed(2)}x`}/><Line dataKey="income" name="Net income / base year" stroke="#4f7cf5" dot={false} isAnimationActive={false}/></ComposedChart></ResponsiveContainer></div><p className="text-xs text-muted-foreground">Net income relative to {base?.fiscalYear}. Historical market capitalisation is not supplied; it is not inferred from today's shares.</p></>:<p className="text-sm text-muted-foreground py-2">At least two comparable positive-base annual periods are needed.</p>}</section>

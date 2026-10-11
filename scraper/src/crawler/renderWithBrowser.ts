@@ -51,12 +51,18 @@ export interface RenderResult {
  * guarantee for sites with polling/websockets that never go idle), and
  * returns the resulting DOM as HTML.
  */
-export async function renderPage(url: string, userAgent: string): Promise<RenderResult> {
+export async function renderPage(url: string, userAgent: string, options:{files?:boolean}={}): Promise<RenderResult> {
   const browser = await getBrowser();
   const context = await browser.newContext({ userAgent });
   const page = await context.newPage();
   try {
     const response = await page.goto(url, { waitUntil: "networkidle", timeout: NAVIGATION_TIMEOUT_MS });
+    if(options.files) {
+      await page.getByText('Files',{exact:true}).click({timeout:10000});
+      // Observed publisher schema.org markup on the Files tab. Do not
+      // mistake the lazy summary view for an empty archive.
+      await page.locator('.file-content').first().waitFor({timeout:15000});
+    }
     const html = await page.content();
     return { html, finalUrl: page.url(), status: response?.status() ?? null };
   } catch (err) {

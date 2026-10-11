@@ -6,6 +6,20 @@ import { insertSourceIfMissing } from "../storage/sourcesRepository.js";
  * articles. Operators can disable or edit any seeded row and that choice is
  * preserved because startup only inserts missing IDs. */
 export const DEFAULT_SOURCES: SourceDefinition[] = [
+  ...[
+   {id:'centum-filings',name:'Centum Investment Company PLC',seed:'https://centum.co.ke/annual-reports/',domains:['centum.co.ke']},
+   {id:'jubilee-filings',name:'Jubilee Holdings Limited',seed:'https://jubileeinsurance.com/group/investor-relations/annual-reports/',domains:['jubileeinsurance.com']},
+   {id:'cic-filings',name:'CIC Insurance Group PLC',seed:'https://www.cicinsurancegroup.com/investor-relations/',domains:['cicinsurancegroup.com']},
+   {id:'bat-filings',name:'British American Tobacco Kenya PLC',seed:'https://www.batkenya.com/investors-and-reporting',domains:['batkenya.com']},
+   {id:'boc-filings',name:'BOC Kenya PLC',seed:'https://www.boc.co.ke/our-business/investor-relations',domains:['boc.co.ke']},
+  ].map((s):SourceDefinition=>({id:s.id,name:`${s.name} official report archive`,adapter:'web',enabled:true,
+   config:{seeds:[s.seed],allowedDomains:s.domains,maxDepth:2,issuerName:s.name,requestsPerSecond:.2,concurrency:1,schedule:'30 4 * * *',documents:{pdf:true,ocr:true,tables:true}},
+   termsUrl:s.seed,robotsUrl:`https://${s.domains[0]}/robots.txt`,license:null,redistributionAllowed:null,attributionRequired:true,
+   allowedUsage:'Official issuer financial facts with source provenance; exact issuer/group scope and accounting validation required. Do not republish full documents.'})),
+  {id:'afx-company-history',name:'AFX NSE company facts and history candidates',adapter:'afx',enabled:true,
+   config:{seeds:['https://afx.kwayisi.org/nse/'],allowedDomains:['afx.kwayisi.org'],requestsPerSecond:.2,concurrency:1,schedule:'15 3 * * *'},
+   termsUrl:'https://afx.kwayisi.org/nse/',robotsUrl:'https://afx.kwayisi.org/robots.txt',license:null,redistributionAllowed:null,attributionRequired:true,
+   allowedUsage:'Public factual profile observations and history candidates with provenance. No full text redistribution or replacing official financial statements.'},
   {
     id: 'kakuzi-record-filings', name: 'Kakuzi official five-year record', adapter: 'web', enabled: true,
     config: { seeds: ['https://www.kakuzi.co.ke/five-year-record'], allowedDomains: ['kakuzi.co.ke'], maxDepth: 0,

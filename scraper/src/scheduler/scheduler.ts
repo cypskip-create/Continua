@@ -87,7 +87,7 @@ export async function startScheduler(): Promise<ScheduledTask[]> {
   if (cron.validate(env.DOCUMENT_DRAIN_CRON)) {
     scheduledTasks.push(cron.schedule(env.DOCUMENT_DRAIN_CRON, () => {
       void (async () => {
-        const queuedSources = (await listEnabledSources()).filter(source => source.adapter === 'nse');
+        const queuedSources = (await listEnabledSources()).filter(source => ['nse','kenyanstocks','afx'].includes(source.adapter));
         for (const source of queuedSources) await runSourceOnce(source, true);
       })().catch(err => logger.error({ err }, 'Automatic document queue drain failed; next tick will retry'));
     }));

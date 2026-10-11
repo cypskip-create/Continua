@@ -6,18 +6,11 @@
  * this site's data, so this adapter renders each page with a real
  * browser instead (crawler/renderWithBrowser.ts).
  *
- * WHAT THIS ADAPTER DOES NOT DO, on purpose: parse out structured price/
- * financials fields. The only view available of this site during
- * development was the pre-render HTML shell (via a tool that couldn't
- * execute the SPA's JS) — never the actual rendered DOM. Writing cheerio
- * selectors against markup that was never seen would be guessing, which
- * is exactly what this project has repeatedly ruled out. So parse() here
- * preserves body text and generic financial-table rows (labels, units and
- * reported period headers), without guessing field mappings, and flags everything
- * needsReview so nothing from this source is ever silently treated as
- * confirmed. Once someone can see the real rendered DOM (e.g. paste
- * output of `page.content()` after a manual run, or an actual browser's
- * dev tools), a follow-up pass can add real field-level parsing here.
+ * The rendered NSE listing and Files-tab DOM were inspected on 11 October
+ * 2026. PDF links come from file-content / link[itemprop=url], not guessed
+ * download paths. Mirror upload dates are not issuer reporting dates.
+ * Summary tables stay review-only; downloaded reports enter the Engine's
+ * immutable-source, exact-issuer, period/unit/accounting validation path.
  *
  * ToS/robots status: unverified. isAllowedByRobots() is still checked
  * per URL below (same as every other adapter) — this only controls
@@ -35,6 +28,10 @@ import { upsertArtifact } from "../../storage/rawArtifactsRepository.js";
 import { getSource } from "../../storage/sourcesRepository.js";
 import { logger } from "../../monitoring/logger.js";
 import type { FetchedDocument, ParsedExtraction, SourceAdapter, SourceDocument } from "../types.js";
+import {kenyanStockLinks,kenyanFileLinks} from './archiveLinks.js';
+import {fetchWithRetry} from '../../crawler/httpClient.js';
+import {extractPdfText} from '../../extraction/pdfText.js';
+import {enqueueDocuments} from '../../storage/documentJobsRepository.js';
 
 const ADAPTER_ID = "kenyanstocks";
 const CRAWLER_VERSION = "kenyanstocks-adapter-0.1.0";
@@ -43,11 +40,8 @@ const USER_AGENT = "ContinuaBot/1.0 (+https://github.com/cypskip-create/Continua
 const MIN_USABLE_TEXT_LENGTH = 200;
 
 /**
- * Same "config-driven ticker list" pattern as AfxClient
- * (backend/src/adapters/afx/afxClient.ts) and for the same reason: no
- * verified listing/index page on this site to enumerate the market from,
- * only individual /stock/nse/{TICKER} pages. Set scraping.sources.config
- * → { "tickers": [...] } when seeding this source.
+ * Configured tickers supplement the observed homepage listing, so a
+ * partially rendered listing does not silently remove configured issuers.
  */
 async function getTickers(): Promise<string[]> {
   const source = await getSource(ADAPTER_ID);
@@ -55,34 +49,48 @@ async function getTickers(): Promise<string[]> {
   if (Array.isArray(tickers) && tickers.length > 0) return tickers as string[];
   logger.warn(
     { sourceId: ADAPTER_ID },
-    "kenyanstocks adapter: no tickers configured in scraping.sources.config.tickers — discover() will return nothing",
+    "kenyanstocks adapter: no fallback tickers configured; using observed listing links",
   );
   return [];
 }
 
 export const kenyanstocksAdapter: SourceAdapter = {
   id: ADAPTER_ID,
-  documentConcurrency: 2,
+  documentConcurrency: 1,
+  persistentBatchSize: 10,
 
   async discover(): Promise<SourceDocument[]> {
     const tickers = await getTickers();
     const docs: SourceDocument[] = [];
-    for (const ticker of tickers) {
-      const url = `${BASE_URL}/stock/nse/${ticker.toUpperCase()}`;
+    const homeAllowed=await isAllowedByRobots(BASE_URL);
+    const links=homeAllowed?kenyanStockLinks((await renderPage(BASE_URL,USER_AGENT)).html):[];
+    const urls=[...new Set([...links,...tickers.map(t=>`${BASE_URL}/stock/nse/${t.toUpperCase()}`)])];
+    for (const url of urls) {
       const allowed = await isAllowedByRobots(url);
       if (!allowed) {
         logger.warn({ url }, "kenyanstocks adapter: disallowed by robots.txt — skipping");
         continue;
       }
-      docs.push({ url, title: ticker.toUpperCase(), discoveredFrom: BASE_URL, context: { ticker: ticker.toUpperCase() } });
+      const ticker=new URL(url).pathname.split('/').at(-1)!;
+      docs.push({ url, title: ticker, discoveredFrom: BASE_URL, context: { ticker } });
+      try {
+        const rendered=await renderPage(url,USER_AGENT,{files:true});
+        const files=kenyanFileLinks(rendered.html,url);
+        await enqueueDocuments(ADAPTER_ID,files);
+        docs.push(...files);
+      }catch(err){logger.warn({url,err},'Files archive unavailable; retaining summary page and other issuer archives');}
     }
     return docs;
   },
 
   async fetch(document: SourceDocument): Promise<FetchedDocument> {
-    const rendered = await renderPage(document.url, USER_AGENT);
-    const body = Buffer.from(rendered.html, "utf-8");
-    const contentType = "text/html; charset=utf-8";
+    if(!await isAllowedByRobots(document.url))throw new Error('Publisher robots disallows document');
+    const pdf=/\.pdf$/i.test(new URL(document.url).pathname);
+    const rendered = pdf?null:await renderPage(document.url, USER_AGENT);
+    const res=pdf?await fetchWithRetry(document.url,{requestsPerSecond:.2}):null;
+    if(res&&res.status!==200)throw new Error(`Document HTTP ${res.status}`);
+    const body = res?.body??Buffer.from(rendered!.html, "utf-8");
+    const contentType = pdf?'application/pdf':"text/html; charset=utf-8";
     const bodyHash = sha256(body);
     const storagePath = await storeRawArtifact({
       sourceId: ADAPTER_ID,
@@ -95,7 +103,7 @@ export const kenyanstocksAdapter: SourceAdapter = {
       sourceId: ADAPTER_ID,
       adapter: ADAPTER_ID,
       sha256: bodyHash,
-      documentUrl: rendered.finalUrl,
+      documentUrl: res?.finalUrl??rendered!.finalUrl,
       sourceUrl: document.discoveredFrom,
       contentType,
       sizeBytes: body.byteLength,
@@ -105,7 +113,7 @@ export const kenyanstocksAdapter: SourceAdapter = {
       // Flagged explicitly so anyone reading raw_artifacts later knows
       // this HTML came from a rendered browser session, not a plain GET
       // — relevant context if the parsing here is ever revisited.
-      metadata: { ...document.context, renderedWithBrowser: true },
+      metadata: { ...document.context, renderedWithBrowser: !res },
     });
 
     return {
@@ -121,6 +129,7 @@ export const kenyanstocksAdapter: SourceAdapter = {
   },
 
   async parse(fetched: FetchedDocument): Promise<ParsedExtraction> {
+    if(fetched.contentType==='application/pdf')return {...await extractPdfText(fetched.body),entity:{companyName:null,ticker:null,exchange:'NSE'}};
     const $ = cheerio.load(fetched.body.toString("utf-8"));
     $("script, style, nav, header, footer, noscript").remove();
     const text = $("body").text().split("\n").map((l) => l.trim()).filter(Boolean).join("\n").trim();

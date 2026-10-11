@@ -57,6 +57,7 @@ export function aggregateCandles(source: Candle[], targetInterval: CandleInterva
   const result: Candle[] = Array.from(buckets.values())
     .sort((a, b) => new Date(a.startIso).getTime() - new Date(b.startIso).getTime())
     .map(({ startIso, candles }) => ({
+      ...(candles.every(c=>c.sourceUrl)&&new Set(candles.map(c=>c.sourceUrl)).size===1?{sourceUrl:candles[0]!.sourceUrl}:{}),
       securityId: candles[0]!.securityId,
       interval: targetInterval,
       timestamp: startIso,

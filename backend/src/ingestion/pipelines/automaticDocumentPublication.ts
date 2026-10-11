@@ -12,8 +12,9 @@ import { validateSafaricomPressReport, SAFARICOM_PRESS_VERSION } from '../normal
 import {validateKakuziGroupReport,KAKUZI_GROUP_VERSION} from '../normalizers/kakuziGroupReport.js';
 import {validateKcbGroupReport,KCB_GROUP_VERSION} from '../normalizers/kcbGroupReport.js';
 import {validateKakuziHtmlRecord,KAKUZI_HTML_VERSION} from '../normalizers/kakuziHtmlRecord.js';
+import {issuerMastheadMatches} from '../normalizers/issuerIdentity.js';
 
-export const DOCUMENT_VALIDATOR_VERSION=`${NATIVE_ANNUAL_VERSION}:${CONDENSED_GROUP_VERSION}:${SAFARICOM_PRESS_VERSION}:${KAKUZI_GROUP_VERSION}:${KCB_GROUP_VERSION}:${KAKUZI_HTML_VERSION}:canonical-nse-v5:cbk-reopened-v1`;
+export const DOCUMENT_VALIDATOR_VERSION=`${NATIVE_ANNUAL_VERSION}:${CONDENSED_GROUP_VERSION}:${SAFARICOM_PRESS_VERSION}:${KAKUZI_GROUP_VERSION}:${KCB_GROUP_VERSION}:${KAKUZI_HTML_VERSION}:canonical-nse-v6:cbk-reopened-v1`;
 let active:Promise<unknown>|undefined;
 /** Bounded, versioned, automatic publication after deterministic validation.
  * OCR, unknown layouts and canonical conflicts retain their review state.
@@ -29,7 +30,7 @@ async function run(limit:number,extractionIds?:number[]) {
     a.title,s.config FROM scraping.extractions e JOIN scraping.raw_artifacts a ON a.id=e.artifact_id
     JOIN scraping.sources s ON s.id=a.source_id WHERE s.enabled AND (a.content_type LIKE '%application/pdf%' OR (a.source_id='kakuzi-record-filings' AND a.content_type LIKE '%text/html%'))
     AND a.sha256 ~ '^[a-f0-9]{64}$' AND e.text IS NOT NULL
-    AND (a.source_id='nse' OR a.source_id='cbk-bond-history' OR a.source_id LIKE '%-filings')
+    AND (a.source_id='nse' OR a.source_id='cbk-bond-history' OR a.source_id='kenyanstocks' OR a.source_id LIKE '%-filings')
     AND ($3::bigint[] IS NULL OR e.id=ANY($3))
     AND NOT EXISTS(SELECT 1 FROM scraping.extractions newer WHERE newer.artifact_id=e.artifact_id
       AND (newer.extracted_at>e.extracted_at OR (newer.extracted_at=e.extracted_at AND newer.id>e.id)))
@@ -51,7 +52,7 @@ async function run(limit:number,extractionIds?:number[]) {
           if(row.method!=='native_pdf_text'&&!isKakuziHtml)throw new Error('OCR or unknown non-native extraction requires visual review');
           if(row.method==='native_pdf_text' && row.needs_review===true)throw new Error('Incomplete native PDF extraction requires review; not eligible for automatic publication');
           const url=new URL(row.document_url);
-          if(url.protocol!=='https:' || url.username || url.password)throw new Error('Official HTTPS provenance required');
+          if(url.protocol!=='https:' || url.username || url.password)throw new Error('Registered HTTPS provenance required');
           const host=url.hostname.replace(/^www\./,'');
           if(isKakuziHtml&&(host!=='kakuzi.co.ke'||url.pathname!=='/five-year-record'||url.search||url.hash))throw new Error('Exact registered Kakuzi record URL required');
           if(row.source_id==='cbk-bond-history') {
@@ -67,7 +68,7 @@ async function run(limit:number,extractionIds?:number[]) {
             result={recordIds:records.map(r=>r.id)};
           } else {
             const domains=(row.config?.allowedDomains??[]) as string[];
-            if(row.source_id==='nse' ? host!=='nse.co.ke' : !domains.some(domain=>host===domain.replace(/^www\./,'')))throw new Error('Source host outside registered issuer archive');
+            if(row.source_id==='nse' ? host!=='nse.co.ke' : row.source_id==='kenyanstocks'?host!=='assets.kenyanstocks.com':!domains.some(domain=>host===domain.replace(/^www\./,'')))throw new Error('Source host outside registered issuer archive');
             // Exact full issuer name in the report header, not fuzzy title matching.
             const names=(await db.query(`SELECT s.id,s.company_id,c.name FROM market.securities s JOIN market.companies c ON c.id=s.company_id WHERE s.exchange='NSE' AND s.status='active' AND (lower(c.name) NOT LIKE 'safaricom%' OR s.symbol='SCOM')`)).rows;
             const normalize=(value:string)=>value.toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -77,7 +78,8 @@ async function run(limit:number,extractionIds?:number[]) {
             const explicitKcb=/KCB GROUP PLC AUDITED RESULTS AND OTHER DISCLOSURES/.test(row.text)&&/FOR THE YEAR ENDED 31ST DECEMBER 2017/.test(row.text);
             // A verified statement masthead takes precedence over incidental
             // issuer names in commentary or shareholder disclosures.
-            const matches=names.filter(c=>isKakuziHtml ? c.id==='NSE:KUKZ' : explicitSafaricom ? c.id==='NSE:SCOM' : explicitKakuzi ? normalize(c.name)==='kakuziplc' : explicitKcb ? c.id==='NSE:KCB' : header.includes(normalize(c.name)));
+            const mastheads=names.filter(c=>issuerMastheadMatches(row.text,c.name));
+            const matches=names.filter(c=>isKakuziHtml ? c.id==='NSE:KUKZ' : explicitSafaricom ? c.id==='NSE:SCOM' : explicitKakuzi ? normalize(c.name)==='kakuziplc' : explicitKcb ? c.id==='NSE:KCB' : mastheads.length?mastheads.some(m=>m.id===c.id):header.includes(normalize(c.name)));
             if(matches.length!==1)throw new Error('Unique exact issuer identity required');
             const issuer=matches[0]!;
             const entries=isKakuziHtml ? validateKakuziHtmlRecord(row.text,row.tables,issuer.id,new Date(row.extracted_at).toISOString().slice(0,10)) : explicitKcb ? validateKcbGroupReport(row.text,issuer.id) : explicitKakuzi ? validateKakuziGroupReport(row.text,issuer.id) : issuer.id==='NSE:SCOM' && /CONDENSED AUDITED RESULTS FOR THE/.test(row.text)

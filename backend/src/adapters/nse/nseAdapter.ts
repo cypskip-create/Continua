@@ -13,6 +13,8 @@ import {
 } from "./nseMapper.js";
 import type { NseRawCandle } from "./nseRawTypes.js";
 import { readPublishedNseIndices } from "./nseIndices.js";
+import {MyStocksClient} from '../mystocks/mystocksClient.js';
+import {AfxClient} from '../afx/afxClient.js';
 
 const INTERVAL_TO_RAW: Record<Candle["interval"], NseRawCandle["Interval"]> = {
   "1m": "1MIN", "5m": "5MIN", "15m": "15MIN", "1h": "1HR",
@@ -60,7 +62,8 @@ export class NseAdapter implements IExchangeAdapter {
 
   async getCandles(symbol: string, interval: Candle["interval"], from: string, to: string): Promise<Candle[]> {
     const raw = await this.client.fetchCandles(symbol, INTERVAL_TO_RAW[interval], from, to);
-    return raw.map(mapCandle);
+    const sourceUrl=this.client instanceof MyStocksClient?'https://live.mystocks.co.ke/':this.client instanceof AfxClient?`https://afx.kwayisi.org/nse/${symbol.toLowerCase()}.html`:null;
+    return raw.map(r=>({...mapCandle(r),sourceUrl}));
   }
 
   async getFundamentals(symbol: string): Promise<FundamentalsBundle | null> {

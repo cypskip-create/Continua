@@ -1,5 +1,6 @@
 import { query } from "../db.js";
 import type { FinancialPeriod, IncomeStatement, BalanceSheet, CashFlowStatement } from "../../types/market.js";
+import {env} from '../../config/index.js';
 
 export const financialsRepository = {
   async upsertPeriod(period: FinancialPeriod): Promise<void> {
@@ -72,10 +73,11 @@ export const financialsRepository = {
        LEFT JOIN market.cash_flow_statements c ON c.period_id = p.id
        WHERE p.security_id = $1 AND p.period_type = $2
          AND p.period_end <= CURRENT_DATE AND p.reported_at <= CURRENT_DATE
+         AND ($3 OR EXISTS(SELECT 1 FROM market.filing_history_reviews reviewed WHERE reviewed.period_id=p.id))
          AND (i.period_id IS NOT NULL OR b.period_id IS NOT NULL OR c.period_id IS NOT NULL)
        ORDER BY p.fiscal_year DESC, p.fiscal_quarter DESC NULLS FIRST
        LIMIT 1`,
-      [securityId, periodType]
+      [securityId, periodType,env.NODE_ENV!=='production']
     );
     return res.rows[0] ?? null;
   },
@@ -99,9 +101,10 @@ export const financialsRepository = {
        LEFT JOIN market.cash_flow_statements c ON c.period_id = p.id
        WHERE p.security_id = $1 AND p.period_type = $2
          AND p.period_end <= CURRENT_DATE AND p.reported_at <= CURRENT_DATE
+         AND ($4 OR EXISTS(SELECT 1 FROM market.filing_history_reviews reviewed WHERE reviewed.period_id=p.id))
          AND (i.period_id IS NOT NULL OR b.period_id IS NOT NULL OR c.period_id IS NOT NULL)
        ORDER BY p.fiscal_year DESC, p.fiscal_quarter DESC NULLS FIRST LIMIT $3`,
-      [securityId, periodType, limit]
+      [securityId, periodType, limit,env.NODE_ENV!=='production']
     );
     return res.rows.reverse();
   },

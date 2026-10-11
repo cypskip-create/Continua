@@ -59,6 +59,7 @@ export const IndexSchema = z.object({
 });
 
 export const CandleSchema = z.object({
+  sourceUrl:z.string().url().nullable().optional(),
   securityId: z.string().min(1),
   interval: z.enum(["1m", "5m", "15m", "1h", "1d", "1w", "1M", "1y"]),
   timestamp: isoDate,

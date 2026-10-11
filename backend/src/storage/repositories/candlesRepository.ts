@@ -1,5 +1,6 @@
 import { pool, query } from "../db.js";
 import type { Candle, CandleInterval } from "../../types/market.js";
+import {env} from '../../config/index.js';
 
 export const candlesRepository = {
   /** Bulk upsert via a single multi-row statement — candle backfills can be
@@ -14,15 +15,16 @@ export const candlesRepository = {
         const chunk = candles.slice(i, i + chunkSize);
         const values: unknown[] = [];
         const rows = chunk.map((c, idx) => {
-          const base = idx * 8;
-          values.push(c.securityId, c.interval, c.timestamp, c.open, c.high, c.low, c.close, c.volume);
-          return `($${base + 1},$${base + 2},$${base + 3},$${base + 4},$${base + 5},$${base + 6},$${base + 7},$${base + 8})`;
+          const base = idx * 9;
+          values.push(c.securityId, c.interval, c.timestamp, c.open, c.high, c.low, c.close, c.volume,c.sourceUrl??null);
+          return `(${Array.from({length:9},(_,i)=>`$${base+i+1}`).join(',')})`;
         });
         await client.query(
-          `INSERT INTO market.candles (security_id, interval, bar_time, open, high, low, close, volume)
+          `INSERT INTO market.candles (security_id, interval, bar_time, open, high, low, close, volume,source_url)
            VALUES ${rows.join(",")}
            ON CONFLICT (security_id, interval, bar_time) DO UPDATE SET
-             open = EXCLUDED.open, high = EXCLUDED.high, low = EXCLUDED.low, close = EXCLUDED.close, volume = EXCLUDED.volume`,
+             open = EXCLUDED.open, high = EXCLUDED.high, low = EXCLUDED.low, close = EXCLUDED.close, volume = EXCLUDED.volume,source_url=EXCLUDED.source_url
+           WHERE EXCLUDED.source_url IS NOT NULL OR candles.source_url IS NULL`,
           values
         );
       }
@@ -37,11 +39,12 @@ export const candlesRepository = {
 
   async getCandles(securityId: string, interval: CandleInterval, from: string, to: string): Promise<Candle[]> {
     const res = await query<any>(
-      `SELECT security_id as "securityId", interval, bar_time as "timestamp", open, high, low, close, volume
+      `SELECT security_id as "securityId", interval, bar_time as "timestamp", open, high, low, close, volume,source_url AS "sourceUrl"
        FROM market.candles
        WHERE security_id = $1 AND interval = $2 AND bar_time BETWEEN $3 AND $4
+         AND ($5 OR source_url IS NOT NULL)
        ORDER BY bar_time ASC`,
-      [securityId, interval, from, to]
+      [securityId, interval, from, to,env.NODE_ENV!=='production']
     );
     return res.rows;
   },
@@ -51,9 +54,9 @@ export const candlesRepository = {
   async getPriceAt(securityId: string, atOrBefore: string): Promise<number | null> {
     const res = await query<any>(
       `SELECT close FROM market.candles
-       WHERE security_id = $1 AND interval = '1d' AND bar_time <= $2
+       WHERE security_id = $1 AND interval = '1d' AND bar_time <= $2 AND ($3 OR source_url IS NOT NULL)
        ORDER BY bar_time DESC LIMIT 1`,
-      [securityId, atOrBefore]
+      [securityId, atOrBefore,env.NODE_ENV!=='production']
     );
     return res.rows[0]?.close ?? null;
   },
@@ -61,8 +64,8 @@ export const candlesRepository = {
   async getHighLow(securityId: string, from: string, to: string): Promise<{ high: number; low: number } | null> {
     const res = await query<any>(
       `SELECT MAX(high) as high, MIN(low) as low FROM market.candles
-       WHERE security_id = $1 AND interval = '1d' AND bar_time BETWEEN $2 AND $3`,
-      [securityId, from, to]
+       WHERE security_id = $1 AND interval = '1d' AND bar_time BETWEEN $2 AND $3 AND ($4 OR source_url IS NOT NULL)`,
+      [securityId, from, to,env.NODE_ENV!=='production']
     );
     const row = res.rows[0];
     if (!row || row.high == null) return null;
@@ -85,11 +88,11 @@ export const candlesRepository = {
          SELECT security_id, bar_time, close,
                 row_number() OVER (PARTITION BY security_id ORDER BY bar_time DESC) as rn
          FROM market.candles
-         WHERE security_id = ANY($1) AND interval = '1d'
+         WHERE security_id = ANY($1) AND interval = '1d' AND ($3 OR source_url IS NOT NULL)
        ) ranked
        WHERE rn <= $2
        ORDER BY security_id, bar_time ASC`,
-      [securityIds, limit]
+      [securityIds, limit,env.NODE_ENV!=='production']
     );
     for (const row of res.rows) {
       const list = result.get(row.securityId) ?? [];
@@ -102,8 +105,8 @@ export const candlesRepository = {
   async getAverageVolume(securityId: string, from: string, to: string): Promise<number | null> {
     const res = await query<any>(
       `SELECT AVG(volume) as avg_volume FROM market.candles
-       WHERE security_id = $1 AND interval = '1d' AND bar_time BETWEEN $2 AND $3`,
-      [securityId, from, to]
+       WHERE security_id = $1 AND interval = '1d' AND bar_time BETWEEN $2 AND $3 AND ($4 OR source_url IS NOT NULL)`,
+      [securityId, from, to,env.NODE_ENV!=='production']
     );
     const v = res.rows[0]?.avg_volume;
     return v != null ? Number(v) : null;

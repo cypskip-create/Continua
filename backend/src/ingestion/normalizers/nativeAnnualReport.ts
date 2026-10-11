@@ -1,5 +1,6 @@
 import type { DetectedFinancialTable } from '../../types/market.js';
 import { HistoricalConfirmSchema } from '../confirmHistoricalColumns.js';
+import {issuerMastheadMatches} from './issuerIdentity.js';
 
 export const NATIVE_ANNUAL_VERSION = 'consolidated-native-annual-v1';
 const months=['january','february','march','april','may','june','july','august','september','october','november','december'];
@@ -23,7 +24,7 @@ function number(value:string) {
  */
 export function validateNativeAnnualReport(text:string, issuer:string, securityId:string) {
   const normalized=(v:string)=>v.toLowerCase().replace(/[^a-z0-9]/g,'');
-  if(!issuer || !normalized(text.slice(0,4000)).includes(normalized(issuer))) throw new Error('Exact issuer identity missing from report header');
+  if(!issuer || (!issuerMastheadMatches(text,issuer)&&!normalized(text.slice(0,4000)).includes(normalized(issuer)))) throw new Error('Exact issuer identity missing from report header');
   const approvals=[...text.matchAll(new RegExp(`(?:approved|authorised)\\s+(?:by[^\\n]{0,100}\\s+)?(?:for issue\\s+)?on\\s+${datePattern}`,'gi'))];
   const reportDates=[...new Set(approvals.map(v=>date(v[1]!,v[2]!,v[3]!)))];
   if(reportDates.length!==1)throw new Error('Unique approval date required');

@@ -84,6 +84,8 @@ export interface CompanyProfile {
     founded?: string;
     website?: string;
     sectorName?: string;
+    profileSourceUrl?:string;
+    profileObservedAt?:string;
   };
 }
 

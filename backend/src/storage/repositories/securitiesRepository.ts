@@ -80,7 +80,7 @@ export const securitiesRepository = {
     return res.rows;
   },
 
-  async getCompanyProfile(exchange: string, symbol: string): Promise<(Security & { company: Company & { sectorName?: string; sectorId?: string } }) | null> {
+  async getCompanyProfile(exchange: string, symbol: string): Promise<(Security & { company: Company & { sectorName?: string; sectorId?: string; profileSourceUrl?:string; profileObservedAt?:string } }) | null> {
     const res = await query<any>(
       `SELECT s.id, s.symbol, s.exchange, s.company_id as "companyId", s.currency, s.status, s.isin, s.listed_at as "listedAt",
               c.name as "companyName", c.description, c.headquarters, c.ceo, c.employees, c.founded, c.website,
@@ -93,12 +93,16 @@ export const securitiesRepository = {
     );
     const row = res.rows[0];
     if (!row) return null;
+    // Supplemental collection must not turn a working core profile into an
+    // outage while the collector/database is unavailable.
+    const supplement=exchange==='NSE'&&(!row.headquarters||!row.website)?await publisherProfile(symbol,row.companyName).catch(()=>null):null;
     return {
       id: row.id, symbol: row.symbol, exchange: row.exchange, companyId: row.companyId,
       currency: row.currency, status: row.status, isin: row.isin, listedAt: row.listedAt,
       company: {
-        id: row.companyId, name: row.companyName, description: row.description, headquarters: row.headquarters,
-        ceo: row.ceo, employees: row.employees, founded: row.founded, website: row.website,
+        id: row.companyId, name: row.companyName, description: row.description, headquarters: row.headquarters??supplement?.headquarters,
+        ceo: row.ceo, employees: row.employees, founded: row.founded, website: row.website??supplement?.website,
+        profileSourceUrl:supplement?.sourceUrl,profileObservedAt:supplement?.observedAt,
         sectorName: row.sectorName, sectorId: row.sectorId,
       },
     };
@@ -130,3 +134,4 @@ export const securitiesRepository = {
     return res.rows;
   },
 };
+import {publisherProfile} from '../../services/research/publisherProfile.js';

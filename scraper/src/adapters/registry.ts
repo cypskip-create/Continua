@@ -15,6 +15,7 @@ import { runAdapter, type AdapterRunSummary } from "./runAdapter.js";
 import { nseAnnouncementsAdapter } from "./nse/announcementsAdapter.js";
 import { createRssFeedAdapter } from "./rss/createRssFeedAdapter.js";
 import { kenyanstocksAdapter } from "./kenyanstocks/kenyanstocksAdapter.js";
+import {afxAdapter} from './afx/afxAdapter.js';
 import type { SourceAdapter } from "./types.js";
 import type { Source } from "../types.js";
 import type { CrawlSummary } from "../crawler/crawlSource.js";
@@ -30,6 +31,7 @@ const adapterFactories: Record<string, AdapterFactory> = {
   // here — see kenyanstocksAdapter.ts's doc comment for why, and for
   // what it deliberately does NOT attempt to parse yet.
   kenyanstocks: () => kenyanstocksAdapter,
+  afx:()=>afxAdapter,
 };
 
 export function hasRegisteredAdapter(adapterId: string): boolean {
