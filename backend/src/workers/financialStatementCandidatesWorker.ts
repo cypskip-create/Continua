@@ -11,6 +11,7 @@ import cron, { type ScheduledTask } from "node-cron";
 import { runFinancialStatementCandidatesBridge } from "../ingestion/pipelines/financialStatementCandidatesBridge.js";
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
+import { runAutomaticDocumentPublication } from '../ingestion/pipelines/automaticDocumentPublication.js';
 
 export async function runFinancialCandidatesBridgeOnce(): Promise<void> {
   try {
@@ -26,6 +27,7 @@ export async function runFinancialCandidatesBridgeOnce(): Promise<void> {
       if (summary.extractionsProcessed < batchSize || summary.failed === summary.extractionsProcessed) break;
     }
     logger.info(total, "Financial statement candidates bridge sync complete");
+    await runAutomaticDocumentPublication();
   } catch (err) {
     logger.error({ err }, "Financial statement candidates bridge sync failed");
   }

@@ -8,16 +8,16 @@ import {
 } from "@/components/engine/EngineWorkspace";
 import { useEnginePreferences } from "@/hooks/useEnginePreferences";
 import { engineWorkspaceApi } from "@/api/engineWorkspaceApi";
-import { engineReadRetry } from "@/api/engineRetry";
 import { ResearchJournal } from "@/components/engine/ResearchJournal";
 import { EngineConnectionCheck } from "@/components/engine/EngineConnectionCheck";
 import { mediaStoryUrl } from "@/lib/mediaRoute";
 import { useStickyHeights } from "@/hooks/useStickyHeights";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, RefreshCw, Zap } from "lucide-react";
-import { engineApi, type EngineBundle } from "@/api/engineApi";
+import type { EngineBundle } from "@/api/engineApi";
+import { ContinuaApiError } from '@/api/client';
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useExchange } from "@/hooks/useExchange";
@@ -28,6 +28,7 @@ import { StockAlertDialog } from "@/components/alerts/StockAlertDialog";
 import { EngineForecastDesk, EngineReportsDesk, BriefingDecisionDesk, EvidenceLedger, ValuationSensitivityDesk, OwnershipAuditDesk, TechnicalResearchDesk, ScenarioWorkbench } from "@/components/engine/EngineResearchTools";
 import { ValuationPreview } from "@/components/stock/FundamentalResearch";
 import { premiumEngineTools, canUseEngineTool } from "@/lib/subscription";
+import { useEngineBundle } from '@/hooks/useEngineBundle';
 import { ToolHelp } from "@/components/shared/ToolHelp";
 
 const tools = [
@@ -101,7 +102,7 @@ export default function Engine() {
   const stickyRef = useStickyHeights();
   const [params, setParams] = useSearchParams();
   const { user } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
+  const { profile, loading: profileLoading, error: profileError, refetch: retryProfile } = useProfile();
   const { exchange, exchangeMeta } = useExchange();
   const { instruments } = useInstruments();
   const symbol = (
@@ -143,15 +144,7 @@ export default function Engine() {
   );
   const fullEngine = profile?.subscription_plan === "premium_plus";
   const toolAllowed = canUseEngineTool(profile?.subscription_plan, tool);
-  const query = useQuery({
-    queryKey: ["continua", "engine", user?.id, profile?.subscription_plan, exchange, symbol],
-    queryFn: () => engineApi.get(symbol, exchange),
-    enabled: paid && toolAllowed && !!user && !profileLoading && group.name !== "My workspace",
-    staleTime: 60_000,
-    retry: engineReadRetry,
-    refetchInterval: tool === "News" ? 60_000 : false,
-    refetchOnReconnect: true,
-  });
+  const query = useEngineBundle(symbol,exchange,toolAllowed&&group.name!=='My workspace',tool==='News');
   const data = query.data;
   const {
     settings: researchPreferences,
@@ -225,6 +218,8 @@ export default function Engine() {
           <p role="status" className="py-10 text-sm text-muted-foreground">
             Checking membership…
           </p>
+        ) : user && !profile && profileError ? (
+          <section className="py-6"><p>Your account could not be loaded. Your subscription has not been changed.</p><button className="mt-3 text-primary" onClick={()=>void retryProfile()}>Retry account connection</button></section>
         ) : !paid ? (
           <section className="py-6 space-y-5">
             <h3 className="text-lg font-semibold">
@@ -346,7 +341,7 @@ export default function Engine() {
               <p role="status" className="py-10 text-sm text-muted-foreground">
                 Preparing your analysis…
               </p>
-            ) : query.isError ? (
+            ) : query.isError && (!data || (query.error instanceof ContinuaApiError && [401,403].includes(query.error.status))) ? (
               <div className="py-8 space-y-3">
                 <p role="alert" className="text-sm text-muted-foreground">
                   {query.error.message}
@@ -361,6 +356,7 @@ export default function Engine() {
             ) : (
               data && (
                 <div key={`${exchange}:${symbol}`} className="py-6 space-y-6">
+                  {query.isError&&<p role="status" className="text-sm text-muted-foreground">The background update could not connect. Showing your last saved research with its original date. <button className="text-primary" onClick={()=>void query.refetch()}>Retry update</button></p>}
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -376,7 +372,8 @@ export default function Engine() {
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         Analysis updated{" "}
-                        {new Date(data.generatedAt).toLocaleTimeString([], {
+                        {new Date(data.generatedAt).toLocaleString([], {
+                          day:'2-digit',month:'short',
                           hour: "2-digit",
                           minute: "2-digit",
                         })}

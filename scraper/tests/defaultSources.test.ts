@@ -6,7 +6,7 @@ const { DEFAULT_SOURCES } = await import("../src/config/defaultSources.js");
 
 describe("recurring publisher sources", () => {
   it('registers additional first-party archives with valid staggered schedules',()=>{
-    for(const id of ['eabl-filings','coop-filings','kengen-filings']) {
+    for(const id of ['eabl-filings','coop-filings','kengen-filings','kplc-filings','ncba-filings','dtb-filings']) {
       const source=DEFAULT_SOURCES.find(item=>item.id===id)!;
       expect(source.config.documents?.pdf).toBe(true);
       const [minute,hour]=String(source.config.schedule).split(' ').map(Number);

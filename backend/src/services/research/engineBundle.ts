@@ -13,6 +13,7 @@ import { cache } from "../../storage/cache.js";
 
 import type { ExchangeCode } from "../../config/index.js";
 import { ApiError } from "../../api/middleware/errorHandler.js";
+import { logger } from '../../monitoring/logger.js';
 import {
   analyzeFinancials,
   dataQuality,
@@ -24,9 +25,25 @@ import { trailingDividendPerShare } from "./dividendMetrics.js";
 const pendingBundles=new Map<string,Promise<Awaited<ReturnType<typeof loadEngineBundle>>>>();
 export async function getEngineBundle(symbol:string,exchange:ExchangeCode) {
   const key=`${exchange}:${symbol}`;
-  const existing=pendingBundles.get(key);if(existing)return existing;
-  const job=loadEngineBundle(symbol,exchange);pendingBundles.set(key,job);
-  try{return await job;}finally{pendingBundles.delete(key);}
+  type Bundle=Awaited<ReturnType<typeof loadEngineBundle>>;
+  const staleKey=`engine:last-good:v1:${key}`;
+  const cached=await cache.get<Bundle>(staleKey);
+  const age=cached?Date.now()-Date.parse(cached.generatedAt):Infinity;
+  if(cached && age>=0 && age<60_000)return cached;
+  let job=pendingBundles.get(key);
+  if(!job) {
+    job=loadEngineBundle(symbol,exchange).then(async bundle=>{
+      await cache.set(staleKey,bundle,24*60*60_000);return bundle;
+    }).finally(()=>pendingBundles.delete(key));
+    pendingBundles.set(key,job);
+  }
+  // Keep the original generatedAt so older data is never labelled as live.
+  // Refresh in the background; failed refreshes cannot erase last good data.
+  if(cached && age>=0 && age<24*60*60_000) {
+    void job.catch(error=>logger.warn({error,key},'Engine background refresh failed; retaining dated research'));
+    return cached;
+  }
+  return job;
 }
 async function loadEngineBundle(symbol: string, exchange: ExchangeCode) {
   return cache.getOrSet(`engine:v3:${exchange}:${symbol}`, 60_000, async () => {

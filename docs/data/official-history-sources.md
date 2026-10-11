@@ -11,6 +11,9 @@ Verified on 10–11 October 2026. Public accessibility is not blanket permission
 | EABL | https://www.eabl.com/investors/annual-reports | Annual-report archive lists 2014–2026 | Added first-party filings source |
 | Co-operative Bank | https://www.co-opbank.co.ke/investor-relations/financial-statements/ and https://www.co-opbank.co.ke/investor_categories/co-op-bank-group-agm/ | Paginated financial statements and integrated annual reports | Added first-party filings source |
 | KenGen | https://www.kengen.co.ke/investor-relations/ | Financial statements and integrated reports; official PDFs located for 2015, 2020 and 2025 | Added first-party filings source |
+| Kenya Power | https://www.kplc.co.ke/investor-relations | Integrated annual reports and audited statements, including 2023–2025 PDFs | Added guarded first-party source; scanned reports remain review-only |
+| NCBA Group | https://ncbagroup.com/investor-relations/ | Annual reports, quarterly earnings and investor presentations | Added guarded first-party source; subsidiary and pre-merger figures must not be relabelled as current group history |
+| DTB Kenya | https://dtbk.dtbafrica.com/reports/integrated-reports | Integrated reports and consolidated statements | Added guarded first-party source; distinguish Kenya reporting group from other regional entities |
 | Capital Markets Authority | https://annualreport.cma.or.ke/ | Regulator's issuer-report resource portal; useful to cross-check retained annual reports | Reference source; not an assertion that every issuer/year is accessible or licensed |
 | Central Bank of Kenya | https://www.centralbank.go.ke/bills-bonds/treasury-bonds/ and https://www.centralbank.go.ke/bills-bonds/treasury-bills/ | Auction results, coupons, maturity dates, prospectuses and schedules | Existing public-document sources; reviewed bond observations published |
 | NSE issuer announcements | https://www.nse.co.ke/listed-company-announcements/ | Historical company statements, dividends, rights issues, announcements, issuer events | 2015–2026 archive pages discovered; document downloads/review ongoing |
@@ -28,6 +31,8 @@ The reviewed Barclays/Absa 2015 scan has been published through the protected hi
 - Reviewed CBK bond records now support an instrument-specific dated yield/price view. Auction and secondary-market yield histories remain separate. A single observation appears as a point with a coverage warning, not a trend or prediction. Price-per-100 charts require that verified unit.
 
 No price candles, analyst estimates or missing financial periods are synthesized from report text. A new permission enables the relevant authorised collection workflow; it does not itself verify downloaded figures or create missing historical data.
+
+For bonds, CBK's auction archive remains the primary source for dated auction yields; NSE market-statistics reports are the distinct source for secondary-market observations. For derivatives, use NSE's own derivative price lists/market-statistics downloads, preserving expiry, settlement price and open interest. Do not use similarly named Indian NSE datasets. Licensed historical file/feed delivery from Nairobi NSE is still needed for comprehensive equity and derivatives trading history; an archive of issuer PDFs cannot replace actual trading observations.
 
 ## NSE approval activation, 11 October 2026
 

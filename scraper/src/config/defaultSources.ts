@@ -56,6 +56,9 @@ export const DEFAULT_SOURCES: SourceDefinition[] = [
     { id: "eabl-filings", name: "East African Breweries PLC", domain: "eabl.com", seeds: ["https://www.eabl.com/investors/annual-reports"], paths: ["/investors/", "/sites/", ".pdf"] },
     { id: "coop-filings", name: "Co-operative Bank of Kenya", domain: "co-opbank.co.ke", seeds: ["https://www.co-opbank.co.ke/investor-relations/financial-statements/", "https://www.co-opbank.co.ke/investor_categories/co-op-bank-group-agm/"], paths: ["/investor", "/wp-content/uploads/", ".pdf"] },
     { id: "kengen-filings", name: "Kenya Electricity Generating Company PLC", domain: "kengen.co.ke", seeds: ["https://www.kengen.co.ke/investor-relations/"], paths: ["/investor", "/download/", "/images/", ".pdf"] },
+    { id: "kplc-filings", name: "Kenya Power and Lighting Company PLC", domain: "kplc.co.ke", seeds: ["https://www.kplc.co.ke/investor-relations"], paths: ["/investor", "/storage/", ".pdf"] },
+    { id: "ncba-filings", name: "NCBA Group PLC", domain: "ncbagroup.com", seeds: ["https://ncbagroup.com/investor-relations/"], paths: ["/investor", "/wp-content/", ".pdf"] },
+    { id: "dtb-filings", name: "Diamond Trust Bank Kenya Limited", domain: "dtbk.dtbafrica.com", seeds: ["https://dtbk.dtbafrica.com/reports/integrated-reports"], paths: ["/reports/", "/sites/default/files/", ".pdf"] },
   ].map((issuer, index): SourceDefinition => ({
     id: issuer.id, name: `${issuer.name} historical filings`, adapter: "web", enabled: true,
     config: {

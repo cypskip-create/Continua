@@ -36,7 +36,7 @@ export function draftCbkBondReport(text:string, sourceUrl:string) {
   const prices=vector(/^Price per Kshs\s*100 at average yield\s*/i,false);
   const isinLine=lines.find(v=>/^ISIN\s/.test(v));
   const isins=isinLine?.match(/KE[A-Z0-9]{9}\d/g) ?? [];
-  if(isins.length!==issues.length) throw new Error("ISIN columns missing");
+  if(isins.length!==issues.length || new Set(isins).size!==isins.length) throw new Error("ISIN columns missing or duplicated");
   const due=lines.find(v=>/^Due Dates\s/i.test(v))?.match(/\d{1,2}-[A-Za-z]{3}-\d{2,4}/g) ?? [];
   if(due.length!==issues.length) throw new Error("Maturity columns need review");
   return issues.map((issue,index)=>{

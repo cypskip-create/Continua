@@ -22,6 +22,7 @@ import { useIndices } from "@/hooks/useIndices";
 import { formatPostDate } from "@/lib/formatTimestamp";
 import { UpdatesFeed } from "@/components/home/UpdatesFeed";
 import { PortfolioPulse } from "@/components/home/PortfolioPulse";
+import { MarketIndexStrip } from '@/components/home/MarketIndexStrip';
 
 
 const Eyebrow = ({ children, action, onAction }: { children: React.ReactNode; action?: string; onAction?: () => void }) => (
@@ -195,18 +196,7 @@ export default function Home() {
         <div>
           <Eyebrow action="Markets" onAction={() => navigate('/markets')}>Market Snapshot</Eyebrow>
           {!nseIndices.length && <p className="py-2 text-xs text-muted-foreground">Published NSE index observations are not available yet.</p>}
-          <div className="grid grid-cols-3 gap-3 border-t border-border/60 pt-3">
-            {nseIndices.map(idx => (
-              <div key={idx.name} className="cursor-pointer" onClick={() => navigate('/markets')}>
-                <p className="text-[0.625rem] text-muted-foreground">{idx.name}</p>
-                <p className="text-sm font-semibold tabular mt-0.5">{idx.value}</p>
-                <p className={`text-[0.625rem] font-semibold flex items-center gap-0.5 tabular ${idx.isUp ? 'text-bull' : 'text-bear'}`}>
-                  {idx.isUp ? <ArrowUpRight className="h-2.5 w-2.5" /> : <ArrowDownRight className="h-2.5 w-2.5" />}
-                  {idx.isUp ? '+' : ''}{idx.change}%
-                </p>
-              </div>
-            ))}
-          </div>
+          <MarketIndexStrip indices={nseIndices} onSelect={()=>navigate('/markets')}/>
         </div>
 
         {/* QUICK WATCH — directly below Market Snapshot, as the fast path

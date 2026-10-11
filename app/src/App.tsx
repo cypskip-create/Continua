@@ -1,7 +1,8 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/queryClient";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -41,8 +42,6 @@ const ThemeDetail = lazy(() => import("./pages/ThemeDetail"));
 const FeaturedListDetail = lazy(() => import("./pages/FeaturedListDetail"));
 const AdminFinancialsReview = lazy(() => import("./pages/AdminFinancialsReview"));
 const Engine = lazy(() => import("./pages/Engine"));
-
-const queryClient = new QueryClient();
 
 function AccountAlias() {
   const location = useLocation();

@@ -1,12 +1,9 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { LockKeyhole, Zap } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
-import { useExchange } from "@/hooks/useExchange";
-import { engineApi } from "@/api/engineApi";
-import { engineReadRetry } from "@/api/engineRetry";
+import { researchAccessState } from '@/lib/accountAccess';
 
 export function EnginePreview({ symbol }: { symbol: string }) {
   return <section className="my-4 overflow-hidden rounded-2xl border border-primary/20 bg-primary/5 p-5" aria-label="Locked Engine Forecast preview">
@@ -19,15 +16,13 @@ export function EnginePreview({ symbol }: { symbol: string }) {
   </section>;
 }
 
-/** Do not mount analysis children until the subscriber API confirms access. */
+/** Account-wide UI state; paid APIs still authorize every actual request. */
 export function EngineAccess({symbol,children}: {symbol:string;children:ReactNode}) {
-  const {profile,loading}=useProfile();
+  const {profile,loading,error,refetch}=useProfile();
   const {user}=useAuth();
-  const {exchange}=useExchange();
-  const paid=["premium","premium_plus"].includes(profile?.subscription_plan??"");
-  const query=useQuery({queryKey:["continua","research-access",user?.id,profile?.subscription_plan,exchange,symbol],queryFn:()=>engineApi.researchAccess(symbol,exchange),enabled:paid&&!!user&&!loading,staleTime:60_000,retry:engineReadRetry});
-  if(loading || (paid&&query.isLoading)) return <p role="status" className="py-6 text-sm text-muted-foreground">Checking Engine access…</p>;
-  if(!paid || !user) return <EnginePreview symbol={symbol}/>;
-  if(query.isError || query.data?.allowed !== true) return <section className="py-6 space-y-3"><p role="alert" className="text-sm text-muted-foreground">Engine access could not be verified. Your reported financials remain available.</p><button className="text-sm font-semibold text-primary" onClick={()=>void query.refetch()}>Retry Engine access</button></section>;
+  const state=researchAccessState({signedIn:!!user,loading,hasProfile:!!profile,plan:profile?.subscription_plan,expiresAt:profile?.subscription_expires_at,error});
+  if(state==='loading') return <p role="status" className="py-6 text-sm text-muted-foreground">Loading your account…</p>;
+  if(state==='unavailable') return <section className="py-6"><p>Your subscription could not be loaded. Please retry; this is not an upgrade requirement.</p><button onClick={()=>void refetch()}>Retry account connection</button></section>;
+  if(state==='free') return <EnginePreview symbol={symbol}/>;
   return <>{children}</>;
 }

@@ -339,14 +339,7 @@ export default function Markets() {
     </div>
   );
   const source = (r: ResearchRecord) => (
-    <a
-      className="text-xs text-primary underline"
-      target="_blank"
-      rel="noopener noreferrer"
-      href={r.sourceUrl}
-    >
-      Official source · {dateLabel(r.observedAt)}
-    </a>
+    <span className="text-xs text-muted-foreground">{new URL(r.sourceUrl).hostname.endsWith('centralbank.go.ke')?'CBK':new URL(r.sourceUrl).hostname.endsWith('nse.co.ke')?'NSE':new URL(r.sourceUrl).hostname.endsWith('cma.or.ke')?'CMA':'KNBS'} · {dateLabel(r.observedAt)}</span>
   );
   const indexStrip = (
     <div className="market-index-strip">

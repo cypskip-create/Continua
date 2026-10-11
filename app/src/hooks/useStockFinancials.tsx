@@ -21,6 +21,8 @@ export function useStockFinancials(
     queryFn: () => financialsApi.getHistory(symbol as string, { periodType, limit }),
     enabled: !!symbol,
     staleTime: 30 * 60_000,
+    refetchOnMount: 'always',
+    refetchInterval: 5 * 60_000,
     retry: 1,
   });
 
@@ -29,6 +31,8 @@ export function useStockFinancials(
     queryFn: () => financialsApi.getLatest(symbol as string),
     enabled: !!symbol,
     staleTime: 30 * 60_000,
+    refetchOnMount: 'always',
+    refetchInterval: 5 * 60_000,
     retry: 1,
   });
 
