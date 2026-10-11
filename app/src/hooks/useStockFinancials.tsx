@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { financialsApi } from "@/api/financialsApi";
 import type { FiscalPeriodType } from "@/api/types";
+import {isPublishedFinancialPeriod} from '@/lib/financialCoverage';
 
 /** Real financial statements for one stock. History includes the stored
  * income, balance-sheet, and cash-flow fields for each reported period.
@@ -37,8 +38,8 @@ export function useStockFinancials(
   });
 
   return {
-    history: history.data ?? [],
-    latest: latest.data,
+    history: (history.data ?? []).filter(row=>isPublishedFinancialPeriod(row)),
+    latest: latest.data && isPublishedFinancialPeriod(latest.data) ? latest.data : undefined,
     isLoading: history.isLoading || latest.isLoading,
     historyError: history.error,
     refetchHistory: history.refetch,

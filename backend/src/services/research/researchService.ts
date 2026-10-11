@@ -45,6 +45,7 @@ export const researchService = {
       price: currentPrice,
       sharesOutstanding: latest.sharesOutstanding,
       netIncome: latest.netIncome,
+      eps: latest.eps,
       revenue: latest.revenue,
       ebitda: latest.ebitda,
       operatingIncome: latest.operatingIncome,

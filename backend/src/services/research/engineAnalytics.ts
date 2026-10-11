@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 export interface FinancialRow {
+  sourceUrls?:string[]|null;
   fiscalYear: number; fiscalQuarter?: number | null; periodEnd?: string; reportedAt?: string; currency?: string;
   revenue?: number | null; netIncome?: number | null; eps?: number | null;
   totalAssets?: number | null; totalLiabilities?: number | null; totalEquity?: number | null;
@@ -45,8 +46,13 @@ export function dataQuality(quote: { timestamp?: string; source?: string } | nul
     if (age(row.reportedAt) != null && age(row.reportedAt)! < 0) warnings.push(`FY${row.fiscalYear}: filing date is in the future.`);
   }
   const periods = rows.map(r=>`${r.fiscalYear}:${r.fiscalQuarter ?? "annual"}`);
+  const years=[...new Set(rows.map(row=>row.fiscalYear))].sort((a,b)=>a-b);
+  const missingYears:number[]=[];
+  for(let year=years[0]??0;years.length && year<years.at(-1)!;year++)if(!years.includes(year))missingYears.push(year);
+  if(missingYears.length)warnings.push(`Financial history has gaps: ${missingYears.join(', ')}. Sparse endpoints are not consecutive annual growth.`);
+  const sourceBackedYears=[...new Set(rows.filter(row=>row.sourceUrls?.length).map(row=>row.fiscalYear))];
   if(new Set(periods).size !== periods.length) warnings.push("Duplicate reporting periods require reconciliation.");
-  return { quoteAsOf: quote?.timestamp ?? null, quoteSource: quote?.source ?? null, periodEnd: latest?.periodEnd ?? null, filedAt: latest?.reportedAt ?? null, warnings:[...new Set(warnings)], priceAdjustmentBasis:"Unverified provider basis; corporate-action periods require verification before return analysis." };
+  return { quoteAsOf: quote?.timestamp ?? null, quoteSource: quote?.source ?? null, periodEnd: latest?.periodEnd ?? null, filedAt: latest?.reportedAt ?? null, financialCoverage:{years,missingYears,sourceBackedYears}, warnings:[...new Set(warnings)], priceAdjustmentBasis:"Unverified provider basis; corporate-action periods require verification before return analysis." };
 }
 export interface ResearchState { fiscalYear: number | null; revenue: number | null; netIncome: number | null; debtToEquity: number | null; fairValue: number | null; newsIds: string[]; ownership: {name:string;percent:number}[] }
 export function fingerprint(state: ResearchState) { return createHash("sha256").update(JSON.stringify(state)).digest("hex"); }

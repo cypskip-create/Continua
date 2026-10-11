@@ -2,10 +2,11 @@ import { z } from "zod";
 import { withTransaction } from "../storage/db.js";
 import { ApiError } from "../api/middleware/errorHandler.js";
 import { checkBalanceSheetIntegrity } from "../normalization/financials/normalizeFinancials.js";
+import type { PoolClient } from 'pg';
 
 const date=z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v);
 const amount=z.number().finite();
-const income=z.object({revenue:amount,netIncome:amount,eps:amount,costOfRevenue:amount.optional(),grossProfit:amount.optional(),operatingExpenses:amount.optional(),operatingIncome:amount.optional(),dilutedEps:amount.optional(),ebitda:amount.optional()});
+const income=z.object({revenue:amount,netIncome:amount,eps:amount.optional(),costOfRevenue:amount.optional(),grossProfit:amount.optional(),operatingExpenses:amount.optional(),operatingIncome:amount.optional(),dilutedEps:amount.optional(),ebitda:amount.optional()});
 const balance=z.object({totalAssets:amount,totalLiabilities:amount,totalEquity:amount,cash:amount.optional(),totalDebt:amount.optional(),currentAssets:amount.optional(),currentLiabilities:amount.optional(),sharesOutstanding:amount.optional()});
 const cashflow=z.object({operatingCashFlow:amount.optional(),investingCashFlow:amount.optional(),financingCashFlow:amount.optional(),freeCashFlow:amount.optional(),capex:amount.optional()});
 export const HistoricalConfirmSchema=z.object({
@@ -40,9 +41,9 @@ const fields={
 };
 const tables={income:'income_statements',balance:'balance_sheets',cashflow:'cash_flow_statements'};
 /** Publish explicitly reviewed base-unit columns together, or none of them. */
-export async function confirmHistoricalColumns(candidateId:string,raw:unknown) {
+export async function confirmHistoricalColumns(candidateId:string,raw:unknown,transaction?:PoolClient) {
   const b=HistoricalConfirmSchema.parse(raw);
-  return withTransaction(async client=>{
+  const publish=async (client:PoolClient)=>{
     const c=(await client.query('SELECT * FROM market.financial_statement_candidates WHERE id=$1 FOR UPDATE',[candidateId])).rows[0];
     if(!c)throw new ApiError(404,'Filing candidate not found');
     if(c.status==='rejected')throw new ApiError(409,'This candidate was rejected');
@@ -63,13 +64,16 @@ export async function confirmHistoricalColumns(candidateId:string,raw:unknown) {
       if(existing?.reported_at&&String(existing.reported_at).slice(0,10)>p.reportedAt)throw new ApiError(409,'An older filing cannot replace a newer reported period');
       await client.query(`INSERT INTO market.financial_periods(id,security_id,period_type,fiscal_year,fiscal_quarter,period_end,reported_at,currency) VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(id) DO UPDATE SET reported_at=EXCLUDED.reported_at`,[id,securityId,p.periodType,p.fiscalYear,p.fiscalQuarter??null,p.periodEnd,p.reportedAt,p.currency]);
       const input=e[b.statementType] as Record<string,number>;
-      const keys=Object.keys(input).filter(k=>Object.hasOwn(fields[b.statementType],k));
+      // A reviewed restatement replaces the statement, not merely a subset of
+      // fields: unknown old optional values must not survive a source repair.
+      const keys=e.allowRestatement ? Object.keys(fields[b.statementType]) : Object.keys(input).filter(k=>Object.hasOwn(fields[b.statementType],k));
       const names=keys.map(k=>(fields[b.statementType] as Record<string,string>)[k]);
-      await client.query(`INSERT INTO market.${tables[b.statementType]}(period_id,${names.join(',')}) VALUES($1,${keys.map((_,i)=>'$'+(i+2)).join(',')}) ON CONFLICT(period_id) DO UPDATE SET ${names.map(n=>`${n}=EXCLUDED.${n}`).join(',')}`,[id,...keys.map(k=>input[k])]);
+      await client.query(`INSERT INTO market.${tables[b.statementType]}(period_id,${names.join(',')}) VALUES($1,${keys.map((_,i)=>'$'+(i+2)).join(',')}) ON CONFLICT(period_id) DO UPDATE SET ${names.map(n=>`${n}=EXCLUDED.${n}`).join(',')}`,[id,...keys.map(k=>input[k]??null)]);
       await client.query(`INSERT INTO market.filing_history_reviews(candidate_id,period_id,column_index,statement_type,source_url,source_page,review_note,reviewed_values,previous_values) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,[candidateId,id,e.columnIndex,b.statementType,c.document_url,e.sourcePage,e.note,JSON.stringify(input),JSON.stringify(existing?.statement??null)]);
       ids.push(id);
     }
     await client.query("UPDATE market.financial_statement_candidates SET status='confirmed',reviewed_at=now(),reviewed_note=$2,resulting_period_id=$3,updated_at=now() WHERE id=$1",[candidateId,`Historical columns reviewed: ${b.periods.map(p=>p.columnIndex).join(', ')}`,ids.at(-1)]);
     return {candidateId,periodIds:ids,sourceUrl:c.document_url};
-  });
+  };
+  return transaction ? publish(transaction) : withTransaction(publish);
 }

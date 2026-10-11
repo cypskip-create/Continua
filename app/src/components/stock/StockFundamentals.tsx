@@ -13,6 +13,7 @@ import { FinancialStatementExplorer } from "./FinancialStatementExplorer";
 import { ValuationPreview } from "./FundamentalResearch";
 import { CompanyForecast } from "@/components/engine/CompanyFocus";
 import { OperationalEfficiency, SegmentDisclosure, ShareholderDisclosures } from "./FundamentalDisclosures";
+import {financialYearCoverage} from '@/lib/financialCoverage';
 
 type Panel = "financials" | "forecast" | "shareholders" | "dividends" | "profile";
 
@@ -36,7 +37,7 @@ export function StockFundamentals({ symbol, currency, price = 0, name = symbol, 
     previousPanel.current = panel;
   }, [panel]);
   const [periodType, setPeriodType] = useState<FiscalPeriodType>("annual");
-  const { history, isLoading } = useStockFinancials(symbol, { periodType, limit: 10 });
+  const { history, isLoading, historyError, refetchHistory } = useStockFinancials(symbol, { periodType, limit: 20 });
   const { history: dividends } = useDividendHistory(symbol);
   const { profile } = useCompanyProfile(symbol);
   const { actions } = useCorporateActions(symbol);
@@ -44,6 +45,7 @@ export function StockFundamentals({ symbol, currency, price = 0, name = symbol, 
   const sorted = useMemo(() => [...history].sort((a, b) => a.fiscalYear - b.fiscalYear || (a.fiscalQuarter ?? 0) - (b.fiscalQuarter ?? 0)), [history]);
   const recent = sorted[sorted.length - 1];
   const prior = sorted[sorted.length - 2];
+  const coverage=financialYearCoverage(sorted);
   return <div ref={panelRoot} className="space-y-0" style={{scrollMarginTop:"calc(var(--sticky-header-height,0px) + var(--sticky-nav-height,0px))"}}>
     <div className="sticky top-[calc(var(--sticky-header-height,0px)+var(--sticky-nav-height,0px))] z-20 flex gap-1 overflow-x-auto scrollbar-hide border-b border-border/70 py-2 bg-background/95 backdrop-blur-xl" role="tablist" aria-label="Fundamentals category">
       {([ ["financials", "Financials"], ["forecast", "Forecast"], ["shareholders", "Shareholders"], ["dividends", "Dividends"], ["profile", "Profile"] ] as const).map(([id, label]) =>
@@ -53,6 +55,8 @@ export function StockFundamentals({ symbol, currency, price = 0, name = symbol, 
       <EarningsFundamentals symbol={symbol} currency={currency} mode="reported" />
       <div className="flex flex-wrap items-center justify-between gap-3 py-5"><div><h3 className="text-lg font-semibold">Reported financials</h3><p className="text-xs text-muted-foreground">{recent?.reportedAt ? `Filed ${new Date(recent.reportedAt).toLocaleDateString()}` : "Company filings on record"} · {currency}</p></div><div className="flex gap-1" role="tablist" aria-label="Financial period"><button data-small-target role="tab" aria-selected={periodType === "annual"} onClick={() => setPeriodType("annual")} className={tabClass(periodType === "annual")}>Annual</button><button data-small-target role="tab" aria-selected={periodType === "quarterly"} onClick={() => setPeriodType("quarterly")} className={tabClass(periodType === "quarterly")}>Quarterly</button></div></div>
       {isLoading && !recent && <p className="py-8 text-sm text-muted-foreground">Loading reported statements…</p>}
+      {historyError && <p role="status" className="py-3 text-sm text-muted-foreground">{recent ? "Showing saved statements while the latest history is unavailable." : "Statements are temporarily unavailable—not necessarily missing from the archive."} <button className="text-primary underline" onClick={()=>void refetchHistory()}>Retry statements</button></p>}
+      {!!coverage.years.length && <details className="mb-4 rounded-xl border border-border/70 p-3 text-xs"><summary className="cursor-pointer font-semibold">History coverage · {coverage.years.length} {periodType==='annual'?'fiscal years':'years with quarterly filings'}</summary><p className="pt-2 text-muted-foreground">Available: {coverage.years.join(', ')}. {coverage.sourceBackedYears.length} years linked to reviewed filing documents.</p>{!!coverage.missing.length && <p className="pt-2 text-muted-foreground">Gaps: {coverage.missing.join(', ')}. Gaps are not filled with estimates and do not count as consecutive annual growth.</p>}<p className="pt-2 text-muted-foreground">Comparative figures use the publication date of the report they came from. A later restatement is not treated as information available to investors earlier.</p></details>}
       {recent && <section className="grid grid-cols-2 gap-4 pb-6 text-sm"><div><p className="text-muted-foreground">Revenue</p><p className="font-semibold">{recent.revenue == null ? "—" : compact(Number(recent.revenue), currency)}</p>{recent.revenue != null && prior?.revenue && <p className="text-xs text-muted-foreground">{pct(((Number(recent.revenue) - Number(prior.revenue)) / Math.abs(Number(prior.revenue))) * 100)} vs prior</p>}</div><div><p className="text-muted-foreground">Net income</p><p className="font-semibold">{recent.netIncome == null ? "—" : compact(Number(recent.netIncome), currency)}</p>{recent.netIncome != null && prior?.netIncome && <p className="text-xs text-muted-foreground">{pct(((Number(recent.netIncome) - Number(prior.netIncome)) / Math.abs(Number(prior.netIncome))) * 100)} vs prior</p>}</div></section>}
       {(["Income statement","Balance sheet","Cash flows","Financial indicators"] as const).map(title=><FinancialStatementExplorer key={`${title}-${periodType}`} title={title} symbol={symbol} history={sorted} currency={currency} periodType={periodType}/>)}
       <SegmentDisclosure symbol={symbol} currency={currency}/>

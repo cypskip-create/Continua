@@ -15,7 +15,7 @@ import { computePortfolioStats } from "@/lib/stockPrices";
 import { engineWorkspaceApi } from "@/api/engineWorkspaceApi";
 
 /** One portfolio coordinator preserves existing free feeds and gates advanced research. */
-export function usePortfolioEngine(isPremium: boolean, analysisOpen: boolean) {
+export function usePortfolioEngine(isPremium: boolean, analysisOpen: boolean, isPremiumPlus = false) {
   const portfolio = usePortfolio(), { user } = useAuth(), { exchange } = useExchange();
   const symbols = portfolio.portfolio.map(h => h.symbol);
   const { liveQuotes } = useLivePortfolioQuotes(symbols);
@@ -35,7 +35,7 @@ export function usePortfolioEngine(isPremium: boolean, analysisOpen: boolean) {
   const intelligence = useQuery({
     queryKey: ["continua", "engine-portfolio", user?.id, exchange],
     queryFn: () => engineWorkspaceApi.portfolio(exchange),
-    enabled: !!user && isPremium && analysisOpen && symbols.length > 0,
+    enabled: !!user && isPremiumPlus && analysisOpen && symbols.length > 0,
     staleTime: 60_000, retry: engineReadRetry,
   });
   return { ...portfolio, exchange, liveQuotes, stats, valuations, dividends, research, updates, growth, benchmark, overview, intelligence };

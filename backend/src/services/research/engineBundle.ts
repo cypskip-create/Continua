@@ -65,7 +65,7 @@ async function loadEngineBundle(symbol: string, exchange: ExchangeCode) {
           new Promise<T>((_, reject) => {
             timer = setTimeout(
               () => reject(new Error("Research deadline")),
-              6_000,
+              /statements/i.test(name) ? 15_000 : 6_000,
             );
           }),
         ]);

@@ -9,13 +9,14 @@ import type { ComputedRatios } from "../../types/market.js";
 export interface RatioInputs {
   price: number;
   sharesOutstanding?: number | null;
-  netIncome: number;
-  revenue: number;
+  netIncome?: number | null;
+  revenue?: number | null;
+  eps?: number | null;
   ebitda?: number | null;
   operatingIncome?: number | null;
   grossProfit?: number | null;
-  totalEquity: number;
-  totalAssets: number;
+  totalEquity?: number | null;
+  totalAssets?: number | null;
   totalDebt?: number | null;
   cash?: number | null;
   currentAssets?: number | null;
@@ -34,8 +35,8 @@ const safeDiv = (a: number | null | undefined, b: number | null | undefined): nu
 const round4 = (n: number | undefined) => (n == null || !Number.isFinite(n) ? undefined : Math.round(n * 10000) / 10000);
 
 export function computeRatios(i: RatioInputs): Omit<ComputedRatios, "securityId" | "asOf"> {
-  const eps = i.sharesOutstanding ? i.netIncome / i.sharesOutstanding : undefined;
-  const bookValuePerShare = i.sharesOutstanding ? i.totalEquity / i.sharesOutstanding : undefined;
+  const eps = i.eps != null && Number.isFinite(i.eps) ? i.eps : safeDiv(i.netIncome,i.sharesOutstanding);
+  const bookValuePerShare = safeDiv(i.totalEquity,i.sharesOutstanding);
   const marketCap = i.sharesOutstanding ? i.price * i.sharesOutstanding : undefined;
   const enterpriseValue = marketCap != null ? marketCap + (i.totalDebt ?? 0) - (i.cash ?? 0) : undefined;
 
@@ -54,7 +55,7 @@ export function computeRatios(i: RatioInputs): Omit<ComputedRatios, "securityId"
     evEbitda: round4(safeDiv(enterpriseValue, i.ebitda ?? undefined)),
     roe: round4(safeDiv(i.netIncome, i.totalEquity)),
     roa: round4(safeDiv(i.netIncome, i.totalAssets)),
-    roic: round4(safeDiv(i.operatingIncome ?? undefined, (i.totalEquity + (i.totalDebt ?? 0)))),
+    roic: round4(safeDiv(i.operatingIncome ?? undefined, i.totalEquity == null || i.totalDebt == null ? undefined : i.totalEquity + i.totalDebt)),
     grossMargin: round4(safeDiv(i.grossProfit ?? undefined, i.revenue)),
     operatingMargin: round4(safeDiv(i.operatingIncome ?? undefined, i.revenue)),
     netMargin: round4(safeDiv(i.netIncome, i.revenue)),

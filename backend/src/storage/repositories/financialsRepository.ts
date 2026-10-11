@@ -67,10 +67,12 @@ export const financialsRepository = {
               b.shares_outstanding as "sharesOutstanding",
               c.operating_cash_flow as "operatingCashFlow", c.free_cash_flow as "freeCashFlow"
        FROM market.financial_periods p
-       JOIN market.income_statements i ON i.period_id = p.id
-       JOIN market.balance_sheets b ON b.period_id = p.id
+       LEFT JOIN market.income_statements i ON i.period_id = p.id
+       LEFT JOIN market.balance_sheets b ON b.period_id = p.id
        LEFT JOIN market.cash_flow_statements c ON c.period_id = p.id
        WHERE p.security_id = $1 AND p.period_type = $2
+         AND p.period_end <= CURRENT_DATE AND p.reported_at <= CURRENT_DATE
+         AND (i.period_id IS NOT NULL OR b.period_id IS NOT NULL OR c.period_id IS NOT NULL)
        ORDER BY p.fiscal_year DESC, p.fiscal_quarter DESC NULLS FIRST
        LIMIT 1`,
       [securityId, periodType]
@@ -90,11 +92,14 @@ export const financialsRepository = {
               b.current_assets as "currentAssets", b.current_liabilities as "currentLiabilities",
               b.shares_outstanding as "sharesOutstanding",
               c.operating_cash_flow as "operatingCashFlow", c.investing_cash_flow as "investingCashFlow",
-              c.financing_cash_flow as "financingCashFlow", c.free_cash_flow as "freeCashFlow", c.capex
+              c.financing_cash_flow as "financingCashFlow", c.free_cash_flow as "freeCashFlow", c.capex,
+              (SELECT array_agg(DISTINCT r.source_url) FROM market.filing_history_reviews r WHERE r.period_id=p.id) AS "sourceUrls"
        FROM market.financial_periods p LEFT JOIN market.income_statements i ON i.period_id = p.id
        LEFT JOIN market.balance_sheets b ON b.period_id = p.id
        LEFT JOIN market.cash_flow_statements c ON c.period_id = p.id
        WHERE p.security_id = $1 AND p.period_type = $2
+         AND p.period_end <= CURRENT_DATE AND p.reported_at <= CURRENT_DATE
+         AND (i.period_id IS NOT NULL OR b.period_id IS NOT NULL OR c.period_id IS NOT NULL)
        ORDER BY p.fiscal_year DESC, p.fiscal_quarter DESC NULLS FIRST LIMIT $3`,
       [securityId, periodType, limit]
     );

@@ -111,7 +111,8 @@ export default function TrackInvestments() {
     "portfolio:tab",
     "holdings",
   );
-  const engine = usePortfolioEngine(isPremium, activeTab === "analysis");
+  const isPremiumPlus = profile?.subscription_plan === "premium_plus";
+  const engine = usePortfolioEngine(isPremium, activeTab === "analysis", isPremiumPlus);
   const {
     portfolio,
     loading,
@@ -584,9 +585,10 @@ export default function TrackInvestments() {
                     Engine is analysing your portfolio…
                   </p>
                 )}
-                {!!engine.intelligence.error && (
+                {!isPremiumPlus && <div className="rounded-xl border border-border p-4 space-y-2"><h3 className="font-semibold">Your Premium portfolio analysis</h3><p className="text-sm text-muted-foreground">Scorecards, diversification and company comparisons are included below. Premium Plus adds the full Engine portfolio workbench, stress tests and monitoring.</p><button onClick={() => navigate('/upgrade')} className="text-primary text-sm font-semibold">Explore Premium Plus →</button></div>}
+                {!!engine.intelligence.error && isPremiumPlus && (
                   <p role="alert" className="text-sm text-bear">
-                    Portfolio Engine analysis could not load. Refresh to retry.
+                    {engine.intelligence.data ? 'The latest update could not load. Your previous analysis is still available.' : 'Portfolio analysis could not load.'} <button className="underline" onClick={() => void engine.intelligence.refetch()}>Retry analysis</button>
                   </p>
                 )}
                 {engine.intelligence.data && (

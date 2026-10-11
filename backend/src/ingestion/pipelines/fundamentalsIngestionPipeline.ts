@@ -42,11 +42,15 @@ export async function runFundamentalsIngestion(adapter: IExchangeAdapter, symbol
       const company = normalizeCompany(bundle.company);
       const income = normalizeIncomeStatement(bundle.income);
       const cashFlow = normalizeCashFlow(bundle.cashFlow);
+      const today = new Date().toISOString().slice(0,10);
+      if (bundle.period.periodEnd.slice(0,10) > today || bundle.period.reportedAt.slice(0,10) > today || bundle.period.reportedAt.slice(0,10) < bundle.period.periodEnd.slice(0,10)) {
+        throw new Error('Financial filing dates are future-dated or precede the reporting period');
+      }
 
       const balanceCheck = checkBalanceSheetIntegrity(bundle.balance);
       if (!balanceCheck.ok) {
         errors.push(`${security.symbol}: balance sheet off by ${balanceCheck.deltaPercent}%`);
-        logger.warn({ symbol: security.symbol, deltaPercent: balanceCheck.deltaPercent }, "Balance sheet integrity check failed — stored anyway, flagged for review");
+        throw new Error('Balance sheet integrity check failed; retained in review, not published');
       }
 
       // FK chain: sector must exist before company (company.sector_id

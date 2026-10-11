@@ -1,32 +1,19 @@
-import { useState, useMemo } from "react";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { fx } from "@/lib/chartPalette";
-import { BarChartBlock } from "@/components/charts/BarChartBlock";
+import { useState } from "react";
 import { ReportSection, SubWidget } from "./ReportSection";
 import { CriteriaChecklist } from "./CriteriaChecklist";
 import { KeyInfoUpdates } from "./KeyInfoUpdates";
 import { useStockFinancials } from "@/hooks/useStockFinancials";
 import { PremiumDetail } from "@/components/engine/PremiumDetail";
 import { GrowthWorkbench } from "../ForecastWorkbenches";
+import { FinancialTrend, financialTab } from '../FinancialStatementExplorer';
+import { statementMetrics } from '@/lib/financialPresentation';
 
 interface Props { symbol: string; currency?:string; basic?:boolean }
 type Metric = "revenue" | "earnings" | "eps";
 
 function pctChange(latest: number, prior: number): number | null {
-  if (prior === 0) return null;
+  if (typeof latest!=='number' || typeof prior!=='number' || !Number.isFinite(latest) || !Number.isFinite(prior) || prior === 0) return null;
   return ((latest - prior) / Math.abs(prior)) * 100;
-}
-
-// Pure — module-scope so it isn't a fresh function identity on every
-// render (which would otherwise make the useMemo calls below re-run every
-// time regardless of their dependency array).
-function toRow(r: { fiscalYear: number; fiscalQuarter?: number | null; revenue: number; netIncome: number; eps: number }) {
-  return {
-    year: r.fiscalQuarter ? `Q${r.fiscalQuarter} '${String(r.fiscalYear).slice(2)}` : String(r.fiscalYear),
-    Revenue: +(r.revenue / 1e9).toFixed(2),
-    Earnings: +(r.netIncome / 1e9).toFixed(2),
-    EPS: r.eps,
-  };
 }
 
 /** Continua has no analyst forward-estimates feed, so — same as Simply
@@ -39,25 +26,16 @@ function toRow(r: { fiscalYear: number; fiscalQuarter?: number | null; revenue: 
  *  there are at least two fiscal years of real data to plot. */
 export function FutureGrowthSection({ symbol, currency="KES", basic=false }: Props) {
   const [metric, setMetric] = useState<Metric>("revenue");
+  const [period, setPeriod] = useState<'annual'|'quarterly'>('annual');
   const { history, isLoading } = useStockFinancials(symbol);
-  // Real quarterly periods (not a synthetic split of the annual figure) —
-  // feeds BarChartBlock's built-in Annual/Quarterly dropdown, which only
-  // shows the toggle once this actually has rows.
+  // Only actual quarterly disclosures; annual totals are never split into
+  // invented quarters. Both views use the same shared financial chart.
   const { history: quarterlyHistory } = useStockFinancials(symbol, { periodType: "quarterly", limit: 5 });
-  const [latest, prior] = [...history].sort((a, b) => b.fiscalYear - a.fiscalYear);
+  const latest = [...history].sort((a, b) => b.fiscalYear - a.fiscalYear)[0];
+  const prior = latest ? history.find(row => row.fiscalYear === latest.fiscalYear - 1) : undefined;
   const earningsGrowth = latest && prior ? pctChange(latest.netIncome, prior.netIncome) : null;
   const epsGrowth = latest && prior ? pctChange(latest.eps, prior.eps) : null;
   const revenueGrowth = latest && prior ? pctChange(latest.revenue, prior.revenue) : null;
-
-  const chartData = useMemo(() => [...history].sort((a, b) => a.fiscalYear - b.fiscalYear).map(toRow), [history]);
-  const quarterlyChartData = useMemo(
-    () => [...quarterlyHistory].sort((a, b) => a.fiscalYear - b.fiscalYear || (a.fiscalQuarter ?? 0) - (b.fiscalQuarter ?? 0)).map(toRow),
-    [quarterlyHistory],
-  );
-  const key = metric === "revenue" ? "Revenue" : metric === "earnings" ? "Earnings" : "EPS";
-  const color = metric === "revenue" ? fx.revenue : metric === "earnings" ? fx.earnings : fx.eps;
-  const yFmt = (v: number) => (metric === "eps" ? v.toFixed(1) : `${v}B`);
-  const tipFmt = (v: number) => (metric === "eps" ? `KES ${v}` : `KES ${v}B`);
 
   return (
     <ReportSection number={2} title="Future Growth">
@@ -83,28 +61,9 @@ export function FutureGrowthSection({ symbol, currency="KES", basic=false }: Pro
         />
       )}
 
-      <SubWidget number="2.1" title="Trailing Growth History" description="Real, already-reported revenue, earnings, and EPS — annual (last 3 years) or quarterly (last 5 quarters), not a projection.">
-        {/* Chart frame renders unconditionally — BarChartBlock draws empty axes
-            fine with an empty array, so a symbol with no history on file yet
-            still shows the tool (an empty chart), not a text box in its place. */}
-        <BarChartBlock
-          title=""
-          annual={chartData}
-          allowQuarterly
-          quarterly={quarterlyChartData}
-          xKey="year"
-          series={[{ key, label: metric === "eps" ? "EPS" : key, color }]}
-          yFmt={yFmt}
-          valueFmt={(v) => tipFmt(v)}
-          note={isLoading ? "Loading financial history…" : chartData.length === 0 ? `No financial history on file for ${symbol} yet.` : undefined}
-          right={
-            <ToggleGroup type="single" size="sm" value={metric} onValueChange={(v) => v && setMetric(v as Metric)}>
-              <ToggleGroupItem value="revenue" className="h-6 text-[0.625rem] px-2">Revenue</ToggleGroupItem>
-              <ToggleGroupItem value="earnings" className="h-6 text-[0.625rem] px-2">Earnings</ToggleGroupItem>
-              <ToggleGroupItem value="eps" className="h-6 text-[0.625rem] px-2">EPS</ToggleGroupItem>
-            </ToggleGroup>
-          }
-        />
+      <SubWidget number="2.1" title="Trailing Growth History" description="Reported revenue, earnings and EPS for the last five available periods. YoY needs the matching period one year earlier; gaps are not annual growth.">
+        <div className="flex flex-wrap items-center justify-between gap-2 py-2"><div role="tablist" aria-label="Trailing history metric">{(['revenue','earnings','eps'] as const).map(value => <button key={value} role="tab" aria-selected={metric===value} className={financialTab(metric===value)} onClick={()=>setMetric(value)}>{value==='eps'?'EPS':value==='earnings'?'Earnings':'Revenue'}</button>)}</div><div role="tablist" aria-label="Trailing history period">{(['annual','quarterly'] as const).map(value=><button key={value} role="tab" aria-selected={period===value} className={financialTab(period===value)} onClick={()=>setPeriod(value)}>{value==='annual'?'Annual':'Quarterly'}</button>)}</div></div>
+        <FinancialTrend history={period==='annual'?history:quarterlyHistory} metric={statementMetrics['Income statement'][metric==='revenue'?0:metric==='earnings'?5:7]} title="Trailing growth history"/>
       </SubWidget>
 
       <p className="text-[0.6875rem] text-muted-foreground">
