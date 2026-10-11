@@ -11,6 +11,7 @@
 - A report publishes transactionally. Restatements clear old optional fields instead of leaving fabricated values attached to otherwise corrected statements.
 - Missing EPS/CFO are permitted as null, not fabricated zero. Partial source-backed income/cash-flow history remains usable.
 - Financial history returns reviewed source URLs; the app and Engine report coverage and gaps. Publication refreshes shared ratios, score and Engine caches.
+- Earnings actuals and reporting dates use the same reviewed statements rather than a stale calendar snapshot. Missing reviewed EPS remains unknown; future reported events are not shown as completed results.
 
 ## Verified production publication
 

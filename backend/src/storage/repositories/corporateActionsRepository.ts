@@ -1,6 +1,20 @@
 import { query } from "../db.js";
 import type { CorporateAction, EarningsEvent, OwnershipRecord } from "../../types/market.js";
 
+// Reviewed statements outrank an older calendar snapshot, including genuinely
+// missing fields. Do not COALESCE a missing reviewed EPS back to a stale number.
+const reviewedEarningsJoin = `LEFT JOIN LATERAL (
+  SELECT p.id, p.reported_at, i.eps, i.revenue
+  FROM market.financial_periods p
+  JOIN market.income_statements i ON i.period_id = p.id
+  WHERE p.security_id = ee.security_id AND p.fiscal_year = ee.fiscal_year
+    AND p.fiscal_quarter IS NOT DISTINCT FROM ee.fiscal_quarter
+    AND p.period_type = CASE WHEN ee.fiscal_quarter IS NULL THEN 'annual' ELSE 'quarterly' END
+    AND p.period_end <= CURRENT_DATE AND p.reported_at <= CURRENT_DATE
+    AND EXISTS (SELECT 1 FROM market.filing_history_reviews r WHERE r.period_id = p.id)
+  ORDER BY p.reported_at DESC LIMIT 1
+) reviewed ON TRUE`;
+
 export const corporateActionsRepository = {
   async upsertCorporateAction(a: CorporateAction): Promise<void> {
     await query(
@@ -61,13 +75,16 @@ export const corporateActionsRepository = {
   async getRecentEarnings(exchange: string, limit = 20): Promise<(EarningsEvent & { symbol: string; companyName: string })[]> {
     const res = await query<any>(
       `SELECT ee.id, ee.security_id as "securityId", ee.period_id as "periodId", ee.fiscal_year as "fiscalYear",
-              ee.fiscal_quarter as "fiscalQuarter", ee.reported_date as "reportedDate", ee.eps_actual as "epsActual",
-              ee.revenue_actual as "revenueActual", sec.symbol, c.name as "companyName"
+              ee.fiscal_quarter as "fiscalQuarter", CASE WHEN reviewed.id IS NOT NULL THEN reviewed.reported_at ELSE ee.reported_date END as "reportedDate",
+              CASE WHEN reviewed.id IS NOT NULL THEN reviewed.eps ELSE ee.eps_actual END as "epsActual",
+              CASE WHEN reviewed.id IS NOT NULL THEN reviewed.revenue ELSE ee.revenue_actual END as "revenueActual", sec.symbol, c.name as "companyName"
        FROM market.earnings_events ee
        JOIN market.securities sec ON sec.id = ee.security_id
        JOIN market.companies c ON c.id = sec.company_id
-       WHERE sec.exchange = $1 AND ee.reported_date IS NOT NULL
-       ORDER BY ee.reported_date DESC
+       ${reviewedEarningsJoin}
+       WHERE sec.exchange = $1 AND sec.status <> 'delisted'
+         AND (reviewed.id IS NOT NULL OR ee.reported_date <= CURRENT_DATE)
+       ORDER BY COALESCE(reviewed.reported_at, ee.reported_date) DESC
        LIMIT $2`,
       [exchange, limit]
     );
@@ -76,13 +93,15 @@ export const corporateActionsRepository = {
 
   async getEarningsBySecurity(securityId: string, limit = 12): Promise<EarningsEvent[]> {
     const res = await query<any>(
-      `SELECT id, security_id as "securityId", period_id as "periodId",
-              fiscal_year as "fiscalYear", fiscal_quarter as "fiscalQuarter",
-              expected_date as "expectedDate", reported_date as "reportedDate",
-              eps_estimate as "epsEstimate", eps_actual as "epsActual",
-              revenue_estimate as "revenueEstimate", revenue_actual as "revenueActual"
-       FROM market.earnings_events WHERE security_id = $1
-       ORDER BY fiscal_year DESC, fiscal_quarter DESC NULLS LAST LIMIT $2`,
+      `SELECT ee.id, ee.security_id as "securityId", COALESCE(reviewed.id, ee.period_id) as "periodId",
+              ee.fiscal_year as "fiscalYear", ee.fiscal_quarter as "fiscalQuarter",
+              ee.expected_date as "expectedDate", CASE WHEN reviewed.id IS NOT NULL THEN reviewed.reported_at ELSE ee.reported_date END as "reportedDate",
+              ee.eps_estimate as "epsEstimate", CASE WHEN reviewed.id IS NOT NULL THEN reviewed.eps ELSE ee.eps_actual END as "epsActual",
+              ee.revenue_estimate as "revenueEstimate", CASE WHEN reviewed.id IS NOT NULL THEN reviewed.revenue ELSE ee.revenue_actual END as "revenueActual"
+       FROM market.earnings_events ee ${reviewedEarningsJoin}
+       WHERE ee.security_id = $1
+         AND (reviewed.id IS NOT NULL OR ee.reported_date IS NULL OR ee.reported_date <= CURRENT_DATE)
+       ORDER BY ee.fiscal_year DESC, ee.fiscal_quarter DESC NULLS LAST LIMIT $2`,
       [securityId, limit]
     );
     return res.rows.reverse();
