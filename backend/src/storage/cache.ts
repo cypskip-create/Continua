@@ -17,6 +17,7 @@ export interface ICache {
 }
 
 class InMemoryCache implements ICache {
+  private pending = new Map<string, Promise<any>>();
   // Stored as `any` deliberately — this cache holds heterogeneous value
   // types (Quote, Quote[], Candle[], ratios, ...) keyed by string, and the
   // public ICache methods are what provide type safety to callers via T.
@@ -34,9 +35,15 @@ class InMemoryCache implements ICache {
   async getOrSet<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {
     const cached = await this.get<T>(key);
     if (cached !== null) return cached;
-    const value = await fn();
-    await this.set(key, value, ttlMs);
-    return value;
+    const existing = this.pending.get(key);
+    if (existing) return existing;
+    const job = Promise.resolve().then(fn).then(async value => {
+      await this.set(key, value, ttlMs);
+      return value;
+    });
+    this.pending.set(key, job);
+    try { return await job; }
+    finally { this.pending.delete(key); }
   }
 }
 
@@ -46,6 +53,7 @@ class InMemoryCache implements ICache {
  *  JSON-serialized; TTL is enforced by Redis itself (`PX` on SET) rather
  *  than tracked client-side. */
 class RedisCache implements ICache {
+  private pending = new Map<string, Promise<any>>();
   private client: Redis;
 
   constructor() {
@@ -82,9 +90,15 @@ class RedisCache implements ICache {
   async getOrSet<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {
     const cached = await this.get<T>(key);
     if (cached !== null) return cached;
-    const value = await fn();
-    await this.set(key, value, ttlMs);
-    return value;
+    const existing = this.pending.get(key);
+    if (existing) return existing;
+    const job = Promise.resolve().then(fn).then(async value => {
+      await this.set(key, value, ttlMs);
+      return value;
+    });
+    this.pending.set(key, job);
+    try { return await job; }
+    finally { this.pending.delete(key); }
   }
 }
 

@@ -7,8 +7,8 @@
  * restart, while still avoiding a DB round-trip on every single request.
  */
 import type { Request, Response, NextFunction } from "express";
-import { apiKeyRepository, hashApiKey, type ApiKeyRecord } from "../../storage/repositories/apiKeyRepository.js";
-import { cache } from "../../storage/cache.js";
+import { type ApiKeyRecord } from "../../storage/repositories/apiKeyRepository.js";
+import { findApiKey, recordApiKeyUse } from '../../services/apiKeyAccess.js';
 import { env } from "../../config/index.js";
 import { ApiError } from "./errorHandler.js";
 
@@ -41,12 +41,11 @@ export function apiKeyAuth() {
       return next();
     }
 
-    const keyHash = hashApiKey(presented);
     try {
-      const record = await cache.getOrSet(`apikey:${keyHash}`, 30_000, () => apiKeyRepository.findActiveByHash(keyHash));
+      const record = await findApiKey(presented);
       if (!record) return next(new ApiError(401, "Invalid or revoked API key"));
       req.apiKey = record;
-      void apiKeyRepository.touchLastUsed(record.id); // fire-and-forget, not on the request's critical path
+      recordApiKeyUse(record.id);
       next();
     } catch (err) {
       next(err);

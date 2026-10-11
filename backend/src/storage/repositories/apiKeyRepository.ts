@@ -20,6 +20,14 @@ export function hashApiKey(plaintextKey: string): string {
     .toString("hex");
 }
 
+/** Same stored hash, but never block HTTP/health probes with synchronous KDF work. */
+export function hashApiKeyAsync(plaintextKey: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    crypto.scrypt(plaintextKey, API_KEY_HASH_SALT, API_KEY_HASH_KEYLEN, API_KEY_HASH_PARAMS,
+      (error, key) => error ? reject(error) : resolve(key.toString("hex")));
+  });
+}
+
 export const apiKeyRepository = {
   /** Looks up an active key by its hash. Called on (almost) every request,
    *  so callers should wrap this with a short-TTL cache — see

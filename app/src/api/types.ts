@@ -362,6 +362,7 @@ export interface ResearchBundle {
 }
 
 export interface ScreenerRow {
+  priceMomentum3m?: number | null;
   pb?: number | null;
   roe?: number | null;
   roa?: number | null;

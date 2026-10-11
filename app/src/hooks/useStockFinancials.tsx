@@ -22,17 +22,17 @@ export function useStockFinancials(
     queryFn: () => financialsApi.getHistory(symbol as string, { periodType, limit }),
     enabled: !!symbol,
     staleTime: 30 * 60_000,
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchInterval: 5 * 60_000,
     retry: 1,
   });
 
   const latest = useQuery({
-    queryKey: ["continua", "financials-latest", symbol],
-    queryFn: () => financialsApi.getLatest(symbol as string),
+    queryKey: ["continua", "financials-latest", symbol, periodType],
+    queryFn: () => financialsApi.getLatest(symbol as string, { periodType }),
     enabled: !!symbol,
     staleTime: 30 * 60_000,
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchInterval: 5 * 60_000,
     retry: 1,
   });

@@ -6,13 +6,14 @@
  */
 import { logger } from "./logger.js";
 import type { Quote } from "../types/market.js";
+import { isMarketOpen } from '../config/tradingCalendar.js';
 
 const STALE_QUOTE_MS = 15 * 60 * 1000; // 15 minutes with no update during market hours
 
 export function checkQuoteFreshness(quote: Quote): { stale: boolean; ageMs: number } {
   const ageMs = Date.now() - new Date(quote.timestamp).getTime();
   const stale = ageMs > STALE_QUOTE_MS;
-  if (stale) logger.warn({ symbol: quote.symbol, ageMs }, "Stale quote detected");
+  if (stale && isMarketOpen(quote.exchange)) logger.warn({ symbol: quote.symbol, ageMs }, "Stale quote detected");
   return { stale, ageMs };
 }
 

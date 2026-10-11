@@ -46,6 +46,7 @@ export const screeningService = {
               q.last_price as "lastPrice", q.change_percent as "changePercent", q.market_cap as "marketCap",
               r.pe, r.pb, r.roe, r.roa, r.net_margin as "netMargin", r.debt_to_equity as "debtToEquity",
               r.payout_ratio as "payoutRatio", r.current_ratio as "currentRatio", r.as_of as "ratiosAsOf",
+              r.price_momentum_3m as "priceMomentum3m",
               r.dividend_yield as "dividendYield", sc.afri_score as "afriScore"
        FROM market.securities s
        JOIN market.companies co ON co.id = s.company_id

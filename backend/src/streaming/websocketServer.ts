@@ -17,8 +17,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { marketEventBus, type MarketEvent } from "./pubsub.js";
 import { logger } from "../monitoring/logger.js";
 import { env } from "../config/index.js";
-import { apiKeyRepository, hashApiKey } from "../storage/repositories/apiKeyRepository.js";
-import { cache } from "../storage/cache.js";
+import { findApiKey } from '../services/apiKeyAccess.js';
 
 interface ClientState {
   socket: WebSocket;
@@ -33,8 +32,7 @@ async function isAuthorized(presentedKey: string | null): Promise<boolean> {
   if (!env.API_KEY_AUTH_ENABLED) return true;
   if (!presentedKey) return false;
   if (env.DEV_API_KEY && presentedKey === env.DEV_API_KEY) return true;
-  const keyHash = hashApiKey(presentedKey);
-  const record = await cache.getOrSet(`apikey:${keyHash}`, 30_000, () => apiKeyRepository.findActiveByHash(keyHash));
+  const record = await findApiKey(presentedKey);
   return record !== null;
 }
 

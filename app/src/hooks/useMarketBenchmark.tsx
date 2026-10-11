@@ -1,6 +1,5 @@
-import { useQuery, useQueries } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { screenerApi } from "@/api/screenerApi";
-import { researchApi } from "@/api/researchApi";
 
 export interface BenchmarkAverages {
   pe: number | null;
@@ -20,13 +19,8 @@ function average(nums: (number | null | undefined)[]): number | null {
 
 const SAMPLE_SIZE = 15;
 
-/** "Market" benchmark for the Analysis tab, defined as the {SAMPLE_SIZE}
- *  largest NSE-listed companies by market cap — not the full exchange.
- *  Continua doesn't have a cheap bulk endpoint for per-security ratios
- *  (debt/equity, ROE, momentum), so averaging across every listed security
- *  would mean one network call per ticker on every page load. A market-cap
- *  sample is an honest, clearly-labelled substitute rather than a silent
- *  full-market claim — see sampleLabel, which callers should render as-is. */
+/** Market-cap sample, not the full exchange. The screener supplies all
+ * benchmark ratios in one read; do not fan out fifteen company requests. */
 export function useMarketBenchmark() {
   const sampleQuery = useQuery({
     queryKey: ["continua", "screener", "market-cap-sample", SAMPLE_SIZE],
@@ -36,24 +30,14 @@ export function useMarketBenchmark() {
 
   const rows = sampleQuery.data ?? [];
 
-  const researchResults = useQueries({
-    queries: rows.map((row) => ({
-      queryKey: ["continua", "research", row.symbol],
-      queryFn: () => researchApi.get(row.symbol),
-      staleTime: 15 * 60_000,
-      retry: 1,
-      enabled: !!row.symbol,
-    })),
-  });
-
-  const isLoading = sampleQuery.isLoading || researchResults.some((r) => r.isLoading);
+  const isLoading = sampleQuery.isLoading;
 
   const averages: BenchmarkAverages = {
     pe: average(rows.map((r) => r.pe)),
     dividendYield: average(rows.map((r) => r.dividendYield)),
-    priceMomentum3m: average(researchResults.map((r) => r.data?.ratios.priceMomentum3m)),
-    debtToEquity: average(researchResults.map((r) => r.data?.ratios.debtToEquity)),
-    roe: average(researchResults.map((r) => r.data?.ratios.roe)),
+    priceMomentum3m: average(rows.map((r) => r.priceMomentum3m)),
+    debtToEquity: average(rows.map((r) => r.debtToEquity)),
+    roe: average(rows.map((r) => r.roe)),
     sampleSize: rows.length,
     sampleLabel: `NSE Top ${rows.length || SAMPLE_SIZE} by Market Cap`,
   };

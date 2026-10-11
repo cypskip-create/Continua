@@ -1,6 +1,7 @@
 import { pool, query } from "../storage/db.js";
 import { cache } from "../storage/cache.js";
 import { logger } from "./logger.js";
+import { isMarketOpen } from '../config/tradingCalendar.js';
 
 export interface HealthStatus {
   status: "healthy" | "degraded" | "unhealthy";
@@ -10,7 +11,18 @@ export interface HealthStatus {
 
 const STALE_QUOTE_MS = 15 * 60 * 1000; // matches dataQuality.ts's per-quote threshold
 
-export async function runHealthCheck(): Promise<HealthStatus> {
+let pending: Promise<HealthStatus> | undefined;
+let recent: HealthStatus | undefined;
+// Render probes every few seconds. Share in-flight work rather than adding
+// more pool waiters during the exact congestion a probe is meant to detect.
+export function runHealthCheck(): Promise<HealthStatus> {
+  if (recent && Date.now() - Date.parse(recent.timestamp) < 5_000) return Promise.resolve(recent);
+  if (pending) return pending;
+  pending = inspectHealth().then(result => { recent = result; return result; }).finally(() => { pending = undefined; });
+  return pending;
+}
+
+async function inspectHealth(): Promise<HealthStatus> {
   const checks: HealthStatus["checks"] = {};
 
   try {
@@ -42,9 +54,10 @@ export async function runHealthCheck(): Promise<HealthStatus> {
       const stale = Number(res.rows[0]?.stale ?? 0);
       // Empty table (nothing bootstrapped yet) isn't a freshness problem —
       // only flag once there's data that SHOULD be fresh and isn't.
-      const ok = total === 0 || stale === 0;
+      const marketOpen = isMarketOpen('NSE');
+      const ok = !marketOpen || total === 0 || stale === 0;
       checks.quoteFreshness = ok
-        ? { ok: true }
+        ? { ok: true, ...(!marketOpen ? { detail: `NSE closed; ${stale}/${total} quotes older than 15 minutes. Stored quote timestamps remain unchanged.` } : {}) }
         : { ok: false, detail: `${stale}/${total} active quotes are older than ${STALE_QUOTE_MS / 60000} minutes` };
     } catch (err) {
       checks.quoteFreshness = { ok: false, detail: String(err) };
@@ -53,7 +66,8 @@ export async function runHealthCheck(): Promise<HealthStatus> {
 
   const allOk = Object.values(checks).every((c) => c.ok);
   const status: HealthStatus["status"] = allOk ? "healthy" : (checks.database?.ok ? "degraded" : "unhealthy");
-  if (!allOk) logger.error({ checks }, "Health check failed");
+  if (status === 'unhealthy') logger.error({ checks }, "Health check failed");
+  else if (status === 'degraded') logger.warn({ checks }, "Data health degraded; API remains available");
 
   return { status, checks, timestamp: new Date().toISOString() };
 }
