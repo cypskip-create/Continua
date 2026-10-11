@@ -5,6 +5,15 @@ process.env.LOG_LEVEL ??= "fatal";
 const { DEFAULT_SOURCES } = await import("../src/config/defaultSources.js");
 
 describe("recurring publisher sources", () => {
+  it('registers additional first-party archives with valid staggered schedules',()=>{
+    for(const id of ['eabl-filings','coop-filings','kengen-filings']) {
+      const source=DEFAULT_SOURCES.find(item=>item.id===id)!;
+      expect(source.config.documents?.pdf).toBe(true);
+      const [minute,hour]=String(source.config.schedule).split(' ').map(Number);
+      expect(minute).toBeLessThan(60); expect(hour).toBeLessThan(24);
+      expect(source.redistributionAllowed).toBeNull();
+    }
+  });
   it.each([
     ["techtrendske-rss", "techtrendske.co.ke", "/feed/"],
     ["soko-directory-rss", "sokodirectory.com", "/feed/"],

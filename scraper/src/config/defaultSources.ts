@@ -53,12 +53,15 @@ export const DEFAULT_SOURCES: SourceDefinition[] = [
     { id: "kcb-filings", name: "KCB Group PLC", domain: "kcbgroup.com", seeds: ["https://kcbgroup.com/investor-relations/", "https://kcbgroup.com/financial-statements"], paths: ["/investor", "/financial", "/annual", ".pdf"] },
     { id: "equity-filings", name: "Equity Group Holdings PLC", domain: "equitygroupholdings.com", seeds: ["https://equitygroupholdings.com/investor-relation/?cat=financial-results"], paths: ["/investor", "/wp-content/uploads/", "financial-results", "annual-report"] },
     { id: "absa-filings", name: "Absa Bank Kenya PLC", domain: "absabank.co.ke", seeds: ["https://www.absabank.co.ke/investor-relations/"], paths: ["/investor-relations", "/content/dam/", ".pdf"] },
+    { id: "eabl-filings", name: "East African Breweries PLC", domain: "eabl.com", seeds: ["https://www.eabl.com/investors/annual-reports"], paths: ["/investors/", "/sites/", ".pdf"] },
+    { id: "coop-filings", name: "Co-operative Bank of Kenya", domain: "co-opbank.co.ke", seeds: ["https://www.co-opbank.co.ke/investor-relations/financial-statements/", "https://www.co-opbank.co.ke/investor_categories/co-op-bank-group-agm/"], paths: ["/investor", "/wp-content/uploads/", ".pdf"] },
+    { id: "kengen-filings", name: "Kenya Electricity Generating Company PLC", domain: "kengen.co.ke", seeds: ["https://www.kengen.co.ke/investor-relations/"], paths: ["/investor", "/download/", "/images/", ".pdf"] },
   ].map((issuer, index): SourceDefinition => ({
     id: issuer.id, name: `${issuer.name} historical filings`, adapter: "web", enabled: true,
     config: {
       seeds: issuer.seeds, allowedDomains: [issuer.domain], discoveryPaths: issuer.paths,
       issuerName: issuer.name, maxDepth: 3, requestsPerSecond: 0.2, concurrency: 1,
-      schedule: `${10 + index * 15} 4 * * *`, documents: { pdf: true, ocr: true, tables: true },
+      schedule: `${(10 + index * 15) % 60} ${4 + Math.floor((10 + index * 15) / 60)} * * *`, documents: { pdf: true, ocr: true, tables: true },
     },
     termsUrl: `https://${issuer.domain}/`, robotsUrl: `https://${issuer.domain}/robots.txt`,
     license: null, redistributionAllowed: null, attributionRequired: true,
