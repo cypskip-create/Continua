@@ -32,6 +32,7 @@ import { fileURLToPath } from "node:url";
 import { createWorker } from "tesseract.js";
 import type { ParsedExtraction } from "../adapters/types.js";
 import { logger } from "../monitoring/logger.js";
+import { createSerialWorkQueue } from "./serialWorkQueue.js";
 
 export const OCR_PARSER_VERSION = "ocr-tesseract-0.1.0";
 
@@ -57,7 +58,13 @@ function rasterizePdf(pdfPath: string, outDir: string): Promise<void> {
   });
 }
 
-export async function extractPdfTextViaOcr(buffer: Buffer): Promise<Omit<ParsedExtraction, "entity">> {
+const enqueueOcr = createSerialWorkQueue();
+export function extractPdfTextViaOcr(buffer: Buffer): Promise<Omit<ParsedExtraction, "entity">> {
+  // Adapter, cron sweep and manual reprocessing share this memory budget.
+  return enqueueOcr(() => performOcr(buffer));
+}
+
+async function performOcr(buffer: Buffer): Promise<Omit<ParsedExtraction, "entity">> {
   const tmpDir = await mkdtemp(path.join(tmpdir(), "scraper-ocr-"));
   const pdfPath = path.join(tmpDir, "input.pdf");
 
