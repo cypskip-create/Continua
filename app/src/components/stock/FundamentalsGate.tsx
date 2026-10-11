@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { researchAccessState } from "@/lib/accountAccess";
 import { useResearchQuota, type ResearchQuotaResult } from "@/hooks/useResearchQuota";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 
 export function FundamentalsGate({ symbol, children }: { symbol: string; children: ReactNode }) {
   const { user } = useAuth();
+  const { profile, loading, error, refetch } = useProfile();
+  const access = researchAccessState({ signedIn: !!user, loading, plan: profile?.subscription_plan, expiresAt: profile?.subscription_expires_at, hasProfile: !!profile, error });
   const { recordView } = useResearchQuota();
   const container = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
@@ -21,7 +25,7 @@ export function FundamentalsGate({ symbol, children }: { symbol: string; childre
     return () => observer.disconnect();
   }, []);
   useEffect(() => {
-    if (!active || !user) return;
+    if (!active || !user || access !== 'free') return;
     let cancelled = false;
     setResult(null);
     setOwner(null);
@@ -30,14 +34,17 @@ export function FundamentalsGate({ symbol, children }: { symbol: string; childre
       if (!cancelled) { setResult(quota); setOwner(user.id); setFailed(!quota); }
     }).catch(() => { if (!cancelled) setFailed(true); });
     return () => { cancelled = true; };
-  }, [active, user?.id, symbol, attempt, recordView]);
+  }, [active, user?.id, symbol, attempt, recordView, access]);
   usePageRefresh(async () => {
-    if (!active || !user) return;
+    if (!active || !user || access !== 'free') return;
     const quota = await recordView(symbol);
     setResult(quota); setOwner(user.id); setFailed(!quota);
   });
   return <div ref={container} className="min-h-52">
-    {result?.allowed && owner === user?.id ? <>
+    {access === 'paid' ? <>
+      <div className="border-b border-border/70 py-3 text-xs text-muted-foreground">{profile?.subscription_plan === 'premium_plus' ? 'Premium Plus' : 'Premium'} · unlimited Fundamentals</div>
+      {children}
+    </> : access === 'unavailable' ? <div className="py-10 space-y-3"><p className="text-sm text-muted-foreground">Your account access could not be refreshed. Please try again.</p><button className="text-sm font-semibold text-primary" onClick={() => void refetch()}>Retry account access</button></div> : access === 'loading' ? <p role="status" className="py-10 text-sm text-muted-foreground">Loading your account…</p> : result?.allowed && owner === user?.id ? <>
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/70 py-3 text-xs">
         <span className="text-muted-foreground">{result.is_premium ? "Premium · unlimited Fundamentals" : `${result.remaining ?? 0} of ${result.limit ?? 5} new stocks left this month · revisit this stock anytime`}</span>
         {!result.is_premium && <Link to="/upgrade" className="font-semibold text-primary">Upgrade</Link>}
