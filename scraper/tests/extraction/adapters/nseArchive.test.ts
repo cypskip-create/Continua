@@ -1,7 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { archiveFormConfig, archivePageNumbers, archiveDocuments } from "../../../src/adapters/nse/archiveDiscovery.js";
+import { archiveFormConfig, archivePageNumbers, archiveDocuments, archiveCategoryLinks, canonicalArchiveUrl } from "../../../src/adapters/nse/archiveDiscovery.js";
 const url = "https://www.nse.co.ke/listed-company-announcements/";
 describe("NSE published archive form", () => {
+  it("follows home View All and official news categories without crawling unrelated links", () => {
+    const html = `<a href="/listed-company-announcements">View All</a><a href="/press-releases/">View All</a>
+      <a href="/nse-events/">Events</a><a href="/success-stories/">Success stories</a><a href="/publications/">Publications</a>
+      <a href="/press-releases/">Duplicate</a><a href="/about-nse/">About</a><a href="https://evil.invalid/press-releases/">View All</a>
+      <a href="https://www.nse.co.ke.evil.invalid/press-releases/">View All</a><a href="/press-releases/#top">Top</a>`;
+    expect(archiveCategoryLinks(html, "https://www.nse.co.ke/")).toEqual([
+      "https://www.nse.co.ke/listed-company-announcements/", "https://www.nse.co.ke/press-releases/",
+      "https://www.nse.co.ke/nse-events/", "https://www.nse.co.ke/success-stories/", "https://www.nse.co.ke/publications/",
+    ]);
+  });
+  it("treats empty fragments and slash variants as one archive without dropping year queries", () => {
+    expect(canonicalArchiveUrl(`${url}#`)).toBe(url);
+    expect(canonicalArchiveUrl("https://www.nse.co.ke/listed-company-announcements?year=2017#")).toBe(`${url}?year=2017`);
+    expect(archiveCategoryLinks(`<a href="${url}#">2015</a><a href="${url.slice(0,-1)}">View All</a>`,url)).toEqual([]);
+  });
   it("reads real year buttons and live configuration without guessed identifiers", () => {
     const html = `<script>var wp_ajax = {"ajaxurl":"https://www.nse.co.ke/wp-admin/admin-ajax.php","ajaxnonce":"fresh","nse_id":"15"};</script>
       <button class="yearclick" data-year="2015" data-cid="15">2015</button><button class="yearclick" data-year="2014" data-cid="15">2014</button><button class="yearclick" data-year="All" data-cid="15">All</button>`;

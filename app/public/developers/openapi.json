@@ -1,0 +1,336 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Continua Read API — Integration Preview",
+    "version": "0.1.0",
+    "description": "Implemented market-read subset. External access requires onboarding, quotas and redistribution rights. App subscriptions are not API licences. No execution or workspace API."
+  },
+  "servers": [
+    {
+      "url": "{baseUrl}",
+      "variables": {
+        "baseUrl": {
+          "default": "http://localhost:4000/api/v1",
+          "description": "Replace with the base URL supplied during onboarding."
+        }
+      }
+    }
+  ],
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ],
+  "paths": {
+    "/quotes/{symbol}": {
+      "get": {
+        "summary": "Latest available quote",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "SCOM"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON object containing data. Coverage depends on validated records."
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "Missing or invalid key"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "description": "Record unavailable"
+          },
+          "429": {
+            "description": "Rate limit"
+          },
+          "503": {
+            "description": "Temporary failure"
+          }
+        }
+      }
+    },
+    "/companies/{symbol}": {
+      "get": {
+        "summary": "Company profile",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "SCOM"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON object containing data. Coverage depends on validated records."
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "Missing or invalid key"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "description": "Record unavailable"
+          },
+          "429": {
+            "description": "Rate limit"
+          },
+          "503": {
+            "description": "Temporary failure"
+          }
+        }
+      }
+    },
+    "/historical/{symbol}": {
+      "get": {
+        "summary": "Available OHLCV history",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "SCOM"
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1m",
+                "5m",
+                "15m",
+                "1h",
+                "1d",
+                "1w",
+                "1M",
+                "1y"
+              ],
+              "default": "1d"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON object containing data. Coverage depends on validated records."
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "Missing or invalid key"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "description": "Record unavailable"
+          },
+          "429": {
+            "description": "Rate limit"
+          },
+          "503": {
+            "description": "Temporary failure"
+          }
+        }
+      }
+    },
+    "/financials/{symbol}/history": {
+      "get": {
+        "summary": "Reported historical periods",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "SCOM"
+          },
+          {
+            "name": "periodType",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "annual",
+                "quarterly"
+              ],
+              "default": "annual"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 5
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON object containing data. Coverage depends on validated records."
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "Missing or invalid key"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "description": "Record unavailable"
+          },
+          "429": {
+            "description": "Rate limit"
+          },
+          "503": {
+            "description": "Temporary failure"
+          }
+        }
+      }
+    },
+    "/announcements/{symbol}": {
+      "get": {
+        "summary": "Company filings",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "SCOM"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON object containing data. Coverage depends on validated records."
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "Missing or invalid key"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "description": "Record unavailable"
+          },
+          "429": {
+            "description": "Rate limit"
+          },
+          "503": {
+            "description": "Temporary failure"
+          }
+        }
+      }
+    },
+    "/dividends/{symbol}": {
+      "get": {
+        "summary": "Dividend actions",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "SCOM"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON object containing data. Coverage depends on validated records."
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "Missing or invalid key"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "description": "Record unavailable"
+          },
+          "429": {
+            "description": "Rate limit"
+          },
+          "503": {
+            "description": "Temporary failure"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Server-only. Never embed in public clients."
+      }
+    }
+  }
+}

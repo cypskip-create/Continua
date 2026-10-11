@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /auth
 
-Sitemap: https://afrifinance.lovable.app/sitemap.xml
+Sitemap: https://continua-cypskip-creates-projects.vercel.app/sitemap.xml

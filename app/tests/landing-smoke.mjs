@@ -71,7 +71,28 @@ try {
   assert.deepEqual(invalidAnchors,[]);
   await page.setViewportSize({width:390,height:844});
   await page.evaluate(()=>window.scrollTo(0,0));
+  await page.screenshot({path:`${artifacts}/landing-hero-mobile.png`});
+  await page.locator('#engine img').scrollIntoViewIfNeeded();
+  await page.screenshot({path:`${artifacts}/landing-engine-mobile.png`});
+  await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:`${artifacts}/landing-mobile.png`,fullPage:true});
+  assert.deepEqual(errors,[]);
+  for (const route of ['docs','developers','about','help','trust']) {
+    await page.goto(`http://127.0.0.1:5190/${route}`);
+    await page.locator('.wr-heading h1').waitFor();
+    for (const width of [320,390,768,1440]) {
+      await page.setViewportSize({width,height:900});
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${route} overflow at ${width}`);
+    }
+    const broken=await page.evaluate(()=>Array.from(document.querySelectorAll('a[href^="#"]')).filter(a=>!document.getElementById(a.getAttribute('href').slice(1))).map(a=>a.getAttribute('href')));
+    assert.deepEqual(broken,[],`${route} broken anchors`);
+  }
+  await page.goto('http://127.0.0.1:5190/developers');
+  const spec=await (await context.request.get('http://127.0.0.1:5190/developers/openapi.json')).json();
+  assert.equal(spec.openapi,'3.1.0');
+  assert.ok(spec.paths['/financials/{symbol}/history']);
+  await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:`${artifacts}/website-developers-mobile.png`,fullPage:true});
   assert.deepEqual(errors,[]);
   console.log('PASS landing: responsive widths, product tabs, keyboard, menu, FAQ, image, anchors, pause and reduced motion; no uncaught errors');
 } finally { await browser.close(); await server.close(); }

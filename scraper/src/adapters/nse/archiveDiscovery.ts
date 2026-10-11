@@ -6,6 +6,30 @@ export function isOfficialNseUrl(raw: string): boolean {
   catch { return false; }
 }
 
+export function canonicalArchiveUrl(raw: string): string {
+  const url = new URL(raw);
+  url.hash = "";
+  if (!url.pathname.endsWith("/") && !/\.[a-z0-9]+$/i.test(url.pathname)) url.pathname += "/";
+  return url.href;
+}
+
+/** Follow the publisher's category/View All links, not an unrestricted site crawl. */
+export function archiveCategoryLinks(html: string, pageUrl: string): string[] {
+  const $ = cheerio.load(html);
+  const links = new Set<string>();
+  $("a[href]").each((_, element) => {
+    const href = $(element).attr("href");
+    if (!href) return;
+    let candidate: URL;
+    try { candidate = new URL(href, pageUrl); } catch { return; }
+    if (!isOfficialNseUrl(candidate.href) || candidate.hash) return;
+    if (!/^\/(listed-company-announcements|corporate-actions|press-releases|nse-events|success-stories|publications)(\/|$)/.test(candidate.pathname)) return;
+    const canonical = canonicalArchiveUrl(candidate.href);
+    if (canonical !== canonicalArchiveUrl(pageUrl)) links.add(canonical);
+  });
+  return [...links];
+}
+
 /** Reads the live publisher configuration; never guesses category IDs or nonce values.
  * Verified against NSE nse-downloads/assets/js/nse_list.js on 2026-10-10. */
 export function archiveFormConfig(html: string, fromYear = 2015) {

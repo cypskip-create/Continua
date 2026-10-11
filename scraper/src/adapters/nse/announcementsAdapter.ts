@@ -28,7 +28,7 @@ import { logger } from "../../monitoring/logger.js";
 import type { FetchedDocument, ParsedExtraction, SourceAdapter, SourceDocument } from "../types.js";
 import { extractPdfText } from "../../extraction/pdfText.js";
 import { env } from "../../config/index.js";
-import { archiveFormConfig, archivePageNumbers, archiveDocuments } from "./archiveDiscovery.js";
+import { archiveFormConfig, archivePageNumbers, archiveDocuments, archiveCategoryLinks, canonicalArchiveUrl } from "./archiveDiscovery.js";
 import { archiveCheckpoint, completeArchivePage } from "../../storage/archiveCheckpointsRepository.js";
 import { enqueueDocuments } from "../../storage/documentJobsRepository.js";
 
@@ -57,9 +57,9 @@ export function discoverArchiveLinks(html: string, pageUrl: string): string[] {
     const resolved = resolveUrl(pageUrl, href);
     if (!resolved) return;
     const candidate = new URL(resolved);
-    if (candidate.origin === page.origin && candidate.href !== page.href && !candidate.hash) links.add(candidate.href);
+    if (candidate.origin === page.origin && !candidate.hash && canonicalArchiveUrl(candidate.href) !== canonicalArchiveUrl(page.href)) links.add(canonicalArchiveUrl(candidate.href));
   });
-  return [...links];
+  return [...new Set([...links, ...archiveCategoryLinks(html, pageUrl)])];
 }
 
 export const nseAnnouncementsAdapter: SourceAdapter = {
@@ -89,7 +89,7 @@ export const nseAnnouncementsAdapter: SourceAdapter = {
       try { const u = new URL(url); return u.protocol === 'https:' && ['nse.co.ke','www.nse.co.ke'].includes(u.hostname) && !u.username && !u.password; }
       catch { return false; }
     };
-    const archiveUrls = [...new Set([res.finalUrl, "https://www.nse.co.ke/press-releases/", "https://www.nse.co.ke/corporate-actions/", "https://www.nse.co.ke/", ...discoverArchiveLinks(html, res.finalUrl), ...configuredArchives])].filter(officialArchive);
+    const archiveUrls = [...new Set([res.finalUrl, "https://www.nse.co.ke/press-releases/", "https://www.nse.co.ke/corporate-actions/", "https://www.nse.co.ke/", ...discoverArchiveLinks(html, res.finalUrl), ...configuredArchives].filter(officialArchive).map(canonicalArchiveUrl))];
     const visited = new Set<string>();
     const docs: SourceDocument[] = [];
     let pageBudget = 80;
@@ -106,26 +106,32 @@ export const nseAnnouncementsAdapter: SourceAdapter = {
           const form = archiveFormConfig(archiveHtml);
           if (form && await isAllowedByRobots(form.endpoint)) {
             for (const year of form.years) {
-              const checkpoint = await archiveCheckpoint(ADAPTER_ID, archive.finalUrl, Number(year));
-              const pages = [...checkpoint.pages];
-              const seenPages = new Set<number>(checkpoint.completed_pages);
-              for (const page of pages) {
-                if (seenPages.has(page)) continue;
-                if (pageBudget <= 0) break;
-                pageBudget--;
-                const result = await fetchWithRetry(form.endpoint, { requestsPerSecond,
-                  form: { action: "list_dwnlds", security: form.security, nse_id: form.category,
-                    tags: year, page: String(page), limit: form.limit, expiry: form.expiry } });
-                if (result.status >= 400) throw new Error(`NSE ${year} page ${page}: HTTP ${result.status}`);
-                const body = result.body.toString("utf8");
-                if (body.trim() === "-1" || body.trim() === "0") throw new Error("NSE archive form expired or rejected; retry with fresh configuration");
-                const pageDocs = archiveDocuments(body, archive.finalUrl, { archiveYear: Number(year), archivePage: page, category: form.category });
-                await enqueueDocuments(ADAPTER_ID, pageDocs);
-                docs.push(...pageDocs);
-                const discoveredPages = archivePageNumbers(body);
-                await completeArchivePage(ADAPTER_ID, archive.finalUrl, Number(year), page, discoveredPages);
-                seenPages.add(page);
-                for (const next of discoveredPages) if (!pages.includes(next)) pages.push(next);
+              if (pageBudget <= 0) break;
+              try {
+                const checkpoint = await archiveCheckpoint(ADAPTER_ID, archive.finalUrl, Number(year));
+                const pages = [...checkpoint.pages];
+                const seenPages = new Set<number>(checkpoint.completed_pages);
+                for (const page of pages) {
+                  if (seenPages.has(page)) continue;
+                  if (pageBudget <= 0) break;
+                  pageBudget--;
+                  const result = await fetchWithRetry(form.endpoint, { requestsPerSecond,
+                    form: { action: "list_dwnlds", security: form.security, nse_id: form.category,
+                      tags: year, page: String(page), limit: form.limit, expiry: form.expiry } });
+                  if (result.status >= 400) throw new Error(`NSE ${year} page ${page}: HTTP ${result.status}`);
+                  const body = result.body.toString("utf8");
+                  if (body.trim() === "-1" || body.trim() === "0") throw new Error("NSE archive form expired or rejected; retry with fresh configuration");
+                  const pageDocs = archiveDocuments(body, archive.finalUrl, { archiveYear: Number(year), archivePage: page, category: form.category });
+                  await enqueueDocuments(ADAPTER_ID, pageDocs);
+                  docs.push(...pageDocs);
+                  const discoveredPages = archivePageNumbers(body);
+                  await completeArchivePage(ADAPTER_ID, archive.finalUrl, Number(year), page, discoveredPages);
+                  seenPages.add(page);
+                  for (const next of discoveredPages) if (!pages.includes(next)) pages.push(next);
+                }
+              } catch (err) {
+                // Failed pages remain uncompleted and are retried on the next crawl.
+                logger.warn({ archiveUrl, year, err }, "NSE archive year failed — retaining checkpoint and continuing other years");
               }
             }
           }
@@ -134,11 +140,11 @@ export const nseAnnouncementsAdapter: SourceAdapter = {
           }
         }
       } catch (err) {
-        logger.warn({ archiveUrl, err }, "NSE archive discovery failed — continuing with other years");
+        logger.warn({ archiveUrl, err }, "NSE archive discovery failed — continuing with other categories");
       }
     }
     const uniqueDocs = [...new Map(docs.map((doc) => [doc.url, doc])).values()];
-    logger.info({ count: uniqueDocs.length, archivePages: archiveUrls.length }, "NSE discover() found announcement PDFs");
+    logger.info({ count: uniqueDocs.length, archivePages: visited.size, remainingPageBudget: pageBudget }, "NSE discover() found publisher documents; publication requires extraction and validation");
     return uniqueDocs;
   },
 
