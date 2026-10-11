@@ -1,4 +1,6 @@
 import { useState } from "react";
+import {ExportResearch} from './ResearchExport';
+export {ExportResearch} from './ResearchExport';
 import type { EngineBundle } from "@/api/engineApi";
 import type { EnginePortfolio, MonitorRule } from "@/api/engineWorkspaceApi";
 import { financialNumber, financialPercent, financialPeriod, finiteFinancial } from "@/lib/financialPresentation";
@@ -11,12 +13,6 @@ import { FinancialStatementExplorer } from "@/components/stock/FinancialStatemen
 import { GrowthWorkbench, RiskWorkbench, ScenarioWorkbench, ScorecardWorkbench, ResearchNumber, ResearchTable } from "@/components/stock/ForecastWorkbenches";
 const control = "rounded-lg border border-border bg-background px-3 py-2 text-sm max-w-full";
 const help = "text-sm text-muted-foreground";
-export function ExportResearch({ name, data }: {
-    name: string;
-    data: unknown;
-}) {
-    return <button type="button" className={control} onClick={() => { const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })); const a = document.createElement("a"); a.href = url; a.download = `${name.replace(/[^a-z0-9-]/gi, "-")}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }}>Export research snapshot</button>;
-}
 export function EngineForecastDesk({ symbol, currency }: {
     symbol: string;
     currency: string;

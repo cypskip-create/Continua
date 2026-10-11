@@ -2,7 +2,7 @@ import {useState} from 'react';
 import {useMutation} from '@tanstack/react-query';
 import {engineWorkspaceApi,type StressResult,type BondResult,type FuturesResult} from '@/api/engineWorkspaceApi';
 import {ToolHelp} from '@/components/shared/ToolHelp';
-import {ExportResearch} from './EngineResearchTools';
+import {ExportResearch} from './ResearchExport';
 type LabResult=(StressResult|BondResult|FuturesResult)&{assumptions?:unknown;generatedAt?:string};
 
 const number=(v:number|null)=>v==null?'Not available':v.toLocaleString(undefined,{maximumFractionDigits:4});
@@ -31,6 +31,7 @@ export function EngineRiskLab(){
  return <section className="space-y-5">
   <div className="flex items-center gap-2"><h2 className="text-xl font-semibold">Risk lab</h2><ToolHelp tool="Risk lab" description="Test a change before making a decision. These calculations use your holdings or the assumptions you enter; they do not predict the market or place trades."/></div>
   <p className="text-sm text-muted-foreground">Separate observed evidence from hypothetical outcomes. Every result shows its calculation basis.</p>
+  {tab==='Portfolio stress'&&<div className="space-y-2"><p className="text-xs text-muted-foreground">Illustrative starting points — not named historical events or probability estimates.</p><div className="flex flex-wrap gap-2">{[['Mild decline','-5'],['Broad downturn','-20'],['Severe decline','-40'],['Market rebound','10']].map(([label,value])=><button key={label} type="button" disabled={mutation.isPending} className="rounded-full border px-3 py-2 text-xs" onClick={()=>{setShock(value);setSectors('');mutation.reset()}}>{label} · {value}%</button>)}</div></div>}
   <div className="flex gap-2 overflow-x-auto" role="tablist">{(['Portfolio stress','Bond cash flows','Futures exposure'] as const).map(t=><button key={t} disabled={mutation.isPending} role="tab" aria-selected={tab===t} onClick={()=>{setTab(t);mutation.reset()}} className={`shrink-0 rounded-full px-4 py-2 text-sm ${tab===t?'bg-primary text-primary-foreground':'bg-muted'}`}>{t}</button>)}</div>
   <form className="space-y-4" onSubmit={e=>{e.preventDefault();mutation.mutate()}}>
    {tab==='Portfolio stress'?<><Input label="Market price change (%)" value={shock} onChange={setShock}/><label className="block text-sm space-y-1">Additional sector changes (%) — optional<textarea className={field} rows={3} placeholder={'Banking, -20\nEnergy, 5'} value={sectors} onChange={e=>setSectors(e.target.value)}/></label><p className="text-xs text-muted-foreground">Uses your server-verified NSE holdings and dated quotes. Market and sector changes compound; this is not a beta or probability model.</p></>:

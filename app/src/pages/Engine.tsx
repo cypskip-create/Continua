@@ -32,6 +32,8 @@ import { useEngineBundle } from '@/hooks/useEngineBundle';
 import { ToolHelp } from "@/components/shared/ToolHelp";
 import { EngineRiskLab } from "@/components/engine/EngineRiskLab";
 import { CompanyEvidenceDesk } from "@/components/engine/CompanyEvidenceDesk";
+import {EngineReliabilityDesk} from '@/components/engine/EngineReliabilityDesk';
+import {EarningsSensitivityLab} from '@/components/engine/EarningsSensitivityLab';
 
 const tools = [
   "Briefing",
@@ -115,6 +117,7 @@ export default function Engine() {
     "KCB"
   ).toUpperCase();
   const [goal, setGoal] = useState("Balanced");
+  const [toolSearch,setToolSearch]=useState('');
   const tool = toolFromParam(params.get("tool"));
   const rememberedTools = useRef<Record<string, Tool>>({});
   const group = groups.find((item) => item.tools.includes(tool))!;
@@ -189,10 +192,10 @@ export default function Engine() {
           </button>
           <Zap className="h-5 w-5 text-primary" />
           <h1 className="text-lg font-semibold">Continua Engine</h1>
-          <span className="ml-auto text-xs text-muted-foreground">{fullEngine ? 'Premium Plus' : 'Premium'}</span>
+          <span className="ml-auto text-xs text-muted-foreground">{fullEngine ? 'Premium Plus' : paid?'Premium':'Free'}</span>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-4">
+      <main className="mx-auto max-w-5xl px-4">
         <section className="border-b border-border/70 py-5">
           {paid ? (
             <>
@@ -337,6 +340,10 @@ export default function Engine() {
                 ))}
               </div>
             </nav>
+            <section className="py-3 space-y-3" aria-label="Research shortcuts">
+              <label className="text-xs text-muted-foreground block">Find an Engine tool<input aria-label="Find an Engine tool" type="search" value={toolSearch} onChange={e=>setToolSearch(e.target.value)} placeholder="Search tools, evidence, risk…" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm text-foreground"/></label>
+              {toolSearch.trim()?<div className="flex flex-wrap gap-2">{tools.filter(t=>`${t} ${toolHelp[t]}`.toLowerCase().includes(toolSearch.trim().toLowerCase())).map(t=><button key={t} className="rounded-full border px-3 py-2 text-xs" onClick={()=>{setTool(t);setToolSearch('')}}>{t}{!canUseEngineTool(profile?.subscription_plan,t)?' · Plus':''}</button>)}{!tools.some(t=>`${t} ${toolHelp[t]}`.toLowerCase().includes(toolSearch.trim().toLowerCase()))&&<p className="text-sm text-muted-foreground">No matching tool. Try “evidence”, “earnings” or “risk”.</p>}</div>:<div className="flex flex-wrap gap-2 text-xs">{[['Check the evidence','Evidence'],['Understand results','Earnings & Reports'],['Challenge assumptions','Scenario lab']].map(([label,target])=><button key={target} className="rounded-full border px-3 py-2" onClick={()=>setTool(target as Tool)}>{label} →{!canUseEngineTool(profile?.subscription_plan,target)?' Plus':''}</button>)}</div>}
+            </section>
             <div className="engine-tool-context" aria-label="Current research tool">
               <p className="font-semibold flex items-center gap-2">{tool}{["Portfolio", "Preferences"].includes(tool) ? "" : ` · ${symbol}`}<ToolHelp tool={tool} description={toolHelp[tool]}/></p>
               <p className="text-sm text-muted-foreground">{toolHelp[tool]}</p>
@@ -360,6 +367,7 @@ export default function Engine() {
             ) : (
               data && (
                 <div key={`${exchange}:${symbol}`} className="py-6 space-y-6">
+                  <EngineReliabilityDesk data={data} expanded={tool==='Evidence'} onTool={target=>setTool(toolFromParam(target))}/>
                   {query.isError&&<p role="status" className="text-sm text-muted-foreground">The background update could not connect. Showing your last saved research with its original date. <button className="text-primary" onClick={()=>void query.refetch()}>Retry update</button></p>}
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
@@ -583,7 +591,7 @@ export default function Engine() {
                       </button>
                     </>
                   )}
-                  {tool === "Scenario lab" && <ScenarioWorkbench key={symbol} symbol={symbol} currency={data.currency}/>}
+                  {tool === "Scenario lab" && <><EarningsSensitivityLab key={`sensitivity:${symbol}`} symbol={symbol}/><ScenarioWorkbench key={symbol} symbol={symbol} currency={data.currency}/></>}
                   <div className="flex gap-4 border-t border-border/70 pt-4 text-xs font-semibold text-primary">
                     <Link to={`/stock/${encodeURIComponent(symbol)}`}>
                       Open stock Fundamentals →

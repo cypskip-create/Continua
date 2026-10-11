@@ -13,6 +13,7 @@ import {validateKakuziGroupReport,KAKUZI_GROUP_VERSION} from '../normalizers/kak
 import {validateKcbGroupReport,KCB_GROUP_VERSION} from '../normalizers/kcbGroupReport.js';
 import {validateKakuziHtmlRecord,KAKUZI_HTML_VERSION} from '../normalizers/kakuziHtmlRecord.js';
 import {issuerMastheadMatches} from '../normalizers/issuerIdentity.js';
+import {engineCacheKeys} from '../../services/research/engineCacheKeys.js';
 
 export const DOCUMENT_VALIDATOR_VERSION=`${NATIVE_ANNUAL_VERSION}:${CONDENSED_GROUP_VERSION}:${SAFARICOM_PRESS_VERSION}:${KAKUZI_GROUP_VERSION}:${KCB_GROUP_VERSION}:${KAKUZI_HTML_VERSION}:canonical-nse-v6:cbk-reopened-v1`;
 let active:Promise<unknown>|undefined;
@@ -125,15 +126,15 @@ async function run(limit:number,extractionIds?:number[]) {
       cache.del(`financial-read:latest:NSE:${symbol}:${period}`),
       ...Array.from({length:50},(_,index)=>cache.del(`financial-read:history:NSE:${symbol}:${period}:${index+1}`)),
     ]));
-    await cache.del(`engine:v4:NSE:${symbol}`);
-    await cache.del(`engine:last-good:v1:NSE:${symbol}`);
+    await cache.del(engineCacheKeys.bundle('NSE',symbol));
+    await cache.del(engineCacheKeys.lastGood('NSE',symbol));
     const quote=await pricesRepository.getQuote(id);
     if(quote)await researchService.recomputeAndStore(id,quote.lastPrice);
     await cache.del(CacheKeys.ratios('NSE',symbol));
     await cache.del(CacheKeys.afriScore('NSE',symbol));
     await cache.del(`engine:v3:NSE:${symbol}`);
-    await cache.del(`engine:v4:NSE:${symbol}`);
-    await cache.del(`engine:last-good:v1:NSE:${symbol}`);
+    await cache.del(engineCacheKeys.bundle('NSE',symbol));
+    await cache.del(engineCacheKeys.lastGood('NSE',symbol));
   }catch(error){logger.warn({securityId:id,error:String(error)},'Published financials retained; research refresh will retry');}
   logger.info(summary,'Automatic document validation completed');
   return summary;

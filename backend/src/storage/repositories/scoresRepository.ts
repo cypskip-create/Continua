@@ -1,5 +1,6 @@
 import { query } from "../db.js";
 import type { ComputedRatios, AfriScoreResult } from "../../types/market.js";
+import {env} from '../../config/index.js';
 
 export const scoresRepository = {
   async upsertRatios(r: ComputedRatios): Promise<void> {
@@ -82,21 +83,26 @@ export const scoresRepository = {
     return res.rows[0] ?? null;
   },
 
-  /** Average P/E and dividend yield across a security's sector, on the
-   *  same exchange, excluding the security itself and any nulls/negative
-   *  P/Es (a loss-making company's negative P/E would otherwise drag a
-   *  sector "average" to a meaningless number) — used by
-   *  services/technical/valuationService.ts's relative-valuation model. */
-  async getSectorAverageRatios(exchange: string, sectorId: string, excludeSecurityId: string): Promise<{ avgPe: number | null; avgDividendYield: number | null; sampleSize: number }> {
+  /** Fresh reported-annual sector P/E, optionally on the target fiscal year.
+   * Reviewed financials in production, active peers and quotes <=7 days old.
+   * The legacy dividend-yield field is unavailable rather than populated
+   * from an unrelated cached-ratio snapshot. */
+  async getSectorAverageRatios(exchange: string, sectorId: string, excludeSecurityId: string,fiscalYear?:number): Promise<{ avgPe: number | null; avgDividendYield: number | null; sampleSize: number }> {
     const res = await query<any>(
-      `SELECT AVG(r.pe) FILTER (WHERE r.pe > 0) as "avgPe",
-              AVG(r.dividend_yield) as "avgDividendYield",
-              COUNT(*) FILTER (WHERE r.pe > 0) as "sampleSize"
-       FROM market.computed_ratios r
-       JOIN market.securities s ON s.id = r.security_id
+      `SELECT AVG(q.last_price/f.eps) as "avgPe",NULL::numeric as "avgDividendYield",COUNT(*) as "sampleSize"
+       FROM market.securities s
        JOIN market.companies c ON c.id = s.company_id
-       WHERE s.exchange = $1 AND c.sector_id = $2 AND s.id != $3`,
-      [exchange, sectorId, excludeSecurityId]
+       JOIN market.live_quotes q ON q.security_id=s.id
+       JOIN LATERAL (SELECT COALESCE(i.eps,i.net_income/NULLIF(b.shares_outstanding,0)) AS eps
+         FROM market.financial_periods p JOIN market.income_statements i ON i.period_id=p.id
+         LEFT JOIN market.balance_sheets b ON b.period_id=p.id
+         WHERE p.security_id=s.id AND p.period_type='annual' AND ($5::int IS NULL OR p.fiscal_year=$5)
+         AND p.period_end<=q.event_timestamp::date AND p.reported_at<=q.event_timestamp::date
+         AND ($4 OR EXISTS(SELECT 1 FROM market.filing_history_reviews reviewed WHERE reviewed.period_id=p.id))
+         ORDER BY p.fiscal_year DESC,p.reported_at DESC LIMIT 1) f ON f.eps>0
+       WHERE s.exchange = $1 AND c.sector_id = $2 AND s.id != $3 AND s.status='active'
+       AND q.last_price>0 AND q.event_timestamp<=now() AND q.event_timestamp>=now()-interval '7 days'`,
+      [exchange, sectorId, excludeSecurityId,env.NODE_ENV!=='production',fiscalYear??null]
     );
     const row = res.rows[0];
     return {

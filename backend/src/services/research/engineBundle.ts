@@ -6,7 +6,6 @@ import { securitiesRepository } from "../../storage/repositories/securitiesRepos
 import { pricesRepository } from "../../storage/repositories/pricesRepository.js";
 import { financialsRepository } from "../../storage/repositories/financialsRepository.js";
 import { corporateActionsRepository } from "../../storage/repositories/corporateActionsRepository.js";
-import { researchService } from "./researchService.js";
 import { valuationService } from "../../services/technical/valuationService.js";
 import { buildCompanyBriefing } from "./engineBriefing.js";
 import { cache } from "../../storage/cache.js";
@@ -23,17 +22,28 @@ import {
 import { engineRepository } from "../../storage/repositories/engineRepository.js";
 import { trailingDividendPerShare } from "./dividendMetrics.js";
 import {companyDiagnostics} from './companyDiagnostics.js';
+import {researchReadiness} from './researchReadiness.js';
+import {reportedResearchRatios} from './reportedResearch.js';
+import {computeAfriScore} from './afriScore.js';
+import {yoyGrowth} from './ratiosEngine.js';
+import {engineCacheKeys} from './engineCacheKeys.js';
 const pendingBundles=new Map<string,Promise<Awaited<ReturnType<typeof loadEngineBundle>>>>();
 export async function getEngineBundle(symbol:string,exchange:ExchangeCode) {
   const key=`${exchange}:${symbol}`;
   type Bundle=Awaited<ReturnType<typeof loadEngineBundle>>;
-  const staleKey=`engine:last-good:v1:${key}`;
+  const staleKey=engineCacheKeys.lastGood(exchange,symbol);
   const cached=await cache.get<Bundle>(staleKey);
   const age=cached?Date.now()-Date.parse(cached.generatedAt):Infinity;
   if(cached && age>=0 && age<60_000)return cached;
   let job=pendingBundles.get(key);
   if(!job) {
     job=loadEngineBundle(symbol,exchange).then(async bundle=>{
+      const retainedAge=cached?Date.now()-Date.parse(cached.generatedAt):Infinity;
+      if(cached&&retainedAge>=0&&retainedAge<24*60*60_000&&bundle.unavailable.some(section=>['Quote','Financial statements'].includes(section))) {
+        const retained={...cached,refresh:{state:'retained',failedSections:bundle.unavailable,attemptedAt:bundle.generatedAt}};
+        await cache.set(staleKey,retained,Math.max(1,24*60*60_000-retainedAge));
+        return retained;
+      }
       await cache.set(staleKey,bundle,24*60*60_000);return bundle;
     }).finally(()=>pendingBundles.delete(key));
     pendingBundles.set(key,job);
@@ -47,7 +57,7 @@ export async function getEngineBundle(symbol:string,exchange:ExchangeCode) {
   return job;
 }
 async function loadEngineBundle(symbol: string, exchange: ExchangeCode) {
-  return cache.getOrSet(`engine:v4:${exchange}:${symbol}`, 60_000, async () => {
+  return cache.getOrSet(engineCacheKeys.bundle(exchange,symbol), 60_000, async () => {
     const profile = await securitiesRepository.getCompanyProfile(
       exchange,
       symbol,
@@ -83,8 +93,6 @@ async function loadEngineBundle(symbol: string, exchange: ExchangeCode) {
       earnings,
       ownership,
       valuation,
-      ratios,
-      score,
       news,
       technicals,
       actions,
@@ -107,8 +115,6 @@ async function loadEngineBundle(symbol: string, exchange: ExchangeCode) {
         [],
       ),
       optional("Valuation", valuationService.compute(exchange, symbol), null),
-      optional("Ratios", researchService.getRatios(profile.id), null),
-      optional("Company score", researchService.getAfriScore(profile.id), null),
       optional("News", newsRepository.listBySecurity(profile.id, 12), []),
       optional(
         "Technicals",
@@ -162,6 +168,11 @@ async function loadEngineBundle(symbol: string, exchange: ExchangeCode) {
     const sorted = [...history].sort((a, b) => a.fiscalYear - b.fiscalYear);
     const latest = sorted.at(-1),
       prior = sorted.at(-2);
+    // Derive headline metrics from this bundle's dated, reviewed inputs,
+    // never a previously cached ratio whose filing/quote basis is unknown.
+    const ratios=reportedResearchRatios(profile.id,quote,sorted,quote?trailingDividendPerShare(actions,new Date(quote.timestamp))??null:null);
+    const adjacent=latest&&prior&&latest.fiscalYear===prior.fiscalYear+1;
+    const score=ratios?{...computeAfriScore(profile.id,{ratios,revenueGrowthYoy:adjacent?yoyGrowth(latest.revenue,prior.revenue):undefined,epsGrowthYoy:adjacent?yoyGrowth(latest.eps,prior.eps):undefined}),asOf:quote!.timestamp}:null;
     const financialAnalysis = analyzeFinancials(
       sorted,
       profile.company.sectorName ?? "",
@@ -206,6 +217,8 @@ async function loadEngineBundle(symbol: string, exchange: ExchangeCode) {
     };
     const briefing = buildCompanyBriefing({ symbol, latest, prior, ratios });
     return {
+      refresh:{state:unavailable.length?'partial':'complete',failedSections:[...new Set(unavailable)],attemptedAt:new Date().toISOString()},
+      reliability:researchReadiness({quote,history:sorted,unavailable,technicalObservations:technicals.filter(t=>t!=null).length?Math.min(...technicals.filter(t=>t!=null).map(t=>t.timestamps.length)):0,estimateCount:earnings.filter(e=>e.epsEstimate!=null||e.revenueEstimate!=null).length,ownershipCount:ownership.length}),
       diagnostics:companyDiagnostics(sorted),
       quality,
       financialAnalysis,

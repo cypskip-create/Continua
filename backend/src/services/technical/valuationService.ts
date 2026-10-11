@@ -57,15 +57,15 @@ export const valuationService = {
     if (!quote) return null;
     const currentPrice = quote.lastPrice;
 
-    const [latestFinancials, ratios, dividends] = await Promise.all([
+    const [latestFinancials, dividends] = await Promise.all([
       financialsRepository.getLatestPeriodBundle(securityId, "annual"),
-      scoresRepository.getRatios(securityId),
       corporateActionsRepository.getDividendsBySecurity(securityId),
     ]);
+    const datedFinancials=latestFinancials?.reportedAt?.slice(0,10)<=quote.timestamp.slice(0,10)&&latestFinancials?.periodEnd?.slice(0,10)<=quote.timestamp.slice(0,10)?latestFinancials:null;
 
     const models: ValuationModel[] = [
-      await relativeValuationModel(exchange, securityId, profile.company.sectorId, currentPrice, ratios),
-      grahamNumberModel(currentPrice, latestFinancials),
+      await relativeValuationModel(exchange, securityId, profile.company.sectorId, currentPrice, datedFinancials),
+      grahamNumberModel(currentPrice, datedFinancials),
       dividendDiscountModel(currentPrice, dividends),
     ];
 
@@ -73,25 +73,24 @@ export const valuationService = {
   },
 };
 
-async function relativeValuationModel(
-  exchange: ExchangeCode, securityId: string, sectorId: string | undefined, currentPrice: number, ratios: Awaited<ReturnType<typeof scoresRepository.getRatios>>
+export async function relativeValuationModel(
+  exchange: ExchangeCode, securityId: string, sectorId: string | undefined, currentPrice: number, financials: Awaited<ReturnType<typeof financialsRepository.getLatestPeriodBundle>>
 ): Promise<ValuationModel> {
-  const methodology = "Applies the sector's average P/E (excluding this security, and excluding loss-making peers) to this security's own trailing EPS.";
+  const methodology = "Applies the sector's average reported-annual P/E to this security's reported EPS, using the same fiscal year. Excludes this security and loss-making peers. Annual EPS is not TTM or a forward estimate; quote dates can differ.";
 
   if (!sectorId) return { model: "Relative Valuation (Sector P/E)", fairValue: null, currentPrice, upsidePercent: null, inputs: {}, methodology, unavailableReason: "No sector classification on file for this security." };
-  if (!ratios?.pe || ratios.pe <= 0) return { model: "Relative Valuation (Sector P/E)", fairValue: null, currentPrice, upsidePercent: null, inputs: {}, methodology, unavailableReason: "No positive trailing P/E on file for this security (often means negative or unavailable EPS)." };
-
-  const eps = currentPrice / ratios.pe;
-  const sector = await scoresRepository.getSectorAverageRatios(exchange, sectorId, securityId);
+  const eps=financials?.eps??(financials?.sharesOutstanding>0?financials.netIncome/financials.sharesOutstanding:null);
+  if (!Number.isFinite(eps) || eps<=0) return { model: "Relative Valuation (Sector P/E)", fairValue: null, currentPrice, upsidePercent: null, inputs: {}, methodology, unavailableReason: "Positive reported EPS available on the quote date is required; EPS is never inferred from a cached P/E." };
+  const sector = await scoresRepository.getSectorAverageRatios(exchange, sectorId, securityId,financials.fiscalYear);
   if (!sector.avgPe || sector.sampleSize < 3) {
-    return { model: "Relative Valuation (Sector P/E)", fairValue: null, currentPrice, upsidePercent: null, inputs: { sectorPeerCount: sector.sampleSize }, methodology, unavailableReason: `Fewer than 3 profitable sector peers with computed ratios on file (found ${sector.sampleSize}) — not enough for a meaningful sector average.` };
+    return { model: "Relative Valuation (Sector P/E)", fairValue: null, currentPrice, upsidePercent: null, inputs: { sectorPeerCount: sector.sampleSize }, methodology, unavailableReason: `Fewer than 3 profitable, dated, same-year sector peers (found ${sector.sampleSize}) — not enough for a meaningful sector average.` };
   }
 
   const fairValue = round(sector.avgPe * eps);
   return {
     model: "Relative Valuation (Sector P/E)", fairValue, currentPrice,
     upsidePercent: round(((fairValue - currentPrice) / currentPrice) * 100),
-    inputs: { trailingEps: round(eps), sectorAveragePe: round(sector.avgPe), sectorPeerCount: sector.sampleSize },
+    inputs: { reportedAnnualEps: round(eps), fiscalYear:financials.fiscalYear,sectorAveragePe: round(sector.avgPe), sectorPeerCount: sector.sampleSize },
     methodology,
   };
 }

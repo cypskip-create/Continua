@@ -14,12 +14,21 @@ import { askEngine,type Evidence } from "../../services/research/engineAssistant
 import { query } from "../../storage/db.js";
 import { monitoringKinds } from "../../services/research/engineMonitoring.js";
 import { runEngineMonitoringOnce } from "../../workers/engineMonitorWorker.js";
+import {earningsSensitivity,EarningsSensitivitySchema} from '../../services/research/earningsSensitivity.js';
+import {annualRatioAt} from '../../services/technical/valuationHistory.js';
 export const engineWorkbenchRoutes=Router();
 const exchangeSchema=z.enum(ACTIVE_EXCHANGES).default("NSE");
 const symbolSchema=z.string().trim().toUpperCase().regex(/^[A-Z0-9.\-]{1,20}$/);
 const user=(res:Response)=>String(res.locals.engineUserId);
 const handle=(fn:(req:Request,res:Response)=>Promise<void>)=>asyncHandler(async(req,res)=>{try{await fn(req,res);}catch(error){if((error as {code?:string}).code==="42P01")throw new ApiError(503,"Engine persistence requires the latest database migration. Ask the administrator to deploy it.");throw error;}});
 const parse=<S extends z.ZodTypeAny>(schema:S,value:unknown):z.output<S>=>{const result=schema.safeParse(value);if(!result.success)throw new ApiError(400,"Invalid Engine request: "+result.error.issues.map(i=>i.message).join(", "));return result.data;};
+engineWorkbenchRoutes.post('/engine/labs/earnings-sensitivity',requirePremiumPlus,handle(async(req,res)=>{
+ const b=parse(EarningsSensitivitySchema,req.body),bundle=await getEngineBundle(b.symbol,'NSE'),q=bundle.quote;
+ if(!q||String(q.source)==='mock'||!Number.isFinite(Date.parse(q.timestamp))||Date.parse(q.timestamp)>Date.now())throw new ApiError(422,'A dated non-mock quote is required.');
+ const dated=annualRatioAt(bundle.history.filter(r=>r.sourceUrls?.length),q.lastPrice,q.timestamp,'pe');
+ if(!dated.ratio||!dated.denominator)throw new ApiError(422,'Positive EPS from a source-backed annual filing available on the quote date is required.');
+ res.json({data:{...earningsSensitivity(dated.denominator,q.lastPrice,b.years,b.growthPercent,b.exitPe),symbol:b.symbol,currency:bundle.currency,quoteAsOf:q.timestamp,fiscalYear:dated.fiscalYear,sourceUrls:dated.sourceUrls,snapshotId:bundle.reliability.snapshotId,generatedAt:new Date().toISOString()}});
+}));
 engineWorkbenchRoutes.post('/engine/labs/stress',requirePremiumPlus,handle(async(req,res)=>{
   const body=parse(StressSchema,req.body),portfolio=await getPortfolioOverview(user(res),'NSE');
   const positions=portfolio.positions.filter(p=>p.asOf&&Number.isFinite(Date.parse(p.asOf))&&Date.parse(p.asOf)<=Date.now());
