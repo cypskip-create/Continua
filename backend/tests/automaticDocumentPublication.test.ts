@@ -26,6 +26,7 @@ it('automatically publishes a complete native bond template with a hash-backed a
 });
 it.each([
   {...row,method:'ocr'}, {...row,text:text.replace('100.6538','400.00')},
+  {...row,needs_review:true},
   {...row,text:text.replace('10-Jul-34','10-Jul-24')},
   {...row,document_url:'https://example.org/results.pdf'},
   {...row,text:text.replace('12.7338','not reported')},
@@ -51,7 +52,15 @@ it('publishes only the registered reconciled HTML template into canonical histor
  mocks.query.mockResolvedValueOnce({rows:[htmlRow]}).mockResolvedValue({rows:[]});
  mocks.db.mockImplementation(async(sql:string)=>sql.includes('pg_try_advisory')?{rows:[{locked:true}]}:sql.includes('SELECT s.id,s.company_id')?{rows:[{id:'NSE:KUKZ',company_id:'NSE:company:KUKZ',name:'Kakuzi PLC'}]}:sql.startsWith('SELECT id::text FROM market.financial_statement_candidates')?{rows:[{id:'99'}]}:{rows:[],rowCount:0});
  expect(await runAutomaticDocumentPublication()).toEqual({published:1,review:0,failed:0});
+ expect(mocks.upsert).toHaveBeenCalledWith(expect.anything(),expect.objectContaining({query:expect.any(Function)}));
  expect(mocks.confirm).toHaveBeenCalledWith('99',expect.objectContaining({statementType:'income',periods:expect.arrayContaining([expect.objectContaining({income:{revenue:100000,netIncome:10000,eps:1}})])}),expect.anything());
+});
+it('selects only the latest extraction and drains oldest records first',async()=>{
+ mocks.query.mockResolvedValue({rows:[]});
+ await runAutomaticDocumentPublication();
+ const sql=mocks.query.mock.calls[0]![0] as string;
+ expect(sql).toContain('newer.artifact_id=e.artifact_id');
+ expect(sql).toContain('ORDER BY e.id ASC');
 });
 it.each([
  {...htmlRow,source_id:'nse'},

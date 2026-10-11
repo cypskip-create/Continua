@@ -13,7 +13,7 @@ import {validateKakuziGroupReport,KAKUZI_GROUP_VERSION} from '../normalizers/kak
 import {validateKcbGroupReport,KCB_GROUP_VERSION} from '../normalizers/kcbGroupReport.js';
 import {validateKakuziHtmlRecord,KAKUZI_HTML_VERSION} from '../normalizers/kakuziHtmlRecord.js';
 
-export const DOCUMENT_VALIDATOR_VERSION=`${NATIVE_ANNUAL_VERSION}:${CONDENSED_GROUP_VERSION}:${SAFARICOM_PRESS_VERSION}:${KAKUZI_GROUP_VERSION}:${KCB_GROUP_VERSION}:${KAKUZI_HTML_VERSION}:canonical-nse-v4:cbk-reopened-v1`;
+export const DOCUMENT_VALIDATOR_VERSION=`${NATIVE_ANNUAL_VERSION}:${CONDENSED_GROUP_VERSION}:${SAFARICOM_PRESS_VERSION}:${KAKUZI_GROUP_VERSION}:${KCB_GROUP_VERSION}:${KAKUZI_HTML_VERSION}:canonical-nse-v5:cbk-reopened-v1`;
 let active:Promise<unknown>|undefined;
 /** Bounded, versioned, automatic publication after deterministic validation.
  * OCR, unknown layouts and canonical conflicts retain their review state.
@@ -25,14 +25,16 @@ export function runAutomaticDocumentPublication(limit=25,extractionIds?:number[]
   return active;
 }
 async function run(limit:number,extractionIds?:number[]) {
-  const pending=await query(`SELECT e.id,e.artifact_id,e.method,e.text,e.tables,e.extracted_at,a.retrieved_at,a.sha256,a.document_url,a.source_id,
+  const pending=await query(`SELECT e.id,e.artifact_id,e.method,e.text,e.tables,e.needs_review,e.extracted_at,a.retrieved_at,a.sha256,a.document_url,a.source_id,
     a.title,s.config FROM scraping.extractions e JOIN scraping.raw_artifacts a ON a.id=e.artifact_id
     JOIN scraping.sources s ON s.id=a.source_id WHERE s.enabled AND (a.content_type LIKE '%application/pdf%' OR (a.source_id='kakuzi-record-filings' AND a.content_type LIKE '%text/html%'))
     AND a.sha256 ~ '^[a-f0-9]{64}$' AND e.text IS NOT NULL
     AND (a.source_id='nse' OR a.source_id='cbk-bond-history' OR a.source_id LIKE '%-filings')
     AND ($3::bigint[] IS NULL OR e.id=ANY($3))
+    AND NOT EXISTS(SELECT 1 FROM scraping.extractions newer WHERE newer.artifact_id=e.artifact_id
+      AND (newer.extracted_at>e.extracted_at OR (newer.extracted_at=e.extracted_at AND newer.id>e.id)))
     AND NOT EXISTS(SELECT 1 FROM market.document_validations v WHERE v.extraction_id=e.id AND v.validator_version=$1)
-    ORDER BY (e.method='native_pdf_text') DESC,e.id DESC LIMIT $2`,[DOCUMENT_VALIDATOR_VERSION,limit,extractionIds??null]);
+    ORDER BY e.id ASC LIMIT $2`,[DOCUMENT_VALIDATOR_VERSION,limit,extractionIds??null]);
   const summary={published:0,review:0,failed:0};
   const changed=new Map<string,string>();
   for(const row of pending.rows) {
@@ -47,6 +49,7 @@ async function run(limit:number,extractionIds?:number[]) {
         try {
           const isKakuziHtml=row.method==='html'&&row.source_id==='kakuzi-record-filings';
           if(row.method!=='native_pdf_text'&&!isKakuziHtml)throw new Error('OCR or unknown non-native extraction requires visual review');
+          if(row.method==='native_pdf_text' && row.needs_review===true)throw new Error('Incomplete native PDF extraction requires review; not eligible for automatic publication');
           const url=new URL(row.document_url);
           if(url.protocol!=='https:' || url.username || url.password)throw new Error('Official HTTPS provenance required');
           const host=url.hostname.replace(/^www\./,'');
@@ -90,7 +93,7 @@ async function run(limit:number,extractionIds?:number[]) {
               if(existing?.status==='rejected')throw new Error('Previously rejected auto candidate requires review');
               await financialStatementCandidatesRepository.upsert({companyId:issuer.company_id,securityId:issuer.id,rawCompanyName:issuer.name,
                 source:row.source_id,exchange:'NSE',documentUrl:row.document_url,documentTitle:row.title,tableIndex,
-                detectedTable:entry.table,detectionConfidence:1,scrapedArtifactId:row.artifact_id,scrapedExtractionId:row.id});
+                detectedTable:entry.table,detectionConfidence:1,scrapedArtifactId:row.artifact_id,scrapedExtractionId:row.id},db);
               const candidate=(await db.query('SELECT id::text FROM market.financial_statement_candidates WHERE scraped_extraction_id=$1 AND table_index=$2',[row.id,tableIndex])).rows[0];
               await confirmHistoricalColumns(candidate.id,entry.confirmation,db);ids.push(candidate.id);
             }
@@ -108,11 +111,20 @@ async function run(limit:number,extractionIds?:number[]) {
         summary[outcome]++;
       });
       if(committedIssuer)changed.set(committedIssuer.id,committedIssuer.symbol);
-    } catch { summary.failed++; }
+    } catch (err) {
+      summary.failed++;
+      logger.warn({ extractionId: row.id, error: String(err) }, 'Document publication transaction failed; record remains retryable');
+    }
   }
   // A published filing must refresh the same research used by the app and
   // portfolio Engine, not wait for the unrelated daily quote worker.
   for(const [id,symbol] of changed)try {
+    await Promise.all(['annual','quarterly'].flatMap(period => [
+      cache.del(`financial-read:latest:NSE:${symbol}:${period}`),
+      ...Array.from({length:50},(_,index)=>cache.del(`financial-read:history:NSE:${symbol}:${period}:${index+1}`)),
+    ]));
+    await cache.del(`engine:v4:NSE:${symbol}`);
+    await cache.del(`engine:last-good:v1:NSE:${symbol}`);
     const quote=await pricesRepository.getQuote(id);
     if(quote)await researchService.recomputeAndStore(id,quote.lastPrice);
     await cache.del(CacheKeys.ratios('NSE',symbol));

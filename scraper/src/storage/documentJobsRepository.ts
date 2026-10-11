@@ -10,6 +10,24 @@ export async function enqueueDocuments(sourceId: string, documents: SourceDocume
     [sourceId, JSON.stringify(documents.slice(offset, offset + 200))]);
   }
 }
+
+/** Recover legacy jobs incorrectly completed after an empty PDF extraction.
+ * Only the latest extraction is considered; valid history is never requeued. */
+export async function requeueIncompleteDocuments(sourceId: string, limit: number): Promise<void> {
+  await query(`WITH incomplete AS (
+    SELECT j.id FROM scraping.document_jobs j WHERE j.source_id=$1 AND j.status='complete'
+      AND EXISTS(SELECT 1 FROM LATERAL (
+          SELECT a.id FROM scraping.raw_artifacts a WHERE a.source_id=j.source_id AND a.document_url=j.url
+          ORDER BY a.retrieved_at DESC,a.id DESC LIMIT 1
+        ) artifact
+        JOIN LATERAL (SELECT e.method,e.text FROM scraping.extractions e WHERE e.artifact_id=artifact.id
+          ORDER BY e.extracted_at DESC,e.id DESC LIMIT 1) latest ON true
+        WHERE latest.method IN ('native_pdf_text','ocr') AND length(trim(coalesce(latest.text,'')))<50)
+    ORDER BY j.id FOR UPDATE SKIP LOCKED LIMIT $2
+  ) UPDATE scraping.document_jobs j SET status='pending',next_attempt_at=now(),updated_at=now(),
+      error_reason='Recovering incomplete legacy PDF extraction'
+    FROM incomplete WHERE j.id=incomplete.id`, [sourceId,limit]);
+}
 export async function claimDocuments(sourceId: string, limit: number): Promise<{ id: number; document: SourceDocument; attempts: number }[]> {
   const result = await query(`WITH pending AS (
     SELECT id FROM scraping.document_jobs WHERE source_id=$1 AND

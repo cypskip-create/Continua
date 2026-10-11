@@ -64,6 +64,8 @@ const EnvSchema = z.object({
   DEFAULT_CRAWL_CRON: z.string().default("0 */6 * * *"), // every 6 hours
   NEWS_CRAWL_CRON: z.string().default("*/10 * * * *"), // all enabled RSS sources
   SCHEDULER_ENABLED: booleanEnv(true),
+  DOCUMENT_DRAIN_CRON: z.string().default("*/2 * * * *"),
+  DOCUMENT_DRAIN_BATCH_SIZE: z.coerce.number().int().min(1).max(25).default(10),
 
   // How often to catch up generic-crawled artifacts that were stored but
   // never extracted (extraction/extractionSweep.ts). Independent of any

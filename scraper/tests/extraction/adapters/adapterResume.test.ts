@@ -10,8 +10,8 @@ import type { SourceAdapter } from "../../../src/adapters/types.js";
 const doc = { url: "https://www.nse.co.ke/report.pdf", discoveredFrom: "https://www.nse.co.ke/" };
 const adapter: SourceAdapter = { id: "nse", persistentBatchSize: 25, discover: async () => [doc],
   fetch: async () => ({ document: doc, artifactId: 7, isNewArtifact: false, body: Buffer.from("pdf"), sha256: "hash", contentType: "application/pdf", sizeBytes: 3, storagePath: "file.pdf" }),
-  parse: vi.fn(async () => ({ method: "native_pdf_text" as const, confidence: .9, text: "reported figures", tables: [], entity: { companyName: null, ticker: null, exchange: "NSE" }, needsReview: false })) };
-beforeEach(() => { vi.clearAllMocks(); vi.mocked(claimDocuments).mockResolvedValue([{ id: 3, document: doc, attempts: 2 }]); });
+  parse: vi.fn(async () => ({ method: "native_pdf_text" as const, confidence: .9, text: "A genuine company statement with dated financial figures and explicit KES units.", tables: [], entity: { companyName: null, ticker: null, exchange: "NSE" }, needsReview: false })) };
+beforeEach(() => { vi.clearAllMocks(); vi.mocked(claimDocuments).mockReset().mockResolvedValue([]).mockResolvedValueOnce([{ id: 3, document: doc, attempts: 2 }]); });
 it("retries extraction when bytes were stored before a crash", async () => {
   vi.mocked(findLatestExtraction).mockResolvedValue(null);
   expect((await runAdapter(adapter)).extracted).toBe(1);
@@ -19,7 +19,7 @@ it("retries extraction when bytes were stored before a crash", async () => {
   expect(finishDocument).toHaveBeenCalledWith(3,2);
 });
 it("does not parse a successfully extracted unchanged PDF twice", async () => {
-  vi.mocked(findLatestExtraction).mockResolvedValue({ id: 1 } as never);
+  vi.mocked(findLatestExtraction).mockResolvedValue({ id: 1, text: "A genuine company statement with dated financial figures and explicit KES units." } as never);
   expect((await runAdapter(adapter)).extracted).toBe(0);
   expect(adapter.parse).not.toHaveBeenCalled();
   expect(finishDocument).toHaveBeenCalledWith(3,2);

@@ -78,10 +78,10 @@ export interface UnextractedArtifact {
 }
 
 /**
- * Artifacts with zero extraction rows at all — distinct from
+ * Artifacts with no usable extraction yet (including legacy empty PDFs) — distinct from
  * listNeedsReview() below, which is about extractions that ran but came
  * back low-confidence. This is for artifacts that never got a chance to
- * run: today that's every raw_artifact stored via the generic crawler
+ * run successfully: today that's every raw_artifact stored via the generic crawler
  * (crawler/crawlSource.ts stores bytes for provenance but doesn't invoke
  * extraction itself — only the adapter-based runAdapter.ts path does).
  * extractionSweep.ts uses this to catch generic-crawled PDFs/HTML up
@@ -98,8 +98,9 @@ export async function findUnextracted(limit = 50): Promise<UnextractedArtifact[]
   }>(
     `SELECT a.id as artifact_id, a.source_id, a.adapter, a.content_type, a.storage_path, a.document_url
      FROM scraping.raw_artifacts a
-     LEFT JOIN scraping.extractions e ON e.artifact_id = a.id
-     WHERE e.id IS NULL
+     LEFT JOIN LATERAL (SELECT e.id,e.text FROM scraping.extractions e WHERE e.artifact_id=a.id
+       ORDER BY e.extracted_at DESC,e.id DESC LIMIT 1) e ON true
+     WHERE (e.id IS NULL OR (a.content_type ILIKE '%pdf%' AND length(trim(coalesce(e.text,'')))<50))
        AND (a.content_type ILIKE '%pdf%' OR a.content_type ILIKE '%html%')
        AND ($2::boolean = false OR EXISTS (
          SELECT 1 FROM storage.objects o WHERE o.bucket_id=$3

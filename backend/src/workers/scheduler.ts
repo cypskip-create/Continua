@@ -1,4 +1,5 @@
 import { startEngineMonitorWorker } from "./engineMonitorWorker.js";
+import { startDocumentPublicationWorker } from './documentPublicationWorker.js';
 /**
  * Live prices are the latency-critical path. Start their recurring workers
  * and first ingestion immediately; do not hold them behind slow candle,
@@ -27,6 +28,7 @@ export async function startAllWorkers(): Promise<() => void> {
   const candlesTask = startCandlesWorker();
   const announcementsTask = startAnnouncementsWorker();
   const financialCandidatesTask = startFinancialCandidatesWorker();
+  const documentPublicationTask = startDocumentPublicationWorker();
   const newsTask = startNewsWorker();
 
   // Fire the first live-data pass before any expensive bootstrap work. On a
@@ -84,6 +86,7 @@ export async function startAllWorkers(): Promise<() => void> {
     candlesTask.stop();
     announcementsTask.stop();
     financialCandidatesTask.stop();
+    documentPublicationTask.stop();
     newsTask.stop();
   };
 }

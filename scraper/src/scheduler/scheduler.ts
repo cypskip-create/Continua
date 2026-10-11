@@ -46,14 +46,14 @@ export function newsScheduleStatus() {
   return { enabled: env.SCHEDULER_ENABLED, cron: env.NEWS_CRAWL_CRON, running: [...runningSources].filter(id => newsRuns.has(id)), sources: [...newsRuns].map(([sourceId, state]) => ({ sourceId, ...state })) };
 }
 
-async function runSourceOnce(source: Source): Promise<void> {
+async function runSourceOnce(source: Source, drainOnly = false): Promise<void> {
   // A slow publisher must not accumulate another crawl every cron tick.
   if (runningSources.has(source.id)) return;
   runningSources.add(source.id);
   if (source.adapter === "rss") newsRuns.set(source.id, { startedAt: new Date().toISOString(), completedAt: null, success: null });
   try {
     if (hasRegisteredAdapter(source.adapter)) {
-      const summary = await runRegisteredAdapter(source);
+      const summary = await runRegisteredAdapter(source, { drainOnly, batchSize: env.DOCUMENT_DRAIN_BATCH_SIZE });
       if (source.adapter === "rss") newsRuns.set(source.id, { ...newsRuns.get(source.id)!, completedAt: new Date().toISOString(), success: summary.failed === 0 && summary.discovered > 0, discovered: summary.discovered, extracted: summary.extracted });
       logger.info({ sourceId: source.id, ...summary }, "Scheduled adapter run complete");
     } else {
@@ -82,6 +82,17 @@ export async function startScheduler(): Promise<ScheduledTask[]> {
 
   await ensureDefaultSources();
   const sources = await listEnabledSources();
+  // Discovery retains its publisher schedule. Already queued documents do
+  // not wait another six hours for the next archive crawl.
+  if (cron.validate(env.DOCUMENT_DRAIN_CRON)) {
+    scheduledTasks.push(cron.schedule(env.DOCUMENT_DRAIN_CRON, () => {
+      void (async () => {
+        const queuedSources = (await listEnabledSources()).filter(source => source.adapter === 'nse');
+        for (const source of queuedSources) await runSourceOnce(source, true);
+      })().catch(err => logger.error({ err }, 'Automatic document queue drain failed; next tick will retry'));
+    }));
+    logger.info({ cron: env.DOCUMENT_DRAIN_CRON, batchSize: env.DOCUMENT_DRAIN_BATCH_SIZE }, 'Scheduled independent document queue processing');
+  } else logger.warn('Invalid DOCUMENT_DRAIN_CRON; automatic queue drain is not scheduled');
   for (const source of sources) {
     const cronExpression = sourceSchedule(source, env.NEWS_CRAWL_CRON, env.DEFAULT_CRAWL_CRON);
 

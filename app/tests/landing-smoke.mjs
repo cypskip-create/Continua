@@ -77,6 +77,15 @@ try {
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:`${artifacts}/landing-mobile.png`,fullPage:true});
   assert.deepEqual(errors,[]);
+  await page.goto('http://127.0.0.1:5190/auth');
+  await page.locator('.auth-art img').evaluate(img=>img.decode());
+  assert.equal(await page.locator('.auth-art img').getAttribute('src'),'/landing/engine-research.png');
+  for (const width of [320,390,768,1440]) {
+    await page.setViewportSize({width,height:900});
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`auth overflow at ${width}`);
+  }
+  await page.waitForFunction(()=>Array.from(document.querySelectorAll('.auth-form-column')).every(el=>Number(getComputedStyle(el).opacity)>.99));
+  await page.screenshot({path:`${artifacts}/auth-research-desktop.png`});
   for (const route of ['docs','developers','about','help','trust']) {
     await page.goto(`http://127.0.0.1:5190/${route}`);
     await page.locator('.wr-heading h1').waitFor();

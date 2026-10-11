@@ -26,7 +26,7 @@ import { recordDeadLetter } from "../storage/deadLettersRepository.js";
 import { extractByContentType } from "./extractByContentType.js";
 import { logger } from "../monitoring/logger.js";
 
-const SWEEP_PARSER_VERSION = "extraction-sweep-0.1.0";
+const SWEEP_PARSER_VERSION = "extraction-sweep-0.2.0";
 
 export interface ExtractionSweepSummary {
   examined: number;
@@ -62,6 +62,10 @@ async function runSweep(limit: number): Promise<ExtractionSweepSummary> {
         // content-type header can lie.
         summary.skippedUnsupported++;
         continue;
+      }
+
+      if ((artifact.contentType ?? '').includes('pdf') && (result.text?.trim().length ?? 0) < 50) {
+        throw new Error('PDF extraction produced no usable text; automatic sweep will retry');
       }
 
       await insertExtraction({

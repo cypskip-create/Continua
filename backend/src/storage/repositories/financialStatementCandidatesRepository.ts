@@ -1,4 +1,5 @@
 import { query } from "../db.js";
+import type { PoolClient } from 'pg';
 import type { FinancialStatementCandidate } from "../../types/market.js";
 
 interface CandidateRow {
@@ -59,8 +60,9 @@ export const financialStatementCandidatesRepository = {
     detectionConfidence: number | null;
     scrapedArtifactId: number | null;
     scrapedExtractionId: number;
-  }): Promise<void> {
-    await query(
+  }, transaction?: PoolClient): Promise<void> {
+    const execute = transaction ? transaction.query.bind(transaction) : query;
+    await execute(
       `INSERT INTO market.financial_statement_candidates
          (company_id, security_id, raw_company_name, source, exchange, document_url, document_title,
           table_index, detected_table, detection_confidence, scraped_artifact_id, scraped_extraction_id)

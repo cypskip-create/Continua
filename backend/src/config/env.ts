@@ -72,6 +72,8 @@ const EnvSchema = z.object({
   CORPORATE_ACTIONS_SYNC_CRON: z.string().default("0 3 * * *"),
   ANNOUNCEMENTS_BRIDGE_CRON: z.string().default("*/5 * * * *"), // scraper runs independently; promptly publish whatever it produced
   FINANCIAL_CANDIDATES_BRIDGE_CRON: z.string().default("*/5 * * * *"), // keep reviewable fundamental tables close behind new filings
+  DOCUMENT_PUBLICATION_CRON: z.string().default("*/2 * * * *"),
+  DOCUMENT_PUBLICATION_BATCH_SIZE: z.coerce.number().int().min(1).max(100).default(25),
   NEWS_BRIDGE_CRON: z.string().default("*/2 * * * *"), // keep newly scraped headlines close to real time
   NEWS_SCRAPER_URL: z.string().url().optional(), // production Render collector is the fallback; override on other hosts
 

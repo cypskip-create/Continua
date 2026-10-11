@@ -18,6 +18,8 @@ import { kenyanstocksAdapter } from "./kenyanstocks/kenyanstocksAdapter.js";
 import type { SourceAdapter } from "./types.js";
 import type { Source } from "../types.js";
 import type { CrawlSummary } from "../crawler/crawlSource.js";
+import { requeueIncompleteDocuments } from '../storage/documentJobsRepository.js';
+import { logger } from '../monitoring/logger.js';
 
 type AdapterFactory = (source: Source) => SourceAdapter;
 
@@ -34,11 +36,16 @@ export function hasRegisteredAdapter(adapterId: string): boolean {
   return adapterId in adapterFactories;
 }
 
-export async function runRegisteredAdapter(source: Source): Promise<AdapterRunSummary> {
+export async function runRegisteredAdapter(source: Source, options: { drainOnly?: boolean; batchSize?: number } = {}): Promise<AdapterRunSummary> {
   const factory = adapterFactories[source.adapter];
   if (!factory) throw new Error(`No adapter registered for id: ${source.adapter}`);
   const adapter = factory(source);
-  return runAdapter(adapter);
+  if (options.drainOnly && !adapter.persistentBatchSize) throw new Error('Adapter has no durable document queue');
+  if (options.drainOnly) {
+    try { await requeueIncompleteDocuments(source.id, options.batchSize ?? adapter.persistentBatchSize!); }
+    catch (err) { logger.warn({ sourceId: source.id, err }, 'Legacy extraction recovery failed; continuing queued document work'); }
+  }
+  return runAdapter(options.drainOnly ? { ...adapter, persistentBatchSize: options.batchSize ?? adapter.persistentBatchSize, discover: async () => [] } : adapter);
 }
 
 export type { CrawlSummary };
