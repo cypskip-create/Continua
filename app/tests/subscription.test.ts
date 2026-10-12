@@ -20,7 +20,7 @@ test('Premium includes all company research and evidence, but not Plus workspace
     assert.equal(canUseEngineTool('premium', tool), true);
     assert.equal(canUseEngineTool('premium_plus', tool), true);
   }
-  for (const tool of ['Technicals','Scenario lab','Peers','Portfolio','Monitoring','Journal','Ask Engine','Preferences']) {
+  for (const tool of ['Technicals','Scenario lab','Risk lab','Research questions','Peers','Portfolio','Monitoring','Journal','Ask Engine','Preferences']) {
     assert.equal(canUseEngineTool('premium', tool), false);
     assert.equal(canUseEngineTool('premium_plus', tool), true);
   }

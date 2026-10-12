@@ -5,7 +5,7 @@ export interface FuturesResult {notional:number;pnl:number;stressPnl:number;marg
 export interface RiskAttribution {coveredWeight:number;observations:number;contributions:{symbol:string;weight:number;varianceContribution:number;riskShare:number}[];historicalVaR95:number|null;expectedShortfall95:number|null;tailObservations:number;methodology:string}
 export interface EnginePreferences {
   goal:string;horizon:string;experience:string;riskComfort:string;incomeNeeds:string;sectors:string[];
-  notifications:boolean;learnInterests:boolean;interests:{symbol:string;exchange:string;visits:number}[];
+  notifications:boolean;learnInterests:boolean;interests:{symbol:string;exchange:string;visits:number;lastSeen?:string}[];
 }
 export const defaultEnginePreferences:EnginePreferences={goal:"Balanced",horizon:"1_to_5_years",experience:"beginner",riskComfort:"unspecified",incomeNeeds:"none",sectors:[],notifications:true,learnInterests:false,interests:[]};
 export interface MonitorRule {id:string;exchange:string;symbol:string;kind:string;threshold:number|null;enabled:boolean;last_state?:{checkedAt?:string;asOf?:string|null;value?:number|null;triggered?:boolean;unavailable?:boolean;error?:string}|null}

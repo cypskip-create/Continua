@@ -1,6 +1,6 @@
 import { query, withTransaction } from "../db.js";
 import { ApiError } from "../../api/middleware/errorHandler.js";
-import { defaultPreferences, EnginePreferencesSchema, type EnginePreferences } from "../../services/research/enginePreferences.js";
+import { defaultPreferences, EnginePreferencesSchema, recordInterest, type EnginePreferences } from "../../services/research/enginePreferences.js";
 import { fingerprint, changesBetween, type ResearchState } from "../../services/research/engineAnalytics.js";
 export const engineRepository = {
   async preferences(userId:string):Promise<EnginePreferences> {
@@ -9,8 +9,25 @@ export const engineRepository = {
     return parsed.success?parsed.data:defaultPreferences();
   },
   async savePreferences(userId:string,settings:EnginePreferences) {
-    await query("INSERT INTO public.engine_preferences(user_id,settings) VALUES($1,$2::jsonb) ON CONFLICT(user_id) DO UPDATE SET settings=EXCLUDED.settings,updated_at=now()",[userId,JSON.stringify(settings)]);
-    return settings;
+    return withTransaction(async client=>{
+      await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',['engine-preferences:'+userId]);
+      const existing=await client.query<{settings:unknown}>('SELECT settings FROM public.engine_preferences WHERE user_id=$1',[userId]);
+      const parsed=EnginePreferencesSchema.safeParse(existing.rows[0]?.settings??{});
+      // Settings forms may be old; never overwrite server-recorded interests.
+      const saved={...settings,interests:parsed.success?parsed.data.interests:[]};
+      await client.query("INSERT INTO public.engine_preferences(user_id,settings) VALUES($1,$2::jsonb) ON CONFLICT(user_id) DO UPDATE SET settings=EXCLUDED.settings,updated_at=now()",[userId,JSON.stringify(saved)]);
+      return saved;
+    });
+  },
+  async recordInterest(userId:string,symbol:string,exchange:string,reset=false) {
+    return withTransaction(async client=>{
+      await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',['engine-preferences:'+userId]);
+      const existing=await client.query<{settings:unknown}>('SELECT settings FROM public.engine_preferences WHERE user_id=$1',[userId]);
+      const parsed=EnginePreferencesSchema.safeParse(existing.rows[0]?.settings??{});
+      const saved=recordInterest(parsed.success?parsed.data:defaultPreferences(),symbol,exchange,reset);
+      await client.query("INSERT INTO public.engine_preferences(user_id,settings) VALUES($1,$2::jsonb) ON CONFLICT(user_id) DO UPDATE SET settings=EXCLUDED.settings,updated_at=now()",[userId,JSON.stringify(saved)]);
+      return saved;
+    });
   },
   async observe(securityId:string,state:ResearchState) {
     return withTransaction(async client=>{

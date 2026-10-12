@@ -158,6 +158,7 @@ export function EnginePreferencesPanel() {
     mutationFn: () => engineWorkspaceApi.visit("KCB", "NSE", true),
     onSuccess: (value) => {
       client.setQueryData(["continua", "engine-preferences", user?.id], value);
+      void client.invalidateQueries({queryKey:['continua','engine-recommendations',user?.id]});
     },
   });
   const select = (
@@ -278,7 +279,7 @@ export function EnginePreferencesPanel() {
         <p className="text-xs text-muted-foreground mt-2">
           {settings.interests.length
             ? settings.interests
-                .map((i) => `${i.symbol} (${i.visits} visits)`)
+                .map((i) => `${i.symbol} (${i.visits} research days)`)
                 .join(" · ")
             : "No interests recorded."}
         </p>

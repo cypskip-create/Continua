@@ -34,6 +34,11 @@ import { EngineRiskLab } from "@/components/engine/EngineRiskLab";
 import { CompanyEvidenceDesk } from "@/components/engine/CompanyEvidenceDesk";
 import {EngineReliabilityDesk} from '@/components/engine/EngineReliabilityDesk';
 import {EarningsSensitivityLab} from '@/components/engine/EarningsSensitivityLab';
+import {AdvancedResearchLab} from '@/components/engine/AdvancedResearchLab';
+import {ForecastNotebook} from '@/components/engine/ForecastNotebook';
+import {LearningResearchDesk} from '@/components/engine/LearningResearchDesk';
+import {FinancialVersionDesk} from '@/components/engine/FinancialVersionDesk';
+import {PipelineHealthDesk} from '@/components/engine/PipelineHealthDesk';
 
 const tools = [
   "Briefing",
@@ -52,6 +57,7 @@ const tools = [
   "Preferences",
   "Evidence",
   "Journal",
+  "Research questions",
 ] as const;
 type Tool = (typeof tools)[number];
 const groups: { name: string; tools: Tool[] }[] = [
@@ -72,7 +78,7 @@ const groups: { name: string; tools: Tool[] }[] = [
   },
   {
     name: "My workspace",
-    tools: ["Portfolio", "Monitoring", "Journal", "Ask Engine", "Preferences"],
+    tools: ["Portfolio", "Monitoring", "Journal", "Research questions", "Ask Engine", "Preferences"],
   },
 ];
 const toolHelp: Record<Tool, string> = {
@@ -92,6 +98,7 @@ const toolHelp: Record<Tool, string> = {
   Journal: "Record your thesis, evidence and next review so you can revisit your decisions.",
   "Ask Engine": "Ask a focused question about the selected company and inspect the evidence in the answer.",
   Preferences: "Set your research focus and notification preferences.",
+  'Research questions':'Record private probabilities, fixed resolution rules and evidence. Review calibration without betting, rewards or rankings.',
 };
 function toolFromParam(value: string | null): Tool {
   if (value === "Focus") return "Forecast";
@@ -170,7 +177,7 @@ export default function Engine() {
       lastVisit.current !== key
     ) {
       lastVisit.current = key;
-      void engineWorkspaceApi.visit(symbol, exchange).catch(() => {});
+      void engineWorkspaceApi.visit(symbol, exchange).then(()=>queryClient.invalidateQueries({queryKey:['continua','engine-recommendations',user?.id]})).catch(() => {});
     }
   }, [fullEngine, user?.id, exchange, symbol, researchPreferences.learnInterests]);
   return (
@@ -196,6 +203,7 @@ export default function Engine() {
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-4">
+        {fullEngine&&<div className="py-4"><LearningResearchDesk onTool={target=>setTool(toolFromParam(target))} onCompany={next=>setParams(current=>{const p=new URLSearchParams(current);p.set('symbol',next);p.set('tool','Evidence');return p;},{replace:true})}/></div>}
         <section className="border-b border-border/70 py-5">
           {paid ? (
             <>
@@ -368,6 +376,7 @@ export default function Engine() {
               data && (
                 <div key={`${exchange}:${symbol}`} className="py-6 space-y-6">
                   <EngineReliabilityDesk data={data} expanded={tool==='Evidence'} onTool={target=>setTool(toolFromParam(target))}/>
+                  {tool==='Evidence'&&<><FinancialVersionDesk symbol={symbol}/>{fullEngine&&<PipelineHealthDesk/>}</>}
                   {query.isError&&<p role="status" className="text-sm text-muted-foreground">The background update could not connect. Showing your last saved research with its original date. <button className="text-primary" onClick={()=>void query.refetch()}>Retry update</button></p>}
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
@@ -611,9 +620,11 @@ export default function Engine() {
               "Preferences",
               "Journal",
               "Risk lab",
+              "Research questions",
             ].includes(tool) && toolAllowed && (
               <div className="py-5">
-                {tool === "Risk lab" && <EngineRiskLab />}
+                {tool === "Risk lab" && <><EngineRiskLab /><div className="mt-8"><AdvancedResearchLab key={symbol} symbol={symbol}/></div></>}
+                {tool === 'Research questions' && <ForecastNotebook key={`${user?.id}:${symbol}`} symbol={symbol}/>}
                 {tool === "Journal" && (
                   <ResearchJournal
                     account={user?.id ?? "guest"}

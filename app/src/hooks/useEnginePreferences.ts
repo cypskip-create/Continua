@@ -7,6 +7,6 @@ export function useEnginePreferences(){
   const enabled=!!user&&profile?.subscription_plan === "premium_plus";
   const queryKey=["continua","engine-preferences",user?.id];
   const query=useQuery({queryKey,queryFn:engineWorkspaceApi.preferences,enabled,staleTime:60000,retry:false});
-  const save=useMutation({mutationFn:(settings:EnginePreferences)=>engineWorkspaceApi.savePreferences(settings),onSuccess:settings=>client.setQueryData(queryKey,settings)});
+  const save=useMutation({mutationFn:(settings:EnginePreferences)=>engineWorkspaceApi.savePreferences(settings),onSuccess:settings=>{client.setQueryData(queryKey,settings);void client.invalidateQueries({queryKey:['continua','engine-recommendations',user?.id]});}});
   return {settings:query.data??defaultEnginePreferences,query,save,enabled};
 }

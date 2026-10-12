@@ -4,10 +4,11 @@ import { z } from "zod";
 import {StressSchema,BondLabSchema,FuturesLabSchema} from '../../services/research/engineLabSchemas.js';
 import {stressPortfolio,bondRisk,futuresRisk} from '../../services/research/engineRiskLab.js';
 import { ACTIVE_EXCHANGES,env } from "../../config/index.js";
-import { requirePremiumPlus, requireEngineUser } from "../middleware/requireSubscriber.js";
+import { requirePremiumPlus, requireEngineUser,requireSubscriber } from "../middleware/requireSubscriber.js";
 import { asyncHandler,ApiError } from "../middleware/errorHandler.js";
 import { engineRepository } from "../../storage/repositories/engineRepository.js";
-import { EnginePreferencesSchema } from "../../services/research/enginePreferences.js";
+import { EnginePreferencesSchema,researchRecommendations } from "../../services/research/enginePreferences.js";
+import {AdvancedResearchSchema,advancedResearch,CalendarDate} from '../../services/research/advancedResearch.js';
 import { getEngineBundle } from "../../services/research/engineBundle.js";
 import { getPortfolioOverview,getPortfolioResearch,getPeers } from "../../services/research/engineWorkspace.js";
 import { askEngine,type Evidence } from "../../services/research/engineAssistant.js";
@@ -16,12 +17,36 @@ import { monitoringKinds } from "../../services/research/engineMonitoring.js";
 import { runEngineMonitoringOnce } from "../../workers/engineMonitorWorker.js";
 import {earningsSensitivity,EarningsSensitivitySchema} from '../../services/research/earningsSensitivity.js';
 import {annualRatioAt} from '../../services/technical/valuationHistory.js';
+import {runHealthCheck} from '../../monitoring/healthCheck.js';
 export const engineWorkbenchRoutes=Router();
 const exchangeSchema=z.enum(ACTIVE_EXCHANGES).default("NSE");
 const symbolSchema=z.string().trim().toUpperCase().regex(/^[A-Z0-9.\-]{1,20}$/);
 const user=(res:Response)=>String(res.locals.engineUserId);
 const handle=(fn:(req:Request,res:Response)=>Promise<void>)=>asyncHandler(async(req,res)=>{try{await fn(req,res);}catch(error){if((error as {code?:string}).code==="42P01")throw new ApiError(503,"Engine persistence requires the latest database migration. Ask the administrator to deploy it.");throw error;}});
 const parse=<S extends z.ZodTypeAny>(schema:S,value:unknown):z.output<S>=>{const result=schema.safeParse(value);if(!result.success)throw new ApiError(400,"Invalid Engine request: "+result.error.issues.map(i=>i.message).join(", "));return result.data;};
+engineWorkbenchRoutes.post('/engine/labs/advanced',requirePremiumPlus,handle(async(req,res)=>{
+ const input=parse(AdvancedResearchSchema,req.body);
+ try{res.json({data:advancedResearch(input)});}catch(e){throw new ApiError(422,e instanceof Error?e.message:'Research inputs require review.');}
+}));
+engineWorkbenchRoutes.get('/engine/labs/history-inputs',requirePremiumPlus,handle(async(req,res)=>{
+ const b=parse(z.object({symbol:symbolSchema,start:CalendarDate,end:CalendarDate}).refine(v=>v.start<v.end&&v.end<=new Date().toISOString().slice(0,10)&&Date.parse(v.end)-Date.parse(v.start)<=6*366*86400000,'Use an ordered past window of at most six years'),req.query);
+ const rows=await query<{date:string;close:number;sourceUrl:string}>(`SELECT DISTINCT ON(bar_time::date) bar_time::date::text AS date,close,source_url AS "sourceUrl" FROM market.candles WHERE security_id=$1 AND interval='1d' AND bar_time>=$2::date AND bar_time<$3::date+interval '1 day' AND close>0 AND source_url LIKE 'https://%' ORDER BY bar_time::date,bar_time DESC LIMIT 1501`,['NSE:'+b.symbol,b.start,b.end]);
+ if(rows.rows.length>1500)throw new ApiError(400,'Reduce the window to at most 1500 observed sessions.');
+ if(rows.rows.length<2)throw new ApiError(422,'Fewer than two source-backed price observations are stored for this window. Missing sessions are not invented.');
+ res.json({data:{symbol:b.symbol,points:rows.rows.map(({date,close})=>({date,close})),sourceUrls:[...new Set(rows.rows.map(r=>r.sourceUrl))],basis:'Stored source-linked raw price closes; corporate-action completeness and benchmark compatibility require separate verification.'}});
+}));
+engineWorkbenchRoutes.get('/engine/recommendations',requirePremiumPlus,handle(async(_req,res)=>{res.json({data:researchRecommendations(await engineRepository.preferences(user(res)))});}));
+engineWorkbenchRoutes.get('/engine/financial-versions',requireSubscriber,handle(async(req,res)=>{
+ const symbol=parse(symbolSchema,req.query.symbol);
+ const rows=await query('SELECT id,table_name,period_id,operation,before_payload,after_payload,recorded_at,transaction_id FROM market.financial_version_audit WHERE security_id=$1 ORDER BY recorded_at DESC,id DESC LIMIT 100',['NSE:'+symbol]);
+ res.json({data:{versions:rows.rows,methodology:'Canonical changes recorded from deployment onward. Recorded time is not the original filing/publication date. This audit preserves prior values but does not identify or approve issuer restatements; conflicting documents still require review.'}});
+}));
+engineWorkbenchRoutes.get('/engine/pipeline-health',requirePremiumPlus,handle(async(_req,res)=>{
+ const health=await runHealthCheck();
+ const validations=await query(`SELECT outcome,count(*)::int AS count,max(validated_at) AS latest FROM
+  (SELECT DISTINCT ON(extraction_id) outcome,validated_at FROM market.document_validations ORDER BY extraction_id,validated_at DESC,validator_version DESC) latest GROUP BY outcome`);
+ res.json({data:{checkedAt:health.timestamp,status:health.status,checks:Object.entries(health.checks).map(([name,v])=>({name,ok:v.ok})),validations:validations.rows,limits:['Counts describe recorded validation outcomes, not complete issuer/year coverage.','Unsupported OCR and conflicts remain in review; confidence alone cannot approve publication.','Always-on hosting and paid AI are disabled by user choice; free-instance sleep remains possible.'],methodology:'Operational health is separate from financial evidence quality. No private errors, credentials or user activity are returned.'}});
+}));
 engineWorkbenchRoutes.post('/engine/labs/earnings-sensitivity',requirePremiumPlus,handle(async(req,res)=>{
  const b=parse(EarningsSensitivitySchema,req.body),bundle=await getEngineBundle(b.symbol,'NSE'),q=bundle.quote;
  if(!q||String(q.source)==='mock'||!Number.isFinite(Date.parse(q.timestamp))||Date.parse(q.timestamp)>Date.now())throw new ApiError(422,'A dated non-mock quote is required.');
@@ -43,10 +68,7 @@ engineWorkbenchRoutes.get("/engine/preferences",requirePremiumPlus,handle(async(
 engineWorkbenchRoutes.post("/engine/preferences",requirePremiumPlus,handle(async(req,res)=>{const settings=parse(EnginePreferencesSchema,req.body);res.json({data:await engineRepository.savePreferences(user(res),settings)});}));
 engineWorkbenchRoutes.post("/engine/interests",requirePremiumPlus,handle(async(req,res)=>{
   const body=parse(z.object({symbol:symbolSchema,exchange:exchangeSchema,reset:z.boolean().optional()}),req.body);
-  const preferences=await engineRepository.preferences(user(res));
-  if(body.reset)preferences.interests=[];
-  else if(preferences.learnInterests){const current=preferences.interests.find(i=>i.symbol===body.symbol&&i.exchange===body.exchange);if(current)current.visits=Math.min(current.visits+1,10000);else preferences.interests.unshift({symbol:body.symbol,exchange:body.exchange,visits:1});preferences.interests=preferences.interests.slice(0,30);}
-  res.json({data:await engineRepository.savePreferences(user(res),preferences)});
+  res.json({data:await engineRepository.recordInterest(user(res),body.symbol,body.exchange,body.reset)});
 }));
 engineWorkbenchRoutes.get("/engine/portfolio",requirePremiumPlus,handle(async(req,res)=>{res.json({data:await getPortfolioResearch(user(res),parse(exchangeSchema,req.query.exchange))});}));
 engineWorkbenchRoutes.get("/engine/portfolio/overview",requireEngineUser,handle(async(req,res)=>{res.json({data:await getPortfolioOverview(user(res),parse(exchangeSchema,req.query.exchange))});}));
