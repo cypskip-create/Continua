@@ -8,6 +8,7 @@
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import { env } from "../config/index.js";
+import {safeObjectKey,readR2,writeR2} from './r2Storage.js';
 
 function extensionFor(contentType: string | null): string {
   if (!contentType) return "bin";
@@ -38,6 +39,15 @@ export async function storeRawArtifact(params: {
   const year = now.getUTCFullYear();
   const ext = extensionFor(params.contentType);
   const relativePath = path.join(params.sourceId, String(year), `${params.sha256}.${ext}`);
+  if(env.RAW_STORAGE_DRIVER==='r2'){
+    const objectKey=safeObjectKey(relativePath.replaceAll('\\','/'));
+    await writeR2(objectKey,params.body,params.sha256,params.contentType);
+    if(env.R2_DUAL_WRITE){
+      const response=await fetch(storageUrl(objectKey),{method:'POST',redirect:'error',signal:AbortSignal.timeout(60000),headers:{...storageHeaders(),'Content-Type':params.contentType??'application/octet-stream','x-upsert':'true'},body:new Uint8Array(params.body)});
+      if(!response.ok)throw new Error(`Rollback storage copy failed: HTTP ${response.status}`);
+    }
+    return `r2://${env.R2_BUCKET}/${objectKey}`;
+  }
   if (env.RAW_STORAGE_DRIVER === "supabase") {
     const objectKey = relativePath.replaceAll("\\", "/");
     const response = await fetch(storageUrl(objectKey), { method: "POST", redirect: "error",
@@ -61,7 +71,14 @@ export async function storeRawArtifact(params: {
  * storagePath is the relative path as stored in raw_artifacts.storage_path.
  */
 export async function readRawArtifact(storagePath: string): Promise<Buffer> {
-  if (env.RAW_STORAGE_DRIVER === "supabase") {
+  if(storagePath.startsWith('r2://')){
+    const location=new URL(storagePath);if(location.hostname!==env.R2_BUCKET||location.search||location.hash)throw new Error('Invalid R2 artifact location');
+    const key=safeObjectKey(location.pathname.slice(1));
+    if(env.RAW_STORAGE_DRIVER==='r2')return readR2(key);
+    storagePath=key; // Dual-written rollback copy; original data is retained.
+  }
+  safeObjectKey(storagePath.replaceAll('\\','/'));
+  if (env.RAW_STORAGE_DRIVER === "supabase"||env.RAW_STORAGE_DRIVER==='r2') {
     const response = await fetch(storageUrl(storagePath), { headers: storageHeaders(), redirect: "error", signal: AbortSignal.timeout(60_000) });
     if (!response.ok) throw new Error(`Private artifact read failed: HTTP ${response.status}`);
     const bytes = Buffer.from(await response.arrayBuffer());

@@ -14,6 +14,7 @@ const endpoints = resolveApiEndpoint(
   (import.meta.env.VITE_CONTINUA_API_URL as string | undefined) ??
   (import.meta.env.VITE_AFRIFINANCE_API_URL as string | undefined),
   import.meta.env.PROD,
+  window.location.origin,
 );
 export const AFRIFINANCE_API_URL = endpoints.rest;
 

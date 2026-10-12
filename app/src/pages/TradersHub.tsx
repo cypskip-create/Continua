@@ -429,7 +429,6 @@ export default function TradersHub() {
         <div className="border-b border-border/50">
           {peopleStatus==='loading'&&<p role="status" className="px-4 py-3 text-xs text-muted-foreground">Searching people…</p>}
           {peopleStatus==='error'&&<p role="alert" className="px-4 py-3 text-xs text-destructive">People search could not load. Try again shortly.</p>}
-          {peopleStatus==='ready'&&!people.length&&<p className="px-4 py-3 text-xs text-muted-foreground">No matching public TradersHub profiles. An account can appear without posting once its owner completes TradersHub setup.</p>}
           {people.length > 0 && (
             <div className="px-4 py-2">
               <p className="text-[0.625rem] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">People</p>

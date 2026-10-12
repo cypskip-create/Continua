@@ -35,7 +35,12 @@ const EnvSchema = z.object({
   // these are re-fetchable staging artifacts, not the system of record
   // (extraction writes structured data into Postgres). For durable historical
   // PDFs use the implemented private Supabase driver in storage/rawStorage.ts.
-  RAW_STORAGE_DRIVER: z.enum(["local", "supabase"]).default("local"),
+  RAW_STORAGE_DRIVER: z.enum(["local", "supabase", "r2"]).default("local"),
+  R2_ACCOUNT_ID:z.string().regex(/^[a-f0-9]{32}$/).optional(),
+  R2_ACCESS_KEY_ID:z.string().optional(),
+  R2_SECRET_ACCESS_KEY:z.string().optional(),
+  R2_BUCKET:z.string().regex(/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/).optional(),
+  R2_DUAL_WRITE:booleanEnv(true),
   RAW_STORAGE_LOCAL_PATH: z.string().default("./data/raw"),
   SUPABASE_URL: z.string().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),

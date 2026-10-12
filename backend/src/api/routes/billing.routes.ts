@@ -6,14 +6,16 @@ import { env } from "../../config/index.js";
 import { liveCheckoutEnabled, initializeLiveCheckout, verifyLiveCheckout, liveReferencePattern } from "../../services/paystackLive.js";
 
 export const billingRoutes = Router();
-billingRoutes.get("/billing/status", (_req,res) => { res.json({ data: { enabled: liveCheckoutEnabled(), mode: "live", automaticRenewal: false } }); });
+billingRoutes.get("/billing/status", (_req,res) => { res.setHeader('Cache-Control','no-store');res.json({ data: { enabled: liveCheckoutEnabled(), inlineCheckout: true, mode: "live", automaticRenewal: false } }); });
 billingRoutes.post("/billing/checkout", requireEngineUser, asyncHandler(async (req,res) => {
   const input = checkoutAgreementInput.safeParse(req.body);
   if (!input.success) throw new ApiError(400, "Choose a valid plan and billing cycle, then acknowledge the current billing terms. Refresh checkout if needed.");
-  res.json({ data: await initializeLiveCheckout(res.locals.engineUserId, res.locals.engineUserEmail, {plan:input.data.plan,cycle:input.data.cycle},CHECKOUT_POLICY_VERSION) });
+  res.setHeader('Cache-Control','no-store');
+  res.json({ data: await initializeLiveCheckout(res.locals.engineUserId, res.locals.engineUserEmail, {plan:input.data.plan,cycle:input.data.cycle},CHECKOUT_POLICY_VERSION,input.data.paymentMethod) });
 }));
 billingRoutes.get("/billing/verify/:reference", requireEngineUser, asyncHandler(async (req,res) => {
   const reference = String(req.params.reference);
+  res.setHeader('Cache-Control','no-store');
   res.json({ data: await verifyLiveCheckout(reference, res.locals.engineUserId) });
 }));
 // Mounted with express.raw BEFORE express.json and public API-key middleware.

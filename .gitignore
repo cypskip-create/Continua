@@ -33,3 +33,5 @@ backend/.env.local
 *.sw?
 scraper/data/*
 .qa-artifacts/
+__pycache__/
+*.pyc

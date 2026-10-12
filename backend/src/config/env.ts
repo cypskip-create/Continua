@@ -38,7 +38,10 @@ const EnvSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   SUPABASE_URL: z.string().url().default("https://jjsetogmnumoudrovpzn.supabase.co"),
 
-  CACHE_DRIVER: z.enum(["memory", "redis"]).default("memory"),
+  CACHE_DRIVER: z.enum(["memory", "redis", "upstash"]).default("memory"),
+  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+  CACHE_NAMESPACE: z.string().regex(/^[a-zA-Z0-9:_-]{1,80}$/).default('continua:production:cache:v2'),
   REDIS_URL: z.string().optional(),
 
   NSE_CLIENT_MODE: z.enum(["mock", "live", "afx", "mystocks"]).default("mock"),

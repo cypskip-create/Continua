@@ -66,7 +66,7 @@ export default function Auth() {
     // from the shared session rather than local state lost by that remount.
     if (!sessionLoading && user && mode !== 'reset') {
       const from = location.state?.from;
-      navigate(from?.pathname?.startsWith('/') && from.pathname !== '/auth' ? `${from.pathname}${from.search ?? ''}${from.hash ?? ''}` : '/', { replace: true });
+      navigate(from?.pathname?.startsWith('/') && !from.pathname.startsWith('//') && from.pathname !== '/auth' ? `${from.pathname}${from.search ?? ''}${from.hash ?? ''}` : '/', { replace: true });
     }
   }, [sessionLoading, user, mode, navigate, location.state]);
 
@@ -125,7 +125,9 @@ export default function Auth() {
     if(isSignUp&&(!adult||!acceptedTerms)){toast({title:'Before creating an account',description:'Confirm that you are 18 or older and agree to the Terms.'});return;}
     setGoogleLoading(true);
     try {
-      const { error } = await lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin });
+      const from=location.state?.from;
+      const destination=from?.pathname==='/checkout'?`/checkout${from.search ?? ''}`:'';
+      const { error } = await lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin+destination });
       if (error) toast({ title: 'Error', description: error.message || 'Failed to sign in with Google', variant: 'destructive' });
     } catch {
       toast({ title: 'Error', description: 'An unexpected error occurred', variant: 'destructive' });

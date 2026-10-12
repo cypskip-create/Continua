@@ -38,7 +38,7 @@ export function validateLiveTransaction(raw: unknown, order: LiveOrder) {
   if (t.reference !== order.reference || t.amount !== order.amount_minor || t.customer.email.toLowerCase() !== order.email.toLowerCase() || t.metadata.continua_reference !== order.reference || t.metadata.continua_user !== order.user_id || (t.status === "success" && !t.paid_at)) throw new ApiError(409, "This payment does not match your live checkout.");
   return t;
 }
-export async function initializeLiveCheckout(userId: string, email: string, input: z.infer<typeof checkoutInput>,policyVersion:string) {
+export async function initializeLiveCheckout(userId: string, email: string, input: z.infer<typeof checkoutInput>,policyVersion:string,paymentMethod?:'card'|'mobile_money') {
   if(policyVersion!==CHECKOUT_POLICY_VERSION)throw new ApiError(400,'Acknowledge the current checkout terms before proceeding.');
   requireEnabled();
   if (!z.string().email().safeParse(email).success) throw new ApiError(400, "Your account needs an email address for checkout.");
@@ -48,13 +48,14 @@ export async function initializeLiveCheckout(userId: string, email: string, inpu
   const reference = `continua-live-${randomUUID()}`;
   const amount = prices[input.plan][input.cycle];
   await query(`INSERT INTO public.paystack_live_orders (reference,user_id,email,plan,cycle,amount_minor,terms_version,terms_accepted_at) VALUES ($1,$2,$3,$4,$5,$6,$7,now())`, [reference,userId,email,input.plan,input.cycle,amount,policyVersion]);
-  const data = z.object({ authorization_url: z.string(), reference: z.literal(reference) }).safeParse(await provider("/transaction/initialize", {
+  const data = z.object({ authorization_url: z.string(), reference: z.literal(reference),access_code:z.string().min(1).max(200).optional() }).safeParse(await provider("/transaction/initialize", {
     email, amount, currency: "KES", reference, callback_url: env.PAYSTACK_CALLBACK_URL,
     metadata: JSON.stringify({ continua_reference: reference, continua_user: userId, mode: "live",terms_version:policyVersion }),
+    ...(paymentMethod?{channels:[paymentMethod]}:{}),
     // One-time checkout supports M-PESA. Never save reusable card authorizations or auto-charge.
   }));
   if (!data.success || !validCheckoutUrl(data.data.authorization_url)) throw new ApiError(502, "Payment provider returned an invalid checkout link.");
-  return { url: data.data.authorization_url, reference, mode: "live" };
+  return { url: data.data.authorization_url, accessCode:data.data.access_code??null, reference, mode: "live",amount:amount/100,currency:'KES' };
 }
 export async function verifyLiveCheckout(reference: string, userId?: string) {
   requireEnabled();

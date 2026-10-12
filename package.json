@@ -22,6 +22,7 @@
     "pino": "^10.3.1"
   },
   "devDependencies": {
-    "supabase": "^2.114.0"
+    "supabase": "^2.114.0",
+    "wrangler": "^4.149.0"
   }
 }

@@ -21,6 +21,7 @@ const Markets = lazy(() => import("./pages/Markets"));
 const Discover = lazy(() => import("./pages/Discover"));
 const Account = lazy(() => import("./pages/Account"));
 const Upgrade = lazy(() => import("./pages/Upgrade"));
+const Checkout = lazy(() => import("./pages/Checkout"));
 const LegalPolicies = lazy(() => import('./pages/LegalPolicies'));
 const StockDetail = lazy(() => import("./pages/StockDetail"));
 const Watchlist = lazy(() => import("./pages/Watchlist"));
@@ -92,6 +93,7 @@ const App = () => (
                   <Route path="/copyright" element={<LegalPolicies section="copyright" />} />
                   <Route path="/billing-policy" element={<LegalPolicies section="billing" />} />
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/checkout" element={<Checkout />} />
                   <Route path="/admin/financials-review" element={<AdminFinancialsReview />} />
                   <Route element={<MainLayout />}>
                     <Route path="markets" element={<Markets />} />

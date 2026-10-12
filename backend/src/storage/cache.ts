@@ -8,6 +8,7 @@ import { LRUCache } from "lru-cache";
 import { Redis } from "ioredis";
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
+import {UpstashCache} from './upstashCache.js';
 
 export interface ICache {
   get<T>(key: string): Promise<T | null>;
@@ -103,6 +104,10 @@ class RedisCache implements ICache {
 }
 
 function createCache(): ICache {
+  if(env.CACHE_DRIVER==='upstash'){
+    if(!env.UPSTASH_REDIS_REST_URL||!env.UPSTASH_REDIS_REST_TOKEN)throw new Error('Upstash cache requires server-side REST credentials');
+    return new UpstashCache(env.UPSTASH_REDIS_REST_URL,env.UPSTASH_REDIS_REST_TOKEN,env.CACHE_NAMESPACE,new InMemoryCache());
+  }
   if (env.CACHE_DRIVER === "redis") {
     logger.info("Using Redis cache driver");
     return new RedisCache();

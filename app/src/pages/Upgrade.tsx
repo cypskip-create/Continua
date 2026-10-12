@@ -10,6 +10,7 @@ import { continuaFetch } from "@/api/client";
 import { PLANS, type PaidPlan } from "@/lib/subscription";
 import { navigateBack } from "@/lib/navigation";
 import {LEGAL_POLICY_VERSION} from '@/lib/legalPolicy';
+import {checkoutDestination} from '@/lib/checkout';
 
 const freeFeatures = ["Portfolio tracking, watchlists and charts", "TradersHub posts, media and discussions", "Fundamentals: 5 distinct stocks per month, with free revisits", "Basic ratings, forecast summaries and return on capital"];
 export default function Upgrade() {
@@ -40,10 +41,9 @@ export default function Upgrade() {
     if(!paymentStatus.data?.enabled){toast({title:"Checkout is not available yet",description:"Payment setup is still in progress. No payment has been taken."});return;}
     setBusy(plan);
     try {
-      const data=await continuaFetch<{url:string;mode:string}>("/billing/checkout",{method:"POST",body:{plan,cycle:annual?"annual":"monthly",policyVersion:LEGAL_POLICY_VERSION,accepted:true}});
-      const target=new URL(data.url);
-      if(data.mode!=='live'||target.origin!=="https://checkout.paystack.com"||target.username||target.password)throw new Error("Invalid checkout link. No payment has been taken.");
-      window.location.assign(target.href);
+      const target=new URL(checkoutDestination(import.meta.env.VITE_CONTINUA_WEBSITE_ORIGIN||window.location.origin,plan,annual?'annual':'monthly'));
+      if(target.origin===window.location.origin)navigate(target.pathname+target.search);
+      else window.location.assign(target.href);
     }catch(error){toast({title:"Upgrade not completed",description:error instanceof Error?error.message:"Please try again.",variant:"destructive"});}
     finally{setBusy(null);}
   };
