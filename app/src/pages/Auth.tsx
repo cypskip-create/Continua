@@ -177,29 +177,6 @@ export default function Auth() {
 
           {mode !== 'reset' ? (
             <>
-              {/* Sign in / Sign up segmented toggle — pill slides between the two */}
-              <div className="relative grid grid-cols-2 p-1.5 m-4 mb-0 bg-muted/50 rounded-full">
-                <motion.div
-                  className="absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-6px)] rounded-full bg-background shadow-sm"
-                  animate={{ x: mode === 'signup' ? 'calc(100% + 4px)' : 0 }}
-                  transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-                />
-                <button
-                  type="button"
-                  onClick={() => switchMode('signin')}
-                  className={`relative z-10 h-9 rounded-full text-[0.84375rem] font-semibold transition-colors ${mode === 'signin' ? 'text-foreground' : 'text-muted-foreground'}`}
-                >
-                  Log In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchMode('signup')}
-                  className={`relative z-10 h-9 rounded-full text-[0.84375rem] font-semibold transition-colors ${mode === 'signup' ? 'text-foreground' : 'text-muted-foreground'}`}
-                >
-                  Sign Up
-                </button>
-              </div>
-
               <AnimatePresence mode="wait">
                 <motion.div
                   key={mode}
