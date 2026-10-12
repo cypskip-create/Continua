@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import {useKeyboardPanel} from '@/hooks/useKeyboardPanel';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -38,6 +39,7 @@ export function AddInvestmentDialog({
   const { portfolio, addToPortfolio, updatePortfolioItem } = usePortfolio();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const keyboardPanel=useKeyboardPanel(open);
   const [saving, setSaving] = useState(false);
 
   const existing: PortfolioItem | undefined = lockedSymbol
@@ -119,7 +121,7 @@ export function AddInvestmentDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[400px] p-0 gap-0 rounded-2xl">
+      <DialogContent {...keyboardPanel} className="sm:max-w-[400px] p-0 gap-0 rounded-2xl">
         <DialogHeader className="p-5 pb-3 border-b">
           <DialogTitle className="text-base">
             {existing ? `Update ${existing.symbol} Holding` : "Add Investment"}

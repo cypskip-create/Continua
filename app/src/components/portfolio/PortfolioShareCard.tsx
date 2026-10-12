@@ -107,7 +107,7 @@ export const PortfolioShareCard = forwardRef<HTMLDivElement, PortfolioShareCardP
     const shown = topHoldingsOnly ? holdings.slice(0, 5) : holdings;
     const primaryGain = showDayChange ? todayGain : totalGain;
     const primaryPct = showDayChange ? todayPercent : gainPercent;
-    const { primary, primaryForeground, card, border, muted, isAmoled } = useResolvedThemeColors();
+    const { primary, primaryForeground, card, border, muted } = useResolvedThemeColors();
     // AMOLED keeps every surface flat true-black-or-near-black (see index.css
     // "AMOLED consistency") — no lifted gradients — so the card matches the
     // rest of the app instead of standing out with a violet-tinted sheen.
@@ -119,12 +119,9 @@ export const PortfolioShareCard = forwardRef<HTMLDivElement, PortfolioShareCardP
     // Every one of these is a translucent color over the card in the original
     // design (an alpha channel) — pre-blended here into solid rgb() so nothing
     // in this card depends on the renderer supporting CSS alpha colors.
-    const tintedRgb = blend(primaryRgb, cardRgb, 0.08);
     const borderOnCardRgb = blend(borderRgb, cardRgb, 0.6);
     const footerBgRgb = blend(mutedRgb, cardRgb, 0.2);
-    const cardBackground = isAmoled
-      ? `rgb(${cardRgb.join(", ")})`
-      : `linear-gradient(165deg, rgb(${tintedRgb.join(", ")}), rgb(${cardRgb.join(", ")}) 55%)`;
+    const cardBackground = `rgb(${cardRgb.join(", ")})`;
     const rgb = (c: [number, number, number]) => `rgb(${c.join(", ")})`;
 
     return (
@@ -169,12 +166,15 @@ export const PortfolioShareCard = forwardRef<HTMLDivElement, PortfolioShareCardP
                     {!hideAmounts && <p className="text-[0.625rem] text-muted-foreground">{h.shares} sh</p>}
                   </div>
                 </div>
+                <div className="text-right shrink-0 ml-2">
+                {!hideAmounts && <p className="text-[0.75rem] font-semibold tabular">KES {kes(h.shares*h.currentPrice)}</p>}
                 {!hideGains && (
                   <span className={`text-[0.75rem] font-semibold tabular ${(showDayChange ? h.dayChangePct : h.gainPct) >= 0 ? "text-bull" : "text-bear"}`}>
                     {(showDayChange ? h.dayChangePct : h.gainPct) >= 0 ? "+" : ""}
                     {(showDayChange ? h.dayChangePct : h.gainPct).toFixed(2)}%
                   </span>
                 )}
+                </div>
               </div>
             ))}
           </div>

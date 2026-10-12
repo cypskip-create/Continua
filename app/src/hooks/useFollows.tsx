@@ -8,6 +8,7 @@ export interface FollowUser {
   full_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  handle?: string | null;
 }
 
 export function useFollows() {
@@ -34,7 +35,7 @@ export function useFollows() {
     // Use public view to exclude sensitive data like email
     const { data: profiles } = await supabase
       .from('profiles_public')
-      .select('id, user_id, full_name, avatar_url, bio')
+      .select('id, user_id, full_name, avatar_url, bio, handle')
       .in('user_id', followingIds);
 
     return profiles || [];
@@ -56,7 +57,7 @@ export function useFollows() {
     // Use public view to exclude sensitive data like email
     const { data: profiles } = await supabase
       .from('profiles_public')
-      .select('id, user_id, full_name, avatar_url, bio')
+      .select('id, user_id, full_name, avatar_url, bio, handle')
       .in('user_id', followerIds);
 
     return profiles || [];

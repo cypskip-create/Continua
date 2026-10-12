@@ -14,6 +14,7 @@ import { useWatchlist } from "@/hooks/useWatchlist";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
 import { HubPostCard } from "@/components/social/HubPostCard";
+import {HubResearchTools} from '@/components/social/HubResearchTools';
 import { XComposeModal } from "@/components/social/XComposeModal";
 import { TradersHubOnboarding, INTEREST_SECTOR_TICKERS } from "@/components/social/TradersHubOnboarding";
 import { SuggestedForYou } from "@/components/social/SuggestedForYou";
@@ -24,6 +25,7 @@ import { atHandle, getInitials } from "@/lib/handle";
 import { CommunityReaction } from "@/components/social/CommunityReactionButton";
 import { useLivePortfolioQuotes } from "@/hooks/useLiveQuotes";
 import { shareLink } from "@/lib/share";
+import {useInstruments} from '@/hooks/useInstruments';
 
 type FeedTab = "for-you" | "following" | "trending";
 type Tab = FeedTab | "media";
@@ -49,6 +51,8 @@ const NSE_NAMES: Record<string, string> = {
 };
 
 export default function TradersHub() {
+  const {instruments}=useInstruments('NSE');
+  const companyNames=useMemo(()=>({...NSE_NAMES,...Object.fromEntries(instruments.map(i=>[i.symbol,i.companyName]))}),[instruments]);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
@@ -72,6 +76,7 @@ export default function TradersHub() {
   });
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [people, setPeople] = useState<PeopleResult[]>([]);
+  const [peopleStatus,setPeopleStatus]=useState<'idle'|'loading'|'ready'|'error'>('idle');
   const [composeOpen, setComposeOpen] = useState(false);
   const [prefillContent, setPrefillContent] = useState("");
   const [sharePreset, setSharePreset] = useState<{ hideAmounts: boolean; hideGains: boolean; topHoldingsOnly: boolean; showDayChange: boolean } | undefined>();
@@ -116,16 +121,17 @@ export default function TradersHub() {
 
   // People search — users by name or handle
   useEffect(() => {
-    const q = searchQuery.trim().replace(/^@/, "");
-    if (q.length < 2) { setPeople([]); return; }
+    const q = searchQuery.trim().replace(/^@/, "").replace(/[^\p{L}\p{N} _\-]/gu,'').slice(0,80);
+    if (!q) { setPeople([]);setPeopleStatus('idle'); return; }
+    setPeopleStatus('loading');
     let cancelled = false;
     const timer = setTimeout(async () => {
-      const { data } = await supabase
+      const { data,error } = await supabase
         .from("profiles_public")
         .select("user_id, full_name, handle, avatar_url, bio")
         .or(`full_name.ilike.%${q}%,handle.ilike.%${q}%`)
-        .limit(8);
-      if (!cancelled) setPeople((data as PeopleResult[]) || []);
+        .order('full_name').limit(30);
+      if (!cancelled){setPeople((data as PeopleResult[]) || []);setPeopleStatus(error?'error':'ready');}
     }, 250);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [searchQuery]);
@@ -200,7 +206,7 @@ export default function TradersHub() {
         const inContent = post.content.toLowerCase().includes(q);
         const inTicker = post.stock_mentions?.some(s => s.toLowerCase().includes(q));
         const inAuthor = (post.author?.full_name || "").toLowerCase().includes(q) || (post.author?.handle || "").toLowerCase().includes(q);
-        const inCompany = post.stock_mentions?.some(s => (NSE_NAMES[s.toUpperCase()] || "").toLowerCase().includes(q));
+        const inCompany = post.stock_mentions?.some(s => (companyNames[s.toUpperCase()] || "").toLowerCase().includes(q));
         if (!inContent && !inTicker && !inAuthor && !inCompany) return false;
       }
       if (activeTab === "following") return isFollowing(post.user_id);
@@ -248,7 +254,7 @@ export default function TradersHub() {
     }
 
     return result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [posts, searchQuery, activeTab, isFollowing, portfolioSymbols, watchlistSymbols, reactedTopics, bookmarkedIds, user, profile?.interests]);
+  }, [posts, searchQuery, activeTab, isFollowing, portfolioSymbols, watchlistSymbols, reactedTopics, bookmarkedIds, user, profile?.interests,companyNames]);
 
   // Merges into the current URL params instead of replacing them wholesale,
   // so switching tabs, searching, and the notification deep-link param
@@ -306,7 +312,7 @@ export default function TradersHub() {
   const searching = searchQuery.trim().length > 0;
   const q = searchQuery.trim().replace(/^[#$@]/, "").toUpperCase();
   const tickerMatches = searching
-    ? Object.keys(NSE_NAMES).filter(sym => sym.includes(q) || NSE_NAMES[sym].toUpperCase().includes(q)).slice(0, 5)
+    ? Object.keys(companyNames).filter(sym => sym.includes(q) || companyNames[sym].toUpperCase().includes(q)).slice(0, 12)
     : [];
   const hashtagMatches = searching
     ? [...new Set(posts.flatMap(p => p.content.match(/#\w+/g) || []))].filter(h => h.toUpperCase().includes(q)).slice(0, 5)
@@ -401,6 +407,7 @@ export default function TradersHub() {
       </header>
 
       {/* Ticker rail */}
+      {!searching&&activeTab!=='media'&&<HubResearchTools posts={posts} watchlist={watchlist.map(w=>w.symbol)} onTicker={symbol=>setSearch(`$${symbol}`)} onCompose={draft=>{setPrefillContent(draft);setComposeOpen(true);}}/>}
       {activeTab !== "media" && !searching && trendingTickers.length > 0 && (
         <div className="flex gap-2 overflow-x-auto no-scrollbar px-4 py-2 border-b border-border/40">
           {trendingTickers.map(t => (
@@ -420,6 +427,9 @@ export default function TradersHub() {
       {/* Search results */}
       {activeTab !== "media" && searching && (
         <div className="border-b border-border/50">
+          {peopleStatus==='loading'&&<p role="status" className="px-4 py-3 text-xs text-muted-foreground">Searching people…</p>}
+          {peopleStatus==='error'&&<p role="alert" className="px-4 py-3 text-xs text-destructive">People search could not load. Try again shortly.</p>}
+          {peopleStatus==='ready'&&!people.length&&<p className="px-4 py-3 text-xs text-muted-foreground">No matching public TradersHub profiles. An account can appear without posting once its owner completes TradersHub setup.</p>}
           {people.length > 0 && (
             <div className="px-4 py-2">
               <p className="text-[0.625rem] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">People</p>
@@ -442,7 +452,7 @@ export default function TradersHub() {
                   <button key={sym} data-small-target onClick={() => navigate(`/stock/${sym}`)} className="flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-muted/50 text-[0.6875rem]">
                     <Building2 className="h-3 w-3 text-primary" />
                     <span className="font-semibold text-primary">${sym}</span>
-                    <span className="text-muted-foreground truncate max-w-[110px]">{NSE_NAMES[sym]}</span>
+                    <span className="text-muted-foreground truncate max-w-[110px]">{companyNames[sym]}</span>
                   </button>
                 ))}
                 {hashtagMatches.map(tag => (

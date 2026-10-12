@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import {SafetyMenuItems} from '@/components/social/SafetyMenuItems';
-import { useParams, useNavigate } from "react-router-dom";
+import {useAccountBlock} from '@/hooks/useAccountBlock';
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { navigateBack } from "@/lib/navigation";
 import { ArrowLeft, Calendar, UserPlus, MessageCircle, MoreHorizontal, Lock, Verified, Heart, Repeat2, FileText, Camera, Loader2, Share, TrendingUp, TrendingDown, Award, Target, PieChart, ChevronRight, Image as ImageIcon, MapPin, Pin, Bookmark, VolumeX, UserX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,6 +52,8 @@ interface PortfolioHolding {
 
 export default function UserProfile() {
   const { userId } = useParams();
+  const [profileParams]=useSearchParams();
+  const accountBlock=useAccountBlock(userId);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -84,11 +87,14 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (userId) {
-      fetchProfile(); fetchUserPosts(); fetchUserLikes(); fetchUserReposts();
-      loadFollowCounts(); fetchPublicPortfolio();
-      if (user?.id === userId) fetchBookmarks();
+      fetchProfile();
+      if(accountBlock.state==='clear'){
+        fetchUserPosts(); fetchUserLikes(); fetchUserReposts();
+        loadFollowCounts(); fetchPublicPortfolio();
+        if (user?.id === userId) fetchBookmarks();
+      }
     }
-  }, [userId, user]);
+  }, [userId, user,accountBlock.state]);
 
   // Does the profile being viewed already follow the current user? If so, the
   // follow button should read "Follow back" instead of a plain "Follow", the
@@ -371,7 +377,7 @@ export default function UserProfile() {
       : { id: "", user_id: p.user_id, full_name: profileData?.full_name || null, avatar_url: profileData?.avatar_url || null, bio: null, handle: profileData?.handle ?? null },
   });
 
-  if (loading) {
+  if (loading || accountBlock.state==='loading') {
     return <div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary/30 border-t-primary" /></div>;
   }
 
@@ -393,6 +399,11 @@ export default function UserProfile() {
   }
 
   // Find first post to "pin" (most liked)
+  if(accountBlock.state==='blocked'||accountBlock.state==='error')return <div className="min-h-screen bg-background p-5">
+   <Button variant="ghost" onClick={()=>navigateBack(navigate,'/traders-hub')}><ArrowLeft className="h-5 w-5 mr-2"/>Back</Button>
+   <section className="mx-auto max-w-md py-16 space-y-4"><h1 className="text-2xl font-bold">{accountBlock.state==='blocked'?`You blocked ${profileData.full_name||'this account'}`:'Account safety could not load'}</h1>
+   <p className="text-muted-foreground">{accountBlock.state==='blocked'?'Unblock this account to view its posts and profile. Blocking keeps its posts out of your feed and prevents signed-in interactions.':'Please reload before viewing this account.'}</p>
+   {accountBlock.state==='blocked'&&<Button onClick={()=>void accountBlock.unblock().catch(()=>toast({title:"Couldn't unblock account",variant:'destructive'}))}>Unblock account</Button>}</section></div>;
   const pinnedPost = userPosts.length > 0 ? [...userPosts].sort((a, b) => b.likes_count - a.likes_count)[0] : null;
   const regularPosts = userPosts.filter(p => p.id !== pinnedPost?.id);
 
@@ -492,7 +503,7 @@ export default function UserProfile() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="posts" className="mt-4">
+      <Tabs key={userId+profileParams.toString()} defaultValue={isOwnProfile&&profileParams.get('tab')==='bookmarks'?'bookmarks':'posts'} className="mt-4">
         <TabsList className="w-full flex bg-transparent border-b border-border rounded-none h-11 p-0 gap-1 overflow-x-auto">
           {[
             { value: "posts", label: "Posts" },

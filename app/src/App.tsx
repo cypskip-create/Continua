@@ -1,6 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { CommunityReportHost } from "@/components/social/SafetyMenuItems";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
@@ -74,6 +75,7 @@ const App = () => (
             <Sonner />
             <AppLockGate>
               <BrowserRouter>
+                <CommunityReportHost />
                 <ScrollRestorationController />
                 <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="h-7 w-7 rounded-full border-2 border-muted-foreground/25 border-t-primary animate-spin" /></div>}>
                 <Routes>

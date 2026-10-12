@@ -7,13 +7,13 @@ import { PortfolioReviewDesk } from "@/components/engine/PortfolioReviewDesk";
 
 const numeric = (n: number | null | undefined) => n == null ? "Unavailable" : n.toLocaleString(undefined, { maximumFractionDigits: 2 });
 
-export function PortfolioEngineOverview({ data, loading, error, showValues }: {
-  data?: EnginePortfolioOverview; loading: boolean; error: unknown; showValues: boolean;
+export function PortfolioEngineOverview({ data, loading, error, showValues, onRetry }: {
+  data?: EnginePortfolioOverview; loading: boolean; error: unknown; showValues: boolean;onRetry?:()=>void;
 }) {
   return <section aria-label="Engine portfolio overview" className="space-y-3 border-t border-border pt-4">
     <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-semibold">Engine portfolio overview</h3><span className="text-xs text-muted-foreground">Included free</span></div>
     {loading && <p role="status" className="text-xs text-muted-foreground">Checking your dated holdings…</p>}
-    {!!error && <p role="alert" className="text-xs text-muted-foreground">Engine overview could not load. Your holdings and existing portfolio tools remain available.</p>}
+    {!!error && <p role="alert" className="text-xs text-muted-foreground">{data?'The latest Engine update could not load. Your previous dated overview remains available.':'Engine overview could not load. Your holdings remain available.'} {onRetry&&<button className="underline" onClick={onRetry}>Retry overview</button>}</p>}
     {data && <>
       <p className="text-sm">{data.holdingCount ? `${data.pricedCount} of ${data.holdingCount} holdings priced` : "Add your first holding to start portfolio research."}{data.sessionDate ? ` · session ${data.sessionDate}` : ""}</p>
       {data.holdingCount > 0 && <div className="grid grid-cols-2 gap-3 text-xs">

@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("../src/storage/db.js", () => ({ query: mocks.query }));
 vi.mock("../src/storage/repositories/pricesRepository.js", () => ({
-  pricesRepository: { getQuote: mocks.quote },
+  pricesRepository: { getQuotesBatch:async(ids:string[])=>Promise.all(ids.map(async securityId=>({...await mocks.quote(securityId),securityId}))) },
 }));
 vi.mock("../src/storage/repositories/securitiesRepository.js", () => ({
   securitiesRepository: { listInstruments: mocks.instruments },

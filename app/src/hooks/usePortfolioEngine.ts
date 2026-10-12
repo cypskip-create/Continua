@@ -30,7 +30,7 @@ export function usePortfolioEngine(isPremium: boolean, analysisOpen: boolean, is
   const overview = useQuery({
     queryKey: ["continua", "engine-portfolio-overview", user?.id, exchange],
     queryFn: () => engineWorkspaceApi.portfolioOverview(exchange), enabled: !!user,
-    staleTime: 60_000, retry: engineReadRetry,
+    staleTime: 60_000, refetchInterval:60_000, refetchOnReconnect:true, retry: engineReadRetry,
   });
   const intelligence = useQuery({
     queryKey: ["continua", "engine-portfolio", user?.id, exchange],

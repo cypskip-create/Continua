@@ -242,7 +242,7 @@ export function RobinhoodPerformanceChart({
         <div className="text-xl font-bold tracking-tight tabular-nums">
           {formatHero(displayValue)}
         </div>
-        <div
+        {chartData.length>=2&&<div
           className={`flex items-center gap-1 mt-0.5 text-[0.6875rem] ${isPositive ? "text-bull" : "text-bear"}`}
         >
           {isPositive ? (
@@ -275,7 +275,8 @@ export function RobinhoodPerformanceChart({
           <span className="text-muted-foreground ml-1">
             {hoverDate || activeTimeframe}
           </span>
-        </div>
+        </div>}
+        {chartData.length<2&&<p className="text-xs text-muted-foreground mt-1">Period change unavailable until two dated observations exist.</p>}
       </div>
 
       {/* Chart */}

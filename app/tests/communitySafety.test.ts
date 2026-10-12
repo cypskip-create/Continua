@@ -14,7 +14,7 @@ test('every saved reaction has atlas artwork while shark and diamond leave the p
 test('safety controls only confirm success after persisted RPC and report failures',()=>{
  const ui=file('../src/components/social/SafetyMenuItems.tsx');
  assert.ok(ui.includes('community_submit_report'));assert.ok(ui.includes('if(error)throw error'));
- assert.ok(ui.includes("Couldn't submit your report"));assert.ok(ui.includes("e.preventDefault()"));
+ assert.ok(ui.includes("Couldn't submit your report"));assert.ok(!ui.includes("e.preventDefault()"));assert.ok(ui.includes('CommunityReportHost'));
  const card=file('../src/components/social/HubPostCard.tsx'),legacy=file('../src/components/social/XPostCard.tsx');
  assert.ok(card.includes('<SafetyMenuItems'));assert.ok(!card.includes('title: "Reported"'));assert.ok(!legacy.includes('title: "Reported"'));
 });

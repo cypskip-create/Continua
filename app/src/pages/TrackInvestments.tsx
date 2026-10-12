@@ -513,6 +513,7 @@ export default function TrackInvestments() {
           data={engine.overview.data}
           loading={engine.overview.isLoading}
           error={engine.overview.error}
+          onRetry={()=>void engine.overview.refetch()}
           showValues={showBalance}
         />
 

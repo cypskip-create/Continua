@@ -21,25 +21,12 @@ interface Props {
   gainPct: number;
 }
 
-// Annualized IRR approximation: simple time-weighted average using oldest holding date
-function calcIRR(totalValue: number, totalCost: number, holdings: Holding[]): number {
-  if (!holdings.length || totalCost <= 0) return 0;
-  const oldest = holdings.reduce((min, h) => {
-    const t = new Date(h.created_at).getTime();
-    return t < min ? t : min;
-  }, Date.now());
-  const years = Math.max(0.25, (Date.now() - oldest) / (365.25 * 24 * 3600 * 1000));
-  const ratio = totalValue / totalCost;
-  return (Math.pow(ratio, 1 / years) - 1) * 100;
-}
-
 export function PortfolioSnowflake({ holdings, totalValue, totalCost, gainPct }: Props) {
   const hasHoldings = holdings.length > 0;
 
   const sectorCount = new Set(holdings.map(h => h.sector || "Other")).size;
   const maxWeight = Math.max(...holdings.map(h => h.weight), 0);
   const winners = holdings.filter(h => h.gainPct > 0).length;
-  const irr = calcIRR(totalValue, totalCost, holdings);
 
   const score = (val: number, max: number) => Math.min(100, Math.max(5, (val / max) * 100));
 
@@ -48,13 +35,13 @@ export function PortfolioSnowflake({ holdings, totalValue, totalCost, gainPct }:
   // empty, rather than the whole card disappearing.
   const data = hasHoldings ? [
     { metric: "Value", v: score(Math.max(0, gainPct + 20), 60) },
-    { metric: "Growth", v: score(Math.max(0, irr + 10), 40) },
+    { metric: "Return", v: score(Math.max(0, gainPct + 10), 40) },
     { metric: "Diversity", v: score(sectorCount, 6) },
     { metric: "Stability", v: score(100 - maxWeight, 100) },
     { metric: "Winners", v: score(winners, Math.max(1, holdings.length)) },
     { metric: "Size", v: score(holdings.length, 12) },
   ] : [
-    { metric: "Value", v: 0 }, { metric: "Growth", v: 0 }, { metric: "Diversity", v: 0 },
+    { metric: "Value", v: 0 }, { metric: "Return", v: 0 }, { metric: "Diversity", v: 0 },
     { metric: "Stability", v: 0 }, { metric: "Winners", v: 0 }, { metric: "Size", v: 0 },
   ];
 
@@ -65,7 +52,7 @@ export function PortfolioSnowflake({ holdings, totalValue, totalCost, gainPct }:
           <Sparkles className="h-4 w-4 text-primary" />
           Portfolio Health
         </h3>
-        <span className="text-[0.625rem] text-muted-foreground font-medium">{hasHoldings ? `IRR · ${irr >= 0 ? '+' : ''}${irr.toFixed(1)}%/yr` : "No holdings yet"}</span>
+        <span className="text-[0.625rem] text-muted-foreground font-medium">{hasHoldings ? 'Recorded positions' : "No holdings yet"}</span>
       </div>
 
       <div className="grid grid-cols-5 gap-3 items-center">
@@ -79,7 +66,7 @@ export function PortfolioSnowflake({ holdings, totalValue, totalCost, gainPct }:
           </ResponsiveContainer>
         </div>
         <div className="col-span-2 space-y-1.5">
-          <Metric label="Annualized IRR" value={hasHoldings ? `${irr >= 0 ? '+' : ''}${irr.toFixed(1)}%` : "—"} positive={hasHoldings && irr >= 0} />
+          <Metric label="Unrealized return" value={hasHoldings ? `${gainPct >= 0 ? '+' : ''}${gainPct.toFixed(1)}%` : "—"} positive={hasHoldings && gainPct >= 0} />
           <Metric label="Diversity" value={hasHoldings ? `${sectorCount} sectors` : "—"} />
           <Metric label="Top weight" value={hasHoldings ? `${maxWeight.toFixed(0)}%` : "—"} positive={hasHoldings && maxWeight < 40} negative={hasHoldings && maxWeight > 50} />
           <Metric label="Winners" value={hasHoldings ? `${winners}/${holdings.length}` : "—"} positive={hasHoldings && winners >= holdings.length / 2} />

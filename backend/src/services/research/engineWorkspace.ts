@@ -33,13 +33,17 @@ async function loadPortfolioPositions(userId: string, exchange: ExchangeCode) {
   ).rows;
   const instruments = await securitiesRepository.listInstruments(exchange),
     known = new Map(instruments.map((i) => [i.symbol, i]));
-  const positions: (PricedPosition & { cost: number })[] = await Promise.all(
-    holdings.map(async (h) => {
+  // One quote read, not one concurrent database connection per holding.
+  // Keep failures visible rather than silently turning an outage into zero coverage.
+  const quotes = await pricesRepository.getQuotesBatch(holdings.flatMap(h=>{
+    const instrument=known.get(h.symbol.toUpperCase());return instrument?[instrument.securityId]:[];
+  }));
+  const byId=new Map(quotes.map(q=>[q.securityId,q]));
+  const positions: (PricedPosition & { cost: number })[] =
+    holdings.map((h) => {
       const instrument = known.get(h.symbol.toUpperCase());
       const quote = instrument
-        ? await pricesRepository
-            .getQuote(instrument.securityId)
-            .catch(() => null)
+        ? byId.get(instrument.securityId)
         : null;
       return {
         cost: h.cost,
@@ -52,8 +56,7 @@ async function loadPortfolioPositions(userId: string, exchange: ExchangeCode) {
         currency: quote?.currency ?? "unknown",
         asOf: isoTimestamp(quote?.timestamp),
       };
-    }),
-  );
+    });
   return positions;
 }
 
