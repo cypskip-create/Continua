@@ -11,7 +11,9 @@ export function useIndices(exchange?: string) {
     queryKey: ["continua", "indices", activeExchange],
     queryFn: () => indicesApi.list(activeExchange),
     staleTime: 60_000,
-    refetchInterval: 120_000,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     retry: 1,
   });
 
@@ -19,5 +21,7 @@ export function useIndices(exchange?: string) {
     indices: query.data ?? [],
     isLoading: query.isLoading,
     isError: query.isError,
+    refetch: query.refetch,
+    checkedAt: query.dataUpdatedAt,
   };
 }

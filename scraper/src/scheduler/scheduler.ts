@@ -10,7 +10,7 @@
  * Revisit if this ever needs to run as multiple replicas.
  */
 import cron, { type ScheduledTask } from "node-cron";
-import { listEnabledSources } from "../storage/sourcesRepository.js";
+import { listEnabledSources,getSource } from "../storage/sourcesRepository.js";
 import { crawlSource } from "../crawler/crawlSource.js";
 import { hasRegisteredAdapter, runRegisteredAdapter } from "../adapters/registry.js";
 import { sweepUnextractedArtifacts } from "../extraction/extractionSweep.js";
@@ -25,6 +25,17 @@ const runningSources = new Set<string>();
 const newsRuns = new Map<string, { startedAt: string; completedAt: string | null; success: boolean | null; discovered?: number; extracted?: number }>();
 let newsRefresh: Promise<void> | null = null;
 let lastNewsRefreshAt = 0;
+let indexRefresh:Promise<void>|null=null;
+let lastIndexRefreshAt=0;
+/** Active readers can wake a sleeping free collector, without keep-alive timers
+ * or bypassing source enablement, licensing, robots or revisit throttles. */
+export function refreshIndexSource():Promise<void>{
+ if(indexRefresh)return indexRefresh;
+ if(!env.SCHEDULER_ENABLED||Date.now()-lastIndexRefreshAt<15*60_000)return Promise.resolve();
+ lastIndexRefreshAt=Date.now();
+ indexRefresh=(async()=>{const source=await getSource('nse-index-summary');if(source?.enabled)await runSourceOnce(source);})().finally(()=>{indexRefresh=null;});
+ return indexRefresh;
+}
 /** Reader-triggered catch-up shares the cron locks and publisher throttles. */
 export function refreshNewsSources(): Promise<void> {
   if (newsRefresh) return newsRefresh;
@@ -113,7 +124,8 @@ export async function startScheduler(): Promise<ScheduledTask[]> {
   // and each adapter's document concurrency still apply underneath.
   void (async () => {
     // Publish fresh news before spending minutes on historical PDFs/OCR.
-    const pending = [...sources].sort((a, b) => Number(b.adapter === "rss") - Number(a.adapter === "rss"));
+    const priority=(s:Source)=>s.id==='nse-index-summary'?2:s.adapter==='rss'?1:0;
+    const pending = [...sources].sort((a, b) => priority(b)-priority(a));
     const workers = Array.from({ length: Math.min(2, pending.length) }, async () => {
       for (;;) {
         const source = pending.shift();

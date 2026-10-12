@@ -170,7 +170,7 @@ export default function Markets() {
       ascending: previous.key === key ? !previous.ascending : false,
     }));
   const { quotes } = useLiveQuotes(CANONICAL_SYMBOLS, "NSE"),
-    { indices } = useIndices();
+    { indices,refetch:refetchIndices } = useIndices();
   const { dividends, isLoading: divLoading } = useUpcomingDividends("NSE", 200);
   const needsIntelligence = (!section && tab === 'Overview') || ['heatmap','monitor'].includes(section ?? '');
   const needsRecords = (!section && tab === 'Overview') || ['Bonds','Derivatives','USP'].includes(tab) || ['ipos','economic','macro'].includes(section ?? '');
@@ -190,7 +190,9 @@ export default function Markets() {
     queryKey: ["continua", "market-records"],
     queryFn: marketResearchApi.records,
     enabled: needsRecords,
-    staleTime: 600_000,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
     retry: 1,
   });
   const earningsQuery = useQuery({
@@ -349,7 +351,7 @@ export default function Markets() {
           <p className="text-2xl my-2 tabular-nums">{fmt(i.value)}</p>
           <Change value={i.changePercent} />
           <p className="text-xs text-muted-foreground mt-2">
-            {dateLabel(i.timestamp)}
+            Closing data · {dateLabel(i.timestamp)}
           </p>
         </div>
       ))}
@@ -1043,6 +1045,7 @@ export default function Markets() {
                 size="icon"
                 aria-label="Refresh market research"
                 onClick={() => {
+                  void refetchIndices();
                   if (needsIntelligence) void intelligence.refetch();
                   if (needsRecords) void recordsQuery.refetch();
                   if (needsEarnings) void earningsQuery.refetch();

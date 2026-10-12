@@ -12,11 +12,15 @@ import { listNeedsReview } from "../storage/extractionsRepository.js";
 import { reprocessArtifact } from "../extraction/reprocessArtifact.js";
 import { sweepUnextractedArtifacts } from "../extraction/extractionSweep.js";
 import { getCrawlStatus } from "../monitoring/crawlStatus.js";
-import { newsScheduleStatus, refreshNewsSources } from "../scheduler/scheduler.js";
+import { newsScheduleStatus, refreshNewsSources,refreshIndexSource } from "../scheduler/scheduler.js";
 
 export function createServer() {
   const app = express();
   app.use(express.json());
+  app.post('/indices/refresh',async(_req,res)=>{
+    try{await refreshIndexSource();res.json({status:'checked'});}
+    catch{res.status(503).json({error:'index_collection_unavailable'});}
+  });
   app.post("/news/refresh", (_req, res) => {
     void refreshNewsSources().catch(err => logger.error({ err }, "Reader news refresh failed"));
     res.status(202).json({ status: "accepted", ...newsScheduleStatus() });

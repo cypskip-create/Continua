@@ -5,7 +5,9 @@
  * supabase/migrations/<...> scraping engine foundation schema.sql for the
  * DDL this depends on.
  */
-import pg from "pg";
+// Resolve pg's CommonJS export, which matches its published @types declarations.
+// TypeScript emits createRequire for this import in the ESM service.
+import pg = require("pg");
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 

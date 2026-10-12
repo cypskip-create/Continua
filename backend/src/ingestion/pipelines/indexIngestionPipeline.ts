@@ -10,6 +10,7 @@ import { ingestionLogRepository } from "../../storage/repositories/ingestionLogR
 import { deadLetterRepository } from "../../storage/repositories/deadLetterRepository.js";
 import { logger } from "../../monitoring/logger.js";
 import type { MarketIndex } from "../../types/market.js";
+import {publishNseIndexHistory} from './nseIndexHistory.js';
 
 export async function runIndexIngestion(adapter: IExchangeAdapter): Promise<void> {
   const startedAt = new Date().toISOString();
@@ -34,6 +35,7 @@ export async function runIndexIngestion(adapter: IExchangeAdapter): Promise<void
     if (stored.length > 0) {
       await indicesRepository.upsertIndicesBatch(stored);
       await cache.del(CacheKeys.indices(adapter.exchange));
+      if(adapter.exchange==='NSE')await publishNseIndexHistory(stored);
     }
   } catch (err) {
     errors.push(`Index collection failed: ${String(err)}`);

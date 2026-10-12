@@ -1,5 +1,6 @@
 import { PostAttachments } from "./PostAttachments";
 import {SafetyMenuItems} from './SafetyMenuItems';
+import {postPreview} from '@/lib/postPreview';
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageSquare, Bookmark, BookmarkCheck, Share2, MoreHorizontal, Trash2, Pencil, Link2, Flag, EyeOff, Verified } from "lucide-react";
@@ -75,7 +76,8 @@ export function HubPostCard({
   const author = post.author;
   const handle = getHandle(author ? { ...author } : { user_id: post.user_id });
   const isOwn = currentUserId === post.user_id;
-  const { title, body } = splitContent(post.content);
+  const preview=postPreview(post.content);
+  const { title, body } = splitContent(preview.text);
   const topic = post.content.match(/#\w+/)?.[0] || (post.stock_mentions?.[0] ? `$${post.stock_mentions[0]}` : null);
   const canEdit = isOwn && !!onEdit && Date.now() - new Date(post.created_at).getTime() < 30 * 60 * 1000;
 
@@ -126,13 +128,16 @@ export function HubPostCard({
       </div>
 
       {/* Body */}
-      <div className="mt-2">
+      <div className="mt-2 cursor-pointer" role="link" tabIndex={0} aria-label="Read full post and comments"
+        onClick={()=>{if(!window.getSelection()?.toString())onOpen(post);}}
+        onKeyDown={e=>{if(e.target===e.currentTarget&&(e.key==='Enter'||e.key===' ')){e.preventDefault();onOpen(post);}}}>
         <h3 className="text-[0.9375rem] font-bold leading-snug break-words">{renderRichText(title, navigate)}</h3>
         {body && (
-          <p className="mt-1 text-[0.8125rem] leading-[1.55] text-muted-foreground line-clamp-3 whitespace-pre-wrap break-words">
+          <p className="mt-1 text-[0.8125rem] leading-[1.55] text-muted-foreground whitespace-pre-wrap break-words">
             {renderRichText(body, navigate)}
           </p>
         )}
+        {preview.truncated&&<span className="mt-1 inline-block text-sm font-medium text-primary">Read more</span>}
       </div>
 
       {/* Media */}

@@ -53,6 +53,7 @@ export const COMMUNITY_REACTIONS: ReactionMeta[] = [
 // reach for most on a finance feed. The rest live behind the "+" expander.
 const QUICK_REACTION_IDS: CommunityReaction[] = ["bullish", "bearish", "fire", "love", "thumbs_up", "thumbs_down"];
 const QUICK_REACTIONS = COMMUNITY_REACTIONS.filter(r => QUICK_REACTION_IDS.includes(r.id));
+const PICKER_REACTIONS=COMMUNITY_REACTIONS.filter(r=>r.id!=='shark'&&r.id!=='diamond_hands');
 
 const LEGACY: ReactionMeta[] = [
   { id: "cautious", label: "Cautious" },
@@ -131,7 +132,6 @@ export function CommunityReactionButton({ counts, selected, onSelect, compact, h
               <button
                 key={item.id}
                 type="button"
-                title={item.label}
                 aria-label={item.label}
                 onClick={() => { onSelect(item.id); setOpen(false); }}
                 className={cn(
@@ -153,21 +153,19 @@ export function CommunityReactionButton({ counts, selected, onSelect, compact, h
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-1">
-            {COMMUNITY_REACTIONS.map(item => (
+          <div className="grid grid-cols-5 gap-1">
+            {PICKER_REACTIONS.map(item => (
               <button
                 key={item.id}
                 type="button"
-                title={item.label}
                 aria-label={item.label}
                 onClick={() => { onSelect(item.id); setOpen(false); }}
                 className={cn(
-                  "flex flex-col items-center justify-center h-14 min-w-0 rounded-xl transition-colors hover:bg-muted/60 active:scale-95",
+                  "flex items-center justify-center h-11 min-w-0 rounded-full transition-colors hover:bg-muted/60 active:scale-95",
                   selected === item.id && "bg-primary/10"
                 )}
               >
-                <ReactionIcon id={item.id} size={30}/>
-                <span className="text-[9px] truncate max-w-full">{item.label}</span>
+                <ReactionIcon id={item.id} size={36}/>
               </button>
             ))}
           </div>
