@@ -102,7 +102,9 @@ A dedicated non-admin backend key was approved, created and stored only as the
 Worker BACKEND_API_KEY secret. Existing production backend keys were not changed.
 The registered build token and Git trigger connect cypskip-create/Continua main
 to this parallel Worker, with app/infra/root-manifest watch paths and private
-build configuration. Auto-build success still requires a pushed build to verify.
+build configuration. Pushing commit 631b23b automatically triggered build
+aebdb5a7-6a7f-4485-9de0-b0c40a76f21e. Cloudflare reports successful build and deploy,
+with Worker version 63ccf344-93ff-49f0-8f45-39f91659228f (2026-10-12).
 The exact preview host was approved for additive Supabase Auth redirect URLs
 (root and same-host paths) and Render browser origins. The primary Auth site URL,
 Vercel host and live Paystack callback/webhook settings remain unchanged.

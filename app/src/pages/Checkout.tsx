@@ -47,7 +47,7 @@ export default function Checkout() {
     amount = annual ? p.annual : p.monthly;
   const { user, loading } = useAuth(),
     { refetch } = useProfile();
-  const paymentStatus=useQuery({queryKey:['inline-billing-status'],queryFn:()=>continuaFetch<{enabled:boolean;inlineCheckout?:boolean}>('/billing/status'),staleTime:15000,refetchInterval:30000});
+  const paymentStatus=useQuery({queryKey:['inline-billing-status',user?.id],queryFn:()=>continuaFetch<{enabled:boolean;inlineCheckout?:boolean}>('/billing/status'),enabled:!!user,staleTime:15000,refetchInterval:30000});
   const checkoutReady=paymentStatus.data?.enabled===true&&paymentStatus.data?.inlineCheckout===true;
   const [method, setMethod] = useState<"mobile_money" | "card">("mobile_money");
   const [accepted, setAccepted] = useState(false),
