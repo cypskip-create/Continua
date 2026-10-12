@@ -19,6 +19,7 @@ export function booleanEnv(defaultValue: boolean) {
  * the same Postgres instance.
  */
 const EnvSchema = z.object({
+  SCRAPER_ADMIN_API_KEY:z.string().min(32).optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(4100),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),

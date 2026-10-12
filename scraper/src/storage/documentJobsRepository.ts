@@ -32,7 +32,13 @@ export async function claimDocuments(sourceId: string, limit: number): Promise<{
   const result = await query(`WITH pending AS (
     SELECT id FROM scraping.document_jobs WHERE source_id=$1 AND
       ((status IN ('pending','failed') AND next_attempt_at <= now()) OR (status='processing' AND lease_until < now()))
-    ORDER BY attempts, created_at, id FOR UPDATE SKIP LOCKED LIMIT $2
+    ORDER BY attempts,
+      CASE WHEN source_id='kenyanstocks' THEN
+        CASE WHEN url ~* '\\.pdf($|[?])' THEN 0
+             WHEN document->'context'->>'tab'='Files' THEN 1
+             WHEN document->'context'->>'tab'='Financials' THEN 2 ELSE 3 END
+        ELSE 0 END,
+      created_at, id FOR UPDATE SKIP LOCKED LIMIT $2
   ) UPDATE scraping.document_jobs j SET status='processing',attempts=j.attempts+1,
     lease_until=now()+interval '2 hours', updated_at=now()
     FROM pending WHERE j.id=pending.id RETURNING j.id,j.document,j.attempts`, [sourceId, limit]);

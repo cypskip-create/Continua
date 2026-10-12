@@ -11,6 +11,7 @@ import { createServer } from "./api/server.js";
 import { startWebSocketServer } from "./streaming/websocketServer.js";
 import { startAllWorkers } from "./workers/scheduler.js";
 import { env } from "./config/index.js";
+import {startCardRenewalWorker} from './workers/cardRenewalWorker.js';
 import { logger } from "./monitoring/logger.js";
 
 async function main() {
@@ -20,6 +21,7 @@ async function main() {
   });
 
   startWebSocketServer(httpServer);
+  const renewalTask=startCardRenewalWorker();
 
   let stopWorkers = () => {};
   try {
@@ -34,6 +36,7 @@ async function main() {
   const shutdown = async (signal: string) => {
     logger.info({ signal }, "Shutting down…");
     stopWorkers();
+    renewalTask.stop();
     httpServer.close(() => process.exit(0));
     setTimeout(() => process.exit(1), 5000).unref();
   };

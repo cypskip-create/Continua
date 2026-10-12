@@ -42,7 +42,8 @@ async function fetchPendingExtractions(limit: number): Promise<PendingExtraction
      JOIN scraping.raw_artifacts a ON a.id = e.artifact_id
      WHERE jsonb_array_length(e.tables) > 0
        AND a.source_id NOT IN ('cbk-bond-history','cbk-bill-history','nse-market-reports','nse-index-summary')
-       AND EXISTS (SELECT 1 FROM jsonb_array_elements(e.tables) t WHERE jsonb_typeof(t->'rows')='array')
+       AND EXISTS (SELECT 1 FROM jsonb_array_elements(e.tables) t WHERE jsonb_typeof(t->'rows')='array'
+         AND EXISTS(SELECT 1 FROM jsonb_array_elements(t->'rows') r WHERE jsonb_typeof(r->'values')='array'))
        AND NOT EXISTS (
          SELECT 1 FROM market.financial_statement_candidates c WHERE c.scraped_extraction_id = e.id
        )
@@ -71,12 +72,20 @@ export async function runFinancialStatementCandidatesBridge(exchange = "NSE", ba
     summary.extractionsProcessed++;
     try {
       const rawCompanyName = row.entity?.companyName ?? row.title ?? null;
-      const resolved = rawCompanyName ? await resolveCompanyEntity(rawCompanyName, exchange) : null;
+      // Browser tab extracts often carry only an exact URL ticker, not a legal
+      // issuer masthead. Resolve the literal identifier, never fuzzy-match a tab title.
+      const ticker=row.entity?.ticker;
+      const exact=ticker&&/^[A-Z0-9-]{1,20}$/.test(ticker)?await query<{companyId:string;securityId:string}>(
+        'SELECT company_id AS "companyId",id AS "securityId" FROM market.securities WHERE exchange=$1 AND symbol=$2',[exchange,ticker]):null;
+      const resolved = exact?.rows.length===1?exact.rows[0]:rawCompanyName ? await resolveCompanyEntity(rawCompanyName, exchange) : null;
       if (resolved) summary.resolved++;
       else summary.unresolved++;
 
       for (let tableIndex = 0; tableIndex < row.tables.length; tableIndex++) {
-        if (!Array.isArray(row.tables[tableIndex]?.rows)) continue;
+        const table=row.tables[tableIndex];
+        // Publisher observations use structured cells, not native statement
+        // value columns. Do not feed them into the manual/issuer PDF mapper.
+        if (!Array.isArray(table?.rows)||!table.rows.every(r=>typeof r.label==='string'&&Array.isArray(r.values))) continue;
         await financialStatementCandidatesRepository.upsert({
           companyId: resolved?.companyId ?? null,
           securityId: resolved?.securityId ?? null,

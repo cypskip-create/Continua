@@ -27,6 +27,20 @@ let newsRefresh: Promise<void> | null = null;
 let lastNewsRefreshAt = 0;
 let indexRefresh:Promise<void>|null=null;
 let lastIndexRefreshAt=0;
+let documentRefresh:Promise<void>|null=null;
+let lastDocumentRefreshAt=0;
+/** A real financial-page read can wake the free collector. This is bounded
+ * catch-up, not an always-on keepalive or arbitrary URL-fetch endpoint. */
+export function refreshFinancialDocuments():Promise<void> {
+ if(documentRefresh)return documentRefresh;
+ if(!env.SCHEDULER_ENABLED||Date.now()-lastDocumentRefreshAt<10*60_000)return Promise.resolve();
+ lastDocumentRefreshAt=Date.now();
+ documentRefresh=(async()=>{
+  const source=await getSource('kenyanstocks');
+  if(source?.enabled&&source.redistributionAllowed===true)await runSourceOnce(source,true);
+ })().finally(()=>{documentRefresh=null;});
+ return documentRefresh;
+}
 /** Active readers can wake a sleeping free collector, without keep-alive timers
  * or bypassing source enablement, licensing, robots or revisit throttles. */
 export function refreshIndexSource():Promise<void>{

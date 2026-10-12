@@ -4,4 +4,8 @@ export function checkoutDestination(origin:string,plan:string,cycle:string){
  if(!['premium','premium_plus'].includes(plan)||!['monthly','annual'].includes(cycle))throw new Error('Invalid checkout selection');
  url.searchParams.set('plan',plan);url.searchParams.set('cycle',cycle);return url.href;
 }
-export const paymentReferencePattern=/^continua-live-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+export const paymentReferencePattern=/^continua-(live|test)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+export function validKenyanMobile(value:string) {
+ const compact=value.trim().replace(/[\s()-]/g,'').replace(/^\+/,'').replace(/^0(?=[17])/,'254');
+ return /^254[17]\d{8}$/.test(compact);
+}

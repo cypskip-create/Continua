@@ -584,5 +584,14 @@ button:not(:disabled):active, [role="button"]:not([aria-disabled="true"]):active
 html, body, #root { width: 100%; max-width: 100%; min-width: 0; }
 .page-canvas { min-width: 0; overflow-wrap: anywhere; }
 .page-canvas .recharts-responsive-container { min-width: 0; }
+/* Translated ticker rails must not enlarge Safari's document/visual viewport.
+   clip (unlike hidden) does not turn the shell into a new sticky scroll owner. */
+.app-shell { width: 100%; max-width: 100%; overflow-x: clip; }
+.home-desk, .market-desk, .desk-content { width: 100%; min-width: 0; }
+.marquee-container { width: 100%; min-width: 0; contain: inline-size; }
+.market-table-scroll, .market-index-strip, .market-choices, .market-tool-rail { max-width: 100%; min-width: 0; }
+.payment-accordion { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows 220ms ease, visibility 0s 220ms; }
+.payment-accordion[data-open="true"] { grid-template-rows: 1fr; visibility: visible; transition-delay: 0s; }
+@media (prefers-reduced-motion: reduce) { .payment-accordion { transition: none; } }
 
 .page-canvas [data-section] { scroll-margin-top: calc(var(--sticky-header-height, 0px) + var(--sticky-nav-height, 0px) + 1rem); }

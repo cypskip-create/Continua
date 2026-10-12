@@ -29,6 +29,7 @@ const transactionSchema = z.object({
   id: z.number().int().positive().safe(), domain: z.literal("live"), status: z.string(), reference: z.string(),
   amount: z.number().int().nonnegative(), currency: z.literal("KES"), paid_at: z.string().datetime({ offset: true }).nullable().optional(),
   customer: z.object({ email: z.string().email() }),
+  authorization:z.object({authorization_code:z.string(),channel:z.string(),reusable:z.boolean()}).optional(),
   metadata: z.object({ continua_reference: z.string(), continua_user: z.string(), mode: z.literal("live") }),
 });
 export function validateLiveTransaction(raw: unknown, order: LiveOrder) {

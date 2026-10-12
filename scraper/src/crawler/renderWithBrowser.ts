@@ -33,7 +33,9 @@ let browserPromise: Promise<Browser> | null = null;
 
 function getBrowser(): Promise<Browser> {
   if (!browserPromise) {
-    browserPromise = chromium.launch({ headless: true }).catch((err) => {
+    browserPromise = chromium.launch({ headless: true }).then(browser=>{
+      browser.on('disconnected',()=>{browserPromise=null;});return browser;
+    }).catch((err) => {
       browserPromise = null; // let the next call retry launching rather than caching a permanent failure
       throw err;
     });
@@ -70,26 +72,31 @@ export async function renderPage(url: string, userAgent: string, options:{files?
     // Some publisher category deep-links return 500 although clicking the
     // same category works. Navigate to the observed parent and click it.
     const navigationUrl=new URL(url);if(options.category)navigationUrl.searchParams.delete('category');
-    const response = await page.goto(navigationUrl.href, { waitUntil: "networkidle", timeout: NAVIGATION_TIMEOUT_MS });
+    const response = await page.goto(navigationUrl.href, { waitUntil: "domcontentloaded", timeout: NAVIGATION_TIMEOUT_MS });
     if(response&&response.status()>=400)throw new Error(`Rendered document HTTP ${response.status()}`);
+    // Generic JavaScript pages also need time to populate after DOM creation.
+    // A continually polling publisher must not turn that wait into a failure.
+    if(!options.stockTab)await page.waitForLoadState('networkidle',{timeout:5000}).catch(()=>{});
     let expandedRows=0,scrollLimitReached=false;
     if(options.stockTab){
-      await page.locator('.normal-tab.selected-tab').filter({hasText:options.stockTab}).waitFor({timeout:15000});
+      // Wait for the selected DOM view, not an indefinitely idle ticker feed.
+      await page.locator('.normal-tab.selected-tab').filter({hasText:options.stockTab}).waitFor({timeout:30000});
+      await page.waitForLoadState('networkidle',{timeout:5000}).catch(()=>{});
       if(options.category){
         await page.getByRole('button',{name:options.category,exact:true}).click();
-        await page.waitForLoadState('networkidle',{timeout:15000});
+        await page.waitForLoadState('networkidle',{timeout:5000}).catch(()=>{});
         const buttons=page.locator('table .expand-button');
         for(const button of (await buttons.all()).slice(0,200)){await button.click();expandedRows++;}
       }
       if(options.historyStart){
         const start=page.getByLabel('Start Date',{exact:true});await start.fill(options.historyStart);await start.press('Tab');
-        await page.waitForLoadState('networkidle',{timeout:15000});
+        await page.waitForLoadState('networkidle',{timeout:5000}).catch(()=>{});
       }
       // Lazy content is bounded; all horizontally hidden DOM columns are kept.
       for(let step=0;step<12;step++){
         const before=await page.evaluate("JSON.stringify({height:document.body.scrollHeight,rows:document.querySelectorAll('tr').length,files:document.querySelectorAll('.file-content').length})");
         await page.evaluate("window.scrollTo(0,document.body.scrollHeight)");
-        await page.waitForLoadState('networkidle',{timeout:15000});
+        await page.waitForLoadState('networkidle',{timeout:5000}).catch(()=>{});
         const after=await page.evaluate("JSON.stringify({height:document.body.scrollHeight,rows:document.querySelectorAll('tr').length,files:document.querySelectorAll('.file-content').length})");
         if(JSON.stringify(before)===JSON.stringify(after))break;if(step===11)scrollLimitReached=true;
       }
@@ -107,7 +114,7 @@ export async function renderPage(url: string, userAgent: string, options:{files?
     logger.warn({ url, err }, "renderPage: navigation failed");
     throw err;
   } finally {
-    await context.close();
+    await context.close().catch(()=>{}); // A crashed browser must not mask the original failure.
   }
 }
 

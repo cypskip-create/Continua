@@ -1,4 +1,5 @@
 import express from "express";
+import {publicCollectorRoute,validOperatorKey} from './operatorAccess.js';
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 import { checkHealth } from "../monitoring/healthCheck.js";
@@ -12,11 +13,25 @@ import { listNeedsReview } from "../storage/extractionsRepository.js";
 import { reprocessArtifact } from "../extraction/reprocessArtifact.js";
 import { sweepUnextractedArtifacts } from "../extraction/extractionSweep.js";
 import { getCrawlStatus } from "../monitoring/crawlStatus.js";
-import { newsScheduleStatus, refreshNewsSources,refreshIndexSource } from "../scheduler/scheduler.js";
+import { newsScheduleStatus, refreshNewsSources,refreshIndexSource,refreshFinancialDocuments } from "../scheduler/scheduler.js";
 
 export function createServer() {
   const app = express();
-  app.use(express.json());
+  app.disable('x-powered-by');
+  // Cloudflare cannot protect the direct Render scraper URL. Keep crawl,
+  // archive, reprocessing and operator diagnostics private at their origin.
+  app.use((req,res,next)=>{
+    res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
+    if(!publicCollectorRoute(req.method,req.path)&&!validOperatorKey(req.header('X-Scraper-Admin-Key'),env.SCRAPER_ADMIN_API_KEY)) {
+      res.status(401).json({error:'operator_authentication_required'});return;
+    }
+    next();
+  });
+  app.use(express.json({limit:'64kb'}));
+  app.post('/documents/refresh',(_req,res)=>{
+    void refreshFinancialDocuments().catch(()=>logger.warn('Reader-triggered financial document collection failed; queued jobs retained'));
+    res.status(202).json({status:'accepted'});
+  });
   app.post('/indices/refresh',async(_req,res)=>{
     try{await refreshIndexSource();res.json({status:'checked'});}
     catch{res.status(503).json({error:'index_collection_unavailable'});}

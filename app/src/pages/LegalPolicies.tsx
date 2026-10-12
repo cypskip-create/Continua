@@ -68,7 +68,7 @@ const policies: Record<
     sections: [
       [
         "Prices and renewal",
-        "Premium costs KES 800 for one month or KES 7,980 for one year. Premium Plus costs KES 1,000 for one month or KES 9,960 for one year (KES 830 monthly equivalent). Annual amounts are charged in one payment, not monthly instalments. Renewals are manual; access ends at membership expiry unless you choose another payment.",
+        "Premium costs KES 800 for one month or KES 7,980 for one year. Premium Plus costs KES 1,000 for one month or KES 9,960 for one year (KES 830 monthly equivalent). Annual amounts are charged in one payment, not monthly instalments. Renewals are manual by default. Where enabled, monthly card checkout offers a separate, optional automatic-renewal choice for eligible reusable cards. M-PESA, Airtel Money and annual plans renew manually. Turn off card renewal on the checkout page before the next scheduled charge; a payment already processing may still complete. Failed renewal stops automatic retries and does not grant another paid term. Access ends at expiry unless a renewal payment is independently verified.",
       ],
       [
         "Switching tiers and missing coverage",

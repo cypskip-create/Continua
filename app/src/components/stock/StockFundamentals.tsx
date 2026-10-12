@@ -14,6 +14,7 @@ import { ValuationPreview } from "./FundamentalResearch";
 import { CompanyForecast } from "@/components/engine/CompanyFocus";
 import { OperationalEfficiency, SegmentDisclosure, ShareholderDisclosures } from "./FundamentalDisclosures";
 import {financialYearCoverage} from '@/lib/financialCoverage';
+import {PublisherFinancialTables} from './PublisherFinancialTables';
 
 type Panel = "financials" | "forecast" | "shareholders" | "dividends" | "profile";
 
@@ -60,6 +61,7 @@ export function StockFundamentals({ symbol, currency, price = 0, name = symbol, 
       {recent && <section className="grid grid-cols-2 gap-4 pb-6 text-sm"><div><p className="text-muted-foreground">Revenue</p><p className="font-semibold">{recent.revenue == null ? "—" : compact(Number(recent.revenue), currency)}</p>{recent.revenue != null && prior?.revenue && <p className="text-xs text-muted-foreground">{pct(((Number(recent.revenue) - Number(prior.revenue)) / Math.abs(Number(prior.revenue))) * 100)} vs prior</p>}</div><div><p className="text-muted-foreground">Net income</p><p className="font-semibold">{recent.netIncome == null ? "—" : compact(Number(recent.netIncome), currency)}</p>{recent.netIncome != null && prior?.netIncome && <p className="text-xs text-muted-foreground">{pct(((Number(recent.netIncome) - Number(prior.netIncome)) / Math.abs(Number(prior.netIncome))) * 100)} vs prior</p>}</div></section>}
       {(["Income statement","Balance sheet","Cash flows","Financial indicators"] as const).map(title=><FinancialStatementExplorer key={`${title}-${periodType}`} title={title} symbol={symbol} history={sorted} currency={currency} periodType={periodType}/>)}
       <SegmentDisclosure symbol={symbol} currency={currency}/>
+      <PublisherFinancialTables symbol={symbol}/>
       <OperationalEfficiency symbol={symbol} currency={currency} employees={profile?.company.employees} history={sorted}/>
       <details className="border-t border-border/70 py-5"><summary className="cursor-pointer text-base font-semibold">Past performance</summary><div className="pt-5"><PastPerformanceSection symbol={symbol} currency={currency} /></div></details>
       <details className="border-t border-border/70 py-5"><summary className="cursor-pointer text-base font-semibold">Financial health</summary><div className="pt-5"><FinancialHealthSection symbol={symbol} currency={currency} /></div></details>
