@@ -1,16 +1,16 @@
 import { Router } from "express";
 import { requireEngineUser } from "../middleware/requireSubscriber.js";
 import { asyncHandler, ApiError } from "../middleware/errorHandler.js";
-import { checkoutInput, validWebhookSignature } from "../../services/paystackCommon.js";
+import { checkoutAgreementInput,CHECKOUT_POLICY_VERSION, validWebhookSignature } from "../../services/paystackCommon.js";
 import { env } from "../../config/index.js";
 import { liveCheckoutEnabled, initializeLiveCheckout, verifyLiveCheckout, liveReferencePattern } from "../../services/paystackLive.js";
 
 export const billingRoutes = Router();
 billingRoutes.get("/billing/status", (_req,res) => { res.json({ data: { enabled: liveCheckoutEnabled(), mode: "live", automaticRenewal: false } }); });
 billingRoutes.post("/billing/checkout", requireEngineUser, asyncHandler(async (req,res) => {
-  const input = checkoutInput.safeParse(req.body);
-  if (!input.success) throw new ApiError(400, "Choose a valid plan and billing cycle.");
-  res.json({ data: await initializeLiveCheckout(res.locals.engineUserId, res.locals.engineUserEmail, input.data) });
+  const input = checkoutAgreementInput.safeParse(req.body);
+  if (!input.success) throw new ApiError(400, "Choose a valid plan and billing cycle, then acknowledge the current billing terms. Refresh checkout if needed.");
+  res.json({ data: await initializeLiveCheckout(res.locals.engineUserId, res.locals.engineUserEmail, {plan:input.data.plan,cycle:input.data.cycle},CHECKOUT_POLICY_VERSION) });
 }));
 billingRoutes.get("/billing/verify/:reference", requireEngineUser, asyncHandler(async (req,res) => {
   const reference = String(req.params.reference);

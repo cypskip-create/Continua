@@ -47,21 +47,6 @@ interface NewsDetailDialogProps {
   onToggleSave: (id: number) => void;
 }
 
-// Mock comments for demo - in production, these would come from database
-const mockComments: Record<number, NewsComment[]> = {
-  1: [
-    { id: "1", user: "TraderKE", avatar: "TK", content: "This is great news for the banking sector! EQTY is looking strong.", time: "2h ago" },
-    { id: "2", user: "MarketWatch", avatar: "MW", content: "The foreign investors seem bullish on Kenyan equities.", time: "3h ago" },
-    { id: "3", user: "FinanceGuru", avatar: "FG", content: "I've been holding SCOM for months. Finally seeing some movement!", time: "4h ago" },
-  ],
-  2: [
-    { id: "1", user: "BankingFan", avatar: "BF", content: "Mobile banking disruption is real. $SCOM leading the way.", time: "1h ago" },
-  ],
-  3: [
-    { id: "1", user: "InvestorJane", avatar: "IJ", content: "Agricultural sector needs more attention from investors.", time: "5h ago" },
-    { id: "2", user: "NSEWatcher", avatar: "NW", content: "Tea exports are crucial for forex inflows.", time: "6h ago" },
-  ],
-};
 
 export function NewsDetailDialog({ 
   article, 
@@ -79,8 +64,7 @@ export function NewsDetailDialog({
 
   if (!article) return null;
 
-  const articleComments = mockComments[article.id] || [];
-  const allComments = [...articleComments, ...comments];
+  const allComments = comments;
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -116,25 +100,11 @@ export function NewsDetailDialog({
 
     setComments(prev => [comment, ...prev]);
     setNewComment("");
-    toast({ title: "Comment added!" });
+    toast({ title: "Comment added for this session",description:'This legacy preview does not publish comments to the community.' });
   };
 
-  // Generate full article content based on summary
-  const fullContent = `
-${article.summary}
-
-The development marks a significant milestone in Kenya's financial sector, with analysts expecting widespread implications for both retail and institutional investors. Market observers have noted the timing of this announcement coincides with broader regional economic trends.
-
-"This is a pivotal moment for the market," said industry experts familiar with the matter. "We're seeing increased confidence from both local and international investors."
-
-The move comes amid growing interest in East African markets, with the Nairobi Securities Exchange recording increased trading volumes over the past quarter. Foreign investor participation has remained steady, with net inflows totaling approximately KES 2.3 billion in recent months.
-
-Key stakeholders have expressed optimism about the long-term prospects, citing improving macroeconomic indicators and supportive monetary policy from the Central Bank of Kenya.
-
-Looking ahead, market participants will be closely watching for further developments, particularly regarding regulatory approvals and implementation timelines. The next few weeks are expected to provide more clarity on the strategic direction.
-
-For investors, analysts recommend maintaining a diversified portfolio while keeping an eye on sector-specific opportunities that may arise from these developments.
-  `.trim();
+  // A summary cannot establish quotations, analyst views or market statistics.
+  const fullContent = `${article.summary}\n\nOnly the supplied summary is available here. No full article, expert quotes or additional market statistics have been inferred.`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

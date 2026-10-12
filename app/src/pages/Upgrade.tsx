@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams,Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Check, Crown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { continuaFetch } from "@/api/client";
 import { PLANS, type PaidPlan } from "@/lib/subscription";
 import { navigateBack } from "@/lib/navigation";
+import {LEGAL_POLICY_VERSION} from '@/lib/legalPolicy';
 
-const freeFeatures = ["Portfolio tracking, watchlists and charts", "TradersHub posts, media and discussions", "Fundamentals: 5 distinct stocks per month, with free revisits", "Basic ratings, forecast summaries and return on capital", "3 AI theses per month"];
+const freeFeatures = ["Portfolio tracking, watchlists and charts", "TradersHub posts, media and discussions", "Fundamentals: 5 distinct stocks per month, with free revisits", "Basic ratings, forecast summaries and return on capital"];
 export default function Upgrade() {
   const navigate=useNavigate();
   const {user}=useAuth(), {profile,refetch}=useProfile();
@@ -31,13 +32,15 @@ export default function Upgrade() {
   const {toast}=useToast();
   const [annual,setAnnual]=useState(false);
   const [busy,setBusy]=useState<PaidPlan|null>(null);
+  const [acceptedPlan,setAcceptedPlan]=useState<PaidPlan|null>(null);
   const current=profile?.subscription_plan??"free";
   const upgrade=async(plan:PaidPlan)=>{
     if (!user) {navigate("/auth");return;}
+    if(acceptedPlan!==plan){toast({title:'Review the billing terms',description:'Confirm the selected plan and billing policy before checkout.'});return;}
     if(!paymentStatus.data?.enabled){toast({title:"Checkout is not available yet",description:"Payment setup is still in progress. No payment has been taken."});return;}
     setBusy(plan);
     try {
-      const data=await continuaFetch<{url:string;mode:string}>("/billing/checkout",{method:"POST",body:{plan,cycle:annual?"annual":"monthly"}});
+      const data=await continuaFetch<{url:string;mode:string}>("/billing/checkout",{method:"POST",body:{plan,cycle:annual?"annual":"monthly",policyVersion:LEGAL_POLICY_VERSION,accepted:true}});
       const target=new URL(data.url);
       if(data.mode!=='live'||target.origin!=="https://checkout.paystack.com"||target.username||target.password)throw new Error("Invalid checkout link. No payment has been taken.");
       window.location.assign(target.href);
@@ -51,13 +54,13 @@ export default function Upgrade() {
       {paymentStatus.data?.enabled&&<section className="rounded-xl border p-4 text-sm" role="status"><strong>Secure checkout with Paystack</strong><p>Payments charge real money and activate your selected membership after verification. Renewals are manual; we won’t automatically charge you. Renewing the same tier extends its expiry; switching tiers starts a new term with no prorated credit.</p></section>}
       {reference&&<section className="rounded-xl border p-4 space-y-3" aria-live="polite"><h3 className="font-semibold">Payment verification</h3><p className="text-sm">{verificationError|| (receipt?.status==='paid'?`Payment confirmed: ${receipt.currency} ${receipt.amount.toLocaleString()}. Membership activated. Receipt ${receipt.receiptNumber}. Access through ${new Date(receipt.expiresAt!).toLocaleDateString()}.`:receipt?`Payment status: ${receipt.status}. Membership has not changed. Retry verification before paying again.`:'Checking your payment…')}</p>{(verificationError||(receipt&&receipt.status!=='paid'))&&<Button variant="outline" onClick={()=>setVerifyAttempt(v=>v+1)}>Retry verification</Button>}<Button variant="ghost" onClick={()=>{setParams({},{replace:true});setReceipt(null);setVerificationError('');}}>Close</Button></section>}
       {profile?.subscription_expires_at&&<p className="text-center text-sm text-muted-foreground">Membership expiry: {new Date(profile.subscription_expires_at).toLocaleDateString()}</p>}
-      <div className="flex justify-center gap-2" aria-label="Billing cycle">{[false,true].map(v=><button key={String(v)} aria-pressed={annual===v} onClick={()=>setAnnual(v)} className={`rounded-full px-5 py-3 text-sm ${annual===v?'bg-primary text-primary-foreground':'bg-muted'}`}>{v?'Annual · save 17%':'Monthly'}</button>)}</div>
+      <div className="flex justify-center gap-2" aria-label="Billing cycle">{[false,true].map(v=><button key={String(v)} aria-pressed={annual===v} onClick={()=>{setAnnual(v);setAcceptedPlan(null);}} className={`rounded-full px-5 py-3 text-sm ${annual===v?'bg-primary text-primary-foreground':'bg-muted'}`}>{v?'Annual · save 17%':'Monthly'}</button>)}</div>
       <div className="grid gap-5 md:grid-cols-3">
         <section className="rounded-2xl border p-5 space-y-5"><h3 className="text-xl font-semibold">Free</h3><p className="text-3xl font-bold">KES 0</p><FeatureList values={freeFeatures}/><Button variant="outline" className="w-full" onClick={()=>navigate(user?'/markets':'/auth')}>{current==='free'?'Current plan':'Explore Free'}</Button></section>
         {(Object.keys(PLANS) as PaidPlan[]).map(plan=>{
           const p=PLANS[plan], amount=annual?p.annual:p.monthly;
           const active=current===plan;
-          return <section key={plan} className={`rounded-2xl border p-5 space-y-5 ${plan==='premium_plus'?'border-primary bg-primary/5':''}`}><h3 className="text-xl font-semibold">{p.name}</h3><div><p className="text-3xl font-bold tabular-nums">KES {(annual?amount/12:amount).toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/month</span></p>{annual&&<p className="mt-2 text-xs text-muted-foreground">Billed KES {amount.toLocaleString()} once a year</p>}</div><FeatureList values={p.features}/><Button variant={plan==='premium_plus'?'default':'outline'} className="w-full" disabled={!!busy||(current==='premium_plus'&&plan==='premium')} onClick={()=>void upgrade(plan)}>{busy===plan?<Loader2 className="animate-spin"/>:active?`Renew ${p.name}`:current==='premium_plus'?'Included in your plan':`Choose ${p.name}`}</Button></section>;
+          return <section key={plan} className={`rounded-2xl border p-5 space-y-5 ${plan==='premium_plus'?'border-primary bg-primary/5':''}`}><h3 className="text-xl font-semibold">{p.name}</h3><div><p className="text-3xl font-bold tabular-nums">KES {(annual?amount/12:amount).toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/month</span></p>{annual&&<p className="mt-2 text-xs text-muted-foreground">Billed KES {amount.toLocaleString()} once a year</p>}</div><FeatureList values={p.features}/><p className="text-xs text-muted-foreground">One payment of KES {amount.toLocaleString()} for {annual?'one year':'one month'}. No automatic renewal. Renew manually to continue after expiry. Tier switches do not receive automatic prorated credit.</p><label className="flex gap-2 text-xs"><input type="checkbox" checked={acceptedPlan===plan} onChange={e=>setAcceptedPlan(e.target.checked?plan:null)}/><span>I agree to the <Link className="text-primary underline" to="/billing-policy" target="_blank">billing policy</Link> and <Link className="text-primary underline" to="/terms" target="_blank">Terms</Link> for this plan and amount.</span></label><Button variant={plan==='premium_plus'?'default':'outline'} className="w-full" disabled={!!busy||acceptedPlan!==plan||(current==='premium_plus'&&plan==='premium')} onClick={()=>void upgrade(plan)}>{busy===plan?<Loader2 className="animate-spin"/>:active?`Renew ${p.name}`:current==='premium_plus'?'Included in your plan':`Choose ${p.name}`}</Button></section>;
         })}
       </div>
       <section className="rounded-xl bg-muted/40 p-5 space-y-3"><h3 className="font-semibold">A clear distinction</h3><p className="text-sm text-muted-foreground">Premium includes detailed stock research, unlimited Fundamentals, advanced portfolio analysis, long-form posts and ad-free access. Its Engine access includes Briefing, Forecast, News, Earnings & Reports, Valuation, Ownership and Evidence. All expanded Fundamentals Forecast research is included. Premium Plus adds technical analysis, scenario labs, peers and personal workspace tools. Ask Engine still has fair-use and safety limits, which are shown in the tool.</p><p className="text-xs text-muted-foreground">Premium Plus: KES 1,000 × 12, less 17% = KES 9,960 per year. Existing Premium pricing remains KES 800/month or KES 7,980/year. Availability depends on verified source coverage; a subscription cannot supply missing filings.</p></section>

@@ -22,6 +22,11 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     res.status(err.status).json({ error: err.message });
     return;
   }
-  logger.error({ err, path: req.path }, "Unhandled API error");
+  const parser=err as {type?:string;status?:number;name?:string;code?:string};
+  if(parser.type==='entity.too.large'){res.status(413).json({error:'Request is too large.'});return;}
+  if(parser.type==='entity.parse.failed'){res.status(400).json({error:'Invalid JSON request.'});return;}
+  // Error objects from body parsers can contain the submitted body. Never log
+  // credentials, payment data or private notes through an error serializer.
+  logger.error({ errorName:parser.name??'Error',code:parser.code,path:req.path }, "Unhandled API error");
   res.status(500).json({ error: "Internal server error" });
 }

@@ -13,6 +13,7 @@ import { ContinuaMark } from '@/components/shared/ContinuaMark';
 import './auth.css';
 import { lovable } from '@/integrations/lovable';
 import { useTouchClick } from '@/hooks/useTouchClick';
+import {AuthBotCheck,AUTH_BOT_CHECK_CONFIGURED} from '@/components/security/AuthBotCheck';
 
 type Mode = 'signin' | 'signup' | 'reset';
 
@@ -20,8 +21,9 @@ type Mode = 'signin' | 'signup' | 'reset';
 function getPasswordStrength(password: string) {
   if (!password) return { score: 0, label: '', barClass: '' };
   let score = 0;
-  if (password.length >= 6) score++;
-  if (password.length >= 10) score++;
+  if(password.length<12)return {score:0,label:'Use at least 12 characters',barClass:'bg-bear'};
+  if (password.length >= 12) score++;
+  if (password.length >= 16) score++;
   if (/[0-9]/.test(password) && /[a-zA-Z]/.test(password)) score++;
   if (/[^a-zA-Z0-9]/.test(password)) score++;
 
@@ -46,6 +48,8 @@ export default function Auth() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [adult,setAdult]=useState(false),[acceptedTerms,setAcceptedTerms]=useState(false);
+  const [captchaToken,setCaptchaToken]=useState(''),[captchaAttempt,setCaptchaAttempt]=useState(0);
 
   const { signUp, signIn, resetPassword, user, loading: sessionLoading } = useAuth();
   const navigate = useNavigate();
@@ -69,11 +73,13 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
+    if(AUTH_BOT_CHECK_CONFIGURED&&!captchaToken){toast({title:'Complete bot verification first',variant:'destructive'});return;}
+    if(isSignUp&&(!adult||!acceptedTerms)){toast({title:'Before creating an account',description:'Confirm that you are 18 or older and agree to the Terms.'});return;}
     setLoading(true);
 
     try {
       if (mode === 'reset') {
-        const { error } = await resetPassword(email);
+        const { error } = await resetPassword(email,captchaToken||undefined);
         if (error) {
           toast({ title: "Couldn't send reset link", description: error.message, variant: 'destructive' });
         } else {
@@ -90,9 +96,9 @@ export default function Auth() {
           setLoading(false);
           return;
         }
-        result = await signUp(email, password, fullName);
+        result = await signUp(email, password, fullName,{adult,terms:acceptedTerms},captchaToken||undefined);
       } else {
-        result = await signIn(email, password);
+        result = await signIn(email, password,captchaToken||undefined);
       }
 
       if (result.error) {
@@ -110,10 +116,13 @@ export default function Auth() {
     } catch {
       toast({ title: 'Error', description: 'An unexpected error occurred', variant: 'destructive' });
       setLoading(false);
+    } finally {
+      if(AUTH_BOT_CHECK_CONFIGURED){setCaptchaToken('');setCaptchaAttempt(v=>v+1);}
     }
   };
 
   const handleGoogleSignIn = async () => {
+    if(!adult||!acceptedTerms){toast({title:'Before continuing',description:'Confirm that you are 18 or older and agree to the Terms. Google sign-in can create a new account.'});return;}
     setGoogleLoading(true);
     try {
       const { error } = await lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin });
@@ -134,6 +143,7 @@ export default function Auth() {
         <aside className="auth-story"><p className="auth-eyebrow">YOUR NEXT CHAPTER</p><h2>See more.<br/><span>Understand more.</span></h2><p className="auth-intro">Your portfolio deserves more than a price. A clearer perspective starts here.</p><div className="auth-art" aria-hidden="true"><img src="/landing/engine-research.png" alt=""/><span className="auth-art-caption">Research first. React second.</span></div><div className="auth-benefits"><span><TrendingUp size={17}/> Follow the NSE</span><span><ShieldCheck size={17}/> Keep your research private</span></div><p className="auth-risk">Research and portfolio tracking. No trading execution. Capital is at risk.</p></aside>
       <div className="auth-form-column flex flex-col items-center justify-center relative">
         <p className="auth-eyebrow mb-4">MAKE IT YOURS</p>
+        <AuthBotCheck key={`${mode}:${captchaAttempt}`} onToken={setCaptchaToken}/>
 
         <motion.div
           className="auth-card relative w-full overflow-hidden"
@@ -206,12 +216,13 @@ export default function Auth() {
                     {isSignUp ? 'Start researching and tracking NSE stocks in minutes.' : 'Log in to pick up where you left off.'}
                   </p>
 
+                  <div className="space-y-2 mb-4 text-xs"><label className="flex items-start gap-2"><input type="checkbox" checked={adult} onChange={e=>setAdult(e.target.checked)}/><span>I confirm that I am 18 or older.</span></label><label className="flex items-start gap-2"><input type="checkbox" checked={acceptedTerms} onChange={e=>setAcceptedTerms(e.target.checked)}/><span>I agree to the <Link className="text-primary underline" to="/terms" target="_blank">Terms</Link> and have read the <Link className="text-primary underline" to="/privacy" target="_blank">Privacy notice</Link>.</span></label><p className="text-muted-foreground">Required for account creation and Google sign-in. Optional Engine learning is separate and off by default.</p></div>
                   <Button
                     type="button"
                     variant="outline"
                     className="w-full h-11 mb-4 font-medium rounded-xl transition-transform hover:-translate-y-0.5 active:scale-[0.97]"
                     onClick={handleGoogleSignIn}
-                    disabled={googleLoading}
+                    disabled={googleLoading||!adult||!acceptedTerms}
                   >
                     {googleLoading ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -279,6 +290,7 @@ export default function Auth() {
                           type={showPassword ? 'text' : 'password'}
                           aria-label="Password"
                           autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                          minLength={isSignUp?12:undefined}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Password"
@@ -322,7 +334,7 @@ export default function Auth() {
                       {...submitTap}
                       type="submit"
                       className="w-full h-12 text-[0.90625rem] font-semibold rounded-xl mt-1 transition-transform hover:-translate-y-0.5 active:scale-[0.97]"
-                      disabled={loading}
+                      disabled={loading||(isSignUp&&(!adult||!acceptedTerms))||(AUTH_BOT_CHECK_CONFIGURED&&!captchaToken)}
                     >
                       {loading ? (
                         <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{isSignUp ? 'Creating account…' : 'Logging in…'}</>
@@ -371,7 +383,7 @@ export default function Auth() {
                         required
                       />
                     </div>
-                    <Button type="submit" className="w-full h-12 text-[0.90625rem] font-semibold rounded-xl transition-transform hover:-translate-y-0.5 active:scale-[0.97]" disabled={loading}>
+                    <Button type="submit" className="w-full h-12 text-[0.90625rem] font-semibold rounded-xl transition-transform hover:-translate-y-0.5 active:scale-[0.97]" disabled={loading||(AUTH_BOT_CHECK_CONFIGURED&&!captchaToken)}>
                       {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                       Send reset link
                     </Button>
@@ -397,7 +409,7 @@ export default function Auth() {
         </div>
 
         <p className="text-[0.6875rem] text-muted-foreground/80 mt-3 text-center max-w-xs">
-          By continuing, you agree to our Terms of Service and Privacy Policy
+          <Link className="text-primary" to="/terms">Terms of service</Link> · <Link className="text-primary" to="/privacy">Privacy notice</Link> · <Link className="text-primary" to="/copyright">Copyright reports</Link>
         </p>
       </div>
       </main>

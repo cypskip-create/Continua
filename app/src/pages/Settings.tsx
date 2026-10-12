@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation,Link } from "react-router-dom";
 import { navigateBack } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { useAppLock } from "@/hooks/useAppLock";
 import { PortfolioVisibilityToggles } from "@/components/portfolio/PortfolioVisibilityToggles";
+import {paymentLabel,SUPPORT_EMAIL} from '@/lib/legalPolicy';
+import {clearDeletedAccountStorage} from '@/lib/deletedAccountStorage';
 
 const HANDLE_REGEX = /^[a-z0-9_]{3,20}$/;
 
@@ -46,7 +48,6 @@ export default function Settings() {
   const [section, setSection] = useState<Section>((location.state as any)?.section || "menu");
   const [newMethodType, setNewMethodType] = useState<"mpesa" | "card">("mpesa");
   const [newMethodValue, setNewMethodValue] = useState("");
-  const [newMethodExpiry, setNewMethodExpiry] = useState("");
   const [addingMethod, setAddingMethod] = useState(false);
   const [handle, setHandle] = useState(profile?.handle || "");
   const [checking, setChecking] = useState(false);
@@ -169,33 +170,9 @@ export default function Settings() {
     if (!user) return;
     setAddingMethod(true);
     try {
-      if (newMethodType === "mpesa") {
-        const digits = newMethodValue.replace(/\s+/g, "");
-        if (!/^(?:\+?254|0)[71]\d{8}$/.test(digits)) {
-          toast({ title: "Enter a valid M-Pesa number", description: "e.g. 0712345678", variant: "destructive" });
-          return;
-        }
-        const normalized = digits.replace(/^\+/, "").replace(/^0/, "254");
-        const masked = `${normalized.slice(0, 6)}••••${normalized.slice(-3)}`;
-        const res = await addPaymentMethod({ method_type: "mpesa", label: "M-Pesa", detail: masked });
-        if (res.error) throw res.error;
-      } else {
-        const digits = newMethodValue.replace(/\s+/g, "");
-        if (!/^\d{13,19}$/.test(digits)) {
-          toast({ title: "Enter a valid card number", variant: "destructive" });
-          return;
-        }
-        if (!/^\d{2}\/\d{2}$/.test(newMethodExpiry.trim())) {
-          toast({ title: "Enter expiry as MM/YY", variant: "destructive" });
-          return;
-        }
-        const brand = /^4/.test(digits) ? "Visa" : /^5[1-5]/.test(digits) ? "Mastercard" : "Card";
-        const masked = `•••• ${digits.slice(-4)} · ${newMethodExpiry.trim()}`;
-        const res = await addPaymentMethod({ method_type: "card", label: brand, detail: masked });
-        if (res.error) throw res.error;
-      }
+      const res=await addPaymentMethod(paymentLabel(newMethodType,newMethodValue));
+      if(res.error)throw res.error;
       setNewMethodValue("");
-      setNewMethodExpiry("");
       toast({ title: "Payment method added" });
     } catch (e: any) {
       toast({ title: "Couldn't add payment method", description: e?.message, variant: "destructive" });
@@ -211,11 +188,12 @@ export default function Settings() {
       supabase.from("user_follows").select("*").eq("follower_id", user.id),
       supabase.from("post_likes").select("*").eq("user_id", user.id),
     ]);
-    const blob = new Blob([JSON.stringify({ posts: posts.data, follows: follows.data, likes: likes.data }, null, 2)], { type: "application/json" });
+    if(posts.error||follows.error||likes.error){toast({title:'Export could not complete',description:'Some community records could not load. Please retry; no complete export has been created.',variant:'destructive'});return;}
+    const blob = new Blob([JSON.stringify({scope:'Community posts, followed accounts and post likes only. Contact support for other personal data.',exportedAt:new Date().toISOString(), posts: posts.data, follows: follows.data, likes: likes.data }, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `continua-data-${user.id}.json`; a.click();
     URL.revokeObjectURL(url);
-    toast({ title: "Data exported" });
+    toast({ title: "Community data exported",description:'This download contains posts, follows and likes; it is not a full account export.' });
   };
 
   // Permanent, no undo — this is the real deletion path (see
@@ -228,11 +206,12 @@ export default function Settings() {
     try {
       const { data, error } = await supabase.functions.invoke("delete-account");
       if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || "Deletion failed");
-      toast({ title: "Account deleted", description: "Sorry to see you go." });
+      let cleared=false;try{cleared=clearDeletedAccountStorage(user.id,localStorage).complete;}catch{/* Browser may prohibit storage access. */}
+      toast({ title: "Account deleted", description: cleared?'Your local journal and app-lock records were cleared on this device.':'Account deletion completed. Browser storage could not be fully cleared; clear this site’s stored data on your device.' });
       await signOut?.();
       navigate("/auth");
     } catch (e: any) {
-      toast({ title: "Couldn't delete account", description: e.message || "Please try again or contact support@continua.app", variant: "destructive" });
+      toast({ title: "Couldn't delete account", description: e.message || `Please try again or contact ${SUPPORT_EMAIL}`, variant: "destructive" });
     } finally {
       setDeletingAccount(false);
     }
@@ -241,7 +220,7 @@ export default function Settings() {
   const topSections: { id: Section; label: string; icon: any; desc: string }[] = [
     { id: "tradershub", label: "TradersHub", icon: Users, desc: "Privacy, notifications, blocked & muted accounts" },
     { id: "account", label: "Your account", icon: AtSign, desc: "Username, email, password, app lock" },
-    { id: "payment", label: "Payment methods", icon: CreditCard, desc: "M-Pesa & cards for Premium billing" },
+    { id: "payment", label: "Payment references", icon: CreditCard, desc: "Saved labels; checkout is managed by Paystack" },
     { id: "display", label: "Display", icon: Type, desc: "Theme, text size" },
     { id: "data", label: "Your data", icon: Download, desc: "Download or delete your data" },
     { id: "help", label: "Help & support", icon: HelpCircle, desc: "FAQs & contact us" },
@@ -497,7 +476,7 @@ export default function Settings() {
         {section === "data" && (
           <div className="space-y-3 pb-4">
             <Header title="Your data" />
-            <Button variant="outline" className="w-full rounded-full justify-start" onClick={exportData}><Download className="h-4 w-4 mr-2" />Download your data</Button>
+            <Button variant="outline" className="w-full rounded-full justify-start" onClick={exportData}><Download className="h-4 w-4 mr-2" />Download community data</Button><p className="text-xs text-muted-foreground">Contains your posts, follows and likes. For other data or privacy requests, <a className="text-primary" href={`mailto:${SUPPORT_EMAIL}?subject=Continua%20privacy%20request`}>contact support</a>. Engine notebooks have their own export controls.</p>
             <Button variant="outline" className="w-full rounded-full justify-start text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => { setDeleteConfirmText(""); setSection("delete-account"); }}>
               <Trash2 className="h-4 w-4 mr-2" />Delete account
             </Button>
@@ -559,7 +538,7 @@ export default function Settings() {
         {section === "payment" && (
           <div className="space-y-3 pb-4">
             <Header title="Payment methods" />
-            <p className="text-xs text-muted-foreground -mt-1">Used to bill your Premium subscription. We only ever store a masked reference — never your full card number or M-Pesa PIN.</p>
+            <p className="text-xs text-muted-foreground -mt-1">Saved labels only; these cannot charge or verify a payment method. Actual payments happen on Paystack’s hosted checkout. Never enter a full card/phone number, PIN or CVV here.</p>
             {paymentMethods.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">No payment methods yet</p>
             ) : paymentMethods.map((m) => (
@@ -597,11 +576,10 @@ export default function Settings() {
               <button onClick={() => setNewMethodType("card")} className={`text-xs font-semibold rounded-full px-3 py-1.5 transition-colors ${newMethodType === "card" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>Card</button>
             </div>
             {newMethodType === "mpesa" ? (
-              <Input value={newMethodValue} onChange={(e) => setNewMethodValue(e.target.value)} placeholder="0712 345 678" className="h-10" inputMode="tel" />
+              <Input aria-label="Last three digits of M-Pesa reference" value={newMethodValue} onChange={(e) => setNewMethodValue(e.target.value)} placeholder="Last 3 digits only" className="h-10" inputMode="numeric" maxLength={3} />
             ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <Input value={newMethodValue} onChange={(e) => setNewMethodValue(e.target.value)} placeholder="Card number" className="h-10" inputMode="numeric" maxLength={19} />
-                <Input value={newMethodExpiry} onChange={(e) => setNewMethodExpiry(e.target.value)} placeholder="MM/YY" className="h-10" maxLength={5} />
+              <div>
+                <Input aria-label="Last four digits of card reference" value={newMethodValue} onChange={(e) => setNewMethodValue(e.target.value)} placeholder="Last 4 digits only" className="h-10" inputMode="numeric" maxLength={4} />
               </div>
             )}
             <Button className="w-full rounded-full" onClick={handleAddPaymentMethod} disabled={addingMethod || !newMethodValue.trim()}>
@@ -632,8 +610,8 @@ export default function Settings() {
               </AccordionItem>
             </Accordion>
             <Separator />
-            <Button variant="outline" className="w-full rounded-full justify-start" onClick={() => { window.location.href = "mailto:support@continua.app"; }}>
-              <Mail className="h-4 w-4 mr-2" />Email support@continua.app
+            <Button variant="outline" className="w-full rounded-full justify-start" onClick={() => { window.location.href = `mailto:${SUPPORT_EMAIL}`; }}>
+              <Mail className="h-4 w-4 mr-2" />Email {SUPPORT_EMAIL}
             </Button>
             <Button variant="outline" className="w-full rounded-full justify-start" onClick={() => window.open("https://wa.me/254700000000", "_blank", "noopener,noreferrer")}>
               <MessageSquare className="h-4 w-4 mr-2" />Chat on WhatsApp
@@ -646,14 +624,14 @@ export default function Settings() {
             <Header title="Terms & privacy" />
             <div>
               <p className="text-xs font-semibold text-muted-foreground mb-1">TERMS OF SERVICE</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">By using Continua you agree that market data, AI theses, and community content are for informational purposes only — nothing in the app is financial advice. You're responsible for your own trading decisions and for keeping your account credentials secure. We may suspend accounts that violate our community guidelines, including spam, harassment, or market-manipulation talk.</p>
+              <Link className="text-primary text-sm" to="/terms">Read the current Terms of service →</Link>
             </div>
             <Separator />
             <div>
               <p className="text-xs font-semibold text-muted-foreground mb-1">PRIVACY POLICY</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">We collect your profile, portfolio, and activity data to run the app and personalize your feed. We never sell your data. Payment method details are stored as masked references only. You can download or delete your data anytime from Settings → Your data.</p>
+              <Link className="text-primary text-sm" to="/privacy">Read the current Privacy notice →</Link>
             </div>
-            <p className="text-[0.6875rem] text-muted-foreground">Last updated August 2026</p>
+            <Link className="block text-primary text-sm" to="/billing-policy">Billing and refund enquiries →</Link><Link className="block text-primary text-sm" to="/copyright">Copyright and content reports →</Link>
           </div>
         )}
       </div>

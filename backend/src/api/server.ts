@@ -16,6 +16,7 @@ import { isAllowedBrowserOrigin } from "./corsPolicy.js";
 import { ApiError } from "./middleware/errorHandler.js";
 import { verifyEngineRateLimitIdentity } from "./middleware/requireSubscriber.js";
 import { paystackWebhook } from "./routes/billing.routes.js";
+import {preAuthenticationRateLimit} from './middleware/preAuthenticationRateLimit.js';
 
 // Requests are already gated behind an API key (see apiKeyAuth below), so an
 // open CORS policy was never a data-access hole — but leaving `cors()` with
@@ -52,8 +53,9 @@ export function createServer() {
   app.set("trust proxy", env.NODE_ENV === "production" ? env.TRUST_PROXY_HOPS : 0);
   app.use(helmet());
   app.use(cors(corsOptions));
+  app.use('/api/v1',preAuthenticationRateLimit());
   app.post("/api/v1/billing/paystack/webhook", rateLimit({ windowMs: 60_000, limit: 120 }), express.raw({ type: "application/json", limit: "64kb" }), paystackWebhook);
-  app.use(express.json());
+  app.use(express.json({limit:'512kb'}));
   app.use(requestLogger);
 
   // Health stays open and unmetered — infra probes shouldn't need a key or

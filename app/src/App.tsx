@@ -10,7 +10,6 @@ import { MainLayout } from "./components/layout/MainLayout";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ProfileProvider } from "./hooks/useProfile";
 import { ExchangeProvider } from "./hooks/useExchange";
-import { Analytics } from "@vercel/analytics/react";
 import { AppLockGate } from "./components/security/AppLockGate";
 import { useScrollRestoration } from "./hooks/useScrollRestoration";
 import { Suspense } from "react";
@@ -21,6 +20,7 @@ const Markets = lazy(() => import("./pages/Markets"));
 const Discover = lazy(() => import("./pages/Discover"));
 const Account = lazy(() => import("./pages/Account"));
 const Upgrade = lazy(() => import("./pages/Upgrade"));
+const LegalPolicies = lazy(() => import('./pages/LegalPolicies'));
 const StockDetail = lazy(() => import("./pages/StockDetail"));
 const Watchlist = lazy(() => import("./pages/Watchlist"));
 const SectorDetail = lazy(() => import("./pages/SectorDetail"));
@@ -72,7 +72,6 @@ const App = () => (
           <ExchangeProvider>
             <Toaster />
             <Sonner />
-            <Analytics />
             <AppLockGate>
               <BrowserRouter>
                 <ScrollRestorationController />
@@ -85,6 +84,11 @@ const App = () => (
                   <Route path="/about" element={<WebsiteResources section="about" />} />
                   <Route path="/help" element={<WebsiteResources section="help" />} />
                   <Route path="/trust" element={<WebsiteResources section="trust" />} />
+                  <Route path="/legal" element={<LegalPolicies />} />
+                  <Route path="/terms" element={<LegalPolicies section="terms" />} />
+                  <Route path="/privacy" element={<LegalPolicies section="privacy" />} />
+                  <Route path="/copyright" element={<LegalPolicies section="copyright" />} />
+                  <Route path="/billing-policy" element={<LegalPolicies section="billing" />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/admin/financials-review" element={<AdminFinancialsReview />} />
                   <Route element={<MainLayout />}>

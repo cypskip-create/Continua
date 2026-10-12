@@ -3,7 +3,7 @@ import { z } from "zod";
 import { env } from "../config/index.js";
 import { query } from "../storage/db.js";
 import { ApiError } from "../api/middleware/errorHandler.js";
-import { checkoutInput, prices, validCheckoutUrl } from "./paystackCommon.js";
+import { checkoutInput,CHECKOUT_POLICY_VERSION, prices, validCheckoutUrl } from "./paystackCommon.js";
 
 export const liveReferencePattern = /^continua-live-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 export function liveCheckoutEnabled() {
@@ -24,7 +24,7 @@ async function provider(path: string, body?: unknown) {
   if (!result.success) throw new ApiError(502, "Payment provider returned an unexpected response.");
   return result.data.data;
 }
-interface LiveOrder { reference: string; user_id: string; email: string; amount_minor: number; plan: string; cycle: string; status: string; }
+interface LiveOrder { reference: string; user_id: string; email: string; amount_minor: number; plan: string; cycle: string; status: string; terms_version?:string|null }
 const transactionSchema = z.object({
   id: z.number().int().positive().safe(), domain: z.literal("live"), status: z.string(), reference: z.string(),
   amount: z.number().int().nonnegative(), currency: z.literal("KES"), paid_at: z.string().datetime({ offset: true }).nullable().optional(),
@@ -38,7 +38,8 @@ export function validateLiveTransaction(raw: unknown, order: LiveOrder) {
   if (t.reference !== order.reference || t.amount !== order.amount_minor || t.customer.email.toLowerCase() !== order.email.toLowerCase() || t.metadata.continua_reference !== order.reference || t.metadata.continua_user !== order.user_id || (t.status === "success" && !t.paid_at)) throw new ApiError(409, "This payment does not match your live checkout.");
   return t;
 }
-export async function initializeLiveCheckout(userId: string, email: string, input: z.infer<typeof checkoutInput>) {
+export async function initializeLiveCheckout(userId: string, email: string, input: z.infer<typeof checkoutInput>,policyVersion:string) {
+  if(policyVersion!==CHECKOUT_POLICY_VERSION)throw new ApiError(400,'Acknowledge the current checkout terms before proceeding.');
   requireEnabled();
   if (!z.string().email().safeParse(email).success) throw new ApiError(400, "Your account needs an email address for checkout.");
   const profile = await query<{plan:string}>("SELECT public.effective_subscription_plan($1) AS plan",[userId]);
@@ -46,10 +47,10 @@ export async function initializeLiveCheckout(userId: string, email: string, inpu
   if (profile.rows[0].plan==='premium_plus' && input.plan==='premium') throw new ApiError(409,"Premium is already included in your active Premium Plus membership. Renew Plus or wait until it expires to switch.");
   const reference = `continua-live-${randomUUID()}`;
   const amount = prices[input.plan][input.cycle];
-  await query(`INSERT INTO public.paystack_live_orders (reference,user_id,email,plan,cycle,amount_minor) VALUES ($1,$2,$3,$4,$5,$6)`, [reference,userId,email,input.plan,input.cycle,amount]);
+  await query(`INSERT INTO public.paystack_live_orders (reference,user_id,email,plan,cycle,amount_minor,terms_version,terms_accepted_at) VALUES ($1,$2,$3,$4,$5,$6,$7,now())`, [reference,userId,email,input.plan,input.cycle,amount,policyVersion]);
   const data = z.object({ authorization_url: z.string(), reference: z.literal(reference) }).safeParse(await provider("/transaction/initialize", {
     email, amount, currency: "KES", reference, callback_url: env.PAYSTACK_CALLBACK_URL,
-    metadata: JSON.stringify({ continua_reference: reference, continua_user: userId, mode: "live" }),
+    metadata: JSON.stringify({ continua_reference: reference, continua_user: userId, mode: "live",terms_version:policyVersion }),
     // One-time checkout supports M-PESA. Never save reusable card authorizations or auto-charge.
   }));
   if (!data.success || !validCheckoutUrl(data.data.authorization_url)) throw new ApiError(502, "Payment provider returned an invalid checkout link.");
@@ -68,6 +69,6 @@ export async function verifyLiveCheckout(reference: string, userId?: string) {
     entitlement = result.rows[0]?.receipt ?? null;
     if (!entitlement) throw new ApiError(503, "Payment verified but membership activation needs another verification attempt. Do not pay again.");
   }
-  return { reference, mode: "live", status: t.status === "success" ? "paid" : ["failed","abandoned","reversed"].includes(t.status) ? t.status : "pending", plan: order.plan, cycle: order.cycle, amount: order.amount_minor / 100, currency: "KES", membershipChanged: !!entitlement, ...entitlement };
+  return { reference, mode: "live", status: t.status === "success" ? "paid" : ["failed","abandoned","reversed"].includes(t.status) ? t.status : "pending", plan: order.plan, cycle: order.cycle, amount: order.amount_minor / 100, currency: "KES",policyVersion:order.terms_version??null, membershipChanged: !!entitlement, ...entitlement };
 }
 export async function expirePaidMemberships() { await query("SELECT public.expire_paid_memberships()"); }
