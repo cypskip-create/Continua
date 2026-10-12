@@ -11,4 +11,6 @@ test('auth has visible field labels, Google only and signup-only acknowledgement
  assert.ok(source.includes('{isSignUp && <div'));assert.ok(source.includes("autoComplete={isSignUp ? 'new-password' : 'current-password'}"));
  assert.ok(source.includes('fill="#4285F4"'));assert.ok(source.includes('prefers')===false);
  const css=readFileSync(new URL('../src/pages/auth.css',import.meta.url),'utf8');assert.ok(css.includes('prefers-reduced-motion'));assert.ok(css.includes('border-bottom-right-radius'));
+ assert.ok(css.includes('background:#cbc3ff;color:var(--auth-ink)'));
+ assert.ok(css.includes('.auth-header{background:#efedfb;color:var(--auth-ink)}'));
 });
