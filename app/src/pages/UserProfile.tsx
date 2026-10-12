@@ -734,7 +734,7 @@ export default function UserProfile() {
 
       {/* Comment sheet */}
       <XCommentSheet open={commentSheetOpen} onOpenChange={setCommentSheetOpen} post={selectedPost} currentUserId={user?.id} comments={comments} loadingComments={loadingComments} onAddComment={handleAddComment} onBookmark={handleBookmark} onShare={handlePostShare} onDelete={isOwnProfile ? handleDelete : undefined} onReact={handleReact} onReactComment={reactToComment} onEditComment={handleEditComment} onDeleteComment={handleDeleteComment} />
-      {userId && <FollowersDialog open={followersDialogOpen} onOpenChange={setFollowersDialogOpen} userId={userId} initialTab={dialogTab} />}
+      {userId && <FollowersDialog open={followersDialogOpen} onOpenChange={setFollowersDialogOpen} userId={userId} userName={profileData.full_name||'Investor'} initialTab={dialogTab} />}
       <EditProfileDialog open={editProfileOpen} onOpenChange={(open) => { setEditProfileOpen(open); if (!open) fetchProfile(); }} />
       {profileData.avatar_url && (
         <ImageViewer open={avatarViewerOpen} onOpenChange={setAvatarViewerOpen} images={[profileData.avatar_url]} />

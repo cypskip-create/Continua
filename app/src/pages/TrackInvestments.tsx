@@ -112,7 +112,7 @@ export default function TrackInvestments() {
     "holdings",
   );
   const isPremiumPlus = profile?.subscription_plan === "premium_plus";
-  const engine = usePortfolioEngine(isPremium, activeTab === "analysis", isPremiumPlus);
+  const engine = usePortfolioEngine(isPremium, activeTab === "analysis", isPremiumPlus,activeTab);
   const {
     portfolio,
     loading,

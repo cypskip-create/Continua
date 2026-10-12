@@ -15,18 +15,18 @@ import { computePortfolioStats } from "@/lib/stockPrices";
 import { engineWorkspaceApi } from "@/api/engineWorkspaceApi";
 
 /** One portfolio coordinator preserves existing free feeds and gates advanced research. */
-export function usePortfolioEngine(isPremium: boolean, analysisOpen: boolean, isPremiumPlus = false) {
+export function usePortfolioEngine(isPremium: boolean, analysisOpen: boolean, isPremiumPlus = false,activeTab='holdings') {
   const portfolio = usePortfolio(), { user } = useAuth(), { exchange } = useExchange();
   const symbols = portfolio.portfolio.map(h => h.symbol);
   const { liveQuotes } = useLivePortfolioQuotes(symbols);
   const pricedSymbols = symbols.filter(symbol => liveQuotes[symbol.toUpperCase()]?.price > 0);
   const stats = useMemo(() => computePortfolioStats(portfolio.portfolio, liveQuotes), [portfolio.portfolio, liveQuotes]);
-  const valuations = usePortfolioValuations(pricedSymbols);
-  const dividends = usePortfolioDividends(pricedSymbols);
-  const research = usePortfolioResearch(pricedSymbols);
-  const updates = usePortfolioUpdates(symbols);
+  const valuations = usePortfolioValuations(analysisOpen||activeTab==='valuations'?pricedSymbols:[]);
+  const dividends = usePortfolioDividends(analysisOpen||['returns','dividends'].includes(activeTab)?pricedSymbols:[]);
+  const research = usePortfolioResearch(analysisOpen?pricedSymbols:[]);
+  const updates = usePortfolioUpdates(activeTab==='updates'?symbols:[]);
   const growth = usePortfolioGrowth(isPremium && analysisOpen ? pricedSymbols : []);
-  const benchmark = useMarketBenchmark();
+  const benchmark = useMarketBenchmark(analysisOpen);
   const overview = useQuery({
     queryKey: ["continua", "engine-portfolio-overview", user?.id, exchange],
     queryFn: () => engineWorkspaceApi.portfolioOverview(exchange), enabled: !!user,

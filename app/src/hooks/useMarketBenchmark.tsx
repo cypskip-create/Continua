@@ -21,11 +21,12 @@ const SAMPLE_SIZE = 15;
 
 /** Market-cap sample, not the full exchange. The screener supplies all
  * benchmark ratios in one read; do not fan out fifteen company requests. */
-export function useMarketBenchmark() {
+export function useMarketBenchmark(enabled=true) {
   const sampleQuery = useQuery({
     queryKey: ["continua", "screener", "market-cap-sample", SAMPLE_SIZE],
     queryFn: () => screenerApi.run({ sortBy: "marketCap", sortDirection: "desc", limit: SAMPLE_SIZE }),
     staleTime: 15 * 60_000,
+    enabled,
   });
 
   const rows = sampleQuery.data ?? [];

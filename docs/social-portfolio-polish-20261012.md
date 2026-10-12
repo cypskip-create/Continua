@@ -22,3 +22,7 @@ Discussion Pulse counts ticker mentions/contributors in visible loaded posts fro
 - [X lists](https://help.x.com/en/using-x/x-lists): curated reading informed watchlist discussion shortcuts rather than copying a proprietary UI.
 
 No schema migration is required for these changes. Existing report and block RPCs remain in use.
+
+## Live verification follow-up
+
+The deployed overview temporarily failed on a fresh reload, then recovered automatically and returned 12/12 holdings. Render logs showed concurrent slow database reads (including a 6s holdings query), 500 responses for news/quotes, and an 8s successful overview. Unopened tabs previously started all per-company feeds at once. Tab-specific feeds now load on demand, and benchmark work waits for Analysis, reducing startup contention; this is not a promise that free hosting cannot stall. The report menu was verified dismissed with the report form open; no report was submitted. The followers overlay filled the entire desktop viewport with handles and clean tabs. iOS keyboard behavior still needs device testing.
