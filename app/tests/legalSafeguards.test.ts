@@ -21,3 +21,13 @@ test('deleted-account cleanup preserves other users and public research caches',
  const storage={get length(){return keys.size;},key:(i:number)=>[...keys][i]??null,removeItem:(key:string)=>{keys.delete(key);}};
  assert.deepEqual(clearDeletedAccountStorage('owner',storage),{removed:3,complete:true});assert.ok(keys.has('continua:journal:v1:other:NSE:KCB'));assert.ok(keys.has('public-research'));
 });
+
+test('age and terms controls only appear and gate Google in signup mode',()=>{
+ const auth=readFileSync(new URL('../src/pages/Auth.tsx',import.meta.url),'utf8');
+ assert.match(auth,/\{isSignUp && <div[^\n]+I confirm that I am 18 or older/);
+ const googleHandler=auth.slice(auth.indexOf('const handleGoogleSignIn'),auth.indexOf('const switchMode'));
+ assert.ok(googleHandler.includes('if(isSignUp&&(!adult||!acceptedTerms))'));
+ assert.ok(auth.includes('disabled={googleLoading||(isSignUp&&(!adult||!acceptedTerms))}'));
+ assert.ok(auth.includes('result = await signIn(email, password,captchaToken||undefined)'));
+ assert.ok(auth.includes('result = await signUp(email, password, fullName,{adult,terms:acceptedTerms}'));
+});

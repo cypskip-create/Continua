@@ -122,7 +122,7 @@ export default function Auth() {
   };
 
   const handleGoogleSignIn = async () => {
-    if(!adult||!acceptedTerms){toast({title:'Before continuing',description:'Confirm that you are 18 or older and agree to the Terms. Google sign-in can create a new account.'});return;}
+    if(isSignUp&&(!adult||!acceptedTerms)){toast({title:'Before creating an account',description:'Confirm that you are 18 or older and agree to the Terms.'});return;}
     setGoogleLoading(true);
     try {
       const { error } = await lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin });
@@ -216,13 +216,13 @@ export default function Auth() {
                     {isSignUp ? 'Start researching and tracking NSE stocks in minutes.' : 'Log in to pick up where you left off.'}
                   </p>
 
-                  <div className="space-y-2 mb-4 text-xs"><label className="flex items-start gap-2"><input type="checkbox" checked={adult} onChange={e=>setAdult(e.target.checked)}/><span>I confirm that I am 18 or older.</span></label><label className="flex items-start gap-2"><input type="checkbox" checked={acceptedTerms} onChange={e=>setAcceptedTerms(e.target.checked)}/><span>I agree to the <Link className="text-primary underline" to="/terms" target="_blank">Terms</Link> and have read the <Link className="text-primary underline" to="/privacy" target="_blank">Privacy notice</Link>.</span></label><p className="text-muted-foreground">Required for account creation and Google sign-in. Optional Engine learning is separate and off by default.</p></div>
+                  {isSignUp && <div className="space-y-2 mb-4 text-xs"><label className="flex items-start gap-2"><input type="checkbox" checked={adult} onChange={e=>setAdult(e.target.checked)}/><span>I confirm that I am 18 or older.</span></label><label className="flex items-start gap-2"><input type="checkbox" checked={acceptedTerms} onChange={e=>setAcceptedTerms(e.target.checked)}/><span>I agree to the <Link className="text-primary underline" to="/terms" target="_blank">Terms</Link> and have read the <Link className="text-primary underline" to="/privacy" target="_blank">Privacy notice</Link>.</span></label><p className="text-muted-foreground">Required when signing up with email or Google. Optional Engine learning is separate and off by default.</p></div>}
                   <Button
                     type="button"
                     variant="outline"
                     className="w-full h-11 mb-4 font-medium rounded-xl transition-transform hover:-translate-y-0.5 active:scale-[0.97]"
                     onClick={handleGoogleSignIn}
-                    disabled={googleLoading||!adult||!acceptedTerms}
+                    disabled={googleLoading||(isSignUp&&(!adult||!acceptedTerms))}
                   >
                     {googleLoading ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
