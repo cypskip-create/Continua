@@ -504,8 +504,8 @@ export default function TradersHub() {
           ) : (
             <>
               <MessageSquare className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-              <p className="text-sm font-bold">{searching ? "No matches" : "Start the conversation"}</p>
-              <p className="text-[0.75rem] text-muted-foreground mt-1">{searching ? "Try a different ticker, person or topic." : "Share your first idea with the community."}</p>
+              <p className="text-sm font-bold">{searching ? "No matching posts" : "Start the conversation"}</p>
+              <p className="text-[0.75rem] text-muted-foreground mt-1">{searching ? "People, company and topic results appear above, independently of posts." : "Share your first idea with the community."}</p>
             </>
           )}
         </div>
