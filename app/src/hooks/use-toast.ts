@@ -1,4 +1,5 @@
 import * as React from "react"
+import { feedback, type FeedbackKind } from "@/lib/haptics"
 
 import type {
   ToastActionElement,
@@ -137,10 +138,12 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, "id">
+type Toast = Omit<ToasterToast, "id"> & { feedback?: FeedbackKind | false }
 
-function toast({ ...props }: Toast) {
+function toast({ feedback: requestedFeedback, ...props }: Toast) {
   const id = genId()
+  const kind = requestedFeedback === false ? null : requestedFeedback ?? (props.variant === "destructive" ? "error" : typeof props.title === "string" && /saved|added|removed|updated|sent|copied|submitted|success|created|deleted|blocked|unblocked|muted|unmuted/i.test(props.title) ? "success" : null)
+  if (kind) feedback(kind)
 
   const update = (props: ToasterToast) =>
     dispatch({

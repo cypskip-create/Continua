@@ -1,4 +1,5 @@
 import { useStickyHeights } from "@/hooks/useStickyHeights";
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { refreshPageData } from "@/lib/pageRefresh";
@@ -398,7 +399,7 @@ export default function TrackInvestments() {
           <p className="section-eyebrow">Total Value</p>
           <h2 className="mt-1 text-[2.5rem] leading-none font-semibold tabular tracking-tight">
             {showBalance
-              ? `KES ${stats.totalValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              ? <RollingNumber value={`KES ${stats.totalValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
               : "••••••"}
           </h2>
           <div className="mt-2 flex items-center gap-2 text-sm tabular">
@@ -413,12 +414,12 @@ export default function TrackInvestments() {
               {showBalance && (
                 <>
                   {stats.totalGain >= 0 ? "+" : "−"}KES{" "}
-                  {Math.abs(stats.totalGain).toFixed(2)}{" "}
+                  <RollingNumber value={Math.abs(stats.totalGain).toFixed(2)} />{" "}
                 </>
               )}
               <span className="opacity-80 ml-1">
                 ({stats.gainPct >= 0 ? "+" : ""}
-                {stats.gainPct.toFixed(2)}%)
+                <RollingNumber value={stats.gainPct.toFixed(2)} />%)
               </span>
             </span>
             <span className="text-muted-foreground text-xs">Unrealized</span>
@@ -432,14 +433,14 @@ export default function TrackInvestments() {
                 className={`mt-0.5 text-sm font-semibold tabular ${stats.todayGain >= 0 ? "text-bull" : "text-bear"}`}
               >
                 {showBalance
-                  ? `${stats.todayGain >= 0 ? "+" : "−"}${Math.abs(stats.todayGain).toFixed(0)}`
+                  ? <RollingNumber value={`${stats.todayGain >= 0 ? "+" : "−"}${Math.abs(stats.todayGain).toFixed(0)}`} />
                   : "••"}
               </p>
               <p
                 className={`text-[0.625rem] tabular ${stats.todayPct >= 0 ? "text-bull" : "text-bear"}`}
               >
                 {stats.todayPct >= 0 ? "+" : ""}
-                {stats.todayPct.toFixed(2)}%
+                <RollingNumber value={stats.todayPct.toFixed(2)} />%
               </p>
             </div>
             <div>
@@ -447,7 +448,7 @@ export default function TrackInvestments() {
                 Invested
               </p>
               <p className="mt-0.5 text-sm font-semibold tabular">
-                {showBalance ? `KES ${stats.totalCost.toFixed(0)}` : "••"}
+                {showBalance ? <RollingNumber value={`KES ${stats.totalCost.toFixed(0)}`} /> : "••"}
               </p>
               <p className="text-[0.625rem] text-muted-foreground">
                 {holdings.length} stocks

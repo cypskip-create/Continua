@@ -35,6 +35,8 @@ export const NSE_SECURITIES: NseSecurityRecord[] = [
   { ticker: "KEGN", name: "KenGen Plc", sector: "Energy" },
   { ticker: "KNRE", name: "Kenya Re-Insurance Corporation", sector: "Insurance" },
   { ticker: "KPLC", name: "Kenya Power & Lighting Company", sector: "Energy" },
+  // Issuer confirms its NSE listing on 9 March 2026: https://kpc.co.ke/kenya-pipeline-company-1973/
+  { ticker: "KPC", name: "Kenya Pipeline Company PLC", sector: "Energy" },
   { ticker: "KQ", name: "Kenya Airways Ltd", sector: "Transportation" },
   { ticker: "KUKZ", name: "Kakuzi Ltd", sector: "Agriculture" },
   { ticker: "LBTY", name: "Liberty Kenya Holdings Ltd", sector: "Insurance" },
@@ -70,6 +72,7 @@ export const LEGACY_TICKER_ALIASES: Record<string, string> = {
   SCOM: "SCOM",
   DTB: "DTK",
   STANBIC: "SBIC",
+  HFCB: "HFCK",
   KAKZ: "KUKZ",
   UMEME: "UMME",
   CARBACID: "CARB",

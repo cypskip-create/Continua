@@ -24,6 +24,8 @@
  */
 import { chromium, type Browser } from "playwright";
 import { logger } from "../monitoring/logger.js";
+import {assertPublicUrl} from './urlSafety.js';
+import {throttleHost} from './rateLimiter.js';
 
 const NAVIGATION_TIMEOUT_MS = 30_000;
 
@@ -43,6 +45,7 @@ export interface RenderResult {
   html: string;
   finalUrl: string;
   status: number | null;
+  coverage?:{tab:string;category:string|null;rows:number;expandedRows:number;scrollLimitReached:boolean};
 }
 
 /**
@@ -51,12 +54,46 @@ export interface RenderResult {
  * guarantee for sites with polling/websockets that never go idle), and
  * returns the resulting DOM as HTML.
  */
-export async function renderPage(url: string, userAgent: string, options:{files?:boolean}={}): Promise<RenderResult> {
+export async function renderPage(url: string, userAgent: string, options:{files?:boolean;stockTab?:string;category?:string;historyStart?:string}={}): Promise<RenderResult> {
+  await assertPublicUrl(url);await throttleHost(new URL(url).hostname,.2);
   const browser = await getBrowser();
-  const context = await browser.newContext({ userAgent });
+  const context = await browser.newContext({ userAgent,serviceWorkers:'block' });
+  const checked=new Map<string,Promise<unknown>>();
+  await context.route('**/*',async route=>{
+    try{const target=new URL(route.request().url());if(!['http:','https:'].includes(target.protocol))return route.abort();
+      if(!checked.has(target.origin))checked.set(target.origin,assertPublicUrl(target.origin));await checked.get(target.origin);
+      if(['image','font','media'].includes(route.request().resourceType()))return route.abort();await route.continue();
+    }catch{await route.abort();}
+  });
   const page = await context.newPage();
   try {
-    const response = await page.goto(url, { waitUntil: "networkidle", timeout: NAVIGATION_TIMEOUT_MS });
+    // Some publisher category deep-links return 500 although clicking the
+    // same category works. Navigate to the observed parent and click it.
+    const navigationUrl=new URL(url);if(options.category)navigationUrl.searchParams.delete('category');
+    const response = await page.goto(navigationUrl.href, { waitUntil: "networkidle", timeout: NAVIGATION_TIMEOUT_MS });
+    if(response&&response.status()>=400)throw new Error(`Rendered document HTTP ${response.status()}`);
+    let expandedRows=0,scrollLimitReached=false;
+    if(options.stockTab){
+      await page.locator('.normal-tab.selected-tab').filter({hasText:options.stockTab}).waitFor({timeout:15000});
+      if(options.category){
+        await page.getByRole('button',{name:options.category,exact:true}).click();
+        await page.waitForLoadState('networkidle',{timeout:15000});
+        const buttons=page.locator('table .expand-button');
+        for(const button of (await buttons.all()).slice(0,200)){await button.click();expandedRows++;}
+      }
+      if(options.historyStart){
+        const start=page.getByLabel('Start Date',{exact:true});await start.fill(options.historyStart);await start.press('Tab');
+        await page.waitForLoadState('networkidle',{timeout:15000});
+      }
+      // Lazy content is bounded; all horizontally hidden DOM columns are kept.
+      for(let step=0;step<12;step++){
+        const before=await page.evaluate("JSON.stringify({height:document.body.scrollHeight,rows:document.querySelectorAll('tr').length,files:document.querySelectorAll('.file-content').length})");
+        await page.evaluate("window.scrollTo(0,document.body.scrollHeight)");
+        await page.waitForLoadState('networkidle',{timeout:15000});
+        const after=await page.evaluate("JSON.stringify({height:document.body.scrollHeight,rows:document.querySelectorAll('tr').length,files:document.querySelectorAll('.file-content').length})");
+        if(JSON.stringify(before)===JSON.stringify(after))break;if(step===11)scrollLimitReached=true;
+      }
+    }
     if(options.files) {
       await page.getByText('Files',{exact:true}).click({timeout:10000});
       // Observed publisher schema.org markup on the Files tab. Do not
@@ -64,7 +101,8 @@ export async function renderPage(url: string, userAgent: string, options:{files?
       await page.locator('.file-content').first().waitFor({timeout:15000});
     }
     const html = await page.content();
-    return { html, finalUrl: page.url(), status: response?.status() ?? null };
+    return { html, finalUrl: page.url(), status: response?.status() ?? null,
+      ...(options.stockTab?{coverage:{tab:options.stockTab,category:options.category??null,rows:await page.locator('tr').count(),expandedRows,scrollLimitReached}}:{}) };
   } catch (err) {
     logger.warn({ url, err }, "renderPage: navigation failed");
     throw err;

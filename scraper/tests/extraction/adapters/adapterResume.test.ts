@@ -24,6 +24,11 @@ it("does not parse a successfully extracted unchanged PDF twice", async () => {
   expect(adapter.parse).not.toHaveBeenCalled();
   expect(finishDocument).toHaveBeenCalledWith(3,2);
 });
+it("reprocesses unchanged bytes when the adapter mapping version changes",async()=>{
+ vi.mocked(findLatestExtraction).mockResolvedValue({id:1,parserVersion:'older',text:'A genuine company statement with dated financial figures and explicit KES units.'} as never);
+ expect((await runAdapter({...adapter,parserVersion:'newer'})).extracted).toBe(1);
+ expect(insertExtraction).toHaveBeenCalledWith(expect.objectContaining({parserVersion:'newer'}));
+});
 it("drains previously queued work even when discovery returns no new documents", async () => {
   vi.mocked(findLatestExtraction).mockResolvedValue(null);
   const result = await runAdapter({ ...adapter, discover: async () => [] });

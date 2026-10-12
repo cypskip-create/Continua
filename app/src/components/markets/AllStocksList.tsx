@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Search, TrendingUp, TrendingDown, Filter, ChevronDown, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SparklineChart } from "@/components/shared/SparklineChart";
-import { CANONICAL_SYMBOLS, STOCK_META } from "@/lib/stockPrices";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { useSparklines } from "@/hooks/useSparklines";
+import { useStockDirectory } from "@/hooks/useStockDirectory";
+import { PriceCell } from "@/components/shared/PriceCell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +22,6 @@ import {
 
 // Canonical symbols only, so a company with two ticker aliases — e.g.
 // Diamond Trust Bank, Stanbic — never appears twice.
-const sectors = ["All Sectors", ...Array.from(new Set(CANONICAL_SYMBOLS.map(s => STOCK_META[s].sector))).sort()];
 
 interface AllStocksListProps {
   search?: string;
@@ -40,29 +40,32 @@ export function AllStocksList({ initialSector, onlySymbols, search }: AllStocksL
   const { isInWatchlist, addToWatchlist, removeFromWatchlist, folders, foldersLoading } = useWatchlist();
   const { toast } = useToast();
   const [pickerStock, setPickerStock] = useState<{ symbol: string; name: string } | null>(null);
+  const { directory, symbols } = useStockDirectory();
+  const sectors = useMemo(() => ["All Sectors", ...Array.from(new Set(directory.map(stock => stock.sector))).sort()], [directory]);
 
   useEffect(() => { if (initialSector) setSelectedSector(initialSector); }, [initialSector]);
 
   // Live Continua Data Layer quotes — a symbol the Data Layer's current NSE
   // universe doesn't have yet (see docs/api/API.md / instruments endpoint)
   // shows a loading skeleton in the list rather than a fabricated price.
-  const { quotes } = useLiveQuotes(CANONICAL_SYMBOLS);
-  const { getSparkline } = useSparklines(CANONICAL_SYMBOLS);
+  const { quotes } = useLiveQuotes(symbols);
+  const { getSparkline } = useSparklines(symbols);
 
   const allStocks = useMemo(
-    () => CANONICAL_SYMBOLS.map(symbol => {
+    () => directory.map(({symbol, name, sector, aliases}) => {
       const quote = quotes[symbol];
       return {
         symbol,
-        name: STOCK_META[symbol].name,
-        sector: STOCK_META[symbol].sector,
+        name,
+        sector,
+        aliases,
         price: quote?.lastPrice ?? null,
         change: quote?.changePercent ?? null,
         isUp: (quote?.change ?? 0) >= 0,
         isLive: !!quote,
       };
     }),
-    [quotes]
+    [quotes, directory]
   );
 
   const baseStocks = useMemo(
@@ -72,7 +75,7 @@ export function AllStocksList({ initialSector, onlySymbols, search }: AllStocksL
 
   const filteredStocks = useMemo(() => {
     let stocks = baseStocks.filter(stock => {
-      const matchesSearch = stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      const matchesSearch = [stock.symbol,...stock.aliases].join(' ').toLowerCase().includes(searchQuery.toLowerCase()) ||
                            stock.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesSector = selectedSector === "All Sectors" || stock.sector === selectedSector;
       return matchesSearch && matchesSector;
@@ -203,11 +206,7 @@ export function AllStocksList({ initialSector, onlySymbols, search }: AllStocksL
             <div className="text-right shrink-0 w-[84px]">
               {stock.isLive ? (
                 <>
-                  <p className="text-[0.84375rem] font-bold tabular-nums leading-tight">KES {stock.price!.toFixed(2)}</p>
-                  <div className={`flex items-center justify-end gap-0.5 mt-0.5 ${stock.isUp ? 'text-bull' : 'text-bear'}`}>
-                    {stock.isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    <span className="text-[0.6875rem] font-semibold tabular-nums">{stock.isUp ? '+' : ''}{stock.change!.toFixed(2)}%</span>
-                  </div>
+                  <PriceCell price={stock.price} changePercent={stock.change} isLive />
                 </>
               ) : (
                 <div className="flex flex-col items-end gap-1">

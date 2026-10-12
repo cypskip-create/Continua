@@ -7,7 +7,9 @@
  */
 // Resolve pg's CommonJS export, which matches its published @types declarations.
 // TypeScript emits createRequire for this import in the ESM service.
-import pg = require("pg");
+import { createRequire } from "node:module";
+import type pgTypes = require("pg");
+const pg: typeof pgTypes = createRequire(import.meta.url)("pg");
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 
@@ -30,10 +32,10 @@ pool.on("error", (err: Error) => {
   logger.error({ err }, "Unexpected Postgres pool error");
 });
 
-export async function query<T extends pg.QueryResultRow = any>(
+export async function query<T extends pgTypes.QueryResultRow = any>(
   text: string,
   params?: unknown[]
-): Promise<pg.QueryResult<T>> {
+): Promise<pgTypes.QueryResult<T>> {
   const start = Date.now();
   const res = await pool.query<T>(text, params as any[]);
   const ms = Date.now() - start;
@@ -42,7 +44,7 @@ export async function query<T extends pg.QueryResultRow = any>(
 }
 
 export async function withTransaction<T>(
-  fn: (client: pg.PoolClient) => Promise<T>
+  fn: (client: pgTypes.PoolClient) => Promise<T>
 ): Promise<T> {
   const client = await pool.connect();
   try {

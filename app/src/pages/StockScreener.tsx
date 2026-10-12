@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Download, Save, SlidersHorizontal, X } from "lucide-react";
 import { screenerApi } from "@/api/screenerApi";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
-import { CANONICAL_SYMBOLS, STOCK_META } from "@/lib/stockPrices";
+import { useStockDirectory } from "@/hooks/useStockDirectory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import "./markets.css";
@@ -68,7 +68,8 @@ export function StockScreener() {
     [saved, setSaved] = useState(readSaved),
     [sort, setSort] = useState("change"),
     [ascending, setAscending] = useState(false);
-  const { quotes } = useLiveQuotes(CANONICAL_SYMBOLS, "NSE");
+  const { directory, symbols } = useStockDirectory();
+  const { quotes } = useLiveQuotes(symbols, "NSE");
   const research = useQuery({
     queryKey: ["continua", "market-screener"],
     queryFn: () => screenerApi.run({ limit: 200 }),
@@ -77,13 +78,14 @@ export function StockScreener() {
   });
   const rows = useMemo(() => {
     const lookup = new Map((research.data ?? []).map((r) => [r.symbol, r]));
-    return CANONICAL_SYMBOLS.map((symbol) => {
+    return directory.map(({symbol,name,sector,aliases}) => {
       const q = quotes[symbol],
         r = lookup.get(symbol);
       return {
         symbol,
-        name: STOCK_META[symbol].name,
-        sector: STOCK_META[symbol].sector,
+        name,
+        sector,
+        aliases,
         price: q?.lastPrice ?? null,
         change: q?.changePercent ?? null,
         volume: q?.volume ?? null,
@@ -97,11 +99,11 @@ export function StockScreener() {
         pb: r?.pb ?? null,
       };
     });
-  }, [quotes, research.data]);
+  }, [quotes, research.data, directory]);
   const result = rows
     .filter((r) => {
       if (filters.sector !== "All" && r.sector !== filters.sector) return false;
-      if (!`${r.symbol} ${r.name}`.toLowerCase().includes(search.toLowerCase()))
+      if (!`${r.symbol} ${r.aliases.join(' ')} ${r.name}`.toLowerCase().includes(search.toLowerCase()))
         return false;
       const bounds: [keyof Filters, number | null, boolean, number][] = [
         ["minPrice", r.price, true, 1],

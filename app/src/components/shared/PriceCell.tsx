@@ -1,6 +1,7 @@
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { RollingNumber } from "./RollingNumber";
 
 interface PriceCellProps {
   /** Real last price, or null/undefined while loading — never a fabricated fallback. */
@@ -42,10 +43,10 @@ export function PriceCell({
 
   return (
     <div className={cn(align === "right" ? "text-right" : "text-left", className)}>
-      <p className={cn(priceCls, "tabular-nums leading-tight")}>KES {price!.toFixed(2)}</p>
+      <p className={cn(priceCls, "tabular-nums leading-tight")}><RollingNumber value={`KES ${price!.toFixed(2)}`} /></p>
       <div className={cn("flex items-center gap-0.5 mt-0.5", align === "right" && "justify-end", isUp ? "text-bull" : "text-bear")}>
         {showIcon && (isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />)}
-        <span className={cn(changeCls, "tabular-nums")}>{isUp ? "+" : ""}{changePercent!.toFixed(2)}%</span>
+        <RollingNumber className={cn(changeCls, "tabular-nums")} value={`${isUp ? "+" : ""}${changePercent!.toFixed(2)}%`} />
       </div>
     </div>
   );

@@ -1,4 +1,6 @@
 import { useStickyHeights } from "@/hooks/useStickyHeights";
+import { RollingNumber } from "@/components/shared/RollingNumber";
+import { useStockDirectory } from "@/hooks/useStockDirectory";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { mediaStoryUrl } from "@/lib/mediaRoute";
 import { navigateBack } from "@/lib/navigation";
@@ -107,7 +109,7 @@ export default function StockDetail() {
   const myHolding = portfolio.find(p => p.symbol.toUpperCase() === (symbol || "").toUpperCase());
 
   const upperSymbol = (symbol || "").toUpperCase();
-  const stockMeta = STOCK_META[upperSymbol];
+  const { metadata } = useStockDirectory();
 
   // Live Continua Data Layer quote for this symbol, when it's in the
   // Data Layer's current universe (see docs/api/API.md /instruments) —
@@ -115,6 +117,7 @@ export default function StockDetail() {
   // (rather than erroring) for a symbol the backend doesn't cover yet.
   const { quote: liveQuote } = useLiveQuote(upperSymbol || undefined);
   const { profile: liveProfile } = useCompanyProfile(upperSymbol || undefined);
+  const stockMeta = metadata[upperSymbol] ?? STOCK_META[upperSymbol] ?? (liveProfile ? {name:liveProfile.company.name,sector:liveProfile.company.sectorName ?? 'Other'} : liveQuote ? {name:upperSymbol,sector:'Other'} : undefined);
   const { research: liveResearch } = useResearch(upperSymbol || undefined);
   const { latest: reportedFinancials } = useStockFinancials(upperSymbol || undefined);
   const { actions: corporateActions, isLoading: actionsLoading } = useCorporateActions(upperSymbol || undefined);
@@ -442,7 +445,7 @@ export default function StockDetail() {
                     {stock.name}
                   </p>
                   <span className={`absolute inset-0 text-sm font-bold tabular leading-tight transition-opacity duration-200 ${priceVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                    {stock.isLive ? stock.price.toFixed(2) : <Skeleton className="h-4 w-14 inline-block align-middle" />}
+                    {stock.isLive ? <RollingNumber value={stock.price.toFixed(2)} /> : <Skeleton className="h-4 w-14 inline-block align-middle" />}
                   </span>
                 </div>
               </div>
@@ -479,7 +482,7 @@ export default function StockDetail() {
         <h1 className="text-[0.9375rem] font-medium text-muted-foreground tracking-tight leading-tight">{stock.name}</h1>
         <div ref={heroPriceRef} className="mt-1 flex items-end justify-between gap-3">
           {stock.isLive ? (
-            <span className="text-4xl font-bold tabular tracking-tight">KES {displayPrice.toFixed(2)}</span>
+            <span className="text-4xl font-bold tabular tracking-tight"><RollingNumber value={`KES ${displayPrice.toFixed(2)}`} /></span>
           ) : (
             <Skeleton className="h-9 w-40" />
           )}
@@ -582,7 +585,7 @@ export default function StockDetail() {
                   <span className="text-[0.625rem] text-muted-foreground">{stock.exchange}</span>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-bold tabular">KES {displayPrice.toFixed(2)}</span>
+                  <span className="text-xl font-bold tabular"><RollingNumber value={`KES ${displayPrice.toFixed(2)}`} /></span>
                   <span className={`text-xs font-semibold tabular ${displayIsUp ? 'text-bull' : 'text-bear'}`}>
                     {priceChange >= 0 ? '+' : ''}{priceChangePercent}%
                   </span>

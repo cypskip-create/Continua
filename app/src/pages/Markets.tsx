@@ -24,7 +24,8 @@ import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { useIndices } from "@/hooks/useIndices";
 import { usePageState } from "@/hooks/usePageState";
 import { useUpcomingDividends } from "@/hooks/useMarketCalendars";
-import { CANONICAL_SYMBOLS, STOCK_META } from "@/lib/stockPrices";
+import { useStockDirectory } from "@/hooks/useStockDirectory";
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { investmentThemes } from "@/data/investmentThemes";
 import { industryChains } from "@/data/industryChains";
 import { useWatchlist } from "@/hooks/useWatchlist";
@@ -76,7 +77,7 @@ function Change({ value }: { value: number | null | undefined }) {
             : "text-bull"
       }
     >
-      {value == null ? "—" : `${value > 0 ? "+" : ""}${fmt(value)}%`}
+      {value == null ? "—" : <RollingNumber value={`${value > 0 ? "+" : ""}${fmt(value)}%`} />}
     </span>
   );
 }
@@ -169,7 +170,8 @@ export default function Markets() {
       key,
       ascending: previous.key === key ? !previous.ascending : false,
     }));
-  const { quotes } = useLiveQuotes(CANONICAL_SYMBOLS, "NSE"),
+  const {symbols, metadata} = useStockDirectory();
+  const { quotes } = useLiveQuotes(symbols, "NSE"),
     { indices,refetch:refetchIndices } = useIndices();
   const { dividends, isLoading: divLoading } = useUpcomingDividends("NSE", 200);
   const needsIntelligence = (!section && tab === 'Overview') || ['heatmap','monitor'].includes(section ?? '');
@@ -185,7 +187,7 @@ export default function Markets() {
     retry: 2,
     refetchIntervalInBackground: false,
   });
-  const marketSnapshot = (intelligence.data?.coverage ?? 0) > 0 ? intelligence.data : marketQuoteSummary(Object.values(quotes), STOCK_META) ?? intelligence.data;
+  const marketSnapshot = (intelligence.data?.coverage ?? 0) > 0 ? intelligence.data : marketQuoteSummary(Object.values(quotes), metadata) ?? intelligence.data;
   const recordsQuery = useQuery({
     queryKey: ["continua", "market-records"],
     queryFn: marketResearchApi.records,
@@ -213,7 +215,7 @@ export default function Markets() {
     earnings = earningsQuery.data ?? [];
   const matches = (symbol: string, title: string) =>
     `${symbol} ${title}`.toLowerCase().includes(search.toLowerCase());
-  const names = (symbol: string) => STOCK_META[symbol]?.name ?? symbol;
+  const names = (symbol: string) => metadata[symbol]?.name ?? symbol;
   const ranked = Object.values(quotes)
     .filter((q) => q.lastPrice > 0 && matches(q.symbol, names(q.symbol)))
     .sort((a, b) =>
@@ -348,7 +350,7 @@ export default function Markets() {
       {indices.map((i) => (
         <div key={i.code}>
           <p className="text-sm text-muted-foreground">{i.code}</p>
-          <p className="text-2xl my-2 tabular-nums">{fmt(i.value)}</p>
+          <p className="text-2xl my-2 tabular-nums"><RollingNumber value={fmt(i.value)} /></p>
           <Change value={i.changePercent} />
           <p className="text-xs text-muted-foreground mt-2">
             Closing data · {dateLabel(i.timestamp)}
@@ -762,7 +764,7 @@ export default function Markets() {
                         {stage.name}
                       </p>
                       {stage.symbols
-                        .filter((s) => CANONICAL_SYMBOLS.includes(s))
+                        .filter((s) => symbols.includes(s))
                         .map((symbol) => (
                           <button
                             className="block text-left py-2 w-full"

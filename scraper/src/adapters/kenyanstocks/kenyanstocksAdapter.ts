@@ -32,9 +32,11 @@ import {kenyanStockLinks,kenyanFileLinks} from './archiveLinks.js';
 import {fetchWithRetry} from '../../crawler/httpClient.js';
 import {extractPdfText} from '../../extraction/pdfText.js';
 import {enqueueDocuments} from '../../storage/documentJobsRepository.js';
+import {stockTabDocuments} from './tabPlan.js';
+import {extractStockTables} from './stockTables.js';
 
 const ADAPTER_ID = "kenyanstocks";
-const CRAWLER_VERSION = "kenyanstocks-adapter-0.1.0";
+const CRAWLER_VERSION = "kenyanstocks-adapter-0.3.0";
 const BASE_URL = "https://kenyanstocks.com";
 const USER_AGENT = "ContinuaBot/1.0 (+https://github.com/cypskip-create/Continua)";
 const MIN_USABLE_TEXT_LENGTH = 200;
@@ -56,14 +58,22 @@ async function getTickers(): Promise<string[]> {
 
 export const kenyanstocksAdapter: SourceAdapter = {
   id: ADAPTER_ID,
+  parserVersion: CRAWLER_VERSION,
   documentConcurrency: 1,
   persistentBatchSize: 10,
 
   async discover(): Promise<SourceDocument[]> {
-    const tickers = await getTickers();
+    const aliases:Record<string,string>={DTB:'DTK',STANBIC:'SBIC',HFCB:'HFCK'};
+    const tickers = (await getTickers()).map(t=>aliases[t.toUpperCase()]??t.toUpperCase()).filter(t=>/^[A-Z0-9-]+$/.test(t));
     const docs: SourceDocument[] = [];
     const homeAllowed=await isAllowedByRobots(BASE_URL);
-    const links=homeAllowed?kenyanStockLinks((await renderPage(BASE_URL,USER_AGENT)).html):[];
+    let home='';
+    if(homeAllowed){try{home=(await renderPage(BASE_URL,USER_AGENT)).html;}catch(err){logger.warn({err},'Publisher homepage unavailable; configured issuer discovery retained');}}
+    const links=kenyanStockLinks(home);
+    // Follow the publisher's observed complete-list links, not just ticker rails.
+    const $=cheerio.load(home);
+    const listingUrls=new Set<string>();$('a[href]').each((_,node)=>{const href=$(node).attr('href');if(!href)return;try{const u=new URL(href,BASE_URL);if(u.origin===BASE_URL&&['/stock','/stocks'].includes(u.pathname))listingUrls.add(u.href);}catch{}});
+    for(const listing of listingUrls){if(await isAllowedByRobots(listing)){try{links.push(...kenyanStockLinks((await renderPage(listing,USER_AGENT)).html));}catch(err){logger.warn({listing,err},'Full listing unavailable; discovered tickers retained');}}}
     const urls=[...new Set([...links,...tickers.map(t=>`${BASE_URL}/stock/nse/${t.toUpperCase()}`)])];
     for (const url of urls) {
       const allowed = await isAllowedByRobots(url);
@@ -71,14 +81,7 @@ export const kenyanstocksAdapter: SourceAdapter = {
         logger.warn({ url }, "kenyanstocks adapter: disallowed by robots.txt — skipping");
         continue;
       }
-      const ticker=new URL(url).pathname.split('/').at(-1)!;
-      docs.push({ url, title: ticker, discoveredFrom: BASE_URL, context: { ticker } });
-      try {
-        const rendered=await renderPage(url,USER_AGENT,{files:true});
-        const files=kenyanFileLinks(rendered.html,url);
-        await enqueueDocuments(ADAPTER_ID,files);
-        docs.push(...files);
-      }catch(err){logger.warn({url,err},'Files archive unavailable; retaining summary page and other issuer archives');}
+      docs.push(...stockTabDocuments(url));
     }
     return docs;
   },
@@ -86,7 +89,19 @@ export const kenyanstocksAdapter: SourceAdapter = {
   async fetch(document: SourceDocument): Promise<FetchedDocument> {
     if(!await isAllowedByRobots(document.url))throw new Error('Publisher robots disallows document');
     const pdf=/\.pdf$/i.test(new URL(document.url).pathname);
-    const rendered = pdf?null:await renderPage(document.url, USER_AGENT);
+    const context=document.context??{};
+    const rendered = pdf?null:await renderPage(document.url, USER_AGENT,{stockTab:typeof context.tab==='string'?context.tab:undefined,category:typeof context.category==='string'?context.category:undefined,historyStart:typeof context.historyStart==='string'?context.historyStart:undefined});
+    if(rendered){
+      const page=cheerio.load(rendered.html);
+      const tabs=page('.normal-tab').map((_,n)=>page(n).text().trim()).get();
+      // New publisher tabs are discovered from the DOM, not a fixed ceiling.
+      if(context.tab==='Summary')await enqueueDocuments(ADAPTER_ID,stockTabDocuments(document.url,tabs));
+      if(context.tab==='Financials'){
+        const categories=page('button.tab-btn').map((_,n)=>page(n).text().trim()).get();
+        if(categories.length)await enqueueDocuments(ADAPTER_ID,stockTabDocuments(document.url,['Financials'],categories));
+      }
+      if(context.tab==='Files'||!context.tab){await enqueueDocuments(ADAPTER_ID,kenyanFileLinks(rendered.html,rendered.finalUrl));}
+    }
     const res=pdf?await fetchWithRetry(document.url,{requestsPerSecond:.2}):null;
     if(res&&res.status!==200)throw new Error(`Document HTTP ${res.status}`);
     const body = res?.body??Buffer.from(rendered!.html, "utf-8");
@@ -113,7 +128,7 @@ export const kenyanstocksAdapter: SourceAdapter = {
       // Flagged explicitly so anyone reading raw_artifacts later knows
       // this HTML came from a rendered browser session, not a plain GET
       // — relevant context if the parsing here is ever revisited.
-      metadata: { ...document.context, renderedWithBrowser: !res },
+      metadata: { ...document.context, renderedWithBrowser: !res,coverage:rendered?.coverage??null },
     });
 
     return {
@@ -139,7 +154,8 @@ export const kenyanstocksAdapter: SourceAdapter = {
       method: "html",
       confidence: looksUsable ? 0.4 : 0.1, // capped below extractByContentType.ts's normal HTML confidence — see module doc comment on why nothing here is a confirmed parse
       text: looksUsable ? text : null,
-      tables: extractHtmlFinancialTables(fetched.body.toString("utf-8")),
+      tables: [...extractStockTables(fetched.body.toString('utf-8'),String(fetched.document.context?.tab??'Summary'),typeof fetched.document.context?.category==='string'?fetched.document.context.category:null),...extractHtmlFinancialTables(fetched.body.toString("utf-8"))],
+      // A section heading is not an issuer name. URL ticker is literal source context.
       entity: { companyName: null, ticker: (fetched.document.context?.ticker as string | undefined) ?? null, exchange: "NSE" },
       needsReview: true, // always — see module doc comment
     };

@@ -61,6 +61,8 @@ export interface ParsedExtraction {
 
 export interface SourceAdapter {
   id: string;
+  /** Reprocess unchanged artifacts when the adapter's extraction mapping changes. */
+  parserVersion?: string;
   /** Maximum documents processed simultaneously for this adapter run. */
   documentConcurrency?: number;
   /** Durable, resumable document batches for large historical archives. */

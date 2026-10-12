@@ -2,6 +2,30 @@
 @import "tw-animate-css";
 @config "../tailwind.config.ts";
 
+/* Individual scale preserves existing transforms and positioned controls. */
+button:not(:disabled), [role="button"]:not([aria-disabled="true"]) { transition: scale 140ms ease-out; }
+button:not(:disabled):active, [role="button"]:not([aria-disabled="true"]):active { scale: .975; }
+.rolling-number { display: inline-block; font-variant-numeric: tabular-nums; vertical-align: baseline; }
+.rolling-number-digits { display: inline-flex; white-space: pre; }
+.rolling-digit { display: inline-block; width: 1ch; height: 1.15em; overflow: hidden; position: relative; vertical-align: baseline; }
+.rolling-symbol { display: inline-block; }
+.rolling-digit-motion { display: block; position: relative; height: 100%; }
+.rolling-digit-old, .rolling-digit-new { position: absolute; inset: 0; }
+.rolling-digit-old { animation: digit-out 380ms cubic-bezier(.2,.7,.2,1) forwards; }
+.rolling-digit-new { animation: digit-in 380ms cubic-bezier(.2,.7,.2,1) forwards; }
+.rolling-digit-down .rolling-digit-old { animation-name: digit-out-down; }
+.rolling-digit-down .rolling-digit-new { animation-name: digit-in-down; }
+@keyframes digit-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes digit-out { from { transform: translateY(0); } to { transform: translateY(-100%); } }
+@keyframes digit-in-down { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+@keyframes digit-out-down { from { transform: translateY(0); } to { transform: translateY(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled), [role="button"] { transition: none; }
+  button:not(:disabled):active, [role="button"]:active { scale: 1; }
+  .rolling-digit-old { display: none; }
+  .rolling-digit-new { animation: none; }
+}
+
 /* Continua — canvas-first design system.
    Light: pure white with neutral, softly bordered surfaces.
    Dark: TradingView/X neutral gray.

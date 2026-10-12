@@ -48,7 +48,7 @@ export async function runAdapter(adapter: SourceAdapter): Promise<AdapterRunSumm
         const previous = fetched.isNewArtifact ? null : await findLatestExtraction(fetched.artifactId);
         // An empty prior extraction is not successful work and must not
         // permanently suppress retries after a transient parser failure.
-        if (previous && (!pdf || (previous.text?.trim().length ?? 0) >= 50)) {
+        if (previous && (!adapter.parserVersion || previous.parserVersion === adapter.parserVersion) && (!pdf || (previous.text?.trim().length ?? 0) >= 50)) {
           if (job) await finishDocument(job.id, job.attempts);
           continue;
         }
@@ -62,7 +62,7 @@ export async function runAdapter(adapter: SourceAdapter): Promise<AdapterRunSumm
         }
         await insertExtraction({
           artifactId: fetched.artifactId, method: parsed.method,
-          confidence: parsed.confidence, parserVersion: "adapter-runner-0.2.0",
+          confidence: parsed.confidence, parserVersion: adapter.parserVersion ?? "adapter-runner-0.2.0",
           text: parsed.text, tables: parsed.tables, entity: parsed.entity,
           needsReview: parsed.needsReview,
         });
