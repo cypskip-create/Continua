@@ -1,4 +1,5 @@
 import { useState } from "react";
+import {SafetyMenuItems} from './SafetyMenuItems';
 import { MessageCircle, Share, Bookmark, BookmarkCheck, Trash2, MoreHorizontal, Verified, Eye, Pencil, VolumeX, Flag, UserX, Link2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -57,19 +58,6 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/traders-hub?post=${post.id}`;
     try { await navigator.clipboard.writeText(url); toast({ title: "Link copied" }); } catch { /* no-op */ }
-  };
-  const handleMute = async () => {
-    if (!currentUserId) return navigate("/auth");
-    await supabase.from("muted_users").insert({ muter_id: currentUserId, muted_id: post.user_id });
-    toast({ title: `Muted ${atHandle(post.author as any)}` });
-  };
-  const handleBlock = async () => {
-    if (!currentUserId) return navigate("/auth");
-    await supabase.from("blocked_users").insert({ blocker_id: currentUserId, blocked_id: post.user_id });
-    toast({ title: "User blocked", description: "You won't see their posts anymore." });
-  };
-  const handleReport = () => {
-    toast({ title: "Reported", description: "Thanks — our team will review this post." });
   };
 
   const canEdit = currentUserId === post.user_id && onEdit &&
@@ -179,9 +167,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
                   {currentUserId !== post.user_id && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleMute(); }}><VolumeX className="h-4 w-4 mr-2" />Mute {atHandle(post.author as any)}</DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleBlock(); }}><UserX className="h-4 w-4 mr-2" />Block {atHandle(post.author as any)}</DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleReport(); }} className="text-destructive"><Flag className="h-4 w-4 mr-2" />Report post</DropdownMenuItem>
+                      <SafetyMenuItems authorId={post.user_id} postId={post.id}/>
                     </>
                   )}
                 </DropdownMenuContent>

@@ -107,7 +107,8 @@ export function useFollows() {
     };
 
     loadData();
-    return () => { cancelled = true; };
+    const changed=()=>void loadData();window.addEventListener('continua:community-safety-changed',changed);
+    return () => { cancelled = true;window.removeEventListener('continua:community-safety-changed',changed); };
   }, [user, fetchFollowers, fetchFollowing, fetchMyFollowingIds]);
 
   const followUser = async (targetUserId: string) => {

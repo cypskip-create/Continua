@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePageRefresh } from './usePageRefresh';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -123,8 +123,10 @@ export function usePosts() {
   const [posts, setPosts] = useState<Post[]>(initial);
   const [loading, setLoading] = useState(initial.length === 0);
   const [error, setError] = useState<string | null>(null);
+  const fetchVersion=useRef(0);
 
   const fetchPosts = useCallback(async () => {
+    const version=++fetchVersion.current;
     if (!__postsCache || __postsCacheKey !== cacheKey) setLoading(true);
     try {
       const { data: postsDataRaw, error: postsError } = await supabase
@@ -143,6 +145,8 @@ export function usePosts() {
           supabase.from('muted_users' as any).select('muted_id').eq('muter_id', user.id),
           supabase.from('muted_keywords' as any).select('keyword').eq('user_id', user.id),
         ]);
+        const safetyError=hiddenRes.error||blockedRes.error||mutedRes.error||mutedKeywordsRes.error;
+        if(safetyError)throw safetyError;
         const hiddenSet = new Set((hiddenRes.data as any[] | null)?.map(r => r.post_id));
         // Blocking/muting someone only meant anything if it actually kept
         // their posts out of your feed — previously these tables were
@@ -169,6 +173,7 @@ export function usePosts() {
       }
 
       if (!postsData || postsData.length === 0) {
+        if(version!==fetchVersion.current)return;
         setPosts([]); setError(null); setLoading(false); return;
       }
 
@@ -267,21 +272,23 @@ export function usePosts() {
       }));
 
 
+      if(version!==fetchVersion.current)return;
       setPosts(enriched as Post[]);
       __postsCache = enriched as Post[];
       __postsCacheKey = cacheKey;
       setError(null);
     } catch (err) {
       console.error('Error fetching posts:', err);
-      setError('Failed to load posts');
+      if(version===fetchVersion.current)setError('Failed to load posts');
     } finally {
-      setLoading(false);
+      if(version===fetchVersion.current)setLoading(false);
     }
   }, [user, cacheKey]);
 
   usePageRefresh(fetchPosts);
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
-  useEffect(() => { if (posts.length > 0) { __postsCache = posts; __postsCacheKey = cacheKey; } }, [posts, cacheKey]);
+  useEffect(() => { __postsCache = posts; __postsCacheKey = cacheKey; }, [posts, cacheKey]);
+  useEffect(()=>{const refresh=()=>{__postsCache=null;setPosts([]);void fetchPosts();};window.addEventListener('continua:community-safety-changed',refresh);return()=>window.removeEventListener('continua:community-safety-changed',refresh);},[fetchPosts]);
 
   const createPost = async (content: string, imageInput?: string | string[], quotedPostId?: string, poll?: import("@/components/social/PostAttachments").PostPoll) => {
     if (!user) return { error: { message: 'Must be logged in' } };
@@ -365,14 +372,15 @@ export function usePosts() {
 
   const reportPost = async (postId: string, reason: string = 'unspecified') => {
     if (!user) return { error: { message: 'Must be logged in' } };
-    const { error } = await supabase.from('post_reports' as any).insert({ post_id: postId, reporter_id: user.id, reason });
+    const { error } = await (supabase.rpc as any)('community_submit_report',{p_kind:'post',p_target:postId,p_reason:reason==='unspecified'?'Other':reason,p_details:''});
     return { error };
   };
 
   const hidePost = async (postId: string) => {
     if (!user) return { error: { message: 'Must be logged in' } };
-    const { error } = await supabase.from('hidden_posts' as any).insert({ post_id: postId, user_id: user.id });
+    const { error } = await supabase.from('hidden_posts' as any).upsert({ post_id: postId, user_id: user.id },{onConflict:'post_id,user_id',ignoreDuplicates:true});
     if (!error) setPosts(prev => prev.filter(p => p.id !== postId));
+    toast(error?{title:"Couldn't hide this post",variant:'destructive'}:{title:'Post hidden',description:'This hides the post from your feed.'});
     return { error };
   };
 

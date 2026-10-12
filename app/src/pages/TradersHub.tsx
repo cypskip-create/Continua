@@ -278,7 +278,8 @@ export default function TradersHub() {
 
   const handleFollow = async (targetId: string) => {
     if (!user) { navigate("/auth"); return; }
-    await toggleFollow(targetId);
+    const {error}=await toggleFollow(targetId);
+    if(error)toast({title:"Couldn't update following",description:error.message,variant:'destructive'});
   };
 
   const handleBookmark = async (postId: string) => {
@@ -512,7 +513,7 @@ export default function TradersHub() {
               onReact={handleReact}
               onBookmark={handleBookmark}
               onShare={handleShare}
-              onDelete={async id => { const { error } = await deletePost(id); if (!error) toast({ title: "Post deleted" }); }}
+              onDelete={async id => { const { error } = await deletePost(id); toast(error?{title:"Couldn't delete post",variant:'destructive'}:{title:"Post deleted"}); }}
               onEdit={p => { setEditing(p); setEditDraft(p.content); }}
               onReport={id => reportPost(id)}
               onHide={id => hidePost(id)}

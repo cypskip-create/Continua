@@ -1,4 +1,5 @@
 import { useState } from "react";
+import {SafetyMenuItems} from './SafetyMenuItems';
 import { useNavigate } from "react-router-dom";
 import { MessageSquare, ChevronRight, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -45,7 +46,10 @@ function CommentNode({ comment, depth, onReply, onReactComment, replyingToId, cu
   const editWindowExpired = Date.now() - new Date(comment.created_at).getTime() > 30 * 60 * 1000;
 
   const react = async (next: CommunityReaction) => {
+    if(!currentUserId){navigate('/auth');return;}
+    if(!onReactComment)return;
     const prev = reaction;
+    const previousCounts=counts;
     setReaction(prev === next ? null : next);
     setCounts(current => {
       const updated = { ...current };
@@ -53,7 +57,8 @@ function CommentNode({ comment, depth, onReply, onReactComment, replyingToId, cu
       if (prev !== next) updated[next] = (updated[next] || 0) + 1;
       return updated;
     });
-    await onReactComment?.(comment.id, next, prev);
+    try{const result=await onReactComment(comment.id,next,prev);if(result?.error)throw result.error;}
+    catch{setReaction(prev);setCounts(previousCounts);toast({title:"Couldn't save reaction",variant:'destructive'});}
   };
 
   const saveEdit = async () => {
@@ -97,7 +102,7 @@ function CommentNode({ comment, depth, onReply, onReactComment, replyingToId, cu
               <span className="text-[0.6875rem] text-muted-foreground">
                 {formatTimestamp(comment.created_at)}{comment.edited_at ? " · edited" : ""}
               </span>
-              {isOwn && (onEditSave || onDeleteComment) && !isEditing && (
+              {currentUserId && !isEditing && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button type="button" data-small-target className="p-1 -mr-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60" aria-label="Reply options">
@@ -105,13 +110,14 @@ function CommentNode({ comment, depth, onReply, onReactComment, replyingToId, cu
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-40 rounded-xl">
-                    {onEditSave && (
+                    {!isOwn&&<SafetyMenuItems authorId={comment.user_id}/>}
+                    {isOwn&&onEditSave && (
                       <DropdownMenuItem disabled={editWindowExpired} onClick={() => { setEditDraft(comment.content); setIsEditing(true); }}>
                         <Pencil className="h-3.5 w-3.5 mr-2" />
                         {editWindowExpired ? "Edit (expired)" : "Edit"}
                       </DropdownMenuItem>
                     )}
-                    {onDeleteComment && (
+                    {isOwn&&onDeleteComment && (
                       <DropdownMenuItem className="text-destructive" onClick={() => setConfirmDelete(true)}>
                         <Trash2 className="h-3.5 w-3.5 mr-2" />Delete
                       </DropdownMenuItem>

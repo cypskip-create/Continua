@@ -1,4 +1,5 @@
 import { PostAttachments } from "./PostAttachments";
+import {SafetyMenuItems} from './SafetyMenuItems';
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageSquare, Bookmark, BookmarkCheck, Share2, MoreHorizontal, Trash2, Pencil, Link2, Flag, EyeOff, Verified } from "lucide-react";
@@ -215,12 +216,10 @@ export function HubPostCard({
             <DropdownMenuItem onClick={e => { e.stopPropagation(); copyLink(); }}><Link2 className="h-4 w-4 mr-2" />Copy link</DropdownMenuItem>
             {!isOwn && (
               <>
-                <DropdownMenuItem onClick={e => { e.stopPropagation(); onHide?.(post.id); toast({ title: "Not interested", description: "You'll see fewer posts like this." }); }}>
+                <DropdownMenuItem onClick={e => { e.stopPropagation(); onHide?.(post.id); }}>
                   <EyeOff className="h-4 w-4 mr-2" />Not interested
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive" onClick={e => { e.stopPropagation(); onReport?.(post.id); toast({ title: "Reported", description: "Our team will review this post." }); }}>
-                  <Flag className="h-4 w-4 mr-2" />Report post
-                </DropdownMenuItem>
+                <SafetyMenuItems authorId={post.user_id} postId={post.id}/>
               </>
             )}
           </DropdownMenuContent>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import {SafetyMenuItems} from '@/components/social/SafetyMenuItems';
 import { useParams, useNavigate } from "react-router-dom";
 import { navigateBack } from "@/lib/navigation";
 import { ArrowLeft, Calendar, UserPlus, MessageCircle, MoreHorizontal, Lock, Verified, Heart, Repeat2, FileText, Camera, Loader2, Share, TrendingUp, TrendingDown, Award, Target, PieChart, ChevronRight, Image as ImageIcon, MapPin, Pin, Bookmark, VolumeX, UserX } from "lucide-react";
@@ -262,17 +263,6 @@ export default function UserProfile() {
     else if (result.method === "failed") toast({ title: "Couldn't share this profile", variant: "destructive" });
   };
 
-  const handleMuteUser = async () => {
-    if (!user || !profileData) return navigate("/auth");
-    await supabase.from("muted_users").insert({ muter_id: user.id, muted_id: profileData.user_id });
-    toast({ title: `Muted ${atHandle(profileData)}` });
-  };
-  const handleBlockUser = async () => {
-    if (!user || !profileData) return navigate("/auth");
-    await supabase.from("blocked_users").insert({ blocker_id: user.id, blocked_id: profileData.user_id });
-    toast({ title: "User blocked", description: "You won't see their posts anymore." });
-  };
-
   const handleReact = async (postId: string, reaction: ReactionKind) => { if (!user) { navigate("/auth"); return; } await reactToPost(postId, reaction); };
   const handleBookmark = async (postId: string) => {
     if (!user) { navigate("/auth"); return; }
@@ -294,10 +284,10 @@ export default function UserProfile() {
     if (result.method === "clipboard") toast({ title: "Link copied" });
     else if (result.method === "failed") toast({ title: "Couldn't share this post", variant: "destructive" });
   };
-  const handleDelete = async (postId: string) => { await deletePost(postId); fetchUserPosts(); };
+  const handleDelete = async (postId: string) => { const {error}=await deletePost(postId);if(error){toast({title:"Couldn't delete post",variant:'destructive'});return;}fetchUserPosts(); };
   const handleReport = async (postId: string) => { await reportPost(postId); };
   const handleHide = async (postId: string) => {
-    await hidePost(postId);
+    const {error}=await hidePost(postId);if(error)return;
     const drop = (list: UserPost[]) => list.filter(p => p.id !== postId);
     setUserPosts(drop); setLikedPosts(drop); setRepostedPosts(drop); setBookmarkedPosts(drop);
   };
@@ -329,7 +319,7 @@ export default function UserProfile() {
     if (!error) {
       setComments(prev => removeCommentFromTree(prev, comment.id).tree);
       setSelectedPost(p => p ? { ...p, comments_count: Math.max(0, (p.comments_count || 0) - removedCount) } : p);
-    }
+    }else toast({title:"Couldn't delete reply",variant:'destructive'});
   };
 
   const getInitials = (name: string | null) => name ? name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) : "U";
@@ -427,8 +417,7 @@ export default function UserProfile() {
                 <DropdownMenuItem onClick={handleShare}><Share className="h-4 w-4 mr-2" />Share Profile</DropdownMenuItem>
                 {!isOwnProfile && (
                   <>
-                    <DropdownMenuItem onClick={handleMuteUser}><VolumeX className="h-4 w-4 mr-2" />Mute {atHandle(profileData)}</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive" onClick={handleBlockUser}><UserX className="h-4 w-4 mr-2" />Block {atHandle(profileData)}</DropdownMenuItem>
+                    <SafetyMenuItems authorId={profileData.user_id}/>
                   </>
                 )}
               </DropdownMenuContent>

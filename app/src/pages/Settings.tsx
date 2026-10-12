@@ -152,18 +152,28 @@ export default function Settings() {
     if (!user || !blockedKeyword.trim()) return;
     const { data, error } = await supabase.from("muted_keywords" as any).insert({ user_id: user.id, keyword: blockedKeyword.trim() }).select().single();
     if (!error && data) { setMutedKeywords(prev => [...prev, data as any]); setBlockedKeyword(""); }
+    if(error)toast({title:"Couldn't mute keyword",variant:'destructive'});
+    else window.dispatchEvent(new Event('continua:community-safety-changed'));
   };
   const removeKeyword = async (id: string) => {
-    await supabase.from("muted_keywords" as any).delete().eq("id", id);
+    const {error}=await supabase.from("muted_keywords" as any).delete().eq("id", id);
+    if(error){toast({title:"Couldn't remove keyword",variant:'destructive'});return;}
     setMutedKeywords(prev => prev.filter(k => k.id !== id));
+    window.dispatchEvent(new Event('continua:community-safety-changed'));
   };
   const unblock = async (uid: string) => {
-    await supabase.from("blocked_users" as any).delete().eq("blocker_id", user!.id).eq("blocked_id", uid);
+    if(!user)return;
+    const {error}=await (supabase.rpc as any)('community_set_safety',{p_target:uid,p_kind:'block',p_enabled:false});
+    if(error){toast({title:"Couldn't unblock account",variant:'destructive'});return;}
     setBlockedUsers(prev => prev.filter((u: any) => u.user_id !== uid));
+    window.dispatchEvent(new Event('continua:community-safety-changed'));
   };
   const unmute = async (uid: string) => {
-    await supabase.from("muted_users" as any).delete().eq("muter_id", user!.id).eq("muted_id", uid);
+    if(!user)return;
+    const {error}=await (supabase.rpc as any)('community_set_safety',{p_target:uid,p_kind:'mute',p_enabled:false});
+    if(error){toast({title:"Couldn't unmute account",variant:'destructive'});return;}
     setMutedUsers(prev => prev.filter((u: any) => u.user_id !== uid));
+    window.dispatchEvent(new Event('continua:community-safety-changed'));
   };
 
   const handleAddPaymentMethod = async () => {

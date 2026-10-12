@@ -58,6 +58,7 @@ export function useNotifications() {
   });
   const notifications = user ? result.data ?? [] : [];
   const loading = !!user && result.isLoading;
+  useEffect(()=>{const changed=()=>{client.setQueryData(['continua','notifications',user?.id],[]);void client.invalidateQueries({queryKey:['continua','notifications',user?.id]});};window.addEventListener('continua:community-safety-changed',changed);return()=>window.removeEventListener('continua:community-safety-changed',changed);},[client,user?.id]);
   const fetch = () => result.refetch();
   useEffect(() => {
     if (!user) return;

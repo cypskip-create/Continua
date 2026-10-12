@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ThumbsUp, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { ReactionIcon } from './ReactionIcon';
 
 /**
  * Continua reaction palette — finance-first, deliberately not a like button.
@@ -14,38 +15,38 @@ export type CommunityReaction =
   // legacy
   | "cautious" | "support" | "disagree";
 
-export interface ReactionMeta { id: CommunityReaction; emoji: string; label: string }
+export interface ReactionMeta { id: CommunityReaction; label: string }
 
 export const COMMUNITY_REACTIONS: ReactionMeta[] = [
-  { id: "rocket", emoji: "🚀", label: "To the moon" },
-  { id: "diamond_hands", emoji: "💎", label: "Diamond hands" },
-  { id: "agree", emoji: "✅", label: "Agree" },
-  { id: "question", emoji: "❓", label: "Question" },
-  { id: "warning", emoji: "⚠️", label: "Warning" },
-  { id: "thank_you", emoji: "🙌", label: "Thank you" },
-  { id: "sad", emoji: "😢", label: "Sad" },
-  { id: "angry", emoji: "😠", label: "Angry" },
-  { id: "bullish", emoji: "📈", label: "Bullish" },
-  { id: "bearish", emoji: "📉", label: "Bearish" },
-  { id: "fire", emoji: "🔥", label: "Fire" },
-  { id: "love", emoji: "❤️", label: "Love" },
-  { id: "thumbs_up", emoji: "👍", label: "thumbs up" },
-  { id: "thumbs_down", emoji: "👎", label: "thumbs down" },
-  { id: "strong_hold", emoji: "🤝", label: "Strong Hold" },
-  { id: "insightful", emoji: "💡", label: "Insightful" },
-  { id: "watch", emoji: "👀", label: "Watch" },
-  { id: "laugh", emoji: "😂", label: "Laugh" },
+  { id: "rocket", label: "To the moon" },
+  { id: "diamond_hands", label: "Diamond hands" },
+  { id: "agree", label: "Agree" },
+  { id: "question", label: "Question" },
+  { id: "warning", label: "Warning" },
+  { id: "thank_you", label: "Thank you" },
+  { id: "sad", label: "Sad" },
+  { id: "angry", label: "Angry" },
+  { id: "bullish", label: "Bullish" },
+  { id: "bearish", label: "Bearish" },
+  { id: "fire", label: "Fire" },
+  { id: "love", label: "Love" },
+  { id: "thumbs_up", label: "Thumbs up" },
+  { id: "thumbs_down", label: "Thumbs down" },
+  { id: "strong_hold", label: "Strong hold" },
+  { id: "insightful", label: "Insightful" },
+  { id: "watch", label: "Watch" },
+  { id: "laugh", label: "Laugh" },
   // Finance-relatable additions
-  { id: "celebrate", emoji: "🎉", label: "Celebrate" },
-  { id: "trophy", emoji: "🏆", label: "Big Win" },
-  { id: "heartbreak", emoji: "💔", label: "Heartbreak" },
-  { id: "shocked", emoji: "😱", label: "Shocked" },
-  { id: "thinking", emoji: "🤔", label: "Thinking" },
-  { id: "cant_look", emoji: "🙈", label: "Can't Look" },
-  { id: "hopeful", emoji: "🙏", label: "Hopeful" },
-  { id: "mind_blown", emoji: "🤯", label: "Mind Blown" },
-  { id: "cool", emoji: "😎", label: "Nailed It" },
-  { id: "shark", emoji: "🦈", label: "Shark" },
+  { id: "celebrate", label: "Celebrate" },
+  { id: "trophy", label: "Big win" },
+  { id: "heartbreak", label: "Heartbreak" },
+  { id: "shocked", label: "Shocked" },
+  { id: "thinking", label: "Thinking" },
+  { id: "cant_look", label: "Can't look" },
+  { id: "hopeful", label: "Hopeful" },
+  { id: "mind_blown", label: "Mind blown" },
+  { id: "cool", label: "Nailed it" },
+  { id: "shark", label: "Shark" },
 ];
 
 // The compact, always-visible row on a post — the six reactions people
@@ -54,9 +55,9 @@ const QUICK_REACTION_IDS: CommunityReaction[] = ["bullish", "bearish", "fire", "
 const QUICK_REACTIONS = COMMUNITY_REACTIONS.filter(r => QUICK_REACTION_IDS.includes(r.id));
 
 const LEGACY: ReactionMeta[] = [
-  { id: "cautious", emoji: "🛡️", label: "Cautious" },
-  { id: "support", emoji: "🤝", label: "Support" },
-  { id: "disagree", emoji: "👎", label: "Disagree" },
+  { id: "cautious", label: "Cautious" },
+  { id: "support", label: "Support" },
+  { id: "disagree", label: "Disagree" },
 ];
 
 export const ALL_REACTIONS = [...COMMUNITY_REACTIONS, ...LEGACY];
@@ -109,11 +110,11 @@ export function CommunityReactionButton({ counts, selected, onSelect, compact, h
           data-small-target
         >
           {winner ? (
-            <span className="text-[0.9375rem] leading-none">{winner.meta.emoji}</span>
+            <ReactionIcon id={winner.meta.id} size={22}/>
           ) : active ? (
-            <span className="text-[0.9375rem] leading-none">{active.emoji}</span>
+            <ReactionIcon id={active.id} size={22}/>
           ) : (
-            <span className="text-lg leading-none" aria-hidden="true">🙂</span>
+            <ReactionIcon id="watch" size={22}/>
           )}
           {!hideTotal && <span className="text-[0.6875rem] font-medium tabular-nums">{total > 0 ? total : ""}</span>}
         </button>
@@ -138,7 +139,7 @@ export function CommunityReactionButton({ counts, selected, onSelect, compact, h
                   selected === item.id && "bg-primary/10"
                 )}
               >
-                <span className="text-[1.25rem] leading-none">{item.emoji}</span>
+                <ReactionIcon id={item.id} size={30}/>
               </button>
             ))}
             <button
@@ -152,7 +153,7 @@ export function CommunityReactionButton({ counts, selected, onSelect, compact, h
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-5 gap-0.5">
+          <div className="grid grid-cols-4 gap-1">
             {COMMUNITY_REACTIONS.map(item => (
               <button
                 key={item.id}
@@ -161,11 +162,12 @@ export function CommunityReactionButton({ counts, selected, onSelect, compact, h
                 aria-label={item.label}
                 onClick={() => { onSelect(item.id); setOpen(false); }}
                 className={cn(
-                  "flex items-center justify-center h-9 w-9 rounded-full transition-colors hover:bg-muted/60 active:scale-95",
+                  "flex flex-col items-center justify-center h-14 min-w-0 rounded-xl transition-colors hover:bg-muted/60 active:scale-95",
                   selected === item.id && "bg-primary/10"
                 )}
               >
-                <span className="text-[1.25rem] leading-none">{item.emoji}</span>
+                <ReactionIcon id={item.id} size={30}/>
+                <span className="text-[9px] truncate max-w-full">{item.label}</span>
               </button>
             ))}
           </div>
@@ -187,6 +189,8 @@ export function ReactionChips({
         <button
           key={r.meta.id}
           type="button"
+          aria-label={`${r.meta.label}: ${r.count}`}
+          aria-pressed={selected===r.meta.id}
           onClick={e => { e.stopPropagation(); onSelect?.(r.meta.id); }}
           className={cn(
             "flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-muted/50 text-[0.6875rem] font-medium tabular-nums transition-colors hover:bg-muted",
@@ -194,7 +198,7 @@ export function ReactionChips({
           )}
           data-small-target
         >
-          <span className="text-[0.8125rem] leading-none">{r.meta.emoji}</span>
+          <ReactionIcon id={r.meta.id} size={20}/>
           <span className="text-muted-foreground">{r.count}</span>
         </button>
       ))}

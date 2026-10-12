@@ -1,4 +1,5 @@
 import { PostAttachments } from "@/components/social/PostAttachments";
+import {SafetyMenuItems} from '@/components/social/SafetyMenuItems';
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { navigateBack } from "@/lib/navigation";
@@ -187,7 +188,7 @@ export default function PostDetail() {
         {!following && user?.id !== post.user_id && (
           <button
             data-small-target
-            onClick={() => toggleFollow(post.user_id)}
+            onClick={async()=>{const {error}=await toggleFollow(post.user_id);if(error)toast({title:"Couldn't update following",variant:'destructive'});}}
             className="h-7 px-2.5 rounded-full text-[0.75rem] font-bold text-primary hover:bg-primary/10"
           >
             + Follow
@@ -202,8 +203,9 @@ export default function PostDetail() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44 rounded-xl">
             <DropdownMenuItem onClick={share}><Link2 className="h-4 w-4 mr-2" />Share post</DropdownMenuItem>
+            {user?.id !== post.user_id && <SafetyMenuItems authorId={post.user_id} postId={post.id}/>}
             {user?.id === post.user_id && (
-              <DropdownMenuItem className="text-destructive" onClick={async () => { await deletePost(post.id); navigate("/traders-hub"); }}>
+              <DropdownMenuItem className="text-destructive" onClick={async () => { const {error}=await deletePost(post.id); if(!error)navigate("/traders-hub");else toast({title:"Couldn't delete post",variant:'destructive'}); }}>
                 <Trash2 className="h-4 w-4 mr-2" />Delete post
               </DropdownMenuItem>
             )}
