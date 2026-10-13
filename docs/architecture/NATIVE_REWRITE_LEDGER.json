@@ -1,0 +1,3809 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-10-13",
+  "scope": "Full native-runtime rewrite; not the already-deployed TS-to-JS migration.",
+  "productionCutoverAllowed": false,
+  "nativeCandidate": "backend-go/cmd/continua (loopback only; readiness deliberately 503)",
+  "features": [
+    {
+      "legacyFile": "backend/python/engine_calculations.py",
+      "legacySha256": "142ddf7cb56422353c6daebd8bcbeda32fbce516438ba05a315fd7e74a3c3b57",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/scripts/applyCandleProvenanceMigration.js",
+      "legacySha256": "b2e0bd75a2845022d279a2c1082cda5e18e3301e49d193382f4735024d2ba713",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/applyCheckoutPolicyMigration.js",
+      "legacySha256": "ec06bfdb0ed785db4bf44b3eccc6dafa459a885f51416c1570393af7da28739b",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/applyCommunitySafety.js",
+      "legacySha256": "29256cc30cdf6d9d69844e34559e9fd970e6acef911c7bcfb651cbed1ccad43c",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/applyDocumentValidationMigration.js",
+      "legacySha256": "6de630645f3552b7cc6f1e545023a02da3786246a2419af27760ed2ae13d9374",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/applyEngineResearchExpansion.js",
+      "legacySha256": "931fb01508fb73469b7e14ffce8063e242dff16b6bb35ac1b4ce77f060a80ecb",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/applyHistoryMigration.js",
+      "legacySha256": "b49f253b5213bdefac2d3466d23c3777fe0b5f8cbbe823b9b3c49147fbbd2521",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/applyInvalidFilingArchiveMigration.js",
+      "legacySha256": "efe0fbd7c1dd8f320c16f78ecb2cdca1350695371e7564ae4bcdb94d7939989e",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/applyKakuziArchiveIdentity.js",
+      "legacySha256": "b6d951013059bbce02f372f4eaffa1ffe1f2e034d109b354aab3db9b5d619c11",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/applyNativePaymentsMigration.js",
+      "legacySha256": "1bc50af9290a698950fd0d36c5cba90c512991ce8b739e25c7915c7ae0ca1438",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/applyPartialStatementsMigration.js",
+      "legacySha256": "bad66395cc279016ed7616f155ae87ca291f406b620930add5801286cf70f3c4",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/applyPaystackLiveMigration.js",
+      "legacySha256": "d9de31bea866f6fdef519119bb21c99ec753fcc449aa3eddf457d6232d48a7dc",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/auditHistoryCoverage.js",
+      "legacySha256": "2672e56c9b03efe138dca70d879f9336e83fcd084aeaadbb3e44602153f45dcd",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/auditPublisherCoverage.js",
+      "legacySha256": "e06b1094445ba538fe4423cc42c99704e5c1abf5074eb7f710e69bfde2c1e1a2",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/build.mjs",
+      "legacySha256": "56f73a4166129679414316aa4d9cefe2856a5875812bccdc7e10dcff70bb6721",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/checkPaymentDatabase.js",
+      "legacySha256": "3f0eb0fcde2d17988735e420850fc9a164a3455a5f2f38739d80ce4c0c09b655",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/configureKenyanStocksPermission.js",
+      "legacySha256": "c2e8bf5b64fc028a3c7ff77b33520df3c478ba0c2abb79d9f5ae107ff68a0a77",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/confirmFinancialStatementCandidate.js",
+      "legacySha256": "6cbc1448a35de5a79790c26c1caa6c8821eca26bda68751155a1157cd72c0a25",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/diagnoseIndexFreshness.js",
+      "legacySha256": "a67f931cf761b90ff828e79cc2f61882dc04b9cf234031583649ffaa5b2c53f9",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/diagnosePortfolioOverview.js",
+      "legacySha256": "68f90470c1ec493d6e40f85def88ec48a701fcce7ffd783475b0e96442c41f6b",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/diagnosePublisherCollection.js",
+      "legacySha256": "6b085ad378ef02d6fbc81ea3373b5bef6013dd9ade2d9d9e544f4b6141f2ee76",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/draftBondReport.js",
+      "legacySha256": "5bcea2071ccb93cdfa88b863c0502eb7c6d13b9597dd05527131cbd280632300",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/draftFinancialStatementCandidate.js",
+      "legacySha256": "6a6fc7693c7856ce5637c6614398711cf457aa3270fbc18d8b60a96a11dd44e7",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/enableLicensedNse.js",
+      "legacySha256": "3d0f311df923543706fabbb82c004143cbe80f159e8e8e8a2cf35b87326866ac",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/exportMigrationInventory.js",
+      "legacySha256": "9a5541bb3dda1e7c27c2cde4aa76740099184cac2f6b0ac1b492966dc00d687f",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/generateApiKey.js",
+      "legacySha256": "40029dfa7c48f01270981df5b8fb0c0c8ed2bb031165b7958d95c43576d1e8c2",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/historyCoverage.js",
+      "legacySha256": "373a8f192a3791b348adf2fc7a60caa603e73e49e3eac12c611db13474da1381",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/importHistoricalPrices.js",
+      "legacySha256": "914dc625fe6ddfd64bf4fadaa043ce5564e0c3467648e62e4db005856ccbea1f",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/importMarketResearch.js",
+      "legacySha256": "4d9ae25bbe838562cb6e92427914e1a8a3228726c8e8a13b93dbad29c90bab6e",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/inspectArchiveLayouts.js",
+      "legacySha256": "524930565b75e9bd04e0d312550541658bc9eb2feb7328a5f8561ef544a9ddf4",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/inspectFilingPublication.js",
+      "legacySha256": "59e57696f8d776a4c251637cefcfd03285c0ff8a515b8b3193241b790e4f5c90",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/listFinancialStatementCandidates.js",
+      "legacySha256": "f7d5256d7a4ec3b67c8c6833f46b6e1158aca5a5a3a8f57462e795f3c78d68db",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/publishReviewedFiling.js",
+      "legacySha256": "53ac57953693629775e5c54006669ed7400eb39e821dd008449765d8218496fd",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/recoverMissingArchive.js",
+      "legacySha256": "5a3e21a963e3bb1c6cab2719ff2c55cf5dcd20141ce02bd291324312254afe66",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/rejectFinancialStatementCandidate.js",
+      "legacySha256": "24f57a47112fc65cfeed6cbd56acbe7b63e9ae45a7db8dc191adcadc104fe2cf",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/removenewssource.js",
+      "legacySha256": "a9d4365eafe5026ea83f291bb4c94e62105e81bebd54fdd218e39ae030be55c8",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/repairReviewedCondensedReport.js",
+      "legacySha256": "8a64cce471a97cab1d953e70b788ca5a88069cc9d91d3c117da59dba40f75b18",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/revalidateNews.js",
+      "legacySha256": "0ce32f8aa00c98b72ee16a9833a01e50c1afdb20b19f2f4bfa19aa89e2caae5f",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/revokeApiKey.js",
+      "legacySha256": "2d66c64dd6357bf497053f97cf98cddfd7b3954fb9d911194dc0ccc8ba4aa48c",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/runAnnouncementsBridgeOnce.js",
+      "legacySha256": "c60beffc083a0323ff108ce81138a9990b2df8a819b8bf01b70e5b7f1ce08828",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/runAutomaticDocumentPublication.js",
+      "legacySha256": "1e294d5bc7d5ce7bea7788f077dcbc0758be41b4d26456fc3db902529b80011b",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/runFinancialCandidatesBridgeOnce.js",
+      "legacySha256": "31e1997fc1bb998e4af4133ef1b1fb6093aacb81f54bfbeecbd674703a32cbf2",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/runNewsBridgeOnce.js",
+      "legacySha256": "76bf8f1096267a2b599e861e425ebc578478cbab628378063a304b44e6c407ec",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/serveNativeCheckoutSandbox.js",
+      "legacySha256": "2b8fee45aa472a2d016809a9d82d0166e396e1b5dfeb29388194b28c334e8a40",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/testNativePaymentLedger.js",
+      "legacySha256": "fb5b58576d863e72fd18c85a947781bfb3116cdca5131ab1d5c5129d68e182fe",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/testNativePaystackProvider.js",
+      "legacySha256": "2fa648dc1c569ac370113d65f8fea17fad9a8ccbc05d4154f7a9ca322bd1d90f",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/scripts/verifyEngineArchiveExpansion.js",
+      "legacySha256": "e83c2b3e7f89dab32ff03652f0ebedc4159b05d3c1376c3fd769a5ac03880c70",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/adapters/afx/afxClient.js",
+      "legacySha256": "b09912a3620bf2e2b26eec331cd68bfd2db880885fe1eb2d087482b3db9ce23e",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/adapters/afx/afxRawParser.js",
+      "legacySha256": "862abfcd5b9b828decacf0021b1fc54430e346f849769aa47822551d74cbf8c0",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/adapters/mystocks/mystocksClient.js",
+      "legacySha256": "e57b4590ecfd0a9d31ac6db92e4d37b6e431bcc370c0a85a30d630d81818c1c0",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/adapters/nse/knownSymbols.js",
+      "legacySha256": "580855fd8092b83267518dc11ce212adfc98d420f83cd3dfdca296c42e796058",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/adapters/nse/nseAdapter.js",
+      "legacySha256": "cf2ba0774a024497a8c1ce09e96ec9a839e6c0ca3e4d9785306193d0c7354293",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/adapters/nse/nseClient.js",
+      "legacySha256": "ca9cb6fbcdb4cfd7dc1f54810bf68df393505a4e8ad26e61b9a7dcb978ac2239",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/adapters/nse/nseIndices.js",
+      "legacySha256": "d8e583c050aaea51ac8e8136bfdb6bfe83325e17b91034c73a826bda86a434fa",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/adapters/nse/nseMapper.js",
+      "legacySha256": "238e4fdcd5c1cdfc1215f504e4750f5e970a3b4c2441319e2736e026a10cdf56",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/adapters/nse/nseRawTypes.js",
+      "legacySha256": "a0149b1b2796b5686a95a326cf80a7d5ef3ea5d3b88760c88f0ecf6974d4eaaf",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/adapters/registry.js",
+      "legacySha256": "6f465f0bd8ad7f535fe02c3a5f1af872c594a04586a3b8d30bee2f4be0c8835a",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/adapters/types.js",
+      "legacySha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/adminFinancials.controller.js",
+      "legacySha256": "d1fdb40537a7bddf85466727f6141866e333d5f63ac8e8bbc08113a5bf051df7",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/announcements.controller.js",
+      "legacySha256": "48f0dd00a84595b087d27140124b8a4a88a372058bb76ecdf00f71568abfea5e",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/backtest.controller.js",
+      "legacySha256": "ac42f94b8895e174ce2704f2672368b88383ea4bfdeaacf399c7b4a341923a06",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/companies.controller.js",
+      "legacySha256": "905c028278c5f306cac39200a9b1bb42b4e21c1ee98939a6c9f5fe2921db0e89",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/corporateActions.controller.js",
+      "legacySha256": "ea5723f55fce9737682c4e830192433ec4d2779b4660415a865eca619b4ffdb8",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/financials.controller.js",
+      "legacySha256": "4b5aca806cf11b4fc2025448f75100e5f3c40755167f4318530bf22a73fb0118",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/health.controller.js",
+      "legacySha256": "0d778e77b18ab79339aa7660fa5bee623e40a3aaac15efef34272acfbb19f385",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/historical.controller.js",
+      "legacySha256": "602248be8adfbd4cc1cbf506f3d751be44b9ba00c16a511b76f103bef7197de1",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/indicators.controller.js",
+      "legacySha256": "c5e96947aceecca7f2472b512d614ab9ab840b12fc7ca6b9d72dc860ef95106f",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/instruments.controller.js",
+      "legacySha256": "102323d07a053d549373ab915a586b6b49ddce366b3300598c5486a3e8b61459",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/movers.controller.js",
+      "legacySha256": "acd51ef24b77374e991dfb6ee15f3b6f46e3fe94f9bdf127612f1e33f63aa6ec",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/news.controller.js",
+      "legacySha256": "791a7946d02dbe2ca82ff0f7cebd60c20a9dbd44d9528a6341fbab9ff75b0177",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/quotes.controller.js",
+      "legacySha256": "57ac3b929336bb563ae177c2742c51f62f1f4d75e48a69c5d2bf9f0086b9bde7",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/research.controller.js",
+      "legacySha256": "9390d1eac79c9459ce1cbd6c805820985a777aca70685329a9a8e8fc581e2965",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/screener.controller.js",
+      "legacySha256": "7d26b3e29cc357e459b08ad3f580174619f8336f0f0064bd76241c4b30c6ed9b",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/sectors.controller.js",
+      "legacySha256": "a3777ba197b96e1c2e1743238ea5c59d170d232e7cd39c842a6f678380e34725",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/valuation.controller.js",
+      "legacySha256": "2c8c1bd356a050de4d564d468cf51d587bc39a28e27f82fe6fe16d8ea2a0c246",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/controllers/volumeProfile.controller.js",
+      "legacySha256": "ae0dda6f2973469d7f19e5d92a63efbf5841ae84381084d8556b1b33268192ec",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/corsPolicy.js",
+      "legacySha256": "8fe50f6b52f05760b73629f1b44abe14652fa93c3e05577f0df2278996ce4ac3",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/middleware/apiKeyAuth.js",
+      "legacySha256": "fa62d755cade6644339cc1b8017ae223cdca146333ce0fd7f06d384737726497",
+      "targetLanguage": "Go",
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go lookup/hash/cache exists; full middleware/error/rate-limit golden contracts are still required."
+    },
+    {
+      "legacyFile": "backend/src/api/middleware/errorHandler.js",
+      "legacySha256": "7123ea0421a37a975f9b85f39ef6b99da750628fe3cc54e658c5741f868a4fa7",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/middleware/preAuthenticationRateLimit.js",
+      "legacySha256": "ea9aad796b78f0e9bbfc38cce839acd1073bb13bf57d1504d19ece2b73030755",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/middleware/rateLimit.js",
+      "legacySha256": "22aee012f20e231dca4394647d673b7191a8eb9b1fd5473d1a079e8a9983afd9",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/middleware/requestLogger.js",
+      "legacySha256": "aaeacd859b4d4f0fc116902b283301b5ce98b8be2c03c7cf9ff0b0b4d2c176e3",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/middleware/requireAdminKey.js",
+      "legacySha256": "5c6f49eec35afc0fcc2a6813fd64a331b9f4de35815be9a50844ea7de41de1e6",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/middleware/requireSubscriber.js",
+      "legacySha256": "0f209ff7782bfb986c9d63dfb7f503e7270fd7f4b1f20425b8fc6238dde5d4d5",
+      "targetLanguage": "Go",
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go verified user/plan and Premium/Plus helpers exist; complete route integration remains pending."
+    },
+    {
+      "legacyFile": "backend/src/api/middleware/validateQuery.js",
+      "legacySha256": "84fb7c0ccddc84e9663fbb1e4c1abd7b1dc516249acbaee58adb97d8682fe52a",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/admin.routes.js",
+      "legacySha256": "789214a71d413f481bc74d8a97592c07c5e56339ddb934cf2af23133536cbcca",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/announcements.routes.js",
+      "legacySha256": "f733dddecfc9a379933230e58f04f8e09dfd6677211e0a98473a8c83a025a066",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/backtest.routes.js",
+      "legacySha256": "772dd895e4d49545f6dd209f60cc405759cf6fb2e6aeb430c2a7f278660b411a",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/billing.routes.js",
+      "legacySha256": "ab7a78e826e2ddcf3df70537af01fd24c21b78e2ab1ad7c887e9d407b183e26c",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/companies.routes.js",
+      "legacySha256": "c4232a3aac63be1dff0720e52413808dc14b91e2c91e370d60da65defe572e12",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
+      "legacySha256": "d55b4d830978f72c2eb1576e8fbbba5765195710330e40ac7464da93ece7e2ba",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engine.routes.js",
+      "legacySha256": "0a7dacb7225fb8c35324c0a251aef81922c475d99d1c6c6226b04627be1180e6",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineNotebook.routes.js",
+      "legacySha256": "885c32aca0b2cbbf9aa3c5657642bfad56bda269980e5a8c48820767dcb690b3",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "legacySha256": "2838fb2a7abe4611b4f74523691977db06815718be43f486c2c161104da2c82a",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/financials.routes.js",
+      "legacySha256": "fb5fceb92f9c4dfe7e27c1602ca954f59eeb0726c49509a9bc00d1e134809eee",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/health.routes.js",
+      "legacySha256": "dc277d18c26bfb61eec94628d0c03955a38ba3ad4edec1682cdda474fdae1d5d",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/historical.routes.js",
+      "legacySha256": "1f4eecc6a547a0b32b58d6907c19e49167e2c35b671c9fceb70ffc3d07ba9340",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "legacySha256": "c7e410e77361131e753b77b1c1dd085aab79f33f86519901aa5d9b0c6111a466",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/indicators.routes.js",
+      "legacySha256": "14bf3bfd15030c59a29cf6e5b3cae1c95250176241dee1e9fe313c735d9abede",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/indices.routes.js",
+      "legacySha256": "baccd7526be790851b783bce13700ed39047150e05f632a609b88df83297f165",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/instruments.routes.js",
+      "legacySha256": "46e123f50627c889294191aec74868bfcd886a3324e4c43cfa8985a5af42e0c5",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/marketResearch.routes.js",
+      "legacySha256": "10120120fcf4f89e67a7a19c6cbabbdf7b37cad2f9aaaadc1112a49a89e8856b",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/movers.routes.js",
+      "legacySha256": "22709aaa873122055d9868724257259f20c6a00656d6113c454140039607d687",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/news.routes.js",
+      "legacySha256": "903249cd3777ece70868a71cf19d2ad9f01f8fd62c4934e5a12bfd6ed4d99732",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/quotes.routes.js",
+      "legacySha256": "671982ae72bfca445d357a1069829cbd9905333884a31e2270e6fd8689f673a2",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/research.routes.js",
+      "legacySha256": "3f68f1fe368ac4a79d7ffdb68b9893cf268f3bafb857d294eb00901a5a51d8f1",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/screener.routes.js",
+      "legacySha256": "e0a0def7abddd39f4f2913b75fed76109f6f4c302398776c60e7d28ed36f314c",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/sectors.routes.js",
+      "legacySha256": "4d26e6b9de363086e4ac9b26baf6855c5191fa720e8d6cfb3afcfd20e44acc49",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/valuation.routes.js",
+      "legacySha256": "62db6fe9a7bf7b6423de813d7e2103b348417e0acd7f24d0516ff277d8df3567",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/volumeProfile.routes.js",
+      "legacySha256": "b1d9d487ae1e769787700d75a523cadc855e8d851df2f2f8a01ec2ee04ab5a8b",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/server.js",
+      "legacySha256": "ebdc3e9620025d912006a5a310cef64a243bbacb0df49e6c51825d6c3e75cb06",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/validators/querySchemas.js",
+      "legacySha256": "c7869866ac11d8ec550c7c3972e21dda7212436f40be678f0299a1b6cad0dd37",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/config/env.js",
+      "legacySha256": "83c13a1bda71a3b7a8138bfb208d29a08621ae0264ebc6b93e95b78c918f6fe9",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/config/index.js",
+      "legacySha256": "0af09703c193a5c5e6d61038c7bc1210d63f5e98296c93ff99439620f3b6355e",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/config/tradingCalendar.js",
+      "legacySha256": "e345a6083795c21b748ae9558fc2220652b70bf5d690d387930c5b2f1859309a",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/domain/financialNews.js",
+      "legacySha256": "9efa226af602ecf280a5e73f47172c2026f1f040d2e6a6589ea6097f3f27778f",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/domain/newsQuality.js",
+      "legacySha256": "f2035607fbb552ddb177baa9e03b602574efa90f105c8a0f654cc94dd2353289",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/index.js",
+      "legacySha256": "a6f40eedb4f25a66c1b5096e1971f08d7c0af0957ea74cb1bd1b305a15292155",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/collectors/corporateActionsCollector.js",
+      "legacySha256": "ca0d215dac69030c71761040d63c0a837aaab2a2baaef0bcba51a77cda6a2b91",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/collectors/fundamentalsCollector.js",
+      "legacySha256": "7f3fec3c275a7eef562041bf8bbaeb04556783dcbe24df3c4b7a67827805e98f",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/collectors/indexCollector.js",
+      "legacySha256": "ba944758c47a9fcb31dc64dae39e7b35bec5bb060ec1d4f96abd685709eae126",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/collectors/priceCollector.js",
+      "legacySha256": "fa32169a54e6022bf9ac0d93d13ff3e2ec8c3c2d72aab994cfb8d13765d8bb74",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/confirmHistoricalColumns.js",
+      "legacySha256": "3bd23fe424d551e93fb5d989affe1cb7a457c15fbe3c916ade9655dc659f9c38",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/entityResolution/classifyNewsCategory.js",
+      "legacySha256": "006b5a6b0f27f2d6611e8177c461041ed66d5575a4e12561914f74bbbe6403f5",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/entityResolution/resolveCompanyEntity.js",
+      "legacySha256": "07ae734c738ae0f48bc8400d6c5c8998fda73e56e90b9edd06e6a1456857f0c6",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/entityResolution/resolveStockMentions.js",
+      "legacySha256": "1cc1c88b4f9801bb56fe6ce75bf25d0a04605dc46ab54702e694f4396cd9e9ed",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/financialsDraft.js",
+      "legacySha256": "5d7e582b1f56d210b7630b8831241358e7ee60e5229777d7df428b0862509293",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/normalizers/cbkBondReport.js",
+      "legacySha256": "b454f6a3c64d3973b1415f78a83454d3a716e45d18a6761670f6f26ee89349a8",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/normalizers/condensedGroupReport.js",
+      "legacySha256": "000167f42aae6cd13cb0772cc62a34a3b0c4051a2c7aa4b051ec3aded9069542",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/normalizers/historicalPriceRecord.js",
+      "legacySha256": "43b22239360f456004e02520a834d7a900d6680569aa502e4671e822d60e9c77",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/normalizers/issuerIdentity.js",
+      "legacySha256": "7558fec130caed827b6e9e3b4746da795565cf4d019afc6f01deb77daf33f2c6",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/normalizers/kakuziGroupReport.js",
+      "legacySha256": "4dbb41b6906d482c1991f8c52540abfa479a75d73ad70a70e5f619f510271b37",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/normalizers/kakuziHtmlRecord.js",
+      "legacySha256": "ca85331cfd7f2b34e7f979dd3107b9ce18434fbdea27c46b2627d3f57a78a8dc",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/normalizers/kcbGroupReport.js",
+      "legacySha256": "058d2a6fd8751160fe9011e6c3f02ee4453138f9d022cccb3f24209b421076cf",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/normalizers/marketResearchRecord.js",
+      "legacySha256": "f6cd1efea88e3e2f1206d30a066c9208ce4329f38df9e4d4ab28859b05cc8ef4",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/normalizers/nativeAnnualReport.js",
+      "legacySha256": "5cb781df575a00a8a802bd334b03c38e9722ae707ad67d47dd8eb6e6802f1d12",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/normalizers/safaricomPressReport.js",
+      "legacySha256": "3a12647d3adb2d1fbedaf9b110d121545d1f5451bf03ce56b71d5ff05b244499",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/pipelines/announcementsIngestionPipeline.js",
+      "legacySha256": "9e711a55779394d0efa39414260080ceae823c7aa56ea604b952e98ce8f124a2",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/pipelines/automaticDocumentPublication.js",
+      "legacySha256": "e3477df961573695ac017cf8468628b783962bac8623c36806db0b7864fc940e",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/pipelines/candlesIngestionPipeline.js",
+      "legacySha256": "f3de3ba7038847d70f9bcca05a5e9513f9f0f20e9faa03e01176f9bf71bca178",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/pipelines/corporateActionsIngestionPipeline.js",
+      "legacySha256": "a7c5aecc940e03b404a04c5837fe9c573ae809c5a3b485074de6c134d312046e",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/pipelines/financialStatementCandidatesBridge.js",
+      "legacySha256": "c4d44066140392c7f48b4c8dfcc4b140e98205faea8c71b3356d90d8192e5ba9",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/pipelines/fundamentalsIngestionPipeline.js",
+      "legacySha256": "aaef16fa713dfcd1577aa7db826e34f7c13511c6a4908eaccd87f676bc91dc2f",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/pipelines/indexIngestionPipeline.js",
+      "legacySha256": "21726d250bae53c587da7f754830ae37bf2459c6836fea2fb0d38f2f9e585d27",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/pipelines/newsIngestionPipeline.js",
+      "legacySha256": "d9e4d8a720214647003c7b908a229f44b7b807a9ea906aebfc0342d9e889bf3d",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/pipelines/nseIndexHistory.js",
+      "legacySha256": "2bd7886167a731d17bbc3b857ef052e45306efb15fe4033a948de269e4dced73",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/pipelines/priceIngestionPipeline.js",
+      "legacySha256": "07298698a7d9cd42ea5dd74bd150345d984cb3a701481aa526a5dcf010f19d4a",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/retry.js",
+      "legacySha256": "b1780a8ebfe64dc143ab1b7e21ab8f0806c41f465c2ca3bb54c527d7f1484e97",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/validators/schemas.js",
+      "legacySha256": "d21d172ed2357cb4a2fa09040f54eb26d64abea7ac640d3bdd97e861c578039a",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/validators/validate.js",
+      "legacySha256": "c54b987b4097a6861b604e2aeddc006137feb362fea49366f4ca6c0c1d97053e",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/monitoring/dataQuality.js",
+      "legacySha256": "a7c0e7d3a40e506c9b13942b68a270e52b4046cca49ccb207a25c8ac4f1810db",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/monitoring/healthCheck.js",
+      "legacySha256": "7210e3258adc7e68039bf716f7e9e4964871d5f1e69c6a33668811f1407fe6ec",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/monitoring/logger.js",
+      "legacySha256": "288c5a9ed65ea0a6ab1fbe11557649468b156f407ff0002a8a7bd6ae661111be",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/monitoring/runtimeDiagnostics.js",
+      "legacySha256": "650dac9ffc3a926cd04de7aa22fb9131fd055ee4e414d7fcce3ee6b58651ae3d",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/normalization/companies/normalizeCompany.js",
+      "legacySha256": "1f5f692e68bda2968a51c03a7921cb602b8347d038c481d8dc52b0371c133aba",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/normalization/corporateActions/normalizeCorporateAction.js",
+      "legacySha256": "c439c21bcdd3baf0dd0686feaf2e4ea0bbe32415ca8f5d9895f7c2606e0474c9",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/normalization/financials/normalizeFinancials.js",
+      "legacySha256": "122ff531815375d3f08d48b2ea70b01b463556755cd746ab4c49d3248f9e2397",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/normalization/indices/normalizeIndex.js",
+      "legacySha256": "53b47807115a4bd0b110765abe3dbbeae0c2625f459a49973f16bc90768f68ce",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/normalization/prices/normalizePrice.js",
+      "legacySha256": "d34dbbabb3ce07b35b6b8777f146a8ccaa8037486831b6f354933426b32245ca",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/services/analytics/candleAggregator.js",
+      "legacySha256": "2d49d05e3073a32506b494a549aa2b076d88e8e1c9cf7be6fe3ddf0fab1ac107",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/apiKeyAccess.js",
+      "legacySha256": "eb84b02fd95ec84677db962324fb9519fcf969afcfcde075e92eceec3990dc36",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/services/marketData/historicalService.js",
+      "legacySha256": "ef995f3ef0d443a295e4e92d614af03284c94b8e3d367237ac942fd386185ee9",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/services/marketData/indexService.js",
+      "legacySha256": "cd83fec3a7581e29c245223b091dcaa1b865a1d5f4ec76cc3134713b7dea3b7e",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/services/marketData/moversService.js",
+      "legacySha256": "13643bd9f1257ebf7be459b9d86e40181849fc5b47483583cb99d06aaa02b0ef",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/services/marketData/quoteService.js",
+      "legacySha256": "e47d0dfcb86db8e010cbf87dc7961edfd4737286644753baea6c79622f9842cc",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/services/paystackCommon.js",
+      "legacySha256": "f283217d425ac0fc87c3932fae43c65ae2cb6731b6f4d074e7e3b7ce74b8dacf",
+      "targetLanguage": "Go",
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Go prices and exact-body HMAC are implemented; checkout agreements/provider URL contracts still require complete parity."
+    },
+    {
+      "legacyFile": "backend/src/services/paystackLive.js",
+      "legacySha256": "20de06d2fc525550194645e86ce1bebf0a9cb9eec0d0d88b44aa76fcd6aa09bb",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/services/paystackNative.js",
+      "legacySha256": "462a6bf50ac13311fa62e3a0af542abf03935170a40c5ece09ee6d9bed7ed558",
+      "targetLanguage": "Go",
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Go native input/phone validation exists; provider execution, fulfillment, recovery and renewal are NOT yet ported."
+    },
+    {
+      "legacyFile": "backend/src/services/portfolio/corporateActionAdjustments.js",
+      "legacySha256": "2e6a0ca6d932ce0ae8314ae675ee66be02989352d517e32ef437968d682459ea",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/advancedResearch.js",
+      "legacySha256": "c542f707d959cbf68ab453055705eaea1b0ee8ed3c94718704d689503edc263f",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/afriScore.js",
+      "legacySha256": "01406f4d7d3cad3bb26c8989e7d9e92298ed35c2de96229276b6587a4602792b",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/boundedResearch.js",
+      "legacySha256": "a6376e3b445628ccb6fd00945855f204bb69e32f56c2a489c2a9de919428674d",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/calculatedAnswer.js",
+      "legacySha256": "123e40e0521c6b1ee7201ca6be6a3dedd48d5613eb76fbd5e0a60710278b5223",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/companyDiagnostics.js",
+      "legacySha256": "6210518629f3567e77ca881e37f0d90e879ca494c67e91253df2b3b3e1e07bc1",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/dividendMetrics.js",
+      "legacySha256": "12bc926d3d08c5ecd9f86346252f025d769995c74ee0050391cbd4722e5a3242",
+      "targetLanguage": "Python",
+      "status": "ported",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "replacement": "engine-python/continua_engine/dividends.py",
+      "validation": "127-case native Python parity suite"
+    },
+    {
+      "legacyFile": "backend/src/services/research/earningsSensitivity.js",
+      "legacySha256": "51d599c28764ba2d469cea3189851e413d65dab1ce117802e25d35d7f1165286",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/engineAnalytics.js",
+      "legacySha256": "365fb06baddb31dfa33a879230b4f62cd841ce8840f2cd47eae6926948c9cb17",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/engineAssistant.js",
+      "legacySha256": "f5fc617c2d87851b4e38baa1765633f72e8cb5cf0f72778b853c06b9b08d905e",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/engineBriefing.js",
+      "legacySha256": "48c75ce9b97573309c153a8623bd028e801c58b7f254b3ea5bf155f8cabec4ce",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/engineBundle.js",
+      "legacySha256": "8bb8236ec8a79e8ed4c43c3e00a98e30b110121f3d1b6316b55a3d77f63851d3",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/engineCacheKeys.js",
+      "legacySha256": "a961d649db7eddb06f99a2811ae6348a2f8b0bf2514e8e49291d3d7fd0a22a81",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/engineLabSchemas.js",
+      "legacySha256": "6218bdc365a1874769211107e859d16306d19fc2222aefe66312644783c3433d",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/engineMonitoring.js",
+      "legacySha256": "9d05b9f46db268aa2465c511b5442c4931f7b6e8425dd4bed3a9605589af4d61",
+      "targetLanguage": "Python",
+      "status": "ported",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "replacement": "engine-python/continua_engine/monitoring.py",
+      "validation": "127-case native Python parity suite"
+    },
+    {
+      "legacyFile": "backend/src/services/research/enginePortfolio.js",
+      "legacySha256": "a791ab4b292f774ab34e00c8ba57bb15ebc207e4496c04daf73f49e2536c5ee1",
+      "targetLanguage": "Python",
+      "status": "ported",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "replacement": "engine-python/continua_engine/portfolio.py",
+      "validation": "127-case native Python parity suite"
+    },
+    {
+      "legacyFile": "backend/src/services/research/enginePortfolioRisk.js",
+      "legacySha256": "8ba8858dd052f9e1531424d34c8771e3fbc634b6e27534e36e8e252d9486c5c4",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/enginePreferences.js",
+      "legacySha256": "2f6d5372eb52869af2e3d69d81f426c99bab87684a278d04a50dd414b211036e",
+      "targetLanguage": "Python",
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python opt-in preference calculations exist; full schema/persistence/API/consent integration remains pending."
+    },
+    {
+      "legacyFile": "backend/src/services/research/engineRiskLab.js",
+      "legacySha256": "1bc30ca0b1447bbd49ea873071aab495731c368697192fcde874bff1d218017f",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/engineSynthesis.js",
+      "legacySha256": "78e06e048d4cf79ca3522d1a7bea7b684f7a2559dc9b342eb61444f2eac94ef1",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/engineWorkspace.js",
+      "legacySha256": "698ced872ca13374b8496400b55879c560da119421ee0a30109a05f7dc8b787e",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/factorResearch.js",
+      "legacySha256": "95d90e6f7925c76d114076f7881c9820b60918d125c4ee3efb638e067fcccf66",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/forecastNotebook.js",
+      "legacySha256": "63d9e5452a86001b996e57e5228f47982e2bc71e18299da8edeb93fa1b4568ef",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/marketIntelligence.js",
+      "legacySha256": "69229cb1be35da8a0d29f076a9faf88773a34d32a513b9154829b67a9efd9264",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/newsDigest.js",
+      "legacySha256": "6ea70cb2ec4255299905703f736fd9ff90cd6faa297dc8f7dabaeca968a52c53",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/newsImpact.js",
+      "legacySha256": "ab43dbca74ecb5452b26d95606bb84500546e7c0deed3c151347679e1baf5e9b",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/newsRelevance.js",
+      "legacySha256": "d48eeb3f5a11f981f08529b7c44c8c1ac30bf4308c82a34141ed819ef92def1e",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/publisherFinancialTables.js",
+      "legacySha256": "59f5cc78683aa23308d07246629cc6c932c949d9e8e4d32763c472c6212bae22",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/publisherProfile.js",
+      "legacySha256": "8f879517faaf7e02a070e0dccf5a52d653b719d0ff7e690b321e3633b1f50a3c",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/pythonCalculations.js",
+      "legacySha256": "713298778db805a8d14a5b7d4a74b406fb7be076bffc331ecb1296e293738858",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/ratiosEngine.js",
+      "legacySha256": "28381f11d441400a6a633b513b40c921ff2e0b26b319014f9e954874e9fd8714",
+      "targetLanguage": "Python",
+      "status": "ported",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "replacement": "engine-python/continua_engine/ratios.py",
+      "validation": "127-case native Python parity suite"
+    },
+    {
+      "legacyFile": "backend/src/services/research/reportedResearch.js",
+      "legacySha256": "867274a48eee8f27e6df7bb2df543b8fda16a0712988993db83490518641a1a0",
+      "targetLanguage": "Python",
+      "status": "ported",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "replacement": "engine-python/continua_engine/reported.py",
+      "validation": "127-case native Python parity suite"
+    },
+    {
+      "legacyFile": "backend/src/services/research/researchReadiness.js",
+      "legacySha256": "f1c7523662f2504f5356a53a2fb565a3f152b8d62f9e642f0695164e020b6578",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/research/researchService.js",
+      "legacySha256": "8097863d5e0a1e8b133f2d70f46b9e4b15b53c51fea22abdb91634d0acfeedd8",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/screening/screeningService.js",
+      "legacySha256": "a07f0003a57d162b8c99b75c9cecd2991a2937671180a005750440fac087569a",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/technical/backtestService.js",
+      "legacySha256": "25e8d3d4e3472b2c4fb2a77b9742083f7a7b3e551ee5fab7bd931721210f1578",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/technical/executionSimulation.js",
+      "legacySha256": "42eb54f48b83b8d3a814625226bc669c5069f2c75606d140ffe1cbab9214011b",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/technical/indicators.js",
+      "legacySha256": "5eadbfe5a110514971b231c758a7c305ed375f8862e6c6c59ebb85dc071247ee",
+      "targetLanguage": "Python",
+      "status": "ported",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "replacement": "engine-python/continua_engine/indicators.py",
+      "validation": "127-case native Python parity suite"
+    },
+    {
+      "legacyFile": "backend/src/services/technical/indicatorsService.js",
+      "legacySha256": "ed98c0fd209f280341e14140635f7ea4071412fbb34960517c984fa69ea64121",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/technical/valuationHistory.js",
+      "legacySha256": "098f04ecd6d8e94fed17752d7c03ee847b3d3a75fc3bc5d555eabb050784ffab",
+      "targetLanguage": "Python",
+      "status": "ported",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "replacement": "engine-python/continua_engine/valuation.py",
+      "validation": "127-case native Python parity suite"
+    },
+    {
+      "legacyFile": "backend/src/services/technical/valuationHistoryService.js",
+      "legacySha256": "17a85ae6237444f3fd0869b60d827ec55e8dd63900402eeaad439e5336604522",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/technical/valuationService.js",
+      "legacySha256": "1ac9750c84aa38d86e9abbd66e806af05c0b796e0bb20c085a32ccfb6b95bae5",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/technical/volumeProfileService.js",
+      "legacySha256": "e308ea62d4ea3507157381b2242519d69add66b354592302a6edb664e0fb8015",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/storage/cache.js",
+      "legacySha256": "73d2f6b6d0c9e9171e720b729aee2c5c19b9bd9198ea82f5f012781f0e5a626e",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/dateTypes.js",
+      "legacySha256": "f594ce3ea2b0b3b6b00d5b699c8847d9b11a503fc8df160c75d741c74bab5115",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/db.js",
+      "legacySha256": "4073b18dcf80f135716be219ac3ba516c3734b4805c473cae10f553cdbe962ac",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/apiKeyRepository.js",
+      "legacySha256": "62aa3a8fdbba094ee4d0e5f15cbdd41934ba1e0c0d3db8ec27e157316c67e42e",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/candlesRepository.js",
+      "legacySha256": "6d7d7971e6fe7c10ba573d4f019635df4696e41c6d894e9824f46d8e42a3c3c0",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/companyAnnouncementsRepository.js",
+      "legacySha256": "6491dc3055ab634d21273a13e1c2ef0858fb38707f27f6b053d36bce9c9b1560",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/corporateActionsRepository.js",
+      "legacySha256": "44a02ce495ae1e943f130767480e85f8e6e709aa96cf6e8e0528f8f83e4b3eec",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/deadLetterRepository.js",
+      "legacySha256": "dde87d2dc1a222a44943709f9fb589176fb95c35264b242c9b67df6bf1a41c5c",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/engineRepository.js",
+      "legacySha256": "634a164d18c2703bd7d3b8889377dd583c16604a2633970dca2270f012de11c7",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/financialsRepository.js",
+      "legacySha256": "30f77b2462f071a4e12bd9fcd6caac05306e925b4fa19396a5e2ef29c8f2157d",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/financialStatementCandidatesRepository.js",
+      "legacySha256": "249cfc51b53300842fba9f9b00c6b185cc3a6a4751f3b828c341e91ae72c301c",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/indicesRepository.js",
+      "legacySha256": "2c0975d5db5caef2b060a5ee04d1865dced50ea8f9695ad7fa30a7e624a9be3f",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/ingestionLogRepository.js",
+      "legacySha256": "610812cf665793e62521b3453fcbe52135584c5d338b7299d3d47eef12deb389",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/newsRepository.js",
+      "legacySha256": "d599e3a7675d7c2faed578831ca9f69ccd0d6c7a14799c4e8b61e5a070935934",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/pricesRepository.js",
+      "legacySha256": "744e8c4a30d91247f136839d544647c9434064524d2e9c6e4b95c4480391ecb7",
+      "targetLanguage": "Go",
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go quote reads exist; writes/movers/freshness/ingestion remain pending."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/scoresRepository.js",
+      "legacySha256": "e9f378d0eeb493c4bb1d956717f1fd23516076a38c278eb0eef2a5a7cd3a0492",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/securitiesRepository.js",
+      "legacySha256": "99fc453934a743db71a6a00cb7502348c750c3fc713b0143ecd905f6654f133d",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/storage/upstashCache.js",
+      "legacySha256": "a9a4a793e7597e0581ad4be4b6f971f3104825cb6ba59bb663b3c07d51652a0f",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/streaming/pubsub.js",
+      "legacySha256": "e85f86701e2d02d3379a367973d6a18393e447ab63ee82ba2765c8e273cc0790",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/streaming/websocketServer.js",
+      "legacySha256": "69fcfdeaadd42e2047a52591ccd86e550532870349e10835b1ebc37ba95806df",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/types/market.js",
+      "legacySha256": "875bf007f6d8d635d4d00dd60824000bc132e7c8d5cac75199c5995d6cfec839",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/announcementsWorker.js",
+      "legacySha256": "450df68951edf3338b36357d8954e885d856f3a475cc2c0cac74ba8bd8734f2c",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/candlesWorker.js",
+      "legacySha256": "45b4db476810f27b99131ef49a5b8675bf72b884ba33f881f2bf0922ca3e8496",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/cardRenewalWorker.js",
+      "legacySha256": "95a7f44c4e4cd2353b4e9a901d3658b9afecc5ed89f3a9c54e0ea7aeef3c060a",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/corporateActionsWorker.js",
+      "legacySha256": "496243e866fe30417095069b3505ce990ad38daeac30fd6470bfb9a71b7a981b",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/documentCollectionRequest.js",
+      "legacySha256": "a63a0b4b4643020d262080c8c25208cdf9ae58044de8cd1ae25c3249d5f50502",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/documentPublicationWorker.js",
+      "legacySha256": "38eea49ee1102bc625e74b97d2c5efe0fb024d51e7b20e3a8d548ad211b88f46",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/engineMonitorWorker.js",
+      "legacySha256": "1fde6415a8b40368bf91d77217dc0b36bb8bdae88e2ef9d0ed8bcd662a7b6909",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/financialStatementCandidatesWorker.js",
+      "legacySha256": "15fbda47a05f971085dc103590c7c075c68cb82330f2905144f3cc719666928e",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/financialsWorker.js",
+      "legacySha256": "a593299474eba0c2d94d4f584a67a40a5d2b6a9af7dc48d7f814e78cb0549376",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/indexReaderRefresh.js",
+      "legacySha256": "77a1afeb3d1b856f30a483eecf1ede78476fd36828d2f985d19fd41a0c9f4821",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/indexWorker.js",
+      "legacySha256": "8b2578ee71493590e3ade7e93959efc5b4d3c03e6a5ad8483847d19288e5bb61",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/newsWorker.js",
+      "legacySha256": "cb74a314360c26405213e934e5d8a5bd53775347280b02a7edf2eb802dbc2e1c",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/priceWorker.js",
+      "legacySha256": "7d26f762f419d8940b569e5b0e5103bb669deb8cbdd1ef5c82af0278560399a2",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/scheduler.js",
+      "legacySha256": "fbd02184540137986a6fd1f235761ac0ab0914a23bd95eb67369a2ed7a0cb1c7",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/serialBootstrap.js",
+      "legacySha256": "c5be1194b42714a407222a29d6724a6dcd0e44dbe576550c8696cdf0c35d54c0",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "scraper/python/pdf_extract.py",
+      "legacySha256": "b65ace45b888a3521c5a1813a39e5a7f2331cbc143e5d11cfaddaaf51016d29f",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/scripts/backfillHistory.js",
+      "legacySha256": "ce36d69ad2f9b33dc28cf0be7c8610797d091e117a743d029406e6cafc94a228",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/scripts/backfillKenyanStocks.js",
+      "legacySha256": "69aae67877e8fef800371ba38a186fe7c65b2532bb44379fe471ce0d74809271",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/scripts/build.mjs",
+      "legacySha256": "dd4fda553936036495361efece8622142147b33e9b98327066569f033a2d67fe",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/scripts/collectKakuziRecord.js",
+      "legacySha256": "8f8fccf333c9c51ef1567f3c5b4d144247c2f6d96db006fadbb9c2ef34defc2d",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/scripts/seedSource.js",
+      "legacySha256": "86f8d768867996dc3897bb583dee14df8b5c335b4742f54d5b5a0edf15fac2a4",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/adapters/afx/afxAdapter.js",
+      "legacySha256": "e5e3ac1d8cb68347d883e6a94fcebc5b91b600e9b0c2e34c5ebd65f1599686ea",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/adapters/kenyanstocks/archiveLinks.js",
+      "legacySha256": "19e96689cb7fb10b452c5e214a2994a18d26b5554fafc41ec7c6d504ce3a397b",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/adapters/kenyanstocks/kenyanstocksAdapter.js",
+      "legacySha256": "96812c1a7382335b371c9c0771a4696e7466a1df537f32f5454e6a23972941fc",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/adapters/kenyanstocks/stockTables.js",
+      "legacySha256": "de39b734344c4eeb9de98e79f13bea3eaf9258b1a6a63a9e133b035faf61eeb2",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/adapters/kenyanstocks/tabPlan.js",
+      "legacySha256": "54f4c70f51ddc3843f3077e9a4e52dccef1b65a319a2441a782085ed15b5daa5",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/adapters/nse/announcementsAdapter.js",
+      "legacySha256": "03f96724b8f54a22275562bea2d8b761032b45a0af87b5973ad2474a58215ce8",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/adapters/nse/archiveDiscovery.js",
+      "legacySha256": "73ca05de078e730c2ff0f29e4ee2a1a622481c0e7fc9d2ce04d934c14b92d21f",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/adapters/registry.js",
+      "legacySha256": "ef57aee01e6e1d55ee16940040c7fa7500087a6e8b6e2b365fe5b1690646a9ad",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/adapters/rss/createRssFeedAdapter.js",
+      "legacySha256": "613224447f90352264ddf1ddc7699538f6f4348fda0c6f75d6eec4e384ee240e",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/adapters/runAdapter.js",
+      "legacySha256": "852b642d028099b7f5e99a247e0e15b2352c1bf90b1678531a667ad733126798",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/adapters/types.js",
+      "legacySha256": "26669ebd4647e615d1fa919cda1270996012b4b970e9cc4346ef51a7ccaa376b",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/api/operatorAccess.js",
+      "legacySha256": "6f31b242adef2b03e2d1e51ba18bbc1f480dd9834d092fc95eaabb16579fcf49",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "legacySha256": "a0fd6a88b6ac4622bc14cdb9ef5478b2d6793b934d51d7470cc8a300c4c65fe0",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/config/defaultSources.js",
+      "legacySha256": "847eaa7e3cfc72b9613d7d22a99a47dbf7264a71cdc394d084c8c0469176e918",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/config/env.js",
+      "legacySha256": "8ac13a1ae42b3eecc65222fca8d58c673b165453310b9efed9d85574893afb3f",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/config/index.js",
+      "legacySha256": "e0a271e872a1b105179c523c84ddbaafb82b38c0b2c5a786d1e82d282f19e323",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/crawler/crawlSource.js",
+      "legacySha256": "50b00a1c2d4c705f9a7aef67eeafa47ddf0777dd382608a19b8a26e341082240",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/crawler/discoveryPolicy.js",
+      "legacySha256": "5be60563b7a37305ff12d83c9a4f43ea373d9db81e2af18a371d5a38fb08af9d",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/crawler/hash.js",
+      "legacySha256": "bab38e2b53094346780177b439cc5d0e92915440502d344cf15f5a4d83b50dae",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/crawler/htmlExtract.js",
+      "legacySha256": "673383f5f3dd2ea2f49abbd9c06e0d35186210024a3f5d07660a4564f48cd608",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/crawler/httpClient.js",
+      "legacySha256": "e0a7804752111939e545b98fabc9f334308d5fefe13ff822c87410961afccd7b",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/crawler/rateLimiter.js",
+      "legacySha256": "9cc4a67a94cea533bc6664341b4c50841e4637fd74ae0700cf959f0477ce89e6",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/crawler/renderWithBrowser.js",
+      "legacySha256": "8b170cf97d63f2747296a060bbfa61347180d0134a92014fc427043e74cd2b7b",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/crawler/retry.js",
+      "legacySha256": "ed5092a25bc210bc572cafaead0e6faeb1b2c86a8ffc106f4d554ee4bdcc893c",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/crawler/robotsCheck.js",
+      "legacySha256": "37e8404bf89d0a83cec5e3f721b070d41d718e4fa612cc03455ead2b335ec329",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/crawler/urlNormalize.js",
+      "legacySha256": "eb18c985207cbc21dee13980d3bf965597207c96a2ab807f2705decb2a3ed489",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/crawler/urlSafety.js",
+      "legacySha256": "c7d403630c2c304bbf0967b52e442e214bc4018f51be70dcc5596d9f751c4dc3",
+      "targetLanguage": "Python",
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python DNS pinning/source policy exists; whole collector integration and source regression coverage remain pending."
+    },
+    {
+      "legacyFile": "scraper/src/extraction/articleBodyText.js",
+      "legacySha256": "e62c012239067b12bedc0cdc76f0cef2b444c31b975f69ae1fbaa8abee481dd8",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/extraction/extractByContentType.js",
+      "legacySha256": "23923789416b01c1b8f488edbefb4d6711fc5bc1c0a9cd8b101a6f3326f6a3ce",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/extraction/extractionSweep.js",
+      "legacySha256": "973ec281d9f85d63fca45e6d8d77ce726f0ca4fff871f76cb785e9ba2675df13",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/extraction/htmlFinancialTables.js",
+      "legacySha256": "816dec593a1d8dc55ecffaecab083121163071b3e104a572247e0764506fb3c5",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/extraction/nseIndexSummary.js",
+      "legacySha256": "35f8d83aaf95ecc6ef2225082804c22b894954c024b197c210f3fbc13306a776",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/extraction/ocrText.js",
+      "legacySha256": "f83663e53c1f62c57c960f1c698f8a2ac7289cd9df1d4e63c38252b6e40b53fa",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/extraction/pdfText.js",
+      "legacySha256": "53b9b63ac85d949f38c9a7365f80468ce20b672466da4811d767eff6d50be697",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/extraction/reprocessArtifact.js",
+      "legacySha256": "d5d93e98181eb39265caf0851c020f16588d027717d7f18b63cc8151253ae88a",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/extraction/serialWorkQueue.js",
+      "legacySha256": "b69f3b877470eaf3bc03095122614d16821b4b0e37636d84d3954f4cfd1ad088",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/extraction/tableExtract.js",
+      "legacySha256": "a6aee9fa0ce3dc57dabd38837763a5710a089bc10290184c9e407ba3cecc61c3",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/index.js",
+      "legacySha256": "556814cd699c2b10f29c65527a4e6879fc713d480a20bb34f8ee57d771a8a739",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/monitoring/crawlStatus.js",
+      "legacySha256": "8cbe7a06a9c44e1ba96991d716af4f043007f87ba06ab2ab1ce708b0194fa605",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/monitoring/healthCheck.js",
+      "legacySha256": "74cc9abe65b0e41635bd12a5ce9fe26f6f9a0d72efedccef15ed5615f6eb0512",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/monitoring/logger.js",
+      "legacySha256": "288c5a9ed65ea0a6ab1fbe11557649468b156f407ff0002a8a7bd6ae661111be",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/monitoring/memoryDiagnostics.js",
+      "legacySha256": "b93f4bbe8e8027b4b9f0466180047ec9ce34fff342f5f2bce189a3a4282b747f",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/scheduler/newsSchedule.js",
+      "legacySha256": "1cae5731c3f3d66ed49f20aea9bdf5a93b37501dce5e897d24a890d2fbef6cb4",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/scheduler/scheduler.js",
+      "legacySha256": "63f6bb44ceef7d6728b76afd796e04917dfe120c8722e4474bad7cf2385d4562",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/storage/archiveCheckpointsRepository.js",
+      "legacySha256": "d561ace5048f949b595240dfd18709f776c4ba840b7bbccbafbb00bbae0e61c4",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/storage/crawlStateRepository.js",
+      "legacySha256": "f92f000d9ae911d64b05ca88a083165f89374894099a50eadc5cd163aa685035",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/storage/db.js",
+      "legacySha256": "fb26116786812abf8647321a40d3ab32226b6791b95041c22a2744e6b66ed831",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/storage/deadLettersRepository.js",
+      "legacySha256": "7ecb45d642bb76bd4c6d8c04150f9fe895b0aeea9b5436f4552f2f2eb1f60ae6",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/storage/documentJobsRepository.js",
+      "legacySha256": "d38ac74c1007cdc9bdfeea48d570d327c35a65ce472caf40c4f0e8562efe9eb0",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/storage/extractionsRepository.js",
+      "legacySha256": "e9b5bd66d616388cc342f798bea299ab939c79b31d1716fa34c14bc4e8a25f10",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/storage/r2Archive.js",
+      "legacySha256": "1df2517f60dec65fe68d2c5ed0a97c391abb521b066d79f5d621fcface55bc33",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/storage/r2Storage.js",
+      "legacySha256": "4a5af8c5c06ab9db98959e3edc185ee4cb0c134cd6de2bf7d9fcf44651a13c1f",
+      "targetLanguage": "Python",
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python streaming private upload/verification exists; full read/migration/retry/operator integration remains pending."
+    },
+    {
+      "legacyFile": "scraper/src/storage/rawArtifactsRepository.js",
+      "legacySha256": "df2c41a63b35e108f5fb62035a9a1be99f99cc5cc5657e2e22b2ce55af64922b",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/storage/rawStorage.js",
+      "legacySha256": "0f6530065c617efc3e1e458f2f149e09ece0b511a17717a2f294ef4feedd55a2",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/storage/sourcesRepository.js",
+      "legacySha256": "e19315edbbb2778d823d6d65505c9bc6df5e7a0b5128c9fb24c6eb6ef67d8a6b",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/types.js",
+      "legacySha256": "121f4d8f81dd462ac172bb3fc61e8d2f4b509536cd38c715f97617b78b06f900",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "supabase/functions/ai-stock-analysis/index.js",
+      "legacySha256": "c4586150354a3c72720a868b5a062905d7a10c3610ab23af02128af47cc3a61d",
+      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/functions/check-indicator-alerts/index.js",
+      "legacySha256": "358816bea0389f98d212b87e69a3b5c0b0749388ec4117b27dfff9abc531d8be",
+      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/functions/check-price-alerts/index.js",
+      "legacySha256": "58c96a9999d54c7c9a8baeb5a66fa11a925b6da0a47bee0931761b7de916b6a1",
+      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/functions/delete-account/index.js",
+      "legacySha256": "498f4050195757cd2c5a1569f8d9553c977c708499ba7946022e5e9b6bc358a9",
+      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/functions/run-price-alerts/index.js",
+      "legacySha256": "a7eaef2a3590049916217e87545514c3f20a75f09cccf50001d8c98d1f3b5306",
+      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/functions/stock-thesis/index.js",
+      "legacySha256": "eeb5fdc3c2a638b5dca165b1dacf92612eaa9a40fbfc45e69d4afdb23236de9f",
+      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/functions/upgrade-subscription/index.js",
+      "legacySha256": "276f4abf0470009dffd37e61dd0b6aacefe1bb49126c4bf647bc3931dc46c6be",
+      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/030_market_schema.sql",
+      "legacySha256": "951fb5e3faa289ae7c058fea48aa1a28ec3fc429377222c09e6692a97b871d50",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/031_production_readiness.sql",
+      "legacySha256": "ad9fa556fc70637859ef5c0ecd3d0375c63277c252ad9f288b0a3a4640a96a50",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/032 mansa integration followthrough.sql",
+      "legacySha256": "71ba29a45103e273569e9f31f5bc1b3d4bd4481eae3f5599978fd1be5944f6b9",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/033 alerts multi exchange and indicators.sql",
+      "legacySha256": "bf8344ef1102f293eb9661726f8bb6e285149de6ee3f597d575a0214884b1eb1",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20250930031246_96eed1f7-ea9b-4616-89f1-380eacc896fe.sql",
+      "legacySha256": "36d88f9d4e73cba294ead8a8582aea2c91cf9f040acfdc300d0b0f308bfc5f43",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20250930031422_ee608bd3-2a02-4bc2-8ce8-534690b5ec8f.sql",
+      "legacySha256": "116e833c09c909afad7d891ec1749e08eb7ba80ada7d6b4795cad23f90546ff0",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20251105022831_05cd2654-4328-45eb-aee8-a6e722f8fc43.sql",
+      "legacySha256": "e82601adbb55b3c62c8dde6aee689d1e1fd892c3d25efd83257e68f603b9cc29",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260119151357_2a2ab93d-d885-4faf-a19c-dfac2f9fc397.sql",
+      "legacySha256": "a1e7bed16b57e8c3dc1f3021272650cbcdf254dafab94c2fc6eeaa08449080b2",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260128104216_8c9ee4fc-6a29-4c79-8ee2-f702ba69ecf9.sql",
+      "legacySha256": "53665a83a845b556e1df78b32aad2ff92802f6a9ee4afe2b9b9cbb89e786dbd1",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260202104644_75e47209-e0ff-4ba0-b9ca-e83d6e859b42.sql",
+      "legacySha256": "5fe594da77206d3574e6f89444e9a83129dd1f0dcf5e73ba9d56f632613d7fd2",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260204093435_f8333587-1c17-4b87-89e0-f60cb6e7828a.sql",
+      "legacySha256": "be8a9e36da3baaa7970671cb95f40546210d20e0c2e5ee639edae02cb192e1ec",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260204093449_f4b5ed62-6a4a-4738-af3a-e767644e7b35.sql",
+      "legacySha256": "241ae70bcba2fe82075cd24077dbcad79ed7334562bc704c259c80fd0fe16396",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260204093501_18263abb-14ba-4784-9a38-3e471364234e.sql",
+      "legacySha256": "77375dcd0d87a766c7b6e50e77f9216885eb0db0de62b68fd7da22831a86aece",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260205105603_330bbd61-d60a-4fda-86a1-2fd982b93546.sql",
+      "legacySha256": "4c0f8a454b7ef1968806695195fb8a2c3f07ecff99bd3a65f41063358b22f01b",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260205110727_f7a9e00e-5a51-4dfb-8324-097e285875d4.sql",
+      "legacySha256": "cf4fa0571e3ef2bcadc9757942deec0362113d9fe6659e2e55680db4ab33b470",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260205110734_f27683df-8442-44ec-b134-4f4c2263cff4.sql",
+      "legacySha256": "1b9ad56635bc5df449bdcc5d1bd3b7b6d6ee3b36e903ca25591d58e490565858",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260206074113_8250dc9d-872e-4594-b760-4c6dd1e131b3.sql",
+      "legacySha256": "928941fa5c2e64d63d5274cb3389c6a47697f84f2fbf063f78d29c6d2d750d41",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260406074502_6224a6ef-83c1-4def-860d-33ed642c65eb.sql",
+      "legacySha256": "8d57179ac5a8779044ee1db850db3c50e093790d6b00d7cfc70bdd523459d26d",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260410114403_afcc9729-0abb-47b4-b00b-d4ceb365c615.sql",
+      "legacySha256": "329a24e443eafcdb6aed3bcc0d73dd53980ebf328bd85783f87f8670b055521b",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260508180946_09ac227a-df02-4e4e-ac5a-2d75cfe1c728.sql",
+      "legacySha256": "2d1b01518f2e4d98c9b4c44f0fd29ebff8be3b38c33654b2191c202cd48dff55",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260509144405_d932c9b5-5bcc-4603-8967-7b8342809d5a.sql",
+      "legacySha256": "579c8ef25bc399c17fcc90856ae0f2ca92aaf9d2ff4b7886a8d9cc003597efd4",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260514171128_7a10de03-5b98-4a1a-b456-dbbda0ab1efb.sql",
+      "legacySha256": "f23b1a1acb46d42e1bea0f0b45ed9b904b7ef1630e1e5dab66984bc08fefa461",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260605164816_0db8f0b1-a7c9-4a5f-8b02-baf1408c34a3.sql",
+      "legacySha256": "f356ffba14db6b1f21023464595f3d536cdb8ffa8cab75b88fa34a47097356c1",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260803082543_9eb683f3-fdb7-493d-86a3-c7e5198e45fa.sql",
+      "legacySha256": "447ac6bbdec4ce831c792b6ffd4d3238a1210f5fbca8bee357fa86bc74520a9d",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260804065838_c1d6fcbe-d0b5-490c-aa4b-19bbb98bc02f.sql",
+      "legacySha256": "6f108fb9544ac2ca4e29ec6c89d3cfd316812d92604eb01c56b493748f4bfe40",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260805061205_5fbb1436-550f-4794-aa5a-9aacaf43160f.sql",
+      "legacySha256": "8ccdf1ba3f55effb88e4b1274afb6b5221aabbcaf7446411c45dee84c5d820dc",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260806090000_f3a1c9de-6b52-4e10-9d3a-7c2b1e4f8a91.sql",
+      "legacySha256": "6eaf40f9a66a899af6120f891a102de9ab3b26beaeca60567eecf4647e751f1f",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260807070000_a4d92e18-3c56-4f0a-9b71-2e5d6c8f0a13.sql",
+      "legacySha256": "102434ebccc28847d0450a8c6016a9b3bf72014b3838a6a1068e26b87059f50a",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260808060000_c7e4f281-9a3d-4b6e-8f12-5d9a6c2e1b47.sql",
+      "legacySha256": "807ac39d25b4212a264fa45e8ef877ec5236ac186c3f1598e54a542a33887806",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260808120000_e2b5f8a3-1c4d-4a9e-b7f6-3a8d5c9e2f01.sql",
+      "legacySha256": "393203f4ffe33fde4aab53a7d3f00f7305c904da0cd689178bf3eb350c8d89a0",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260809090000_a1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e.sql",
+      "legacySha256": "1dec28ab411251a4a7349de84e035793f463923a332222934b8f79ef993a53ca",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260813090000_d4e8f2a7-6b1c-4a3d-9e5f-7c8b2a4d6e91.sql",
+      "legacySha256": "35543ddc9ac032ec9a373b3a2399d516884a62d03fbc45eaf80baaf149769fb5",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260815090000_f1c3a8d2-7e4b-4a91-9c5f-3d8b2a6e4f01.sql",
+      "legacySha256": "378511cd63f85bc3870a8799fe5258b29f03921d4817ce8424d1608679857037",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260816181125 comment edited.sql",
+      "legacySha256": "2b52b8a757d49a477ee7c470aaee3cd1d487f32af348826fcf93068085f41c89",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260817051430 tiered post length.sql",
+      "legacySha256": "7fe0bbdc46e508aa8a7dbf096410cd89b47a845546e2008142baf6f4dfd01f65",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260817210000 watchlist folders.sql",
+      "legacySha256": "26a5c1818ab5a41406b33252fb9f70240be4698b3683cdfba5b2af1c74833713",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260821060000 9b4a1e7c 3d5f 4a82 b6e1 7f2c9d4e8a13.sql",
+      "legacySha256": "1f29c58eedb42f065c9a6d1b5b3f42a152a2d91a5c3bd0ab2ccb2364815d0cc6",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260822090000 a3f7c1e9 5b2d 4c8a 91e6 2f7d8b3c4a5e.sql",
+      "legacySha256": "15846dfaf242e49f20b022def2386d9be9070427377d91dad958dc5adbc6d163",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260824090000 tradershub gate and onboarding fields.sql",
+      "legacySha256": "a4c6954f27a82123fcc336b8c98c4099c28509f03d35d8aa4ca0c9784d3f1ab4",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260905120000_expand_reaction_types.sql",
+      "legacySha256": "15827db2249babbd253e4eb414bea69cd7d544853bc79f94b672794050c4216b",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260911184206 schedule alert sweeps.sql",
+      "legacySha256": "324d6e19b1b6f62b7c1b70c0e0185243befd0c0a34738d3242fc3808995ddfc0",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260912190000 news items bridge output table.sql",
+      "legacySha256": "f4c5a5af699262394cb69f965d6eacd2d20273169e0b895b9d9fef067ac3d102",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20260913120000 research usage quota.sql",
+      "legacySha256": "a058936c3304233423356363b0e0ae42ed9f4a8da98a4eed2e8bde5327815f9d",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261003120000_remove_test_news_sources.sql",
+      "legacySha256": "9a00c2473b22efd86f22e734a6b8f3c767d34a7b7020e56c36e0c68a2b1bb863",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261003143000_reclassify_company_news.sql",
+      "legacySha256": "fa71bd312cf677980ea97d0bc3fa1cce8e942bb9160c5f5dfc9ca87aad6358c8",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261003183000_dedupe_and_filter_financial_news.sql",
+      "legacySha256": "ed6480dcbed486ca24ebcf87fce7b27d84aeb1a25204b3d7a564b194631e5166",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261003184000_add_price_to_sales_ratio.sql",
+      "legacySha256": "1e8b50feaf85efb3c5747728f2c953ce3a734e76538b79b8a117f46667d96e4c",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261004120000_more_community_reactions.sql",
+      "legacySha256": "a22c399d671105632f383c02ab6785f4a969d76d1362494fd35c3b055a384c39",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261004123000_atomic_alert_delivery.sql",
+      "legacySha256": "5c525f7d85fdf1e3bf86ee847ae729c36ad15e7a3382528972fe4d64ca32cac0",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261004130000_post_gallery_and_polls.sql",
+      "legacySha256": "605daaeadd949b9408216d41f37c25d05b2cefc6e66870acb73cea02dce03add",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261007120000_atomic_fundamentals_quota.sql",
+      "legacySha256": "c8a8491985384b4a65c46c323cf187b0c3e3899561943645e8fd0c8c461723a1",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261007121000_publisher_news_sources.sql",
+      "legacySha256": "f57ac060e370f6a617df82bae82e2056cd83405e03973ec9983bec5dcd3fd38e",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261007200000_engine_intelligence.sql",
+      "legacySha256": "b31aca76b4cccbe5904d14bed8cf526eb74fcc907098d07bdc3b53387047b295",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261007210000_market_research_records.sql",
+      "legacySha256": "2a84adf690e55cb5c90e0ca4c3e8c1193d24763409f27c22a030777ed28e9f20",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261007230000_engine_monitoring_tools.sql",
+      "legacySha256": "351db83059973f822b7d42df19f55ff8410d466ef71378a881f8082d9f584d1a",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261010140000_filing_history_reviews.sql",
+      "legacySha256": "c14265ac34498d920003d161f273cb2947c8bbb21653974fd36644876c6a0904",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261010143000_nse_only_active_catalog.sql",
+      "legacySha256": "522fa0d694a5f3cb31e0a574a0276e1164be9cb0ec01ca07d4b9f2e2a54dffd0",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261010180000_paystack_test_checkout.sql",
+      "legacySha256": "6fac6ad7b77d1a83362cbd993b69d9c5b4db8888e407d0d0c0bde5d7016f9656",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261010210000_paystack_live_checkout.sql",
+      "legacySha256": "639a46e1ff70678d61e19d72ccc246ab1a64adc9eccd2d13deabea1f215e1738",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261010220000_historical_document_queue.sql",
+      "legacySha256": "ec0e645907e74e391c9049f906280cc8a1f97649fdee74808dd5bb4a6251595b",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261011100000_invalid_filing_archive.sql",
+      "legacySha256": "fff01b7008bd6c9611ef1e2d2dd4dc241fddf403f3a4e0d570100a6c27be6794",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261011110000_document_auto_validation.sql",
+      "legacySha256": "47c2b55e4a60b6f003217dbcea4dfc6cf67605cfeefe3c5af0c3255be420ff3d",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261011123000_partial_reported_statements.sql",
+      "legacySha256": "353d186c44493a1e0dbe45ba4dc649d208af09a1c22ce71d6a6c537bd81c4af3",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261011160000_kakuzi_archive_identity.sql",
+      "legacySha256": "94781b156ac6608d4e6cd4097c8efad591c8540db428898abf83d907d5f2f212",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261011211500_candle_provenance.sql",
+      "legacySha256": "e4b2a5cb7e99227fd5ff0e8ef128dfb0dc5d9019dd53e2ebbc1b4ba914315474",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261012010000_engine_forecast_notebook.sql",
+      "legacySha256": "45bba45a71b8dd049bb45a3d455cb363960dd7726728229f9931dab269db725a",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261012011000_financial_version_audit.sql",
+      "legacySha256": "49f5bd339ba472057f495f7d6d6a684d6fdd53d2733cc09f70c26bb5bc57432b",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261012020000_checkout_policy_receipt.sql",
+      "legacySha256": "18bf11d6bfe41656709e448969c8912cec0ed9d29e0ebf2086d6a08a25bf3396",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261012030000_community_safety.sql",
+      "legacySha256": "7004758016043f581d241f78e5ebd8873b19a2753c314f117f4a2a00de7e023b",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261012220000_native_payment_attempts.sql",
+      "legacySha256": "d2795e6c4988aa4dc7fd440003a2fe72d8d3db019a89c8a04bd340200470d0f9",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "supabase/migrations/Migration news items image url.sql",
+      "legacySha256": "e906955a38c81c00a5fee80ae0af8cb13d9bb10ef2236d450735043a6d31a990",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    }
+  ],
+  "routes": [
+    {
+      "legacyFile": "backend/src/api/routes/admin.routes.js",
+      "method": "GET",
+      "path": "/financials/candidates",
+      "line": 5,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/admin.routes.js",
+      "method": "GET",
+      "path": "/financials/candidates/:id",
+      "line": 6,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/admin.routes.js",
+      "method": "POST",
+      "path": "/financials/candidates/:id/confirm",
+      "line": 7,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/admin.routes.js",
+      "method": "POST",
+      "path": "/financials/candidates/:id/confirm-history",
+      "line": 8,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/admin.routes.js",
+      "method": "POST",
+      "path": "/financials/candidates/:id/reject",
+      "line": 9,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/admin.routes.js",
+      "method": "GET",
+      "path": "/securities",
+      "line": 10,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/announcements.routes.js",
+      "method": "GET",
+      "path": "/announcements/:symbol",
+      "line": 7,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/backtest.routes.js",
+      "method": "POST",
+      "path": "/backtest",
+      "line": 9,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/billing.routes.js",
+      "method": "GET",
+      "path": "/billing/status",
+      "line": 10,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/billing.routes.js",
+      "method": "GET",
+      "path": "/billing/renewal",
+      "line": 11,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/billing.routes.js",
+      "method": "DELETE",
+      "path": "/billing/renewal",
+      "line": 15,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/billing.routes.js",
+      "method": "POST",
+      "path": "/billing/native-checkout",
+      "line": 20,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/billing.routes.js",
+      "method": "GET",
+      "path": "/billing/native-verify/:reference",
+      "line": 27,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/billing.routes.js",
+      "method": "POST",
+      "path": "/billing/checkout",
+      "line": 41,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/billing.routes.js",
+      "method": "GET",
+      "path": "/billing/verify/:reference",
+      "line": 48,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/companies.routes.js",
+      "method": "GET",
+      "path": "/companies/:symbol",
+      "line": 7,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
+      "method": "GET",
+      "path": "/corporate-actions/:symbol",
+      "line": 7,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
+      "method": "GET",
+      "path": "/dividends/upcoming",
+      "line": 11,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
+      "method": "GET",
+      "path": "/earnings/recent",
+      "line": 12,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
+      "method": "GET",
+      "path": "/earnings/:symbol",
+      "line": 13,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
+      "method": "GET",
+      "path": "/dividends/:symbol",
+      "line": 14,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
+      "method": "GET",
+      "path": "/ownership/:symbol",
+      "line": 15,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engine.routes.js",
+      "method": "GET",
+      "path": "/engine/research-access/:symbol",
+      "line": 8,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engine.routes.js",
+      "method": "GET",
+      "path": "/engine/basic/:symbol",
+      "line": 11,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engine.routes.js",
+      "method": "GET",
+      "path": "/engine/:symbol",
+      "line": 21,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineNotebook.routes.js",
+      "method": "USE",
+      "path": "/engine/notebook",
+      "line": 15,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineNotebook.routes.js",
+      "method": "GET",
+      "path": "/engine/notebook",
+      "line": 16,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineNotebook.routes.js",
+      "method": "POST",
+      "path": "/engine/notebook",
+      "line": 22,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineNotebook.routes.js",
+      "method": "POST",
+      "path": "/engine/notebook/:id/:action",
+      "line": 52,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "POST",
+      "path": "/engine/labs/advanced",
+      "line": 35,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "GET",
+      "path": "/engine/labs/history-inputs",
+      "line": 44,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "GET",
+      "path": "/engine/recommendations",
+      "line": 53,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "GET",
+      "path": "/engine/financial-versions",
+      "line": 54,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "GET",
+      "path": "/engine/pipeline-health",
+      "line": 59,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "POST",
+      "path": "/engine/labs/earnings-sensitivity",
+      "line": 65,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "POST",
+      "path": "/engine/labs/stress",
+      "line": 76,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "POST",
+      "path": "/engine/labs/bond",
+      "line": 87,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "POST",
+      "path": "/engine/labs/futures",
+      "line": 88,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "GET",
+      "path": "/engine/preferences",
+      "line": 89,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "POST",
+      "path": "/engine/preferences",
+      "line": 90,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "POST",
+      "path": "/engine/interests",
+      "line": 91,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "GET",
+      "path": "/engine/portfolio",
+      "line": 95,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "GET",
+      "path": "/engine/portfolio/overview",
+      "line": 96,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "POST",
+      "path": "/engine/cash-flows",
+      "line": 97,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "DELETE",
+      "path": "/engine/cash-flows/:id",
+      "line": 102,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "GET",
+      "path": "/engine/peers",
+      "line": 103,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "GET",
+      "path": "/engine/monitoring",
+      "line": 104,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "POST",
+      "path": "/engine/monitoring",
+      "line": 105,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "DELETE",
+      "path": "/engine/monitoring/:id",
+      "line": 112,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "POST",
+      "path": "/engine/monitoring/check",
+      "line": 113,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "GET",
+      "path": "/engine/monitoring/activity",
+      "line": 114,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "GET",
+      "path": "/engine/usage",
+      "line": 115,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
+      "method": "POST",
+      "path": "/engine/assistant",
+      "line": 116,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/financials.routes.js",
+      "method": "GET",
+      "path": "/financials/:symbol/publisher-tables",
+      "line": 10,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/financials.routes.js",
+      "method": "GET",
+      "path": "/financials/:symbol",
+      "line": 17,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/financials.routes.js",
+      "method": "GET",
+      "path": "/financials/:symbol/history",
+      "line": 18,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/health.routes.js",
+      "method": "GET",
+      "path": "/health/live",
+      "line": 5,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/health.routes.js",
+      "method": "GET",
+      "path": "/health",
+      "line": 6,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/historical.routes.js",
+      "method": "GET",
+      "path": "/historical/sparklines",
+      "line": 8,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/historical.routes.js",
+      "method": "GET",
+      "path": "/historical/:symbol",
+      "line": 9,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/historical.routes.js",
+      "method": "GET",
+      "path": "/historical/:symbol/performance",
+      "line": 10,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 33,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 34,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 35,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 36,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 37,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 38,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 39,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 40,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 41,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 42,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 43,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 44,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 45,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 46,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 47,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 48,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 49,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 50,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 51,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 52,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 53,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "line": 54,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/indicators.routes.js",
+      "method": "GET",
+      "path": "/indicators/:symbol",
+      "line": 7,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/indices.routes.js",
+      "method": "GET",
+      "path": "/indices",
+      "line": 15,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/instruments.routes.js",
+      "method": "GET",
+      "path": "/instruments",
+      "line": 7,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/marketResearch.routes.js",
+      "method": "GET",
+      "path": "/market-research/intelligence",
+      "line": 6,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/marketResearch.routes.js",
+      "method": "GET",
+      "path": "/market-research/records",
+      "line": 13,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/marketResearch.routes.js",
+      "method": "GET",
+      "path": "/market-research/earnings",
+      "line": 26,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/movers.routes.js",
+      "method": "GET",
+      "path": "/movers",
+      "line": 7,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/news.routes.js",
+      "method": "GET",
+      "path": "/news",
+      "line": 7,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/news.routes.js",
+      "method": "GET",
+      "path": "/news/item/:id",
+      "line": 8,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/news.routes.js",
+      "method": "GET",
+      "path": "/news/:symbol",
+      "line": 9,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/quotes.routes.js",
+      "method": "GET",
+      "path": "/quotes",
+      "line": 7,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/quotes.routes.js",
+      "method": "GET",
+      "path": "/quotes/:symbol",
+      "line": 8,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/research.routes.js",
+      "method": "GET",
+      "path": "/research/:symbol",
+      "line": 7,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/screener.routes.js",
+      "method": "GET",
+      "path": "/screener",
+      "line": 7,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/sectors.routes.js",
+      "method": "GET",
+      "path": "/sectors",
+      "line": 5,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/valuation.routes.js",
+      "method": "GET",
+      "path": "/valuation/:symbol/history",
+      "line": 8,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/valuation.routes.js",
+      "method": "GET",
+      "path": "/valuation/:symbol",
+      "line": 9,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/volumeProfile.routes.js",
+      "method": "GET",
+      "path": "/volume-profile/:symbol",
+      "line": 8,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/server.js",
+      "method": "USE",
+      "path": null,
+      "line": 50,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/server.js",
+      "method": "USE",
+      "path": null,
+      "line": 51,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/server.js",
+      "method": "USE",
+      "path": "/api/v1",
+      "line": 52,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/server.js",
+      "method": "POST",
+      "path": "/api/v1/billing/paystack/webhook",
+      "line": 53,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/server.js",
+      "method": "USE",
+      "path": null,
+      "line": 54,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/server.js",
+      "method": "USE",
+      "path": null,
+      "line": 55,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/server.js",
+      "method": "USE",
+      "path": "/api/v1",
+      "line": 58,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/server.js",
+      "method": "USE",
+      "path": "/api/v1/admin",
+      "line": 63,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/server.js",
+      "method": "USE",
+      "path": "/api/v1",
+      "line": 64,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/server.js",
+      "method": "USE",
+      "path": null,
+      "line": 65,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "backend/src/api/server.js",
+      "method": "USE",
+      "path": null,
+      "line": 66,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "USE",
+      "path": null,
+      "line": 22,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "USE",
+      "path": null,
+      "line": 31,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "GET",
+      "path": "/health/live",
+      "line": 32,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "POST",
+      "path": "/documents/refresh",
+      "line": 33,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "POST",
+      "path": "/indices/refresh",
+      "line": 37,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "POST",
+      "path": "/news/refresh",
+      "line": 46,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "GET",
+      "path": "/health",
+      "line": 50,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "GET",
+      "path": "/news/status",
+      "line": 54,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "GET",
+      "path": "/sources",
+      "line": 58,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "POST",
+      "path": "/sources/:id/crawl",
+      "line": 66,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "GET",
+      "path": "/adapters/nse/announcements/preview",
+      "line": 87,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "POST",
+      "path": "/adapters/nse/announcements",
+      "line": 101,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "GET",
+      "path": "/dead-letters",
+      "line": 114,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "GET",
+      "path": "/adapters/rss/:sourceId/preview",
+      "line": 124,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "POST",
+      "path": "/adapters/rss/:sourceId",
+      "line": 140,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "GET",
+      "path": "/extractions/needs-review",
+      "line": 158,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "POST",
+      "path": "/artifacts/:id/reprocess",
+      "line": 167,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "POST",
+      "path": "/extractions/sweep",
+      "line": 187,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "GET",
+      "path": "/crawl-status",
+      "line": 201,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "USE",
+      "path": null,
+      "line": 205,
+      "status": "pending",
+      "note": "Dynamic mount: manual resolution required."
+    }
+  ],
+  "requiredReleaseGates": [
+    "All source features ported or deliberately retained with rationale",
+    "Every route/mount resolved and tested",
+    "Native auth/ownership/entitlements parity",
+    "Signed payment/idempotency/recovery/test-mode parity",
+    "Every worker/adapter/publication/mapping ported",
+    "Financial numerical/missing-data/provenance parity",
+    "Restart/retry/queue/R2 recovery parity",
+    "Render-equivalent memory/concurrency/recovery load tests",
+    "Rollback and hosted smoke checks"
+  ]
+}

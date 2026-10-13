@@ -1,0 +1,44 @@
+name: Native rewrite candidate tests (not production cutover)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend-go/**'
+      - 'engine-python/**'
+      - 'scraper-python/**'
+      - 'infra/migration/native-*.mjs'
+      - '.github/workflows/native-rewrite-tests.yml'
+  pull_request:
+    paths:
+      - 'backend-go/**'
+      - 'engine-python/**'
+      - 'scraper-python/**'
+      - 'infra/migration/native-*.mjs'
+      - '.github/workflows/native-rewrite-tests.yml'
+permissions:
+  contents: read
+jobs:
+  candidate-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NATIVE_PYTHON_BIN: python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend-go/go.mod
+          cache-dependency-path: backend-go/go.sum
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: go -C backend-go mod verify
+      - run: go -C backend-go test ./...
+      - run: go -C backend-go vet ./...
+      - run: python -m unittest discover -s engine-python/tests -v
+      - run: python -m unittest discover -s scraper-python/tests -v
+      - run: npm ci --prefix backend
+      - run: node infra/migration/native-engine-parity.mjs

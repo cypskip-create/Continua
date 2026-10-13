@@ -7,8 +7,12 @@ maintenance costs. State and record the selected language and concrete rationale
 Do not force TypeScript or add another runtime simply for variety.
 
 For backend, Engine and scraper implementations, the user requested replacing
-TypeScript. Runtime source is plain JavaScript/Node or Deno, with isolated Python
-workers where justified. Existing non-executable `.d.ts` contracts and development
+TypeScript. The user subsequently requested a full native-runtime rewrite:
+Go for backend API/auth/billing/streaming/jobs, Python for Engine and scraper,
+and retained SQL guarantees. The deployed JavaScript/Node implementation is the
+compatibility reference and rollback, NOT completion of this full rewrite.
+Supabase platform entrypoints remain Deno-compatible JavaScript.
+Existing non-executable `.d.ts` contracts and development
 tests are not evidence of a TypeScript production runtime. Do not reintroduce
 TypeScript implementation code without asking the user.
 
@@ -30,3 +34,8 @@ card fields remain blocked until PCI-DSS compliance and Paystack approval exist.
 
 Frontend runtime redesign/migration is a later user-directed task. Updating tests
 to preserve backend integration does not authorize a frontend redesign.
+
+Do not switch production to the native rewrite until the exhaustive feature and
+route ledger has no pending/partial ports and behavioral, security, numerical,
+restart/recovery and resource-budget validation pass. Candidate services must
+never forward to Node or silently claim unsupported features as implemented.
