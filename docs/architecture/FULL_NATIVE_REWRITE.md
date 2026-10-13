@@ -135,6 +135,73 @@ gate deliberately fails: 300 source features remain pending/partial and all 132
 route/mount entries still require exhaustive verification. These are release
 blockers, not a claim that the whole application has passed.
 
+## Market, preferences and durable collector continuation
+
+Native Go now serves indices, company profiles, daily/coarse history, sparklines,
+range performance, latest/historical reviewed financials and publisher financial
+tables. Reads preserve missing/null states, actual publisher dates, nonfuture
+filing dates and review/source/permission gates. Weekly/monthly/yearly bars are
+rebuilt by Python from daily source bars, with Monday/calendar alignment and
+honest provenance. A bounded 4MB/5000-entry LRU coalesces loads; account/billing
+verification is never cached. Reader refresh callbacks exist but their native
+collector/publication integration is still pending.
+
+28 real owned-database read comparisons passed against existing repository
+contracts for COOP, KCB and SCOM. This includes an expected COOP latest-financial
+404: compatibility does not mean missing reviewed coverage has been created.
+No canonical financial rows were added or fabricated during this validation.
+
+Preference schema/defaults, explicit opt-in daily learning and recommendations
+now execute in Python. Go persists settings under the existing per-account
+advisory lock, preserves server interests from stale forms, and implements
+Plus-protected preference/interests/recommendation routes. Ownership, consent,
+reset and rollback tests use mocks; no real user preferences were changed.
+
+The native Python collector now also has bounded PostgreSQL access, durable
+document job enqueue/claim/requeue/attempt-token finish, source permission/config
+repositories, incremental crawl checkpoints, a bounded serial heavy-work queue,
+and atomic artifact attribution/immutable extraction version repositories.
+Native crawl updates use a last-seen lease CAS; discovery preserves active lease
+timestamps, so an expired worker cannot overwrite a newer claim. This protection
+still requires full crawler/restart integration tests before cutover.
+
+KenyanStocks tab/category plans passed six reference comparisons and accept new
+observed tabs rather than imposing a fixed tab ceiling. Credential-bearing URLs
+are rejected. Source adapters, browser navigation, complete extraction mappings,
+review/publication, private storage reads/backfill/operator APIs and scheduling
+still require migration and whole-pipeline tests. The native collector has not
+been activated on Render.
+
+Pinned Psycopg 3.3.6, psycopg-pool 3.3.3 and boto3 1.43.97 dependencies are
+installed in an ignored isolated workspace environment, with a resolved
+`scraper-python/requirements-lock.txt`. The actual SDK supports conditional
+streaming R2 upload/checksum verification in an intercepted test; no real R2
+upload occurred. Native PostgreSQL connected to the owned database inside a
+read-only transaction (36 enabled sources, 13,408 artifacts, 11,566 extraction
+versions at the check). No document jobs or source settings were mutated.
+
+Go uses pgx's safely parameter-encoded simple protocol and Python disables
+automatic prepared statements, avoiding session-prepared-state assumptions in
+Supavisor transaction pooling. Owned read comparisons passed after this change.
+
+Current continuation checks: 92 Go test functions, static checks and executable
+build; 177 numerical/schema reference cases; 17 Python Engine tests; 26 native
+scraper tests including installed SDKs; six tab-plan comparisons and the real
+read-only database checks. These are component checks, not full migration,
+hosted provider sandbox, concurrent-process recovery or 512MB load approval.
+Unnecessary TypeScript cleanup remains gated on the genuinely complete native
+migration; the working old implementation and its test contracts stay intact.
+
+Additional primary references:
+
+- https://www.psycopg.org/psycopg3/docs/advanced/pool.html
+- https://www.psycopg.org/psycopg3/docs/advanced/async.html
+- https://supabase.com/docs/guides/troubleshooting/disabling-prepared-statements-qL8lEL
+- https://pkg.go.dev/github.com/jackc/pgx/v5
+- https://pypi.org/project/psycopg/3.3.6/
+- https://pypi.org/project/psycopg-pool/3.3.3/
+- https://pypi.org/project/boto3/1.43.97/
+
 ## Reproducible candidate checks
 
 Go: `go -C backend-go test ./...` with `NATIVE_PYTHON_BIN` set for real

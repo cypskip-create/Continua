@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-var allowed = map[string]bool{"ratios": true, "yoy": true, "annual_ratio": true, "sma": true, "ema": true, "rsi": true, "macd": true, "crossover": true, "stress": true, "bond": true, "futures": true, "earnings": true,
-	"record_interest": true, "recommendations": true, "evaluate_monitor": true, "trailing_dividend": true, "portfolio_analysis": true, "performance": true, "aligned_returns": true, "daily_close_map": true, "reported_ratios": true}
+var allowed = map[string]bool{"aggregate_candles": true, "ratios": true, "yoy": true, "annual_ratio": true, "sma": true, "ema": true, "rsi": true, "macd": true, "crossover": true, "stress": true, "bond": true, "futures": true, "earnings": true,
+	"record_interest": true, "recommendations": true, "evaluate_monitor": true, "trailing_dividend": true, "portfolio_analysis": true, "performance": true, "aligned_returns": true, "daily_close_map": true, "reported_ratios": true, "source_financial_tables": true, "publisher_profile": true, "issuer_identity": true, "issuer_masthead": true, "validate_preferences": true}
 
 type Worker struct {
 	Python, Script string

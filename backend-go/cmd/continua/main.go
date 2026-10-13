@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"continua/backend/internal/auth"
+	"continua/backend/internal/engine"
 	"continua/backend/internal/httpapi"
 	"continua/backend/internal/marketdata"
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"log/slog"
 	"net/http"
 	"os"
@@ -19,6 +19,10 @@ func main() {
 	// Local candidate only until the exhaustive migration/cutover gates pass.
 	if os.Getenv("NODE_ENV") == "production" || os.Getenv("CONTINUA_NATIVE_PRODUCTION") == "true" {
 		slog.Error("Native production cutover blocked: rewrite incomplete")
+		os.Exit(1)
+	}
+	if driver := os.Getenv("CACHE_DRIVER"); driver != "" && driver != "memory" {
+		slog.Error("Native distributed cache migration is incomplete; configured driver cannot be silently bypassed")
 		os.Exit(1)
 	}
 	connection := os.Getenv("DATABASE_URL")
@@ -35,6 +39,18 @@ func main() {
 	authenticator := auth.New(store, false)
 	authenticator.DevelopmentKey = os.Getenv("DEV_API_KEY")
 	api := httpapi.New(store, authenticator)
+	if revision := os.Getenv("NATIVE_CANDIDATE_REVISION"); revision != "" {
+		api.Revision = revision
+	}
+	if python := os.Getenv("NATIVE_PYTHON_BIN"); python != "" {
+		script := os.Getenv("NATIVE_PYTHON_SCRIPT")
+		if script == "" {
+			script = "engine-python/worker.py"
+		}
+		worker := engine.NewWorker(python, script)
+		api.Engine = worker
+		api.PreferencesStore = &engine.PreferenceRepository{DB: store.DB, Worker: worker}
+	}
 	supabase := os.Getenv("SUPABASE_URL")
 	if supabase == "" {
 		supabase = "https://jjsetogmnumoudrovpzn.supabase.co"

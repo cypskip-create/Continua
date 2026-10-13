@@ -5,10 +5,15 @@ import (
 	"continua/backend/internal/auth"
 	"database/sql"
 	"encoding/json"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 	"time"
 )
 
-type Store struct{ DB *sql.DB }
+type Store struct {
+	DB              *sql.DB
+	AllowUnreviewed bool
+}
 
 func (s *Store) EffectivePlan(ctx context.Context, id string) (string, error) {
 	var plan sql.NullString
@@ -95,13 +100,27 @@ func (s *Store) Instruments(ctx context.Context, exchange string) ([]json.RawMes
 	return out, rows.Err()
 }
 func Open(connection string) (*Store, error) {
-	db, err := sql.Open("pgx", connection)
+	config, err := nativeConnectionConfig(connection)
 	if err != nil {
 		return nil, err
 	}
+	db := stdlib.OpenDB(*config)
 	db.SetMaxOpenConns(4)
 	db.SetMaxIdleConns(2)
 	db.SetConnMaxIdleTime(30 * time.Second)
 	db.SetConnMaxLifetime(30 * time.Minute)
 	return &Store{DB: db}, nil
+}
+
+func nativeConnectionConfig(connection string) (*pgx.ConnConfig, error) {
+	config, err := pgx.ParseConfig(connection)
+	if err != nil {
+		return nil, err
+	}
+	// Supavisor transaction pooling cannot retain named prepared statements.
+	// Simple protocol uses pgx's own safe parameter encoding, including UUID
+	// strings/arrays whose types PostgreSQL must infer from the SQL context.
+	config.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
+	config.ConnectTimeout = 10 * time.Second
+	return config, nil
 }

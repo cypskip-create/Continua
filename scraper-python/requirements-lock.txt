@@ -1,0 +1,14 @@
+# Resolved native collector dependency set, validated 2026-10-13.
+# Binary wheels are selected for the host platform by pip.
+boto3==1.43.97
+botocore==1.43.112
+jmespath==1.1.0
+psycopg==3.3.6
+psycopg-binary==3.3.6
+psycopg-pool==3.3.3
+python-dateutil==2.9.0.post0
+s3transfer==0.19.2
+six==1.17.0
+typing_extensions==4.16.0
+tzdata==2026.5
+urllib3==2.8.0

@@ -1,0 +1,4 @@
+# Native collector dependencies. No Node/TypeScript runtime.
+psycopg[binary]==3.3.6
+psycopg-pool==3.3.3
+boto3==1.43.97

@@ -922,8 +922,10 @@
       "legacyFile": "backend/src/ingestion/normalizers/issuerIdentity.js",
       "legacySha256": "7558fec130caed827b6e9e3b4746da795565cf4d019afc6f01deb77daf33f2c6",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "ported",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "replacement": "engine-python/continua_engine/publisher.py",
+      "validation": "177-case native parity suite including exact legal suffix and masthead boundaries"
     },
     {
       "legacyFile": "backend/src/ingestion/normalizers/kakuziGroupReport.js",
@@ -1125,8 +1127,10 @@
       "legacyFile": "backend/src/services/analytics/candleAggregator.js",
       "legacySha256": "2d49d05e3073a32506b494a549aa2b076d88e8e1c9cf7be6fe3ddf0fab1ac107",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "ported",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "replacement": "engine-python/continua_engine/candles.py",
+      "validation": "177-case numerical/schema parity suite plus 28 owned-database read comparisons; all supported calendar intervals"
     },
     {
       "legacyFile": "backend/src/services/apiKeyAccess.js",
@@ -1139,15 +1143,17 @@
       "legacyFile": "backend/src/services/marketData/historicalService.js",
       "legacySha256": "ef995f3ef0d443a295e4e92d614af03284c94b8e3d367237ac942fd386185ee9",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go HTTP/cache/read and Python calendar aggregation pass fixtures and owned-database comparisons; complete legacy date-input/error-query compatibility and hosted load validation remain pending."
     },
     {
       "legacyFile": "backend/src/services/marketData/indexService.js",
       "legacySha256": "cd83fec3a7581e29c245223b091dcaa1b865a1d5f4ec76cc3134713b7dea3b7e",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go read/cache and refresh callback hook exist; collector catch-up and index ingestion integration remain pending."
     },
     {
       "legacyFile": "backend/src/services/marketData/moversService.js",
@@ -1316,9 +1322,10 @@
       "legacyFile": "backend/src/services/research/enginePreferences.js",
       "legacySha256": "2f6d5372eb52869af2e3d69d81f426c99bab87684a278d04a50dd414b211036e",
       "targetLanguage": "Python",
-      "status": "partial",
+      "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "remaining": "Native Python opt-in preference calculations exist; full schema/persistence/API/consent integration remains pending."
+      "replacement": "engine-python/continua_engine/preferences.py",
+      "validation": "177-case schema/opt-in calculation parity suite; native Go owner-scoped persistence and HTTP tests"
     },
     {
       "legacyFile": "backend/src/services/research/engineRiskLab.js",
@@ -1387,15 +1394,17 @@
       "legacyFile": "backend/src/services/research/publisherFinancialTables.js",
       "legacySha256": "59f5cc78683aa23308d07246629cc6c932c949d9e8e4d32763c472c6212bae22",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python strict raw table validator and Go permission/digest/ticker/tab/latest-category reads pass fixtures and owned-database comparisons; whole collector/publication and coverage validation remain pending."
     },
     {
       "legacyFile": "backend/src/services/research/publisherProfile.js",
       "legacySha256": "8f879517faaf7e02a070e0dccf5a52d653b719d0ff7e690b321e3633b1f50a3c",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python exact issuer profile validation and Go publisher-digest/URL reads pass profile fixtures and owned-database comparisons; whole source collector and coverage validation remain pending."
     },
     {
       "legacyFile": "backend/src/services/research/pythonCalculations.js",
@@ -1507,8 +1516,9 @@
       "legacyFile": "backend/src/storage/cache.js",
       "legacySha256": "73d2f6b6d0c9e9171e720b729aee2c5c19b9bd9198ea82f5f012781f0e5a626e",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go byte-bounded memory LRU/singleflight/TTL/cancellation pass tests. Redis and Upstash alternatives are not yet ported."
     },
     {
       "legacyFile": "backend/src/storage/dateTypes.js",
@@ -1535,8 +1545,9 @@
       "legacyFile": "backend/src/storage/repositories/candlesRepository.js",
       "legacySha256": "6d7d7971e6fe7c10ba573d4f019635df4696e41c6d894e9824f46d8e42a3c3c0",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go sourced candle/price/sparkline/high-low/average-volume reads exist and 28 owned-database comparisons pass; transactional batch writes remain pending."
     },
     {
       "legacyFile": "backend/src/storage/repositories/companyAnnouncementsRepository.js",
@@ -1563,15 +1574,17 @@
       "legacyFile": "backend/src/storage/repositories/engineRepository.js",
       "legacySha256": "634a164d18c2703bd7d3b8889377dd583c16604a2633970dca2270f012de11c7",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go preferences/save/record-interest use the existing account advisory lock, preserve server interests and enforce schema/defaults through Python. Snapshot observation, monitoring rules and AI-budget methods remain pending."
     },
     {
       "legacyFile": "backend/src/storage/repositories/financialsRepository.js",
       "legacySha256": "30f77b2462f071a4e12bd9fcd6caac05306e925b4fa19396a5e2ef29c8f2157d",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go reviewed, nonfuture latest/history reads pass owned-database comparisons; canonical component/bundle writes and publication integration remain pending."
     },
     {
       "legacyFile": "backend/src/storage/repositories/financialStatementCandidatesRepository.js",
@@ -1584,8 +1597,9 @@
       "legacyFile": "backend/src/storage/repositories/indicesRepository.js",
       "legacySha256": "2c0975d5db5caef2b060a5ee04d1865dced50ea8f9695ad7fa30a7e624a9be3f",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go publisher-EOD index reads pass comparisons; upsert/ingestion integration remains pending."
     },
     {
       "legacyFile": "backend/src/storage/repositories/ingestionLogRepository.js",
@@ -1620,8 +1634,9 @@
       "legacyFile": "backend/src/storage/repositories/securitiesRepository.js",
       "legacySha256": "99fc453934a743db71a6a00cb7502348c750c3fc713b0143ecd905f6654f133d",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go security/instrument/sector/company/publisher-profile reads pass owned-database comparisons; sector/company/security writes remain pending."
     },
     {
       "legacyFile": "backend/src/storage/upstashCache.js",
@@ -1831,8 +1846,9 @@
       "legacyFile": "scraper/src/adapters/kenyanstocks/tabPlan.js",
       "legacySha256": "54f4c70f51ddc3843f3077e9a4e52dccef1b65a319a2441a782085ed15b5daa5",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python tab/category plans pass six pure reference comparisons; full browser-observed discovery/resume integration remains pending. Credential-bearing URLs are intentionally rejected."
     },
     {
       "legacyFile": "scraper/src/adapters/nse/announcementsAdapter.js",
@@ -2049,8 +2065,9 @@
       "legacyFile": "scraper/src/extraction/serialWorkQueue.js",
       "legacySha256": "b69f3b877470eaf3bc03095122614d16821b4b0e37636d84d3954f4cfd1ad088",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native bounded serial queue/cancellation/failure recovery tests pass; all browser/PDF/archive scheduling integration and resource tests remain pending."
     },
     {
       "legacyFile": "scraper/src/extraction/tableExtract.js",
@@ -2119,15 +2136,17 @@
       "legacyFile": "scraper/src/storage/crawlStateRepository.js",
       "legacySha256": "f92f000d9ae911d64b05ca88a083165f89374894099a50eadc5cd163aa685035",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python discovery/claims/status/hash checkpoint methods add last-seen lease CAS and preserve active leases; fixtures pass. Full crawler/real restart integration remains pending."
     },
     {
       "legacyFile": "scraper/src/storage/db.js",
       "legacySha256": "fb26116786812abf8647321a40d3ab32226b6791b95041c22a2744e6b66ed831",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native psycopg async pool, bounded deadlines, transaction handling and disabled prepared statements pass real read-only owned-database connectivity; full collector integration/restart/load remains pending."
     },
     {
       "legacyFile": "scraper/src/storage/deadLettersRepository.js",
@@ -2140,15 +2159,17 @@
       "legacyFile": "scraper/src/storage/documentJobsRepository.js",
       "legacySha256": "d38ac74c1007cdc9bdfeea48d570d327c35a65ce472caf40c4f0e8562efe9eb0",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python enqueue/claim/requeue/finish preserve durable attempt tokens and SKIP LOCKED recovery; mocked SQL/queue tests pass. Real concurrent claim/restart/adapter integration remains pending."
     },
     {
       "legacyFile": "scraper/src/storage/extractionsRepository.js",
       "legacySha256": "e9b5bd66d616388cc342f798bea299ab939c79b31d1716fa34c14bc4e8a25f10",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python immutable insertion/latest/review/unextracted readers preserve versions, review flags and cooldown; fixtures pass. Whole extraction/operator/publication integration remains pending."
     },
     {
       "legacyFile": "scraper/src/storage/r2Archive.js",
@@ -2169,8 +2190,9 @@
       "legacyFile": "scraper/src/storage/rawArtifactsRepository.js",
       "legacySha256": "df2c41a63b35e108f5fb62035a9a1be99f99cc5cc5657e2e22b2ce55af64922b",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python atomic hash upsert and URL attribution preserve artifact IDs and verified paths; transaction fixture tests pass. Whole private storage/collector integration remains pending."
     },
     {
       "legacyFile": "scraper/src/storage/rawStorage.js",
@@ -2183,8 +2205,9 @@
       "legacyFile": "scraper/src/storage/sourcesRepository.js",
       "legacySha256": "e19315edbbb2778d823d6d65505c9bc6df5e7a0b5128c9fb24c6eb6ef67d8a6b",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python source readers/upsert/insert-if-missing preserve permission fields and operator disables; fixtures pass. Built-in catalogue/adapter/boot integration remains pending."
     },
     {
       "legacyFile": "scraper/src/types.js",
@@ -2866,8 +2889,8 @@
       "method": "GET",
       "path": "/companies/:symbol",
       "line": 7,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
@@ -2994,8 +3017,8 @@
       "method": "GET",
       "path": "/engine/recommendations",
       "line": 53,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
@@ -3050,24 +3073,24 @@
       "method": "GET",
       "path": "/engine/preferences",
       "line": 89,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/preferences",
       "line": 90,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/interests",
       "line": 91,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
@@ -3170,24 +3193,24 @@
       "method": "GET",
       "path": "/financials/:symbol/publisher-tables",
       "line": 10,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/financials.routes.js",
       "method": "GET",
       "path": "/financials/:symbol",
       "line": 17,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/financials.routes.js",
       "method": "GET",
       "path": "/financials/:symbol/history",
       "line": 18,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/health.routes.js",
@@ -3210,24 +3233,24 @@
       "method": "GET",
       "path": "/historical/sparklines",
       "line": 8,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/historical.routes.js",
       "method": "GET",
       "path": "/historical/:symbol",
       "line": 9,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/historical.routes.js",
       "method": "GET",
       "path": "/historical/:symbol/performance",
       "line": 10,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
@@ -3418,16 +3441,16 @@
       "method": "GET",
       "path": "/indices",
       "line": 15,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/instruments.routes.js",
       "method": "GET",
       "path": "/instruments",
       "line": 7,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/marketResearch.routes.js",
@@ -3490,16 +3513,16 @@
       "method": "GET",
       "path": "/quotes",
       "line": 7,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/quotes.routes.js",
       "method": "GET",
       "path": "/quotes/:symbol",
       "line": 8,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/research.routes.js",
@@ -3522,8 +3545,8 @@
       "method": "GET",
       "path": "/sectors",
       "line": 5,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/valuation.routes.js",

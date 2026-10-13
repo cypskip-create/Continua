@@ -4581,5 +4581,18 @@
       ],
       "classificationBasis": "workload and integration review; not an individual benchmark"
     }
-  ]
+  ],
+  "nativeRewrite": {
+    "status": "in_progress",
+    "productionCutoverAllowed": false,
+    "ledger": "docs/architecture/NATIVE_REWRITE_LEDGER.json",
+    "boundaries": {
+      "backend": "Go for cancellable HTTP/auth/database/billing/streaming/jobs",
+      "engine": "Python for numerical/evidence/schema calculations; Go for authenticated persistence/API",
+      "scraper": "Python for bounded asynchronous collection/extraction, psycopg PostgreSQL and boto3 private R2",
+      "database": "Retained SQL/RLS/atomic fulfillment",
+      "providerEdge": "Retained provider-compatible JavaScript/Deno"
+    },
+    "validation": "Go/Python component and read-only compatibility checks are not full release approval."
+  }
 }

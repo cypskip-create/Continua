@@ -4,6 +4,7 @@ package httpapi
 import (
 	"context"
 	"continua/backend/internal/auth"
+	"continua/backend/internal/cache"
 	"encoding/json"
 	"errors"
 	"net"
@@ -22,13 +23,17 @@ type MarketStore interface {
 	Ping(context.Context) error
 }
 type Server struct {
-	Store    MarketStore
-	Auth     *auth.Authenticator
-	Users    *auth.UserVerifier
-	Origins  map[string]bool
-	Revision string
-	Billing  AccountBilling
-	limiter  *Limiter
+	Store                            MarketStore
+	Auth                             *auth.Authenticator
+	Users                            *auth.UserVerifier
+	Origins                          map[string]bool
+	Revision                         string
+	Billing                          AccountBilling
+	Engine                           Calculator
+	PreferencesStore                 PreferenceStore
+	ReadCache                        *cache.Memory
+	RequestIndices, RequestDocuments func()
+	limiter                          *Limiter
 }
 
 type AccountBilling interface {
@@ -36,7 +41,7 @@ type AccountBilling interface {
 }
 
 func New(store MarketStore, authenticator *auth.Authenticator) *Server {
-	return &Server{Store: store, Auth: authenticator, Origins: map[string]bool{}, limiter: NewLimiter(), Revision: "native-rewrite-incomplete"}
+	return &Server{Store: store, Auth: authenticator, Origins: map[string]bool{}, limiter: NewLimiter(), Revision: "native-rewrite-incomplete", ReadCache: cache.NewMemory()}
 }
 
 var previewOrigin = regexp.MustCompile(`^https://continua(-[a-z0-9-]+)?-cypskip-creates-projects\.vercel\.app$`)
@@ -140,16 +145,25 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.Billing != nil && s.Billing.AccountHTTP(ctx, w, r, identity) {
 		return
 	}
+	if s.preferences(ctx, w, r, identity) {
+		return
+	}
 	if r.Method != http.MethodGet {
 		failure(w, 501, "This operation has not yet been migrated to the native backend.")
 		return
 	}
 	exchange := r.URL.Query().Get("exchange")
-	if exchange == "" {
+	if !r.URL.Query().Has("exchange") {
 		exchange = "NSE"
 	}
-	if exchange != "NSE" {
+	if exchange != "NSE" || len(r.URL.Query()["exchange"]) > 1 {
 		failure(w, 400, "Invalid exchange")
+		return
+	}
+	if s.publisherReads(ctx, w, r, exchange) {
+		return
+	}
+	if s.marketReads(ctx, w, r, exchange) {
 		return
 	}
 	switch {

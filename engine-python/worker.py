@@ -2,7 +2,7 @@
 import json
 import pathlib
 import sys
-from continua_engine import indicators, ratios, valuation, preferences, monitoring, dividends, portfolio, reported
+from continua_engine import indicators, ratios, valuation, preferences, monitoring, dividends, portfolio, reported, candles, publisher
 
 OPERATIONS = {"sma":indicators.sma,"ema":indicators.ema,"rsi":indicators.rsi,
               "macd":indicators.macd,"crossover":indicators.latest_crossover,
@@ -11,7 +11,10 @@ OPERATIONS = {"sma":indicators.sma,"ema":indicators.ema,"rsi":indicators.rsi,
               "evaluate_monitor":monitoring.evaluate_monitor,"trailing_dividend":dividends.trailing_dividend_per_share,
               "portfolio_analysis":portfolio.portfolio_analysis,"performance":portfolio.performance,
               "aligned_returns":portfolio.aligned_returns,"daily_close_map":portfolio.daily_close_map,
-              "reported_ratios":reported.reported_research_ratios}
+              "reported_ratios":reported.reported_research_ratios,"aggregate_candles":candles.aggregate_candles,
+              "source_financial_tables":publisher.source_financial_tables,"publisher_profile":publisher.profile_observation,
+              "issuer_identity":publisher.legal_issuer_identity,"issuer_masthead":publisher.issuer_masthead_matches,
+              "validate_preferences":preferences.validate_preferences}
 
 def execute(operation, args):
     if operation in OPERATIONS:

@@ -6,9 +6,16 @@ import {annualRatioAt} from '../../backend/src/services/technical/valuationHisto
 import {sma,ema,rsi,macd,latestCrossover} from '../../backend/src/services/technical/indicators.js';
 import {portfolioAnalysis,performance,alignedReturns,dailyCloseMap} from '../../backend/src/services/research/enginePortfolio.js';
 import {trailingDividendPerShare} from '../../backend/src/services/research/dividendMetrics.js';
-import {recordInterest,researchRecommendations,defaultPreferences} from '../../backend/src/services/research/enginePreferences.js';
+import {recordInterest,researchRecommendations,defaultPreferences,EnginePreferencesSchema} from '../../backend/src/services/research/enginePreferences.js';
 import {evaluateMonitor,monitoringKinds} from '../../backend/src/services/research/engineMonitoring.js';
 import {reportedResearchRatios} from '../../backend/src/services/research/reportedResearch.js';
+import {aggregateCandles} from '../../backend/src/services/analytics/candleAggregator.js';
+import {legalIssuerIdentity,issuerMastheadMatches} from '../../backend/src/ingestion/normalizers/issuerIdentity.js';
+// The publisher module includes a repository import, but only its pure validator
+// is invoked. Force an unreachable fixture DSN, never inherited production data.
+process.env.NODE_ENV='test';
+process.env.DATABASE_URL='postgresql://fixture:fixture@127.0.0.1:1/fixture';
+const {sourceFinancialTables}=await import('../../backend/src/services/research/publisherFinancialTables.js');
 const python=process.env.NATIVE_PYTHON_BIN??'python3';
 const worker=fileURLToPath(new URL('../../engine-python/worker.py',import.meta.url));
 const operations={ratios:computeRatios,yoy:yoyGrowth,annual_ratio:annualRatioAt,sma,ema,rsi,macd,crossover:latestCrossover,
@@ -16,8 +23,22 @@ const operations={ratios:computeRatios,yoy:yoyGrowth,annual_ratio:annualRatioAt,
  trailing_dividend:(actions,now)=>trailingDividendPerShare(actions,new Date(now)),
  record_interest:(settings,symbol,exchange,reset,now)=>recordInterest(settings,symbol,exchange,reset,new Date(now)),
  recommendations:(settings,now)=>researchRecommendations(settings,new Date(now)),evaluate_monitor:evaluateMonitor,
- reported_ratios:(id,quote,history,dividend,now)=>reportedResearchRatios(id,quote,history,dividend,new Date(now))};
+ reported_ratios:(id,quote,history,dividend,now)=>reportedResearchRatios(id,quote,history,dividend,new Date(now)),aggregate_candles:aggregateCandles,source_financial_tables:sourceFinancialTables,issuer_identity:legalIssuerIdentity,issuer_masthead:issuerMastheadMatches,
+ validate_preferences:raw=>{const parsed=EnginePreferencesSchema.safeParse(raw);return parsed.success?{valid:true,settings:parsed.data}:{valid:false};}};
 const cases=[];
+for(const settings of [{},{learnInterests:true,sectors:['  Banking  ','\ufeffTelecom\ufeff']},{learnInterests:'yes'},{unknown:true},{goal:'Speculate'},{interests:[{symbol:'KCB',exchange:'NSE',visits:2,lastSeen:'2026-10-13T10:00:00Z',unknown:'stripped'}]},{interests:[{symbol:'KCB',exchange:'NSE',visits:true}]},{interests:[{symbol:'KCB',exchange:'NSE',visits:10001}]},{interests:[{symbol:'KCB',exchange:'NSE',visits:2,lastSeen:'2026-10-13T10:00:00+03:00'}]},{sectors:['💜'.repeat(31)]},{notifications:null}])cases.push({operation:'validate_preferences',args:[settings]});
+for(const name of ['KCB Group PLC','KCB Kenya Limited','Co-operative Bank of Kenya Ltd','A & B Public Limited Company','Alpha Group',''])cases.push({operation:'issuer_identity',args:[name]});
+for(const text of ['KCB Group PLC audited annual results','KCB Kenya Ltd annual results','Unrelated\nKCB Group Limited consolidated financial results'])cases.push({operation:'issuer_masthead',args:[text,'KCB Group PLC']});
+const table={kind:'publisher_table',tab:'Financials',category:'Profit/Loss',columns:['Metric','2025','2024'],rows:[{label:'Revenue',rowKind:'item',cells:[{raw:'1.00 B'},{raw:'900 M'}]}]};
+for(const mutation of ['valid','future','duplicate','cells','group','unicode']){
+ const t=structuredClone(table);if(mutation==='future')t.columns[1]='2099';if(mutation==='duplicate')t.columns[1]='2024';if(mutation==='cells')t.rows[0].cells=[];if(mutation==='group'){t.rows[0].rowKind='group';t.rows[0].cells=[];}if(mutation==='unicode')t.rows[0].label='💜'.repeat(251);
+ cases.push({operation:'source_financial_tables',args:[[t]]});
+}
+for(const interval of ['1m','5m','15m','1h','1d','1w','1M','1y']){
+ cases.push({operation:'aggregate_candles',args:[[],interval]});
+ const dates=['2024-02-28T12:00:00Z','2024-02-29T12:00:00Z','2024-03-01T12:00:00Z','2024-03-03T12:00:00Z','2024-03-04T12:00:00Z','2024-12-31T12:00:00Z','2025-01-01T12:00:00Z'];
+ for(const mixed of [false,true])cases.push({operation:'aggregate_candles',args:[dates.map((timestamp,i)=>({securityId:'NSE:COOP',interval:'1d',timestamp,open:20+i,close:21+i,high:22+i,low:19+i,volume:100+i,sourceUrl:mixed&&i%2?'https://fixture.example/b':'https://fixture.example/a'})).reverse(),interval]});
+}
 let seed=123456;
 const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
 for(let batch=0;batch<12;batch++){
