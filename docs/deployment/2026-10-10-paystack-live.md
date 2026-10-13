@@ -50,7 +50,7 @@ expiry-aware access. Legacy manually granted paid tiers with no expiry remain in
 
 ## Deployment validation
 
-- `backend/scripts/applyPaystackLiveMigration.ts --validate` validates then rolls back.
+- `backend/scripts/applyPaystackLiveMigration.js --validate` validates then rolls back.
 - `--apply` applies exactly this migration and records its Supabase migration ledger entry.
 - Both paths test activation, repeat verification, early renewal and expiry with a
   synthetic user rolled back to a savepoint. They print only safe verification flags.

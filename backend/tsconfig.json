@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
@@ -14,6 +15,6 @@
     "declaration": false,
     "sourceMap": true
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "include": ["src/**/*.js", "src/**/*.d.ts", "tests/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -29,7 +29,7 @@ already called for:
 | File | Purpose |
 |---|---|
 | `client.ts` | Base fetch wrapper — API key header, base URL, typed `ContinuaApiError` |
-| `types.ts` | TS types mirroring the backend's standard schema (`backend/src/types/market.ts`) |
+| `types.ts` | TS types mirroring the backend's standard schema (`backend/src/types/market.js`) |
 | `quotesApi.ts`, `historicalApi.ts`, `companiesApi.ts`, `financialsApi.ts`, `corporateActionsApi.ts`, `moversApi.ts`, `sectorsApi.ts`, `researchApi.ts`, `screenerApi.ts`, `instrumentsApi.ts` | One thin module per backend resource |
 | `websocketClient.ts` | Single shared WebSocket connection with per-symbol ref-counted subscriptions — N components watching SCOM share one server subscription, matching `docs/architecture/DATA_FLOW.md`'s "shared real-time data layer" |
 
@@ -121,7 +121,7 @@ data:
 
 ## Known gap: symbol universe mismatch
 
-The backend's mock NSE adapter (`backend/src/adapters/nse/nseClient.ts`)
+The backend's mock NSE adapter (`backend/src/adapters/nse/nseClient.js`)
 currently generates data for **17 real NSE tickers**. The frontend's static
 reference list (`app/src/lib/stockPrices.ts`) has **~30**. The extra ~13
 (e.g. `ARM`, `NBK`, `UMEME`, `CIC`, `KENO`, `WTK`, `KAKZ`, `SASN`, `EGAD`,

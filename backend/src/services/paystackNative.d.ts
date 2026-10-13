@@ -1,0 +1,96 @@
+import { z } from 'zod';
+export declare const nativeReferencePattern: RegExp;
+export declare function normalizeKenyanPhone(value: string): string;
+export declare const nativeCheckoutInput: z.ZodEffects<z.ZodObject<{
+    plan: z.ZodEnum<["premium", "premium_plus"]>;
+    cycle: z.ZodEnum<["monthly", "annual"]>;
+    policyVersion: z.ZodLiteral<"2026-10-12">;
+    accepted: z.ZodLiteral<true>;
+    paymentMethod: z.ZodEnum<["mpesa", "airtel", "card"]>;
+    phone: z.ZodOptional<z.ZodString>;
+    intentId: z.ZodString;
+    autoRenew: z.ZodDefault<z.ZodBoolean>;
+}, "strict", z.ZodTypeAny, {
+    plan: "premium" | "premium_plus";
+    cycle: "annual" | "monthly";
+    policyVersion: "2026-10-12";
+    accepted: true;
+    paymentMethod: "card" | "mpesa" | "airtel";
+    intentId: string;
+    autoRenew: boolean;
+    phone?: string | undefined;
+}, {
+    plan: "premium" | "premium_plus";
+    cycle: "annual" | "monthly";
+    policyVersion: "2026-10-12";
+    accepted: true;
+    paymentMethod: "card" | "mpesa" | "airtel";
+    intentId: string;
+    phone?: string | undefined;
+    autoRenew?: boolean | undefined;
+}>, {
+    plan: "premium" | "premium_plus";
+    cycle: "annual" | "monthly";
+    policyVersion: "2026-10-12";
+    accepted: true;
+    paymentMethod: "card" | "mpesa" | "airtel";
+    intentId: string;
+    autoRenew: boolean;
+    phone?: string | undefined;
+}, {
+    plan: "premium" | "premium_plus";
+    cycle: "annual" | "monthly";
+    policyVersion: "2026-10-12";
+    accepted: true;
+    paymentMethod: "card" | "mpesa" | "airtel";
+    intentId: string;
+    phone?: string | undefined;
+    autoRenew?: boolean | undefined;
+}>;
+export declare function nativeCheckoutEnabled(): boolean;
+export declare function nativeSecret(mode: 'live' | 'test'): string | undefined;
+export declare function nativeCheckoutForUser(userId: string): boolean;
+export declare function nativeProvider(mode: 'live' | 'test', path: string, body?: unknown): Promise<unknown>;
+export declare function initializeNativeCheckout(userId: string, email: string, input: z.infer<typeof nativeCheckoutInput>): Promise<{
+    reference: string;
+    mode: "test" | "live";
+    plan: "premium" | "premium_plus";
+    cycle: "annual" | "monthly";
+    amount: number;
+    currency: string;
+    accessCode: string | null;
+    paymentMethod: "card" | "mpesa" | "airtel";
+    status: string;
+    authorizationDeadline: string | null;
+}>;
+export declare function verifyNativeCheckout(reference: string, userId?: string): Promise<{
+    accessCode?: string | null | undefined;
+    paymentMethod: "card" | "mpesa" | "airtel";
+    expiresAt?: string | undefined;
+    receiptNumber?: string | undefined;
+    reference: string;
+    mode: string;
+    status: string;
+    plan: string;
+    cycle: string;
+    amount: number;
+    currency: string;
+    policyVersion: string | null;
+    membershipChanged: boolean;
+} | {
+    accessCode: string | null;
+    paymentMethod: "card" | "mpesa" | "airtel";
+    status: string;
+    plan: "premium" | "premium_plus";
+    cycle: "annual" | "monthly";
+    membershipChanged: boolean;
+    reference: string;
+    mode: "test" | "live";
+    amount: number;
+    currency: string;
+    authorizationDeadline: string | null;
+}>;
+export declare function cardRenewalEnabled(): boolean;
+export declare function nextMonth(date: Date): Date;
+export declare function encryptAuthorization(value: string): string;
+export declare function decryptAuthorization(value: string): string;

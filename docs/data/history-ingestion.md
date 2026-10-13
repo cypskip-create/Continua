@@ -34,7 +34,7 @@ All published listed-company and press-release archive pages were discovered for
 
 Native PDF extraction now uses isolated `pdftotext -layout` processes (Poppler, installed by the scraper Dockerfile), avoiding the previous PDF worker cleanup failures. Scanned PDFs fall back to OCR and require review. A single process is bounded to 500 pages, 60 seconds and 20 MB of extracted text.
 
-`backend/scripts/draftBondReport.ts` drafts observations from the documented CBK reopened-bond layout. It requires aligned issue/ISIN/maturity/yield columns and the signed report date. Auction yields are tagged `accepted_auction`, never passed off as secondary-market yields. Two observations in `cbk-reviewed-2026-09-30.json` were checked against a rendered official PDF and published. The tenor is the original issue tenor; coupon and price are not yield. Other CBK report layouts remain review-only.
+`backend/scripts/draftBondReport.js` drafts observations from the documented CBK reopened-bond layout. It requires aligned issue/ISIN/maturity/yield columns and the signed report date. Auction yields are tagged `accepted_auction`, never passed off as secondary-market yields. Two observations in `cbk-reviewed-2026-09-30.json` were checked against a rendered official PDF and published. The tenor is the original issue tenor; coupon and price are not yield. Other CBK report layouts remain review-only.
 
 Operator collection commands: `npm run history:backfill -- --discover-only` and `npm run history:backfill -- --drain-only --batches=4` in scraper. The CLI does not reveal private environment values. Discovery stores each page's jobs before checkpointing it, so a restart does not lose older years.
 
@@ -44,7 +44,7 @@ Operator collection commands: `npm run history:backfill -- --discover-only` and 
 
 The private archive audit identified legacy records whose bytes were not retained during the storage-driver move. The sweep now selects only objects actually present in the configured private bucket, prioritises PDFs, backs off failed parses for one hour, and coalesces overlapping manual/cron calls within the service process. Missing records remain intact for provenance, not replaced with invented extraction text.
 
-`backend/scripts/recoverMissingArchive.ts 100` reports missing enabled-source PDFs; add `--requeue` to make their original URLs eligible for guarded crawling again. Two missing NSE PDFs were requeued at this checkpoint. Recovered identical bytes retain the original artifact ID; changed publisher content becomes a different hashed artifact. Automatic extraction is not automatic publication: financial figures still require period, unit, scope and source review through the protected confirmation workflow.
+`backend/scripts/recoverMissingArchive.js 100` reports missing enabled-source PDFs; add `--requeue` to make their original URLs eligible for guarded crawling again. Two missing NSE PDFs were requeued at this checkpoint. Recovered identical bytes retain the original artifact ID; changed publisher content becomes a different hashed artifact. Automatic extraction is not automatic publication: financial figures still require period, unit, scope and source review through the protected confirmation workflow.
 
 ### Checked NSE index publication
 

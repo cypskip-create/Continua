@@ -1,9 +1,0 @@
-/** Public source-backed statement verification; no account or credential data. */
-import {pool,query} from '../src/storage/db.js';
-try{
- const rows=await query(`SELECT p.security_id,p.fiscal_year,p.period_end::text,p.reported_at::text,i.revenue::float8,i.net_income::float8,i.eps::float8,b.total_assets::float8,b.total_liabilities::float8,b.total_equity::float8,(SELECT array_agg(DISTINCT r.source_url) FROM market.filing_history_reviews r WHERE r.period_id=p.id) AS sources FROM market.financial_periods p LEFT JOIN market.income_statements i ON i.period_id=p.id LEFT JOIN market.balance_sheets b ON b.period_id=p.id WHERE p.security_id IN('NSE:KCB','NSE:KUKZ') AND p.fiscal_year IN(2016,2017) AND p.period_type='annual' ORDER BY p.security_id,p.fiscal_year`);
- if(rows.rows.length!==4||rows.rows.some(r=>!r.sources?.length||r.revenue==null||r.total_assets==null||Math.abs(r.total_assets-r.total_liabilities-r.total_equity)>3000))throw new Error('Expansion verification failed');
- const html=(await query(`SELECT p.fiscal_year,i.revenue::float8,i.net_income::float8,i.eps::float8 FROM market.financial_periods p JOIN market.income_statements i ON i.period_id=p.id WHERE p.security_id='NSE:KUKZ' AND p.period_type='annual' AND p.fiscal_year BETWEEN 2021 AND 2025 AND EXISTS(SELECT 1 FROM market.filing_history_reviews r WHERE r.period_id=p.id AND r.source_url='https://www.kakuzi.co.ke/five-year-record') ORDER BY p.fiscal_year`)).rows;
- if(html.length!==5||html.some(r=>r.revenue==null||r.net_income==null||r.eps==null)||html.find(r=>r.fiscal_year===2024)?.net_income!==-131694000)throw new Error('Non-PDF history verification failed');
- console.log(JSON.stringify({verified:true,statements:rows.rows,htmlHistory:html},null,2));
-}catch(e){console.error((e as Error).message);process.exitCode=1;}finally{await pool.end();}

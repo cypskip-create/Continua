@@ -19,18 +19,23 @@ COPY package.json package-lock.json* ./
 RUN npm install
 COPY tsconfig.json tsconfig.build.json ./
 COPY src ./src
+COPY scripts ./scripts
 RUN npm run build
 
 FROM mcr.microsoft.com/playwright:v1.63.0-jammy AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-RUN apt-get update && apt-get install -y --no-install-recommends poppler-utils && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends poppler-utils python3 python3-venv && rm -rf /var/lib/apt/lists/*
+COPY python/requirements.txt /tmp/pdf-requirements.txt
+RUN python3 -m venv /opt/pdf-python && /opt/pdf-python/bin/pip install --no-cache-dir -r /tmp/pdf-requirements.txt
+COPY python ./python
 COPY package.json package-lock.json* ./
 # The base image already has matching-version Chromium/Firefox/WebKit
 # under PLAYWRIGHT_BROWSERS_PATH, so this `npm install` reuses them
 # instead of re-downloading — no separate `playwright install` step needed.
 RUN npm install --omit=dev
 COPY --from=build /app/dist ./dist
+COPY scripts ./scripts
 
 EXPOSE 4100
 CMD ["node", "dist/index.js"]

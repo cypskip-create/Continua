@@ -49,7 +49,7 @@ remain separate concerns.
 
 Migration `20261012030000_community_safety.sql` adds report storage, RPCs,
 block restrictions and notification filtering. The application script
-`backend/scripts/applyCommunitySafety.ts` tests duplicate reports, report
+`backend/scripts/applyCommunitySafety.js` tests duplicate reports, report
 privacy, bilateral blocking, follow cleanup, rejected blocked reactions/
 comments/follows, unblocking and mute reversal using synthetic auth accounts
 inside a savepoint. All fixtures are rolled back, even when the migration

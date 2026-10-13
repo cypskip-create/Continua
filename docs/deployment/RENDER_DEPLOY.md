@@ -8,12 +8,12 @@ frontend (`app/`) is unaffected — it stays on Vercel.
 Both services are **Web Services** (not Background Workers, not Cron
 Jobs). Each one is a single Node process that runs its own HTTP server
 *and* its own internal cron-scheduled workers together (see
-`backend/src/index.ts` / `scraper/src/index.ts`) — that's already how they
+`backend/src/index.js` / `scraper/src/index.js`) — that's already how they
 ran on Railway, and it's exactly what a Render Web Service is for. There's
 nothing left over that a separate worker or cron service would run.
 
 Good news on the database: **nothing about your data needs to move.**
-`backend/src/storage/db.ts` says it directly — this backend writes into
+`backend/src/storage/db.js` says it directly — this backend writes into
 the `market` schema of the *same* Postgres instance your Supabase project
 already uses (the scraper does the same with the `scraping` schema). So
 "migrate off Railway" here just means "move two Node processes to a new
@@ -158,7 +158,7 @@ actual cost of "free":
   Starter plan for that one service.
 - **Ephemeral disk.** Scraped raw artifacts (`RAW_STORAGE_DRIVER=local`,
   the only storage driver actually implemented right now — see
-  `scraper/src/storage/rawStorage.ts`) live on local disk, which Render
+  `scraper/src/storage/rawStorage.js`) live on local disk, which Render
   wipes on every deploy and restart, same as it would on Railway without
   a paid persistent volume. In this pipeline that's an acceptable
   tradeoff: raw artifacts are re-fetchable staging data, not the system

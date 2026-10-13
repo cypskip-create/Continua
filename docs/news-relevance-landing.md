@@ -4,7 +4,7 @@
 
 The previous reader called unverified, stored ticker associations “Affected stocks”. That conflated page mentions with price impact and retained old bad associations.
 
-Issuer evidence v2 lives in `backend/src/services/research/newsRelevance.ts` and is shared by ingestion, response validation, and historical repair. It checks issuer names, narrow brand aliases, explicit tickers, and the first substantive article prose. Quote rails, page menus, recommendations and unrelated boilerplate are not evidence. A company that is not in the exchange directory is not assigned to an unrelated listed peer. Legacy Safaricom symbols are collapsed when SCOM exists.
+Issuer evidence v2 lives in `backend/src/services/research/newsRelevance.js` and is shared by ingestion, response validation, and historical repair. It checks issuer names, narrow brand aliases, explicit tickers, and the first substantive article prose. Quote rails, page menus, recommendations and unrelated boilerplate are not evidence. A company that is not in the exchange directory is not assigned to an unrelated listed peer. Legacy Safaricom symbols are collapsed when SCOM exists.
 
 Every news API response revalidates associations from the stored extraction, not the old join table. Stock and portfolio queries filter that verified set; the reader shows a source quote for each relationship and explicitly distinguishes relevance from a proven price effect. Legacy cached unverified reader chips are withheld. Broad macro stories remain unassigned rather than making speculative company claims. This is conservative calculated analysis, not an LLM or guaranteed inference of every indirect economic effect.
 

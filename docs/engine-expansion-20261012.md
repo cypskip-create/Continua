@@ -42,7 +42,7 @@ These additions are research tools, not claims of Aladdin/Bloomberg equivalence.
 
 - `20261012010000_engine_forecast_notebook.sql`: private notebook and immutable/append-only rule guards.
 - `20261012011000_financial_version_audit.sql`: canonical baseline and transactional change triggers.
-- `backend/scripts/applyEngineResearchExpansion.ts`: transactional dry-run/apply, migration ledger, access checks, and a rolled-back trigger probe. Canonical financial values are not changed by that probe.
+- `backend/scripts/applyEngineResearchExpansion.js`: transactional dry-run/apply, migration ledger, access checks, and a rolled-back trigger probe. Canonical financial values are not changed by that probe.
 
 Regression tests cover split/dividend arithmetic, missing dates, bounded
 simulations, reproducible seeds, temporal holdout fitting, currency/date

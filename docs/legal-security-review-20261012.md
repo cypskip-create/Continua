@@ -64,7 +64,7 @@ No fictitious address, unsubscribe link or legal agent is supplied here.
 
 `20261012020000_checkout_policy_receipt.sql` adds nullable acknowledgement
 fields without changing existing charges or memberships.
-`backend/scripts/applyCheckoutPolicyMigration.ts` supports transactional
+`backend/scripts/applyCheckoutPolicyMigration.js` supports transactional
 dry-run/apply and migration-ledger verification.
 
 Regression checks cover age/Terms acknowledgement, suffix-only references,

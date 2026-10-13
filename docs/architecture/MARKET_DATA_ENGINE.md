@@ -118,7 +118,7 @@ numbers — see the comments at the top of `mansaAdapter.ts` and
 | Company profile (HQ, CEO, founded year, website) | ❌ Not in Mansa's stock/fundamentals payloads. `Company` fields left `undefined`. |
 
 The `CashFlowStatement.operatingCashFlow` field in
-`backend/src/types/market.ts` was changed from required to **optional**
+`backend/src/types/market.js` was changed from required to **optional**
 to reflect this honestly — a screener or ratio calculation that used to
 assume it always exists must now treat `undefined` as "not available",
 not "zero" (this was already fixed in `normalizeFinancials.ts` as part of

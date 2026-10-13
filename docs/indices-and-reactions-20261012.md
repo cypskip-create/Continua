@@ -20,7 +20,7 @@ market records refresh every minute while viewed; reconnection/focus also
 refreshes indices. The UI labels publisher-dated observations as closing
 data. Official validated levels extend the statistics history with their
 actual dates, permission reference and source. No gaps are interpolated.
-`backend/scripts/diagnoseIndexFreshness.ts` is a read-only collector/observation
+`backend/scripts/diagnoseIndexFreshness.js` is a read-only collector/observation
 timestamp diagnostic, not a key or user-data dump.
 
 ## Posts

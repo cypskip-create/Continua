@@ -3,8 +3,8 @@
 # Vercel and isn't part of this file.
 #
 # Both services are single-process apps that run their own HTTP server AND
-# their own internal cron-scheduled workers (see backend/src/index.ts and
-# scraper/src/index.ts) — there is nothing here for a separate Background
+# their own internal cron-scheduled workers (see backend/src/index.js and
+# scraper/src/index.js) — there is nothing here for a separate Background
 # Worker or Cron Job service to do. "Web Service" is the correct — and only
 # needed — Render service type for each.
 #
@@ -32,7 +32,7 @@ services:
     dockerContext: .
     plan: free
     region: oregon
-    healthCheckPath: /api/v1/health
+    healthCheckPath: /api/v1/health/live
     envVars:
       - key: NODE_ENV
         value: production
@@ -77,7 +77,7 @@ services:
     dockerContext: .
     plan: free
     region: oregon
-    healthCheckPath: /health
+    healthCheckPath: /health/live
     envVars:
       - key: NODE_ENV
         value: production

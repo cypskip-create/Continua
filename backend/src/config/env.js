@@ -1,0 +1,127 @@
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
+dotenv.config();
+import { z } from "zod";
+/**
+ * `z.coerce.boolean()` is a footgun for env vars: it does `Boolean(value)`,
+ * and `Boolean("false")` is `true` in JavaScript — any non-empty string is
+ * truthy. That means `SOME_FLAG=false` in a real .env file would silently
+ * be read as `true`. This helper actually parses the string instead.
+ */
+export function booleanEnv(defaultValue) {
+    return z
+        .string()
+        .optional()
+        .transform((v) => (v === undefined ? defaultValue : ["true", "1", "yes"].includes(v.toLowerCase())));
+}
+/**
+ * Every environment variable the system needs, validated once at boot.
+ * If something required is missing/malformed, we fail loudly at startup
+ * instead of failing weirdly three layers deep at 2am during a price tick.
+ */
+const EnvSchema = z.object({
+    ENGINE_CALCULATION_RUNTIME: z.enum(['node', 'python']).default('node'),
+    ENGINE_PYTHON_BIN: z.string().min(1).default('python3'),
+    PAYSTACK_SECRET_KEY: z.string().optional(),
+    PAYSTACK_LIVE_CHECKOUT_ENABLED: booleanEnv(false),
+    PAYSTACK_CALLBACK_URL: z.string().url().optional(),
+    PAYSTACK_TEST_SECRET_KEY: z.string().optional(),
+    PAYSTACK_NATIVE_MODE: z.enum(['test', 'live']).default('test'),
+    PAYSTACK_NATIVE_ENABLED: booleanEnv(false),
+    PAYSTACK_TEST_USER_IDS: z.string().max(4000).default(''),
+    PAYSTACK_CARD_RENEWAL_ENABLED: booleanEnv(false),
+    PAYSTACK_RENEWAL_ENCRYPTION_KEY: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+    OPENAI_API_KEY: z.string().optional(),
+    ENGINE_AI_MONTHLY_BUDGET_USD: z.coerce.number().min(0).max(1000).default(5),
+    ENGINE_AI_USER_DAILY_LIMIT: z.coerce.number().int().min(0).max(100).default(20),
+    ENGINE_MONITOR_ENABLED: booleanEnv(true),
+    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    PORT: z.coerce.number().default(4000),
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
+    WS_PORT: z.coerce.number().default(4001),
+    LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+    DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+    SUPABASE_URL: z.string().url().default("https://jjsetogmnumoudrovpzn.supabase.co"),
+    CACHE_DRIVER: z.enum(["memory", "redis", "upstash"]).default("memory"),
+    UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+    UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+    CACHE_NAMESPACE: z.string().regex(/^[a-zA-Z0-9:_-]{1,80}$/).default('continua:production:cache:v2'),
+    REDIS_URL: z.string().optional(),
+    NSE_CLIENT_MODE: z.enum(["mock", "live", "afx", "mystocks"]).default("mock"),
+    NSE_API_BASE_URL: z.string().optional(),
+    NSE_API_KEY: z.string().optional(),
+    // ── AFX client (afx.kwayisi.org) ───────────────────────────────────
+    // A free public source, not a licensed feed — fetched by scraping
+    // individual stock pages directly (adapters/afx/afxClient.ts), NOT
+    // through the scraper service's compliance pipeline (robots.txt /
+    // rate limiting / licensing metadata all live inline in the client
+    // itself instead, since it's a live per-request client rather than a
+    // discover/fetch/parse crawl job). Deliberately polled far slower than
+    // PRICE_POLL_INTERVAL_MS — that interval is sized for a real licensed
+    // push/poll feed, not a public HTML page meant for human readers.
+    AFX_MIN_REQUEST_INTERVAL_MS: z.coerce.number().default(1000), // 1 req/sec ceiling across all symbols
+    AFX_POLL_INTERVAL_MS: z.coerce.number().default(300_000), // 5 min — see note above
+    // Comma-separated tickers this client will serve, since afx.kwayisi.org
+    // has no verified listing/index page to enumerate the market from (only
+    // individual pages like /nse/cgen.html were ever actually inspected).
+    // Left unset = falls back to the tickers already known to this codebase
+    // (adapters/nse/nseClient.ts's SEED list) rather than guessing others.
+    AFX_TICKERS: z.string().optional(),
+    // Live NSE sources are selected by NSE_CLIENT_MODE; legacy live resolves to MyStocks.
+    ADAPTER_MODE: z.enum(["mock", "live"]).default("live"),
+    PRICE_POLL_INTERVAL_MS: z.coerce.number().default(5000),
+    INDEX_POLL_INTERVAL_MS: z.coerce.number().default(300_000), // 5 min — see workers/indexWorker.ts
+    FINANCIALS_SYNC_CRON: z.string().default("0 2 * * *"),
+    CORPORATE_ACTIONS_SYNC_CRON: z.string().default("0 3 * * *"),
+    ANNOUNCEMENTS_BRIDGE_CRON: z.string().default("*/5 * * * *"), // scraper runs independently; promptly publish whatever it produced
+    FINANCIAL_CANDIDATES_BRIDGE_CRON: z.string().default("*/5 * * * *"), // keep reviewable fundamental tables close behind new filings
+    DOCUMENT_PUBLICATION_CRON: z.string().default("*/2 * * * *"),
+    DOCUMENT_PUBLICATION_BATCH_SIZE: z.coerce.number().int().min(1).max(100).default(25),
+    NEWS_BRIDGE_CRON: z.string().default("*/2 * * * *"), // keep newly scraped headlines close to real time
+    NEWS_SCRAPER_URL: z.string().url().optional(), // production Render collector is the fallback; override on other hosts
+    // ── CORS ────────────────────────────────────────────────────────────
+    // Comma-separated list of origins allowed to call this API from a browser
+    // (e.g. "https://afrifinance.lovable.app,https://app.afrifinance.co.ke").
+    // Falls back to the local Vite dev server origin so `npm run dev` keeps
+    // working out of the box. Requests with no Origin header (curl, mobile
+    // apps, server-to-server) are always allowed — CORS only governs browsers,
+    // and this API is separately protected by API keys either way.
+    ALLOWED_ORIGINS: z
+        .string()
+        .optional()
+        .transform((v) => (v ?? "http://localhost:8080,http://127.0.0.1:8080,https://afrifinance.lovable.app")
+        .split(",")
+        .map((o) => o.trim())
+        .filter(Boolean)),
+    // ── API auth + rate limiting ──────────────────────────────────────────
+    API_KEY_AUTH_ENABLED: booleanEnv(true),
+    // A fixed dev key that bypasses the DB lookup entirely — lets local dev
+    // and CI run against the API before any real key has been issued via
+    // `npm run apikey:create`. Never set this in a production environment;
+    // real callers should get a DB-issued key (revocable, rate-limited,
+    // attributable) instead.
+    DEV_API_KEY: z.string().optional(),
+    /** Gates the /api/v1/admin/* surface (financial-statement candidate
+     *  review). Deliberately separate from DEV_API_KEY/the public API key
+     *  system — those grant read access to market data; this grants the
+     *  ability to write confirmed financial statements. Unset = admin
+     *  routes refuse everything (fail closed, not fail open). Set via the
+     *  Render dashboard's Environment tab — no shell needed. */
+    ADMIN_API_KEY: z.string().optional(),
+    RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60_000),
+    RATE_LIMIT_MAX_DEFAULT: z.coerce.number().default(120),
+    // ── Trading calendar ───────────────────────────────────────────────────
+    // When true, workers ignore exchange trading hours/days and poll
+    // continuously — useful for demos/tests run outside NSE market hours.
+    IGNORE_TRADING_CALENDAR: booleanEnv(false),
+});
+function loadEnv() {
+    const parsed = EnvSchema.safeParse(process.env);
+    if (!parsed.success) {
+        // eslint-disable-next-line no-console
+        console.error("Invalid environment configuration:", parsed.error.flatten().fieldErrors);
+        process.exit(1);
+    }
+    return parsed.data;
+}
+export const env = loadEnv();

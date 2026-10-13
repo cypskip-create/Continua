@@ -49,8 +49,8 @@ price candles or corrected issuer statements.
 ## Operations
 
 Run from `scraper`, loading server credentials privately from the ignored
-backend env file: `npx tsx scripts/backfillKenyanStocks.ts --discover-only`.
-For bounded catch-up: `npx tsx scripts/backfillKenyanStocks.ts --drain-only
+backend env file: `node scripts/backfillKenyanStocks.js --discover-only`.
+For bounded catch-up: `node scripts/backfillKenyanStocks.js --drain-only
 --batches=2`. The deployed durable-queue scheduler continues processing while
 the scraper is running. Free hosting may sleep; no paid always-on service is
 enabled by this change. An interrupted run resumes through queue leases.

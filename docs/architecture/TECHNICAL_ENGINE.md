@@ -97,7 +97,7 @@ notification message, no `exchange` column at all):
   `EMA_CROSS` alerts by calling the backend's `/indicators/:symbol`
   endpoint (via new `CONTINUA_DATA_BASE_URL` / `CONTINUA_DATA_API_KEY`
   Edge Function secrets — set these to your deployed backend's URL and an
-  API key from `backend/scripts/generateApiKey.ts`).
+  API key from `backend/scripts/generateApiKey.js`).
 - `hooks/usePriceAlerts.tsx` extended with the new fields.
 
 **Not done**: no UI to actually create an indicator alert yet (the hook
@@ -111,7 +111,7 @@ user has the app open would need a cron-triggered sweep instead.
 Run migration `033_alerts_multi_exchange_and_indicators.sql`. Set Edge
 Function secrets `CONTINUA_DATA_BASE_URL` (your deployed backend's public
 URL) and `CONTINUA_DATA_API_KEY` (generate one with
-`backend/scripts/generateApiKey.ts`) for `check-indicator-alerts` to work.
+`backend/scripts/generateApiKey.js`) for `check-indicator-alerts` to work.
 Deploy `check-indicator-alerts`; redeploy `check-price-alerts` (its body
 changed). No new backend env vars — `/indicators`, `/backtest`,
 `/volume-profile`, `/valuation` all ride on the existing `ADAPTER_MODE`/
