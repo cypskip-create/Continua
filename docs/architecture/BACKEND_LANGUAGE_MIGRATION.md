@@ -87,7 +87,7 @@ cards can avoid external bank UI.
 - Full scraper suite with Python extraction enabled: 80 unique tests passed.
   The config excludes stale `dist` test artifacts; previous runs included two
   duplicate compiled tests. Original tests are retained.
-- Frontend compatibility suite: 104 passed.
+- Frontend/Edge compatibility suite: 107 passed.
 - Static route/middleware preservation: 130 original calls across all 255 source
   modules preserved. 245 backend and 59 scraper implementation/CLI files converted.
 - Python PDF financial-row and sequential-document fixtures passed; broader
@@ -115,6 +115,23 @@ was performed. Python options remain behind their explicit runtime settings;
 successful installation/fixture parity is not a production load benchmark.
 Automated parity and read-only smoke checks do not prove every external feed,
 bank/OTP path or missing financial year is complete.
+
+## Complete feature-language inventory and Edge boundaries
+
+`FEATURE_LANGUAGE_DECISIONS.json` records language, runtime, workload rationale
+and primary references for 385 implementation/operator/SQL modules. Regenerate
+with `node infra/migration/feature-language-decisions.mjs`. Classification is a
+workload/integration review, not an individual performance benchmark or a claim
+that one language is universally fastest. Repository `AGENTS.md` records the
+user's requirement to research language suitability before future implementation.
+
+All seven Supabase Edge entrypoints are now JavaScript with explicit `entrypoint`
+configuration. Deno declaration files remain development-only. Existing explicit
+JWT and cron authorization checks remain; account deletion and alert delivery
+are never exercised with production user credentials by migration smoke tests.
+Legacy AI functions reject missing sessions before processing and remain disabled
+unless `CONTINUA_LEGACY_AI_ENABLED=true` is explicitly configured. No funded AI
+service is activated. The retired mock subscription upgrade still returns 410.
 
 ## Primary references
 

@@ -40,8 +40,9 @@ pop3_port = 54326
 # it failed with "Entrypoint path does not exist" until this was removed.
 
 [functions.ai-stock-analysis]
+entrypoint = './functions/ai-stock-analysis/index.js'
 # false, not true: this function already validates the caller's JWT itself
-# (see index.ts — Authorization header -> supabase-js getClaims/auth check)
+# (see index.js — Authorization header -> supabase-js auth check)
 # and returns its own CORS headers for OPTIONS. With verify_jwt=true, the
 # Supabase gateway checks the JWT BEFORE the function code runs at all —
 # and a browser's CORS preflight (OPTIONS) never carries an Authorization
@@ -52,18 +53,22 @@ pop3_port = 54326
 verify_jwt = false
 
 [functions.stock-thesis]
+entrypoint = './functions/stock-thesis/index.js'
 # Same reasoning as ai-stock-analysis above.
 verify_jwt = false
 
 [functions.check-price-alerts]
+entrypoint = './functions/check-price-alerts/index.js'
 # Same reasoning as ai-stock-analysis above.
 verify_jwt = false
 
 [functions.check-indicator-alerts]
+entrypoint = './functions/check-indicator-alerts/index.js'
 # Same reasoning as ai-stock-analysis above.
 verify_jwt = false
 
 [functions.run-price-alerts]
+entrypoint = './functions/run-price-alerts/index.js'
 # Invoked on a schedule by pg_cron/pg_net (see migration
 # …_schedule_alert_sweeps.sql), not by a signed-in browser session — there
 # is no user JWT to verify. It's gated on its own shared secret
@@ -71,10 +76,12 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.delete-account]
+entrypoint = './functions/delete-account/index.js'
 # Same reasoning as ai-stock-analysis above.
 verify_jwt = false
 
 [functions.upgrade-subscription]
+entrypoint = './functions/upgrade-subscription/index.js'
 # Same reasoning as ai-stock-analysis above.
 verify_jwt = false
 

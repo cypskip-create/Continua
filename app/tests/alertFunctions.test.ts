@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 
 async function invoke(name: string, price: number) {
-  const source = readFileSync(new URL(`../../supabase/functions/${name}/index.ts`, import.meta.url), 'utf8').replace(/^import .*;\r?\n/gm, '');
+  const source = readFileSync(new URL(`../../supabase/functions/${name}/index.js`, import.meta.url), 'utf8').replace(/^import .*;\r?\n/gm, '');
   const code = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
   let handler: (req: Request) => Promise<Response>;
   const delivered: unknown[] = [];
