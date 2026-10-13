@@ -91,7 +91,9 @@ Realtime compatibility is a remaining validation gate, not a completed migration
 Created private R2 bucket continua-financial-documents; public access disabled.
 Created object-read/write credentials restricted to that bucket, expiring
 2027-10-12, and saved them as scraper Render environment variables (save-only).
-RAW_STORAGE_DRIVER was not switched. No archive objects have been copied yet.
+At that checkpoint RAW_STORAGE_DRIVER was not switched and no archive objects
+had been copied. The 13 October follow-up implements a bounded R2 archive
+backfill and requires a verified driver cutover before reporting active storage.
 Parallel Worker deployed at https://continua-preview.cypriankiprop41.workers.dev.
 Its deployment token has Workers Scripts Edit, Workers Builds Configuration Edit,
 and Account Settings Read, restricted to the operator's one Cloudflare account,
@@ -117,3 +119,34 @@ namespaces all keys. SET updates its local fallback; DEL clears both stores.
 Failures use the local fallback; concurrent misses coalesce per process, not
 across distributed instances. No entitlement/payment state uses shared edge HTTP
 caching. Provision separate preview/production namespaces before enabling it.
+
+## Private evidence archive follow-up — 13 October 2026
+
+The deployed scraper was still configured for Supabase, explaining the empty
+R2 bucket. The R2 driver uploads new raw PDF/HTML/JSON artifacts to the private
+bucket and keeps the Supabase rollback copy when R2_DUAL_WRITE=true. No user
+media, account records or payment secrets are copied.
+
+`scraper/src/storage/r2Archive.js` copies retained evidence in batches of five,
+on startup and periodic scheduling when RAW_STORAGE_DRIVER=r2. It verifies
+size and SHA-256 before compare-and-set reference updates. No original object
+is deleted. Extraction versions are archived as immutable JSON snapshots with
+raw-object references, document/source identifiers and unchanged review flags;
+all historical versions advance in ID order, not only the latest version.
+Failures retain the original reference and retry after a cooldown so a missing
+legacy file cannot block the entire archive. Lost ephemeral local files still
+require source re-fetching; this migration cannot recover deleted bytes.
+
+R2 write verification uses a streaming digest instead of a second full-file
+buffer. Stored Supabase reads enforce a streaming size limit. Browser rendering
+has one active context and closes Chromium after every page, including failures;
+scheduled source/sweep/archive work is serialized to reduce overlap on 512MB
+Render. Memory diagnostics include Linux container usage (child processes),
+not just Node RSS. These controls reduce identified risks but do not establish
+that all memory-limit failures are permanently eliminated; observe real metrics.
+
+Language choice: Node/JavaScript for bounded object-storage/network control,
+SQL for durable verified checkpoints, native Chromium for dynamic pages. No
+Go/Python rewrite would remove Chromium's memory footprint by itself.
+Primary references: https://developers.cloudflare.com/r2/examples/aws/aws-sdk-js-v3/
+and https://nodejs.org/api/process.html#processmemoryusage.

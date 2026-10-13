@@ -3468,6 +3468,17 @@
       "classificationBasis": "workload and integration review; not an individual benchmark"
     },
     {
+      "file": "scraper/src/monitoring/memoryDiagnostics.js",
+      "category": "operations",
+      "language": "JavaScript",
+      "runtime": "Node.js",
+      "reason": "Use the service-native runtime for operator scripts, input validation, adapter utilities and diagnostics; adding processes provides no demonstrated advantage for these small control-plane tasks.",
+      "references": [
+        "https://nodejs.org/en/learn/command-line/run-nodejs-scripts-from-the-command-line"
+      ],
+      "classificationBasis": "workload and integration review; not an individual benchmark"
+    },
+    {
       "file": "scraper/src/scheduler/newsSchedule.js",
       "category": "jobs",
       "language": "JavaScript + SQL",
@@ -3553,6 +3564,18 @@
     },
     {
       "file": "scraper/src/storage/extractionsRepository.js",
+      "category": "storage",
+      "language": "JavaScript + SQL",
+      "runtime": "Node.js + PostgreSQL",
+      "reason": "Node manages async connection I/O; SQL owns transactions, queue claims, database constraints and row-level privacy. A language change must not move integrity into client-side checks.",
+      "references": [
+        "https://node-postgres.com/features/transactions",
+        "https://www.postgresql.org/docs/current/ddl-rowsecurity.html"
+      ],
+      "classificationBasis": "workload and integration review; not an individual benchmark"
+    },
+    {
+      "file": "scraper/src/storage/r2Archive.js",
       "category": "storage",
       "language": "JavaScript + SQL",
       "runtime": "Node.js + PostgreSQL",

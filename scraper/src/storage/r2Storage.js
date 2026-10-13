@@ -9,7 +9,8 @@ export function safeObjectKey(key) {
 function client() {
     if (!env.R2_ACCOUNT_ID || !env.R2_ACCESS_KEY_ID || !env.R2_SECRET_ACCESS_KEY || !env.R2_BUCKET)
         throw new Error('R2 server credentials are not configured');
-    return new S3Client({ region: 'auto', endpoint: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`, credentials: { accessKeyId: env.R2_ACCESS_KEY_ID, secretAccessKey: env.R2_SECRET_ACCESS_KEY }, maxAttempts: 3 });
+    return new S3Client({ region: 'auto', endpoint: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`, credentials: { accessKeyId: env.R2_ACCESS_KEY_ID, secretAccessKey: env.R2_SECRET_ACCESS_KEY }, maxAttempts: 3,
+        requestChecksumCalculation: 'WHEN_REQUIRED', responseChecksumValidation: 'WHEN_REQUIRED' });
 }
 export async function readR2(key) {
     safeObjectKey(key);
@@ -48,9 +49,21 @@ export async function writeR2(key, body, sha256, contentType) {
             if (error.$metadata?.httpStatusCode !== 412)
                 throw error;
         }
-        const stored = await readR2(key);
-        if (stored.length !== body.length || !stored.equals(body))
+        // Verify bytes with a streaming digest, not a second full PDF buffer.
+        const stored = await s3.send(new GetObjectCommand({ Bucket: env.R2_BUCKET, Key: key }));
+        const digest = createHash('sha256');
+        let length = 0;
+        if (!stored.Body || stored.ContentLength !== body.length)
             throw new Error('R2 write verification failed');
+        try {
+            for await (const chunk of stored.Body) {
+                length += chunk.length;
+                if (length > body.length) throw new Error('R2 write verification failed');
+                digest.update(chunk);
+            }
+            if (length !== body.length || digest.digest('hex') !== sha256)
+                throw new Error('R2 write verification failed');
+        } finally { stored.Body.destroy?.(); }
     }
     finally {
         s3.destroy();

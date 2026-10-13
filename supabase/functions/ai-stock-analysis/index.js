@@ -21,27 +21,27 @@ Deno.serve(async (req) => {
         let systemPrompt = '';
         let userPrompt = '';
         if (analysisType === 'recommendation') {
-            systemPrompt = `You are an expert stock analyst for the Nairobi Securities Exchange (NSE). 
+            systemPrompt = `You are an expert stock analyst for the Nairobi Securities Exchange (NSE).
       Provide detailed stock recommendations based on Kenyan market conditions, considering factors like:
       - Company fundamentals and financial health
       - Market trends in Kenya
       - Industry position
       - Economic indicators
-      
+
       Format your response as JSON with: recommendation (buy/sell/hold), confidence (0-100), reasoning (detailed explanation)`;
             userPrompt = `Analyze ${symbol} and provide a trading recommendation.`;
         }
         else if (analysisType === 'sentiment') {
-            systemPrompt = `You are a sentiment analysis expert for financial markets. 
+            systemPrompt = `You are a sentiment analysis expert for financial markets.
       Analyze market sentiment for Kenyan stocks considering news, social media, and market data.
-      
+
       Format your response as JSON with: sentiment (positive/neutral/negative), score (0-100), summary (brief explanation)`;
             userPrompt = `Analyze current market sentiment for ${symbol}.`;
         }
         else if (analysisType === 'portfolio') {
             systemPrompt = `You are a portfolio analyst specializing in risk assessment and diversification.
       Analyze portfolio composition and provide insights on risk, sector allocation, and rebalancing opportunities.
-      
+
       Format your response as JSON with: riskLevel (low/medium/high), diversificationScore (0-100), suggestions (array of actionable recommendations)`;
             userPrompt = `Analyze this portfolio: ${JSON.stringify(holdings)}. Provide risk assessment and rebalancing suggestions.`;
         }

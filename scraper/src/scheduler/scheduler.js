@@ -18,6 +18,16 @@ import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 import { ensureDefaultSources } from "../config/defaultSources.js";
 import { sourceSchedule } from "./newsSchedule.js";
+import { createSerialWorkQueue } from '../extraction/serialWorkQueue.js';
+import { archiveToR2 } from '../storage/r2Archive.js';
+const enqueueBackground = createSerialWorkQueue();
+let archiveQueued = false;
+function queueArchive() {
+    if (archiveQueued) return;
+    archiveQueued = true;
+    void enqueueBackground(() => archiveToR2()).catch(error => logger.warn({reason:String(error.message??error)}, 'R2 archive unavailable; retained files will retry'))
+      .finally(() => {archiveQueued = false;});
+}
 const scheduledTasks = [];
 const runningSources = new Set();
 const newsRuns = new Map();
@@ -82,6 +92,7 @@ async function runSourceOnce(source, drainOnly = false) {
     if (runningSources.has(source.id))
         return;
     runningSources.add(source.id);
+    return enqueueBackground(async () => {
     if (source.adapter === "rss")
         newsRuns.set(source.id, { startedAt: new Date().toISOString(), completedAt: null, success: null });
     try {
@@ -104,6 +115,7 @@ async function runSourceOnce(source, drainOnly = false) {
     finally {
         runningSources.delete(source.id);
     }
+    });
 }
 /**
  * Loads all enabled sources and schedules each on its own cron
@@ -118,6 +130,8 @@ export async function startScheduler() {
     }
     await ensureDefaultSources();
     const sources = await listEnabledSources();
+    queueArchive(); // Copy retained documents before memory-heavy archive discovery.
+    scheduledTasks.push(cron.schedule('*/2 * * * *', queueArchive));
     // Discovery retains its publisher schedule. Already queued documents do
     // not wait another six hours for the next archive crawl.
     if (cron.validate(env.DOCUMENT_DRAIN_CRON)) {
@@ -151,7 +165,7 @@ export async function startScheduler() {
         // Publish fresh news before spending minutes on historical PDFs/OCR.
         const priority = (s) => s.id === 'nse-index-summary' ? 2 : s.adapter === 'rss' ? 1 : 0;
         const pending = [...sources].sort((a, b) => priority(b) - priority(a));
-        const workers = Array.from({ length: Math.min(2, pending.length) }, async () => {
+        const workers = Array.from({ length: Math.min(1, pending.length) }, async () => {
             for (;;) {
                 const source = pending.shift();
                 if (!source)
@@ -160,7 +174,7 @@ export async function startScheduler() {
             }
         });
         await Promise.all(workers);
-        await sweepUnextractedArtifacts(env.EXTRACTION_SWEEP_BATCH_SIZE);
+        await enqueueBackground(() => sweepUnextractedArtifacts(env.EXTRACTION_SWEEP_BATCH_SIZE));
         logger.info({ sourceCount: sources.length }, "Initial source crawl complete");
     })().catch((err) => logger.error({ err }, "Initial source crawl failed"));
     // Independent of any one source: catches up generic-crawled artifacts
@@ -169,7 +183,7 @@ export async function startScheduler() {
     // sources are configured, so it doesn't need its own per-source setup.
     if (cron.validate(env.EXTRACTION_SWEEP_CRON)) {
         const sweepTask = cron.schedule(env.EXTRACTION_SWEEP_CRON, () => {
-            void sweepUnextractedArtifacts(env.EXTRACTION_SWEEP_BATCH_SIZE).catch((err) => logger.error({ err }, "Scheduled extraction sweep failed"));
+            void enqueueBackground(() => sweepUnextractedArtifacts(env.EXTRACTION_SWEEP_BATCH_SIZE)).catch((err) => logger.error({ err }, "Scheduled extraction sweep failed"));
         });
         scheduledTasks.push(sweepTask);
         logger.info({ cronExpression: env.EXTRACTION_SWEEP_CRON }, "Scheduled extraction sweep");

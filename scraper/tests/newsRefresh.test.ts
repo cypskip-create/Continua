@@ -23,15 +23,15 @@ it("shares reader-triggered crawls, limits concurrency and excludes non-news sou
   const { refreshNewsSources } = await import("../src/scheduler/scheduler.js");
   const first = refreshNewsSources();
   expect(refreshNewsSources()).toBe(first);
-  await vi.advanceTimersByTimeAsync(200);
+  await vi.advanceTimersByTimeAsync(300);
   await first;
-  expect(peak).toBe(2);
+  expect(peak).toBe(1);
   expect(mocks.run.mock.calls.map(([source]) => source.id).sort()).toEqual(["a", "b", "c"]);
   await refreshNewsSources();
   expect(mocks.list).toHaveBeenCalledTimes(1);
   await vi.advanceTimersByTimeAsync(10 * 60_000);
   const later = refreshNewsSources();
-  await vi.advanceTimersByTimeAsync(200);
+  await vi.advanceTimersByTimeAsync(300);
   await later;
   expect(mocks.list).toHaveBeenCalledTimes(2);
 });

@@ -26,6 +26,8 @@ import { chromium } from "playwright";
 import { logger } from "../monitoring/logger.js";
 import { assertPublicUrl } from './urlSafety.js';
 import { throttleHost } from './rateLimiter.js';
+import { createSerialWorkQueue } from '../extraction/serialWorkQueue.js';
+const enqueueBrowser = createSerialWorkQueue();
 const NAVIGATION_TIMEOUT_MS = 30_000;
 let browserPromise = null;
 function getBrowser() {
@@ -47,6 +49,12 @@ function getBrowser() {
  * returns the resulting DOM as HTML.
  */
 export async function renderPage(url, userAgent, options = {}) {
+    return enqueueBrowser(async () => {
+        try { return await renderPageOnce(url, userAgent, options); }
+        finally { await closeBrowser().catch(() => {}); }
+    });
+}
+async function renderPageOnce(url, userAgent, options) {
     await assertPublicUrl(url);
     await throttleHost(new URL(url).hostname, .2);
     const browser = await getBrowser();
@@ -130,6 +138,7 @@ export async function renderPage(url, userAgent, options = {}) {
     }
     finally {
         await context.close().catch(() => { }); // A crashed browser must not mask the original failure.
+        // Chromium must not sit resident while PDFs/OCR run on the 512MB host.
     }
 }
 export async function closeBrowser() {

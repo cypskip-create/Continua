@@ -119,7 +119,7 @@ bank/OTP path or missing financial year is complete.
 ## Complete feature-language inventory and Edge boundaries
 
 `FEATURE_LANGUAGE_DECISIONS.json` records language, runtime, workload rationale
-and primary references for 385 implementation/operator/SQL modules. Regenerate
+and primary references for the implementation/operator/SQL modules. Regenerate
 with `node infra/migration/feature-language-decisions.mjs`. Classification is a
 workload/integration review, not an individual performance benchmark or a claim
 that one language is universally fastest. Repository `AGENTS.md` records the

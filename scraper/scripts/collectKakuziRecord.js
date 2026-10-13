@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '../backend/.env.local', quiet: true });
 // Keep this operator backfill durable, just like the deployed private archive.
-process.env.RAW_STORAGE_DRIVER = 'supabase';
+process.env.RAW_STORAGE_DRIVER ??= 'supabase';
 const remote = process.argv.includes('--remote');
 const { pool, query } = await import('../src/storage/db.js');
 const { DEFAULT_SOURCES } = await import('../src/config/defaultSources.js');

@@ -78,10 +78,23 @@ export async function readRawArtifact(storagePath) {
         const response = await fetch(storageUrl(storagePath), { headers: storageHeaders(), redirect: "error", signal: AbortSignal.timeout(60_000) });
         if (!response.ok)
             throw new Error(`Private artifact read failed: HTTP ${response.status}`);
-        const bytes = Buffer.from(await response.arrayBuffer());
-        if (bytes.length > env.MAX_RESPONSE_SIZE_BYTES)
-            throw new Error("Stored artifact exceeds response limit");
-        return bytes;
+        const declared = Number(response.headers.get('content-length'));
+        if (declared > env.MAX_RESPONSE_SIZE_BYTES || !response.body) {
+            await response.body?.cancel();
+            throw new Error('Stored artifact exceeds response limit');
+        }
+        const reader = response.body.getReader(), chunks = [];
+        let length = 0;
+        try {
+            for (;;) {
+                const {done, value} = await reader.read();
+                if (done) break;
+                length += value.byteLength;
+                if (length > env.MAX_RESPONSE_SIZE_BYTES) throw new Error('Stored artifact exceeds response limit');
+                chunks.push(Buffer.from(value));
+            }
+            return Buffer.concat(chunks, length);
+        } finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }
     }
     const fullPath = path.join(env.RAW_STORAGE_LOCAL_PATH, storagePath);
     return readFile(fullPath);
