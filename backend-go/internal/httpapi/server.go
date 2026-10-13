@@ -148,6 +148,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.preferences(ctx, w, r, identity) {
 		return
 	}
+	if s.workspace(ctx, w, r, identity) {
+		return
+	}
 	if r.Method != http.MethodGet {
 		failure(w, 501, "This operation has not yet been migrated to the native backend.")
 		return
@@ -158,6 +161,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if exchange != "NSE" || len(r.URL.Query()["exchange"]) > 1 {
 		failure(w, 400, "Invalid exchange")
+		return
+	}
+	if s.portfolioOverview(ctx, w, r, identity, exchange) {
 		return
 	}
 	if s.publisherReads(ctx, w, r, exchange) {

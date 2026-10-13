@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../..',import.meta.url));
 const inventory=JSON.parse(await readFile(new URL('../../docs/architecture/FEATURE_LANGUAGE_DECISIONS.json',import.meta.url),'utf8'));
 const nativePorts={
+ 'backend/src/services/research/enginePortfolioRisk.js':['engine-python/continua_engine/risk.py','Native observed-return risk, covariance attribution and gap exclusion pass the expanded reference suite; no fabricated rates, prices or actual-account returns.'],
  'backend/src/services/analytics/candleAggregator.js':['engine-python/continua_engine/candles.py','177-case numerical/schema parity suite plus 28 owned-database read comparisons; all supported calendar intervals'],
  'backend/src/ingestion/normalizers/issuerIdentity.js':['engine-python/continua_engine/publisher.py','177-case native parity suite including exact legal suffix and masthead boundaries'],
  'backend/src/services/research/enginePreferences.js':['engine-python/continua_engine/preferences.py','177-case schema/opt-in calculation parity suite; native Go owner-scoped persistence and HTTP tests'],
@@ -18,6 +19,9 @@ const nativePorts={
  'backend/src/services/research/reportedResearch.js':['engine-python/continua_engine/reported.py','127-case native Python parity suite'],
 };
 const partial={
+ 'backend/src/services/research/engineWorkspace.js':'Native Go verified-owner portfolio positions and free overview use native Python calculations. Monitoring/cash-flow persistence and HTTP exist. Full portfolio research, snapshots/performance, peers, briefing and worker integration remain pending.',
+ 'backend/src/services/research/engineAnalytics.js':'Native Python annual diagnostics, source-quality warnings and illustrative scenarios pass reference comparisons. Snapshot fingerprint/change-detection compatibility remains pending.',
+ 'backend/src/services/research/engineRiskLab.js':'Native Python risk contributions and source-backed total-return adjustments pass reference comparisons; existing native numerical labs are reused. Complete lab-route/input contracts and integration remain pending.',
  'backend/src/services/paystackCommon.js':'Go prices, exact-body HMAC, strict agreements and provider URL contracts are implemented; full differential contract coverage and hosted integration remain required.',
  'backend/src/services/paystackNative.js':'Go provider execution, durable account-locked reservations, verified live SQL fulfillment/test isolation, optional token enrollment and recovery are implemented and mock-tested; production configuration, provider sandbox/golden/restart validation remain pending.',
  'backend/src/services/paystackLive.js':'Go legacy initialize/owner-scoped verification/recovery uses the retained atomic fulfillment function; legacy receipt/provider schema differential coverage and hosted tests remain pending.',
@@ -25,7 +29,7 @@ const partial={
  'backend/src/workers/cardRenewalWorker.js':'Go ten-minute scheduler, singleflight, durable locked reservations and verification-only ambiguous recovery exist; SQL/provider mocks pass. Restart/concurrent-host/provider sandbox and memory tests remain pending; worker is not launched.',
  'backend/src/api/middleware/apiKeyAuth.js':'Native Go lookup/hash/cache exists; full middleware/error/rate-limit golden contracts are still required.',
  'backend/src/storage/repositories/pricesRepository.js':'Native Go quote reads exist; writes/movers/freshness/ingestion remain pending.',
- 'backend/src/storage/repositories/engineRepository.js':'Native Go preferences/save/record-interest use the existing account advisory lock, preserve server interests and enforce schema/defaults through Python. Snapshot observation, monitoring rules and AI-budget methods remain pending.',
+ 'backend/src/storage/repositories/engineRepository.js':'Native Go preferences/save/record-interest preserve schema/ownership/interests. Monitoring list/save/delete and notifications are owner-scoped; save enforces capacity under an account lock. Snapshot observation, monitoring-worker evaluation/notifications and AI-budget methods remain pending.',
  'backend/src/storage/repositories/candlesRepository.js':'Native Go sourced candle/price/sparkline/high-low/average-volume reads exist and 28 owned-database comparisons pass; transactional batch writes remain pending.',
  'backend/src/storage/repositories/financialsRepository.js':'Native Go reviewed, nonfuture latest/history reads pass owned-database comparisons; canonical component/bundle writes and publication integration remain pending.',
  'backend/src/storage/repositories/securitiesRepository.js':'Native Go security/instrument/sector/company/publisher-profile reads pass owned-database comparisons; sector/company/security writes remain pending.',
@@ -36,7 +40,8 @@ const partial={
  'backend/src/services/research/publisherProfile.js':'Native Python exact issuer profile validation and Go publisher-digest/URL reads pass profile fixtures and owned-database comparisons; whole source collector and coverage validation remain pending.',
  'backend/src/storage/cache.js':'Native Go byte-bounded memory LRU/singleflight/TTL/cancellation pass tests. Redis and Upstash alternatives are not yet ported.',
  'backend/src/api/middleware/requireSubscriber.js':'Native Go verified user/plan and Premium/Plus helpers exist; complete route integration remains pending.',
- 'scraper/src/storage/r2Storage.js':'Native Python streaming private upload/verification exists; full read/migration/retry/operator integration remains pending.',
+ 'scraper/src/storage/r2Storage.js':'Native Python streaming upload/verification and private temporary-file read/checksum/cleanup exist and tests pass. Full collector/backfill/operator integration and hosted recovery remain pending.',
+ 'scraper/src/storage/r2Archive.js':'Native Python bounded singleflight archive copies raw content and immutable extraction snapshots, retains originals, applies hash/size verification and version/path CAS, with cooldown and cancellation tests. Private legacy-reader driver, scheduler/boot/operator integration and hosted backfill/restart tests remain pending.',
  'scraper/src/crawler/urlSafety.js':'Native Python DNS pinning/source policy exists; whole collector integration and source regression coverage remain pending.',
  'scraper/src/storage/db.js':'Native psycopg async pool, bounded deadlines, transaction handling and disabled prepared statements pass real read-only owned-database connectivity; full collector integration/restart/load remains pending.',
  'scraper/src/storage/documentJobsRepository.js':'Native Python enqueue/claim/requeue/finish preserve durable attempt tokens and SKIP LOCKED recovery; mocked SQL/queue tests pass. Real concurrent claim/restart/adapter integration remains pending.',
@@ -65,7 +70,9 @@ const modules=JSON.parse(result.stdout).modules;
 const partialRoutes=new Set(['GET /indices','GET /instruments','GET /sectors','GET /quotes','GET /quotes/:symbol',
  'GET /companies/:symbol','GET /historical/sparklines','GET /historical/:symbol','GET /historical/:symbol/performance',
  'GET /financials/:symbol','GET /financials/:symbol/history','GET /financials/:symbol/publisher-tables',
- 'GET /engine/preferences','POST /engine/preferences','POST /engine/interests','GET /engine/recommendations']);
+ 'GET /engine/preferences','POST /engine/preferences','POST /engine/interests','GET /engine/recommendations',
+ 'GET /engine/portfolio/overview','POST /engine/cash-flows','DELETE /engine/cash-flows/:id',
+ 'GET /engine/monitoring','POST /engine/monitoring','DELETE /engine/monitoring/:id','GET /engine/monitoring/activity']);
 const routes=modules.flatMap(m=>m.routes.map(r=>({legacyFile:m.file,...r,status:partialRoutes.has(`${r.method} ${r.path}`)?'partial':'pending',
  note:partialRoutes.has(`${r.method} ${r.path}`)?'Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required.':r.path===null?'Dynamic mount: manual resolution required.':'Full auth/validation/behavior port required.'})));
 const ledger={schemaVersion:1,asOf:'2026-10-13',scope:'Full native-runtime rewrite; not the already-deployed TS-to-JS migration.',productionCutoverAllowed:false,

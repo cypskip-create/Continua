@@ -46,3 +46,20 @@ func TestUnknownAndCancelledRequestsCannotSpawn(t *testing.T) {
 		t.Fatal("cancelled request succeeded")
 	}
 }
+
+func TestRealPythonPortfolioOverviewAndRiskDiagnostics(t *testing.T) {
+	w := worker(t)
+	raw, err := w.Calculate(context.Background(), Request{Operation: "portfolio_overview", Args: []any{[]any{map[string]any{"symbol": "KCB", "price": 90, "shares": 10, "cost": 800, "change": 1, "volume": 1000, "currency": "KES", "sector": "Banking", "asOf": "2026-10-12T12:00:00.000Z"}}, "NSE", "2026-10-13T12:00:00.000Z"}})
+	var result map[string]any
+	if err != nil || json.Unmarshal(raw, &result) != nil || result["unrealized"] != float64(100) || result["sessionPnl"] != float64(10) {
+		t.Fatal(string(raw), err)
+	}
+	raw, err = w.Calculate(context.Background(), Request{Operation: "portfolio_risk", Args: []any{map[string]any{}, map[string]any{}}})
+	if err != nil || json.Unmarshal(raw, &result) != nil || result["available"] != false {
+		t.Fatal(string(raw), err)
+	}
+	raw, err = w.Calculate(context.Background(), Request{Operation: "data_quality", Args: []any{nil, []any{}, "2026-10-13T12:00:00.000Z"}})
+	if err != nil || !json.Valid(raw) {
+		t.Fatal(string(raw), err)
+	}
+}

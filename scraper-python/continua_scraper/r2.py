@@ -2,9 +2,14 @@
 import hashlib
 import os
 import re
+import pathlib
+import tempfile
+from contextlib import contextmanager
+from urllib.parse import urlsplit
+from .download import Artifact
 
 def safe_key(value):
-    if not value or len(value)>1024 or any(part in ("",".","..") for part in value.split("/")) or re.search(r"[\\\x00-\x1f?#]",value):
+    if not isinstance(value,str) or not value or len(value)>1024 or any(part in ("",".","..") for part in value.split("/")) or re.search(r"[\\\x00-\x1f?#]",value):
         raise ValueError("Invalid artifact key")
     return value
 
@@ -64,3 +69,53 @@ class R2Storage:
             self.rollback_write(key,artifact)
         # Only this verified return value may become the database storage_path.
         return f"r2://{self.bucket}/{key}"
+
+    def key_from_location(self,location):
+        """A stored private URI cannot select another bucket or endpoint."""
+        try:
+            parsed=urlsplit(location)
+            if parsed.scheme!="r2" or parsed.netloc!=self.bucket or parsed.query or parsed.fragment or not parsed.path.startswith("/"):
+                raise ValueError("Invalid R2 artifact location")
+            return safe_key(parsed.path[1:])
+        except (ValueError,TypeError):
+            raise ValueError("Invalid R2 artifact location") from None
+
+    @contextmanager
+    def materialize(self,key,*,source_url=None):
+        """Bounded private reprocessing read. The caller owns no persistent file.
+
+        Stream to an isolated temporary directory, verify size/hash before yielding,
+        and remove the file even if extraction fails. Never buffer an entire PDF.
+        """
+        safe_key(key)
+        expected_hash=key.rsplit("/",1)[-1].split(".")[0]
+        expected_hash=expected_hash if re.fullmatch(r"[a-f0-9]{64}",expected_hash) else None
+        response=self.client.get_object(Bucket=self.bucket,Key=key)
+        body=response.get("Body")
+        try:
+            length=response.get("ContentLength")
+            if body is None or not isinstance(length,int) or isinstance(length,bool) or length<0 or length>self.max_bytes:
+                raise ValueError("Stored artifact exceeds response limit")
+            with tempfile.TemporaryDirectory(prefix="continua-r2-read-") as directory:
+                path=pathlib.Path(directory)/"artifact"
+                digest,total=hashlib.sha256(),0
+                with path.open("xb") as output:
+                    while chunk:=body.read(65536):
+                        total+=len(chunk)
+                        if total>length or total>self.max_bytes:
+                            raise ValueError("R2 size verification failed")
+                        digest.update(chunk)
+                        output.write(chunk)
+                actual=digest.hexdigest()
+                if total!=length or (expected_hash and actual!=expected_hash):
+                    raise ValueError("R2 checksum verification failed")
+                # Do not retain a socket throughout CPU-heavy PDF/OCR processing.
+                body.close()
+                body=None
+                yield Artifact(path,source_url or f"r2://{self.bucket}/{key}",response.get("ContentType") or "application/octet-stream",total,actual)
+        finally:
+            if body is not None:
+                body.close()
+
+    def close(self):
+        self.client.close()

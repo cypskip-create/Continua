@@ -2,7 +2,7 @@
 import json
 import pathlib
 import sys
-from continua_engine import indicators, ratios, valuation, preferences, monitoring, dividends, portfolio, reported, candles, publisher
+from continua_engine import indicators, ratios, valuation, preferences, monitoring, dividends, portfolio, reported, candles, publisher, risk, analytics
 
 OPERATIONS = {"sma":indicators.sma,"ema":indicators.ema,"rsi":indicators.rsi,
               "macd":indicators.macd,"crossover":indicators.latest_crossover,
@@ -14,7 +14,10 @@ OPERATIONS = {"sma":indicators.sma,"ema":indicators.ema,"rsi":indicators.rsi,
               "reported_ratios":reported.reported_research_ratios,"aggregate_candles":candles.aggregate_candles,
               "source_financial_tables":publisher.source_financial_tables,"publisher_profile":publisher.profile_observation,
               "issuer_identity":publisher.legal_issuer_identity,"issuer_masthead":publisher.issuer_masthead_matches,
-              "validate_preferences":preferences.validate_preferences}
+              "validate_preferences":preferences.validate_preferences,
+              "risk_contributions":risk.risk_contributions,"portfolio_risk":risk.portfolio_risk,
+              "total_return_series":risk.total_return_series,"portfolio_overview":risk.portfolio_overview,
+              "analyze_financials":analytics.analyze_financials,"data_quality":analytics.data_quality,"scenarios":analytics.scenarios}
 
 def execute(operation, args):
     if operation in OPERATIONS:

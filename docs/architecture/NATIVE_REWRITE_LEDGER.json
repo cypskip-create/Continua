@@ -1255,8 +1255,9 @@
       "legacyFile": "backend/src/services/research/engineAnalytics.js",
       "legacySha256": "365fb06baddb31dfa33a879230b4f62cd841ce8840f2cd47eae6926948c9cb17",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python annual diagnostics, source-quality warnings and illustrative scenarios pass reference comparisons. Snapshot fingerprint/change-detection compatibility remains pending."
     },
     {
       "legacyFile": "backend/src/services/research/engineAssistant.js",
@@ -1315,8 +1316,10 @@
       "legacyFile": "backend/src/services/research/enginePortfolioRisk.js",
       "legacySha256": "8ba8858dd052f9e1531424d34c8771e3fbc634b6e27534e36e8e252d9486c5c4",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "ported",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "replacement": "engine-python/continua_engine/risk.py",
+      "validation": "Native observed-return risk, covariance attribution and gap exclusion pass the expanded reference suite; no fabricated rates, prices or actual-account returns."
     },
     {
       "legacyFile": "backend/src/services/research/enginePreferences.js",
@@ -1331,8 +1334,9 @@
       "legacyFile": "backend/src/services/research/engineRiskLab.js",
       "legacySha256": "1bc30ca0b1447bbd49ea873071aab495731c368697192fcde874bff1d218017f",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python risk contributions and source-backed total-return adjustments pass reference comparisons; existing native numerical labs are reused. Complete lab-route/input contracts and integration remain pending."
     },
     {
       "legacyFile": "backend/src/services/research/engineSynthesis.js",
@@ -1345,8 +1349,9 @@
       "legacyFile": "backend/src/services/research/engineWorkspace.js",
       "legacySha256": "698ced872ca13374b8496400b55879c560da119421ee0a30109a05f7dc8b787e",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Go verified-owner portfolio positions and free overview use native Python calculations. Monitoring/cash-flow persistence and HTTP exist. Full portfolio research, snapshots/performance, peers, briefing and worker integration remain pending."
     },
     {
       "legacyFile": "backend/src/services/research/factorResearch.js",
@@ -1576,7 +1581,7 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native Go preferences/save/record-interest use the existing account advisory lock, preserve server interests and enforce schema/defaults through Python. Snapshot observation, monitoring rules and AI-budget methods remain pending."
+      "remaining": "Native Go preferences/save/record-interest preserve schema/ownership/interests. Monitoring list/save/delete and notifications are owner-scoped; save enforces capacity under an account lock. Snapshot observation, monitoring-worker evaluation/notifications and AI-budget methods remain pending."
     },
     {
       "legacyFile": "backend/src/storage/repositories/financialsRepository.js",
@@ -2175,8 +2180,9 @@
       "legacyFile": "scraper/src/storage/r2Archive.js",
       "legacySha256": "1df2517f60dec65fe68d2c5ed0a97c391abb521b066d79f5d621fcface55bc33",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python bounded singleflight archive copies raw content and immutable extraction snapshots, retains originals, applies hash/size verification and version/path CAS, with cooldown and cancellation tests. Private legacy-reader driver, scheduler/boot/operator integration and hosted backfill/restart tests remain pending."
     },
     {
       "legacyFile": "scraper/src/storage/r2Storage.js",
@@ -2184,7 +2190,7 @@
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "remaining": "Native Python streaming private upload/verification exists; full read/migration/retry/operator integration remains pending."
+      "remaining": "Native Python streaming upload/verification and private temporary-file read/checksum/cleanup exist and tests pass. Full collector/backfill/operator integration and hosted recovery remain pending."
     },
     {
       "legacyFile": "scraper/src/storage/rawArtifactsRepository.js",
@@ -3105,24 +3111,24 @@
       "method": "GET",
       "path": "/engine/portfolio/overview",
       "line": 96,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/cash-flows",
       "line": 97,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "DELETE",
       "path": "/engine/cash-flows/:id",
       "line": 102,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
@@ -3137,24 +3143,24 @@
       "method": "GET",
       "path": "/engine/monitoring",
       "line": 104,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/monitoring",
       "line": 105,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "DELETE",
       "path": "/engine/monitoring/:id",
       "line": 112,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
@@ -3169,8 +3175,8 @@
       "method": "GET",
       "path": "/engine/monitoring/activity",
       "line": 114,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
+      "status": "partial",
+      "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",

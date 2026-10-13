@@ -204,6 +204,51 @@ Additional primary references:
 
 ## Reproducible candidate checks
 
+### Native Engine workspace continuation
+
+Go now reads the verified owner's aggregate holdings with one SQL query,
+preserving unknown/unpriced holdings, and serves the included-free portfolio
+overview through Python. Stale or mixed-session quotes do not become fresh P/L;
+mixed currencies still require a dated FX feed. Monitoring-rule and activity
+reads, rule upsert/delete and cash-flow insert/delete are native, Plus-gated and
+owner-scoped. Concurrent rule additions enforce the 50-rule cap under an account
+advisory lock; updating an existing rule resets its evaluation state.
+
+Python now implements portfolio covariance/risk attribution, observed-return
+volatility/drawdown and source-backed split/dividend adjustment. Short histories
+do not produce historical tail-risk estimates, gaps are excluded rather than
+filled, and unsupported risk-free-rate measures stay null. Annual diagnostics,
+financial gap/source-quality warnings and illustrative scenarios are also native.
+Python numerical tools keep calculation logic together without another runtime;
+Go cancellable SQL transactions retain authenticated ownership and atomic writes.
+Primary references: [Python numerical functions](https://docs.python.org/3/library/math.html),
+[decimal rounding](https://docs.python.org/3.13/library/decimal.html),
+and [Go database transactions](https://go.dev/doc/database/execute-transactions).
+
+This continuation is not complete Engine/workspace or scraper migration. Snapshot
+observation, full research assembly, monitor-worker notification dispatch and
+the remaining adapters/publication/recovery/load gates still block cutover.
+The newly written persistence paths have only fixture tests: no real holdings,
+monitoring rules or cash-flow records were changed during validation.
+
+Native Python R2 reprocessing reads now stream to temporary files and verify
+length and content-addressed hashes before extraction; body handles close before
+CPU-heavy work, and temporary files disappear even on extraction failure.
+Native archive backfill serializes overlapping requests, retains original bytes,
+copies one extraction snapshot at a time, and commits only verified R2 paths.
+Path plus extraction-version CAS prevents a slower worker from regressing a
+newer snapshot marker. Failed artifacts receive a one-hour cooldown; cancelled
+operator requests do not abandon the active copy, and graceful shutdown awaits it.
+Decimal/timestamp snapshot encoding and mocked private storage/database tests
+pass. Legacy private-reader wiring, collector scheduling/operator integration
+and hosted restart/backfill tests are still pending: no real R2 backfill was run
+by this native candidate.
+
+Continuation validation: 250 pure reference comparisons, 23 Python Engine tests,
+34 native scraper tests, Go test/vet/build and 28 owned-database read comparisons
+passed. No billing charges or real user-data writes were made. These are not a
+full release pass; production readiness/cutover and old-code removal stay blocked.
+
 Go: `go -C backend-go test ./...` with `NATIVE_PYTHON_BIN` set for real
 Go/Python integration. Python: `python -m unittest discover -s engine-python/tests`
 and `python -m unittest discover -s scraper-python/tests`.

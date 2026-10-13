@@ -5,6 +5,9 @@ import {computeRatios,yoyGrowth} from '../../backend/src/services/research/ratio
 import {annualRatioAt} from '../../backend/src/services/technical/valuationHistory.js';
 import {sma,ema,rsi,macd,latestCrossover} from '../../backend/src/services/technical/indicators.js';
 import {portfolioAnalysis,performance,alignedReturns,dailyCloseMap} from '../../backend/src/services/research/enginePortfolio.js';
+import {portfolioRisk} from '../../backend/src/services/research/enginePortfolioRisk.js';
+import {riskContributions,totalReturnSeries} from '../../backend/src/services/research/engineRiskLab.js';
+import {analyzeFinancials,dataQuality,scenarios} from '../../backend/src/services/research/engineAnalytics.js';
 import {trailingDividendPerShare} from '../../backend/src/services/research/dividendMetrics.js';
 import {recordInterest,researchRecommendations,defaultPreferences,EnginePreferencesSchema} from '../../backend/src/services/research/enginePreferences.js';
 import {evaluateMonitor,monitoringKinds} from '../../backend/src/services/research/engineMonitoring.js';
@@ -19,13 +22,33 @@ const {sourceFinancialTables}=await import('../../backend/src/services/research/
 const python=process.env.NATIVE_PYTHON_BIN??'python3';
 const worker=fileURLToPath(new URL('../../engine-python/worker.py',import.meta.url));
 const operations={ratios:computeRatios,yoy:yoyGrowth,annual_ratio:annualRatioAt,sma,ema,rsi,macd,crossover:latestCrossover,
- portfolio_analysis:portfolioAnalysis,performance,aligned_returns:alignedReturns,daily_close_map:bars=>Object.fromEntries(dailyCloseMap(bars)),
+ analyze_financials:analyzeFinancials,data_quality:(quote,rows,now)=>dataQuality(quote,rows,new Date(now)),scenarios,
+ portfolio_analysis:portfolioAnalysis,portfolio_risk:portfolioRisk,risk_contributions:riskContributions,total_return_series:totalReturnSeries,performance,aligned_returns:alignedReturns,daily_close_map:bars=>Object.fromEntries(dailyCloseMap(bars)),
  trailing_dividend:(actions,now)=>trailingDividendPerShare(actions,new Date(now)),
  record_interest:(settings,symbol,exchange,reset,now)=>recordInterest(settings,symbol,exchange,reset,new Date(now)),
  recommendations:(settings,now)=>researchRecommendations(settings,new Date(now)),evaluate_monitor:evaluateMonitor,
  reported_ratios:(id,quote,history,dividend,now)=>reportedResearchRatios(id,quote,history,dividend,new Date(now)),aggregate_candles:aggregateCandles,source_financial_tables:sourceFinancialTables,issuer_identity:legalIssuerIdentity,issuer_masthead:issuerMastheadMatches,
  validate_preferences:raw=>{const parsed=EnginePreferencesSchema.safeParse(raw);return parsed.success?{valid:true,settings:parsed.data}:{valid:false};}};
 const cases=[];
+for(const rows of [[],[{fiscalYear:2024,revenue:100,netIncome:10,sharesOutstanding:100,totalAssets:100,totalLiabilities:30,totalEquity:20,reportedAt:'2027-01-01',periodEnd:'2024-12-31',sourceUrls:['https://fixture.example/a']}],[{fiscalYear:2021,revenue:100},{fiscalYear:2025,revenue:200}],[{fiscalYear:2024,revenue:100,netIncome:10,sharesOutstanding:100},{fiscalYear:2025,revenue:120,netIncome:20,sharesOutstanding:105,operatingCashFlow:5,freeCashFlow:-2,totalEquity:-1}],[{fiscalYear:2025,revenue:0},{fiscalYear:2025,revenue:20}]]){
+ for(const sector of ['Banking','Industrial'])cases.push({operation:'analyze_financials',args:[rows,sector]});
+ for(const quote of [null,{timestamp:'2026-01-01T12:00:00.000Z',source:'fixture'}])cases.push({operation:'data_quality',args:[quote,rows,'2026-10-13T12:00:00.000Z']});
+ cases.push({operation:'scenarios',args:[rows.at(-1)??null]});
+}
+for(const length of [0,19,20,21,59,60,100]){
+ const returns={A:Array.from({length},(_,i)=>Math.sin(i)*.02),B:Array.from({length},(_,i)=>Math.cos(i)*.01)};
+ for(const weights of [{A:.7,B:.3},{A:1,B:0},{A:0,B:0}]){
+  cases.push({operation:'risk_contributions',args:[returns,weights]});
+  const series=Object.fromEntries(Object.entries(returns).map(([s,values])=>[s,[{timestamp:'2026-01-01T12:00:00.000Z',close:100},...values.map((v,i)=>({timestamp:new Date(Date.UTC(2026,0,i+2,12)).toISOString(),close:100+v*100}))]]));
+  cases.push({operation:'portfolio_risk',args:[series,weights]});
+ }
+}
+cases.push({operation:'risk_contributions',args:[{A:Array(60).fill(0)},{A:1}]});
+for(const gap of [false,true]){
+ const series=Object.fromEntries(['A','B'].map((s,j)=>[s,Array.from({length:70},(_,i)=>({timestamp:new Date(Date.UTC(2026,0,i+1+(gap&&i>=35?10:0),12)).toISOString(),close:100+(i%9)*(j+1)}))]));
+ cases.push({operation:'portfolio_risk',args:[series,{A:.4,B:.6}]});
+}
+for(const actions of [[],[{date:'2026-01-02',dividend:2,sourceUrl:'https://fixture.example/a'}],[{date:'2026-01-02',splitRatio:2,sourceUrl:'https://fixture.example/a'}]])cases.push({operation:'total_return_series',args:[[{date:'2026-01-01',close:100},{date:'2026-01-02',close:52},{date:'2026-01-03',close:54}],actions]});
 for(const settings of [{},{learnInterests:true,sectors:['  Banking  ','\ufeffTelecom\ufeff']},{learnInterests:'yes'},{unknown:true},{goal:'Speculate'},{interests:[{symbol:'KCB',exchange:'NSE',visits:2,lastSeen:'2026-10-13T10:00:00Z',unknown:'stripped'}]},{interests:[{symbol:'KCB',exchange:'NSE',visits:true}]},{interests:[{symbol:'KCB',exchange:'NSE',visits:10001}]},{interests:[{symbol:'KCB',exchange:'NSE',visits:2,lastSeen:'2026-10-13T10:00:00+03:00'}]},{sectors:['💜'.repeat(31)]},{notifications:null}])cases.push({operation:'validate_preferences',args:[settings]});
 for(const name of ['KCB Group PLC','KCB Kenya Limited','Co-operative Bank of Kenya Ltd','A & B Public Limited Company','Alpha Group',''])cases.push({operation:'issuer_identity',args:[name]});
 for(const text of ['KCB Group PLC audited annual results','KCB Kenya Ltd annual results','Unrelated\nKCB Group Limited consolidated financial results'])cases.push({operation:'issuer_masthead',args:[text,'KCB Group PLC']});
