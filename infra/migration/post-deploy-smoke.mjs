@@ -1,6 +1,7 @@
 /** Read-only hosted checks. No credentials, writes or payment initiation. */
 const expected=process.argv[2];
-if(expected&&!/^[0-9a-f]{7,40}$/.test(expected))throw new Error('Expected commit must be a Git SHA');
+const expectedScraper=process.argv[3]??expected;
+for(const sha of [expected,expectedScraper])if(sha&&!/^[0-9a-f]{7,40}$/.test(sha))throw new Error('Expected commit must be a Git SHA');
 const checks=[
  ['backend-live','https://continua-backend.onrender.com/api/v1/health/live',200,true],
  ['backend-readiness','https://continua-backend.onrender.com/api/v1/health',200,false],
@@ -15,7 +16,8 @@ const results=await Promise.all(checks.map(async([name,url,status,revision])=>{
  try{
   const response=await fetch(url,{redirect:'error',signal:AbortSignal.timeout(65000)});
   const body=await response.json();
-  const correctRevision=!revision||!expected||typeof body.revision==='string'&&body.revision.startsWith(expected);
+  const serviceRevision=name==='scraper-live'?expectedScraper:expected;
+  const correctRevision=!revision||!serviceRevision||typeof body.revision==='string'&&body.revision.startsWith(serviceRevision);
   return {name,httpStatus:response.status,ok:response.status===status&&correctRevision,ms:Date.now()-start,
    ...(revision?{revision:body.revision??null,runtime:body.runtime??null}:{}),
    ...(name==='preview-quotes'?{records:Array.isArray(body.data)?body.data.length:null}:{}),
@@ -23,5 +25,5 @@ const results=await Promise.all(checks.map(async([name,url,status,revision])=>{
   };
  }catch{return {name,ok:false,error:'request_failed_or_timeout',ms:Date.now()-start};}
 }));
-console.log(JSON.stringify({expectedRevision:expected??null,results},null,2));
+console.log(JSON.stringify({expectedBackendRevision:expected??null,expectedScraperRevision:expectedScraper??null,results},null,2));
 if(results.some(result=>!result.ok))process.exitCode=1;

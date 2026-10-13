@@ -84,7 +84,8 @@ cards can avoid external bank UI.
 
 - Full backend suite with real Python differential tests: 411 passed, 6 skipped.
 - Backend and scraper builds passed.
-- Full scraper suite with Python extraction enabled: 80 unique tests passed.
+- Full scraper suite with Python extraction enabled: 83 unique tests passed
+  after the R2 archive/memory follow-up (80 at the initial migration).
   The config excludes stale `dist` test artifacts; previous runs included two
   duplicate compiled tests. Original tests are retained.
 - Frontend/Edge compatibility suite: 107 passed.
@@ -132,6 +133,10 @@ are never exercised with production user credentials by migration smoke tests.
 Legacy AI functions reject missing sessions before processing and remain disabled
 unless `CONTINUA_LEGACY_AI_ENABLED=true` is explicitly configured. No funded AI
 service is activated. The retired mock subscription upgrade still returns 410.
+
+All seven Edge functions were deployed and confirmed ACTIVE with `index.js`
+entrypoints. Six unauthenticated POST checks returned 401, and the retired mock
+upgrade returned 410. No production account, alert or AI-provider write was made.
 
 ## Primary references
 

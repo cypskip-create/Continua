@@ -150,3 +150,15 @@ SQL for durable verified checkpoints, native Chromium for dynamic pages. No
 Go/Python rewrite would remove Chromium's memory footprint by itself.
 Primary references: https://developers.cloudflare.com/r2/examples/aws/aws-sdk-js-v3/
 and https://nodejs.org/api/process.html#processmemoryusage.
+
+Verified rollout: scraper commit `dd246dcc983a3be791358fdc3a944968c9e4a252`
+is deployed. RAW_STORAGE_DRIVER was changed from supabase to r2 in the existing
+Render service; restricted credentials and original storage copies were retained.
+At the first follow-up count, 33 of 13,313 raw artifacts had verified R2 references,
+including 10 PDFs, and 10 artifacts had extraction snapshots archived. Counts
+continue changing as collection and backfill run; this is NOT full archive
+completion. Cloudflare's live object listing showed nse/ and extractions/ objects
+even while overview storage counters still showed zero. The first copied batch
+logged copied=5, failed=0. All seven hosted service/data/authorization smoke
+checks passed. The scraper suite passed 83 tests with the real Python PDF worker;
+Windows lacks the Poppler binary installed in the Render Docker image.
