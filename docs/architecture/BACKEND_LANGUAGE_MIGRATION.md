@@ -98,6 +98,24 @@ cards can avoid external bank UI.
   data-readiness probes remain intact. Free Render sleep/cold starts remain a
   hosting limitation, not something a source-language conversion can eliminate.
 
+## Hosted verification — 13 October 2026
+
+Migration release `9d3d80336916216366e33d159ff69fc4d66bc14b` is Live on both
+Render services, confirmed by the dashboards AND revision-bearing liveness
+responses. Backend runtime is Node v24.21.0; scraper runtime is v24.20.0.
+Backend readiness returned HTTP 200/healthy and scraper readiness 200/ok.
+All seven read-only smoke checks passed, including three requested NSE quotes
+through the Cloudflare preview, scraper-private-origin denial and billing
+ownership denial. Vercel's commit status also reported success.
+
+The quote smoke check must supply `symbols=SCOM,KCB,EQTY`; omitting that required
+parameter correctly returns 400 and is not a backend migration defect.
+No live payment, membership change, credential change or paid-hosting activation
+was performed. Python options remain behind their explicit runtime settings;
+successful installation/fixture parity is not a production load benchmark.
+Automated parity and read-only smoke checks do not prove every external feed,
+bank/OTP path or missing financial year is complete.
+
 ## Primary references
 
 - https://paystack.com/docs/payments/charge-card/

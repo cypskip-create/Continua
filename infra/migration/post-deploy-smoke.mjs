@@ -7,7 +7,7 @@ const checks=[
  ['scraper-live','https://continua-scraper.onrender.com/health/live',200,true],
  ['scraper-readiness','https://continua-scraper.onrender.com/health',200,false],
  ['scraper-private-origin','https://continua-scraper.onrender.com/sources',401,false],
- ['preview-quotes','https://continua-preview.cypriankiprop41.workers.dev/api/v1/quotes?exchange=NSE',200,false],
+ ['preview-quotes','https://continua-preview.cypriankiprop41.workers.dev/api/v1/quotes?exchange=NSE&symbols=SCOM,KCB,EQTY',200,false],
  ['preview-billing-ownership','https://continua-preview.cypriankiprop41.workers.dev/api/v1/billing/renewal',401,false],
 ];
 const results=await Promise.all(checks.map(async([name,url,status,revision])=>{
