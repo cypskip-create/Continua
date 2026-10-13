@@ -4,11 +4,65 @@ import (
 	"context"
 	"continua/backend/internal/auth"
 	"encoding/json"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 )
+
+type accountBillingSpy struct {
+	called int
+	userID string
+}
+
+func (b *accountBillingSpy) AccountHTTP(_ context.Context, w http.ResponseWriter, r *http.Request, id *auth.Identity) bool {
+	b.called++
+	if id != nil {
+		b.userID = id.UserID
+	}
+	w.WriteHeader(200)
+	return true
+}
+
+type userPlanFixture struct{}
+
+func (userPlanFixture) EffectivePlan(context.Context, string) (string, error) { return "free", nil }
+func TestNativeBillingIsDelegatedOnlyAfterBothAuthentications(t *testing.T) {
+	s, _ := fixtureServer()
+	spy := new(accountBillingSpy)
+	s.Billing = spy
+	provider := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer fixture-token" {
+			w.WriteHeader(401)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(map[string]string{"id": "11111111-1111-4111-8111-111111111111", "email": "fixture@example.test"})
+	}))
+	defer provider.Close()
+	s.Users = auth.NewUserVerifier(provider.URL, userPlanFixture{})
+	for _, stage := range []int{0, 1, 2} {
+		r := httptest.NewRequest("POST", "/api/v1/billing/native-checkout", strings.NewReader(`{}`))
+		if stage >= 1 {
+			r.Header.Set("X-API-Key", "fixture-dev")
+		}
+		if stage >= 2 {
+			r.Header.Set("X-User-Token", "fixture-token")
+			r.Header.Set("X-Supabase-Key", "fixture-public")
+		}
+		w := httptest.NewRecorder()
+		s.ServeHTTP(w, r)
+		if stage < 2 && w.Code != 401 {
+			t.Fatal("billing auth bypass", stage, w.Code)
+		}
+		if stage == 2 && w.Code != 200 {
+			t.Fatal(w.Code, w.Body.String())
+		}
+	}
+	if spy.called != 1 || spy.userID != "11111111-1111-4111-8111-111111111111" {
+		t.Fatal("unverified identity reached billing", spy)
+	}
+}
 
 type fixtureStore struct {
 	symbols []string

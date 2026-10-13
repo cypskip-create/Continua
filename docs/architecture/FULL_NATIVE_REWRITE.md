@@ -34,9 +34,21 @@ do not constitute production Node forwarding.
 usage touch, origin policy, bounded rate-limit identities, database quote reads,
 quote routes, sectors and liveness. Native readiness remains 503; production
 startup is blocked while other routes/worker/billing capabilities are missing.
-Billing helper ports preserve prices, mobile-number normalization and exact-byte
-HMAC verification. They do NOT yet implement charge execution or atomic access
-activation. Direct card collection remains prohibited by the existing PCI gate.
+Billing now has native Go provider execution, durable account-locked checkout
+reservations, strict agreements, mobile-money/card initialization, receipt
+verification, legacy-order recovery and optional encrypted-token enrollment.
+Live activation calls the retained atomic SQL fulfillment function; Test Mode
+can only record a sandbox receipt, never change membership. Signed raw-body
+webhooks reverify provider transactions instead of trusting event-supplied data.
+Account HTTP handlers delegate only after both API-key and Supabase identity
+verification. A ten-minute Go renewal scheduler uses durable reservations and
+verifies ambiguous existing references instead of charging again.
+
+These billing components are not activated by candidate startup, deployed, or
+tested against real Paystack in this checkpoint. They were tested with SQL and
+HTTP/provider mocks only. Actual provider sandbox, concurrent-host/restart and
+complete differential/hosted integration tests remain release blockers. Direct
+card collection remains prohibited by the existing PCI gate.
 
 `engine-python/` contains native SMA, EMA, Wilder RSI, MACD, crossover, financial
 ratios, YoY, point-in-time annual ratios, reported ratios, portfolio composition,
@@ -97,6 +109,31 @@ and the user's earlier approvals remain in force.
 - https://docs.aws.amazon.com/boto3/latest/reference/services/s3.html
 - https://developers.cloudflare.com/r2/api/s3/api/
 - https://docs.python.org/3/library/asyncio-stream.html
+- https://go.dev/doc/database/cancel-operations
+- https://paystack.com/docs/api/transaction/
+- https://paystack.com/docs/payments/webhooks/
+
+## Billing continuation checkpoint
+
+The Go billing suites cover concurrent/repeated taps, different-intent recovery,
+reservation rollback, verified ownership, server-owned amounts, mode/currency/
+metadata mismatch, Test Mode isolation, inline declines, optional reusable-token
+enrollment, fixed provider origin/no redirects/bounded response/no retries,
+webhook signatures/mode/verification retry, legacy live recovery, recorded policy,
+and renewal cancellation/locking/rollback/unknown outcomes. SQL mocks validate
+statement arguments and transaction ordering, not actual PostgreSQL concurrency.
+The old runtime and development TypeScript contracts/tests are retained until
+the exhaustive native release gates pass. No production cleanup or cutover has
+occurred merely because the candidate compiles.
+
+Continuation validation: 67 Go test functions pass; `go vet` and the executable
+build pass. The 127-case Python calculation comparison and 8 Engine/9 scraper
+unit tests pass. Scraper tests required temporary-file access on Windows; the
+initial restricted run stalled and was stopped after the permitted rerun passed.
+Read-only native loopback database smoke checks still pass. The full cutover
+gate deliberately fails: 300 source features remain pending/partial and all 132
+route/mount entries still require exhaustive verification. These are release
+blockers, not a claim that the whole application has passed.
 
 ## Reproducible candidate checks
 

@@ -627,8 +627,9 @@
       "legacyFile": "backend/src/api/routes/billing.routes.js",
       "legacySha256": "ab7a78e826e2ddcf3df70537af01fd24c21b78e2ab1ad7c887e9d407b183e26c",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go account HTTP handlers and signed raw-body webhook exist; middleware delegate tests pass. Candidate startup intentionally does not activate billing/webhooks/renewals until configuration and end-to-end validation pass."
     },
     {
       "legacyFile": "backend/src/api/routes/companies.routes.js",
@@ -1168,14 +1169,15 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Go prices and exact-body HMAC are implemented; checkout agreements/provider URL contracts still require complete parity."
+      "remaining": "Go prices, exact-body HMAC, strict agreements and provider URL contracts are implemented; full differential contract coverage and hosted integration remain required."
     },
     {
       "legacyFile": "backend/src/services/paystackLive.js",
       "legacySha256": "20de06d2fc525550194645e86ce1bebf0a9cb9eec0d0d88b44aa76fcd6aa09bb",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Go legacy initialize/owner-scoped verification/recovery uses the retained atomic fulfillment function; legacy receipt/provider schema differential coverage and hosted tests remain pending."
     },
     {
       "legacyFile": "backend/src/services/paystackNative.js",
@@ -1183,7 +1185,7 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Go native input/phone validation exists; provider execution, fulfillment, recovery and renewal are NOT yet ported."
+      "remaining": "Go provider execution, durable account-locked reservations, verified live SQL fulfillment/test isolation, optional token enrollment and recovery are implemented and mock-tested; production configuration, provider sandbox/golden/restart validation remain pending."
     },
     {
       "legacyFile": "backend/src/services/portfolio/corporateActionAdjustments.js",
@@ -1667,8 +1669,9 @@
       "legacyFile": "backend/src/workers/cardRenewalWorker.js",
       "legacySha256": "95a7f44c4e4cd2353b4e9a901d3658b9afecc5ed89f3a9c54e0ea7aeef3c060a",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Go ten-minute scheduler, singleflight, durable locked reservations and verification-only ambiguous recovery exist; SQL/provider mocks pass. Restart/concurrent-host/provider sandbox and memory tests remain pending; worker is not launched."
     },
     {
       "legacyFile": "backend/src/workers/corporateActionsWorker.js",

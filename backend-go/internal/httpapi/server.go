@@ -27,7 +27,12 @@ type Server struct {
 	Users    *auth.UserVerifier
 	Origins  map[string]bool
 	Revision string
+	Billing  AccountBilling
 	limiter  *Limiter
+}
+
+type AccountBilling interface {
+	AccountHTTP(context.Context, http.ResponseWriter, *http.Request, *auth.Identity) bool
 }
 
 func New(store MarketStore, authenticator *auth.Authenticator) *Server {
@@ -130,6 +135,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if key != nil && !s.limiter.Allow(limitIdentity, key.RateLimitPerMin, time.Now()) {
 		w.Header().Set("Retry-After", "60")
 		failure(w, 429, "Too many requests. Please retry shortly.")
+		return
+	}
+	if s.Billing != nil && s.Billing.AccountHTTP(ctx, w, r, identity) {
 		return
 	}
 	if r.Method != http.MethodGet {

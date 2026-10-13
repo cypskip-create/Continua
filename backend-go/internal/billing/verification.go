@@ -18,6 +18,7 @@ import (
 type Order struct {
 	Reference, Mode, UserID, Email, Plan, Cycle string
 	AmountMinor                                 int64
+	TermsVersion                                *string
 }
 type Transaction struct {
 	ID        int64   `json:"id"`
@@ -39,12 +40,38 @@ type Transaction struct {
 
 func ValidateTransaction(raw []byte, order Order) (Transaction, error) {
 	var transaction Transaction
+	var fields map[string]json.RawMessage
+	if json.Unmarshal(raw, &fields) != nil {
+		return transaction, errors.New("Payment does not match this checkout.")
+	}
+	for _, name := range []string{"id", "domain", "status", "reference", "amount", "currency", "customer", "metadata"} {
+		if value, ok := fields[name]; !ok || strings.TrimSpace(string(value)) == "null" {
+			return transaction, errors.New("Payment does not match this checkout.")
+		}
+	}
+	if order.Mode == "live" {
+		if value, ok := fields["authorization"]; ok {
+			var authorization struct {
+				Code     *string `json:"authorization_code"`
+				Channel  *string `json:"channel"`
+				Reusable *bool   `json:"reusable"`
+			}
+			if json.Unmarshal(value, &authorization) != nil || authorization.Code == nil || authorization.Channel == nil || authorization.Reusable == nil {
+				return transaction, errors.New("Payment does not match this checkout.")
+			}
+		}
+	}
 	if json.Unmarshal(raw, &transaction) != nil || transaction.ID <= 0 || transaction.ID > 9007199254740991 || transaction.Domain != order.Mode || transaction.Reference != order.Reference || transaction.Amount != order.AmountMinor || transaction.Currency != "KES" || transaction.Metadata.Reference != order.Reference || transaction.Metadata.UserID != order.UserID || transaction.Metadata.Mode != order.Mode || !strings.EqualFold(transaction.Customer.Email, order.Email) {
 		return transaction, errors.New("Payment does not match this checkout.")
 	}
 	address, err := mail.ParseAddress(transaction.Customer.Email)
 	if err != nil || address.Address != transaction.Customer.Email {
 		return transaction, errors.New("Payment does not match this checkout.")
+	}
+	if transaction.PaidAt != nil {
+		if _, err := time.Parse(time.RFC3339Nano, *transaction.PaidAt); err != nil {
+			return transaction, errors.New("Invalid paid timestamp.")
+		}
 	}
 	if transaction.Status == "success" {
 		if transaction.PaidAt == nil {

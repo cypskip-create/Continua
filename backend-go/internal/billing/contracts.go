@@ -16,7 +16,9 @@ import (
 const PolicyVersion = "2026-10-12"
 
 var phonePattern = regexp.MustCompile(`^254[17][0-9]{8}$`)
-var intentPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$`)
+
+// Existing Zod v3 UUID validation accepts all hexadecimal UUID groups.
+var intentPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 var referencePattern = regexp.MustCompile(`^continua-(live|test)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
 type CheckoutInput struct {
@@ -46,11 +48,11 @@ func PriceMinor(plan, cycle string) (int64, error) {
 }
 func NormalizeKenyanPhone(value string) (string, error) {
 	compact := strings.Map(func(r rune) rune {
-		if r == ' ' || r == '\t' || r == '\n' || r == '\r' || r == '(' || r == ')' || r == '-' {
+		if r == '(' || r == ')' || r == '-' || r == '\uFEFF' || r == '\u00A0' || r == '\u1680' || (r >= '\u2000' && r <= '\u200A') || r == '\u2028' || r == '\u2029' || r == '\u202F' || r == '\u205F' || r == '\u3000' || r == ' ' || (r >= '\t' && r <= '\r') {
 			return -1
 		}
 		return r
-	}, strings.TrimSpace(value))
+	}, value)
 	digits := strings.TrimPrefix(compact, "+")
 	if strings.HasPrefix(digits, "01") || strings.HasPrefix(digits, "07") {
 		digits = "254" + digits[1:]

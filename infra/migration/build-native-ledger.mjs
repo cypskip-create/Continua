@@ -15,8 +15,11 @@ const nativePorts={
  'backend/src/services/research/reportedResearch.js':['engine-python/continua_engine/reported.py','127-case native Python parity suite'],
 };
 const partial={
- 'backend/src/services/paystackCommon.js':'Go prices and exact-body HMAC are implemented; checkout agreements/provider URL contracts still require complete parity.',
- 'backend/src/services/paystackNative.js':'Go native input/phone validation exists; provider execution, fulfillment, recovery and renewal are NOT yet ported.',
+ 'backend/src/services/paystackCommon.js':'Go prices, exact-body HMAC, strict agreements and provider URL contracts are implemented; full differential contract coverage and hosted integration remain required.',
+ 'backend/src/services/paystackNative.js':'Go provider execution, durable account-locked reservations, verified live SQL fulfillment/test isolation, optional token enrollment and recovery are implemented and mock-tested; production configuration, provider sandbox/golden/restart validation remain pending.',
+ 'backend/src/services/paystackLive.js':'Go legacy initialize/owner-scoped verification/recovery uses the retained atomic fulfillment function; legacy receipt/provider schema differential coverage and hosted tests remain pending.',
+ 'backend/src/api/routes/billing.routes.js':'Native Go account HTTP handlers and signed raw-body webhook exist; middleware delegate tests pass. Candidate startup intentionally does not activate billing/webhooks/renewals until configuration and end-to-end validation pass.',
+ 'backend/src/workers/cardRenewalWorker.js':'Go ten-minute scheduler, singleflight, durable locked reservations and verification-only ambiguous recovery exist; SQL/provider mocks pass. Restart/concurrent-host/provider sandbox and memory tests remain pending; worker is not launched.',
  'backend/src/api/middleware/apiKeyAuth.js':'Native Go lookup/hash/cache exists; full middleware/error/rate-limit golden contracts are still required.',
  'backend/src/storage/repositories/pricesRepository.js':'Native Go quote reads exist; writes/movers/freshness/ingestion remain pending.',
  'backend/src/services/research/enginePreferences.js':'Native Python opt-in preference calculations exist; full schema/persistence/API/consent integration remains pending.',
