@@ -139,8 +139,12 @@ def main():
     except Exception as error:
         # Never print SDK exception strings: they may contain URLs or secrets.
         status=getattr(error,'response',{}).get('ResponseMetadata',{}).get('HTTPStatusCode')
+        code=getattr(error,'response',{}).get('Error',{}).get('Code')
+        operation=getattr(error,'operation_name',None)
         print(json.dumps({'status':'failed','reason':'Scheduled collector failed; private credentials and source details omitted',
-            'errorClass':type(error).__name__,'providerHTTPStatus':status if type(status) is int else None}))
+            'errorClass':type(error).__name__,'providerHTTPStatus':status if type(status) is int else None,
+            'providerOperation':operation if operation in ('HeadObject','PutObject','GetObject') else None,
+            'providerCode':code if code in ('400','403','404','AccessDenied','InvalidAccessKeyId','SignatureDoesNotMatch','InvalidArgument','InvalidRequest','AuthorizationHeaderMalformed','NoSuchBucket','NotImplemented') else 'unclassified'}))
         return 1
 
 if __name__=='__main__':raise SystemExit(main())
