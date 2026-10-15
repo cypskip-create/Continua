@@ -62,7 +62,7 @@ exist; conditional ETag fetching is not claimed as implemented by this change.
 Hosted checks on 15 October 2026 verified an actual private R2 upload/read-back
 and SQL receipt. A bounded Capital Business RSS run discovered ten items, stored
 and extracted two, and durably queued the remainder. A two-document NSE queue
-drain failed at source fetch; recurring schedules remain disabled pending document
+drain failed at source fetch; recurring document schedules remain disabled pending document
 source verification. No failed run is represented as a successful migration.
 A subsequent KenyanStocks drain stored and extracted one real document directly
 through private R2 and SQL; its second fetch failed with `SSLError`. Its logical
@@ -74,6 +74,10 @@ the ledger for operator investigation, not deletion or endless retries. The
 legacy backend supports `COLLECTOR_EXECUTION_MODE=actions` to suppress reader-
 triggered requests to the suspended scraper while retaining SQL publication.
 The default remains `render` until this flag is explicitly configured.
+Production Render configuration was left unchanged: applying that flag was
+blocked during safety review while document collection remained incomplete.
+The old scraper remains suspended; only the separately approved Actions news
+schedule is enabled. This is not a completed full native backend cutover.
 
 Keep the old Render scraper suspended until the explicit checks above and a
 bounded production collection succeed. Do not resume both schedulers. The main

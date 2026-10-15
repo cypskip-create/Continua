@@ -24,3 +24,6 @@ class ScheduledTests(unittest.TestCase):
         self.assertIn('cancel-in-progress: false',workflow)
         self.assertIn('persist-credentials: false',workflow)
         self.assertIn('default: false',workflow)
+        self.assertIn("github.event.schedule == '17 */8 * * *' && vars.CONTINUA_SCHEDULED_NEWS_ENABLED == 'true'",workflow)
+        self.assertIn("github.event.schedule == '43 20 * * *' && vars.CONTINUA_SCHEDULED_DOCUMENTS_ENABLED == 'true'",workflow)
+        self.assertNotIn('vars.CONTINUA_SCHEDULED_SCRAPER_ENABLED',workflow)
