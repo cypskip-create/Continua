@@ -21,7 +21,9 @@ Manual runs default to an offline plan. Explicit `apply=true, maintenance=prepar
 applies only the additive scheduler-state migration. Then `verify-storage` writes
 one tiny synthetic private object, checks retrieval/hash and writes one SQL audit
 receipt. These must succeed before setting repository variable
-`CONTINUA_SCHEDULED_SCRAPER_ENABLED=true` or enabling production collection.
+`CONTINUA_SCHEDULED_NEWS_ENABLED=true` (news only) or
+`CONTINUA_SCHEDULED_DOCUMENTS_ENABLED=true` (documents separately).
+The user approved news-only scheduling; document schedules remain off.
 
 Schedules are 00:17/08:17/16:17 UTC for news and 20:43 UTC for documents (03:17,
 11:17,19:17 and 23:43 Africa/Nairobi). Only enabled, permission-recorded sources
@@ -62,6 +64,10 @@ and SQL receipt. A bounded Capital Business RSS run discovered ten items, stored
 and extracted two, and durably queued the remainder. A two-document NSE queue
 drain failed at source fetch; recurring schedules remain disabled pending document
 source verification. No failed run is represented as a successful migration.
+A subsequent KenyanStocks drain stored and extracted one real document directly
+through private R2 and SQL; its second fetch failed with `SSLError`. Its logical
+receipt was approximately 11.8 MB download and 21.7 MB conservative upload
+reservation. TLS verification was not disabled to make the remaining fetch pass.
 
 Actions claims stop after five attempts per document; exhausted records stay in
 the ledger for operator investigation, not deletion or endless retries. The

@@ -12,6 +12,8 @@ class TransferTests(unittest.IsolatedAsyncioTestCase):
         budget.consume('uploadBytes',3);budget.consume('downloadBytes',5)
         with self.assertRaises(TransferLimitReached):budget.consume('uploadBytes',1)
         self.assertEqual(budget.snapshot()['downloadBytes'],5)
+        self.assertTrue(budget.exhausted)
+        with self.assertRaises(TransferLimitReached):budget.consume('downloadBytes',0)
     async def test_reader_counts_wire_bytes(self):
         reader=asyncio.StreamReader();reader.feed_data(b'abc\nxyz');reader.feed_eof()
         previous=transfer_budget.active;transfer_budget.active=TransferBudget(7)

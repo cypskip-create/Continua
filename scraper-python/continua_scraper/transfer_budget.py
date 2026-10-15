@@ -16,11 +16,13 @@ class TransferBudget:
         self.values={'downloadBytes':0,'uploadBytes':0}
         self.lock=threading.Lock()
         self.retries=0
+        self.exhausted=False
     def consume(self,direction,size):
         if direction not in self.values or type(size) is not int or size<0:
             raise ValueError('Invalid logical transfer accounting')
         with self.lock:
-            if sum(self.values.values())+size>self.limit:
+            if self.exhausted or sum(self.values.values())+size>self.limit:
+                self.exhausted=True
                 raise TransferLimitReached('Logical transfer budget reached')
             self.values[direction]+=size
     def snapshot(self):

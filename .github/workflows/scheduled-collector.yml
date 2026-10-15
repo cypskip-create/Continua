@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   collect:
-    if: github.event_name == 'workflow_dispatch' || vars.CONTINUA_SCHEDULED_SCRAPER_ENABLED == 'true'
+    if: github.event_name == 'workflow_dispatch' || (github.event.schedule == '17 */8 * * *' && vars.CONTINUA_SCHEDULED_NEWS_ENABLED == 'true') || (github.event.schedule == '43 20 * * *' && vars.CONTINUA_SCHEDULED_DOCUMENTS_ENABLED == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

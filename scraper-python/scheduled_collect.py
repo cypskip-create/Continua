@@ -73,6 +73,7 @@ async def run(kind,source_id=None):
                         offset=int(time.time()//3600)%max(1,len(sources))
                         sources=(sources[offset:]+sources[:offset])[:source_limit]
                         for source in sources:
+                            if budget.exhausted:break
                             if sum(budget.snapshot()[k] for k in ('uploadBytes','downloadBytes'))>=ceiling:break
                             before=budget.snapshot();source_started=time.monotonic()
                             entry={};receipt['sources'].append(entry)
@@ -97,6 +98,7 @@ async def run(kind,source_id=None):
                                 after=budget.snapshot()
                                 entry.update(sourceId=source['id'],durationSeconds=round(time.monotonic()-source_started,3),
                                     **{key:after[key]-before[key] for key in ('downloadBytes','uploadBytes','retryCount')})
+                        if budget.exhausted:receipt['status']='budget-paused'
                         if receipt['status']=='running':
                             receipt['status']='failed' if any(s.get('failed',0) for s in receipt['sources']) else 'completed'
                 except TimeoutError:receipt['status']='failed'
