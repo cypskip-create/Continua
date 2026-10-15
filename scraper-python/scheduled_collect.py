@@ -16,6 +16,7 @@ from continua_scraper.documents import encode
 from continua_scraper.event_loop import database_event_loop
 from continua_scraper.runtime import CollectorRuntime
 from continua_scraper.storage import RawStorage
+from continua_scraper.crawler import GenericCrawler
 
 def limits(environment):
     result=[]
@@ -72,13 +73,29 @@ async def run(kind,source_id=None):
                         sources=(sources[offset:]+sources[:offset])[:source_limit]
                         for source in sources:
                             if sum(budget.snapshot()[k] for k in ('uploadBytes','downloadBytes'))>=ceiling:break
+                            before=budget.snapshot();source_started=time.monotonic()
+                            entry={};receipt['sources'].append(entry)
                             try:
-                                result=await runtime.registry.run(source['id'],drain_only=kind=='drain',batch_size=2)
-                                receipt['sources'].append({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped')})
+                                adapter=await runtime.registry.build(source['id'])
+                                if isinstance(adapter,GenericCrawler):
+                                    if kind=='drain':raise ValueError('Generic crawler has separate crawl checkpoints')
+                                    result=await adapter.run(2)
+                                else:
+                                    # Queue RSS and other lightweight discoveries too:
+                                    # a two-document batch must not silently drop
+                                    # the remainder or repeatedly select only the
+                                    # newest two feed entries on fresh runners.
+                                    adapter.persistent_batch_size=2
+                                    result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=2)
+                                entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped')})
                             except transfer_budget.TransferLimitReached:
                                 receipt['status']='budget-paused';break
                             except Exception:
-                                receipt['sources'].append({'failed':1})
+                                entry['failed']=1
+                            finally:
+                                after=budget.snapshot()
+                                entry.update(sourceId=source['id'],durationSeconds=round(time.monotonic()-source_started,3),
+                                    **{key:after[key]-before[key] for key in ('downloadBytes','uploadBytes','retryCount')})
                         if receipt['status']=='running':
                             receipt['status']='failed' if any(s.get('failed',0) for s in receipt['sources']) else 'completed'
                 except TimeoutError:receipt['status']='failed'
