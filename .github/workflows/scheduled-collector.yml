@@ -42,7 +42,7 @@ jobs:
           cache-dependency-path: scraper-python/requirements-lock.txt
       - run: python -m pip install -r scraper-python/requirements-lock.txt
       - name: Install document and browser tools
-        if: github.event_name == 'schedule' || (inputs.apply && inputs.maintenance == 'none')
+        if: (github.event_name == 'schedule' && github.event.schedule == '43 20 * * *') || (inputs.apply && inputs.kind != 'news' && inputs.maintenance == 'none')
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends poppler-utils tesseract-ocr

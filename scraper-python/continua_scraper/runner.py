@@ -84,6 +84,9 @@ class AdapterRunner:
                     if job:await self.jobs.finish(job['id'],job['attempts'])
                 except Exception as error:
                     summary['failed']+=1
+                    errors=summary.setdefault('errorClasses',{})
+                    category=f'{stage}:{type(error).__name__}'
+                    errors[category]=errors.get(category,0)+1
                     # Classification is safe even when SDK exceptions include
                     # server credentials; detailed private provider errors are
                     # not copied into database/public operator responses.

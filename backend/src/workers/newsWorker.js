@@ -19,6 +19,7 @@ let lastReaderRefreshAt = 0;
 /** Only active readers trigger this; it is not a keep-alive timer. Never hold
  * the HTTP news response open for a sleeping collector or publisher crawl. */
 export function requestNewsCollection() {
+    if (env.COLLECTOR_EXECUTION_MODE === 'actions') return;
     const collector = env.NEWS_SCRAPER_URL ?? (env.NODE_ENV === "production" ? "https://continua-scraper.onrender.com" : undefined);
     if (!collector || readerRefresh || Date.now() - lastReaderRefreshAt < 10 * 60_000)
         return;

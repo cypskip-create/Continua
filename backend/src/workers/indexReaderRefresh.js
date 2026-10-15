@@ -4,6 +4,7 @@ import { logger } from '../monitoring/logger.js';
 let pending = null, lastAttempt = 0;
 /** Nonblocking reader catch-up, not paid always-on hosting or keep-alive. */
 export function requestIndexCollection() {
+    if (env.COLLECTOR_EXECUTION_MODE === 'actions') return;
     const collector = env.NEWS_SCRAPER_URL ?? (env.NODE_ENV === 'production' ? 'https://continua-scraper.onrender.com' : undefined);
     if (!collector || pending || Date.now() - lastAttempt < 15 * 60_000)
         return;

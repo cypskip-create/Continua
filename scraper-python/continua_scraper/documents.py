@@ -5,8 +5,10 @@ def encode(value):
     return json.dumps(value,ensure_ascii=False,allow_nan=False,separators=(",",":"))
 
 class DocumentJobs:
-    def __init__(self,database):
+    def __init__(self,database,*,max_attempts=None):
+        if max_attempts is not None and (type(max_attempts) is not int or not 1<=max_attempts<=10):raise ValueError('Invalid durable retry ceiling')
         self.database=database
+        self.max_attempts=max_attempts
 
     async def enqueue(self,source_id,documents):
         for offset in range(0,len(documents),200):
@@ -35,7 +37,7 @@ class DocumentJobs:
     async def claim(self,source_id,limit):
         if type(limit) is not int or not 1<=limit<=25:
             raise ValueError("invalid document batch")
-        return await self.database.query("""WITH pending AS (
+        sql="""WITH pending AS (
           SELECT id FROM scraping.document_jobs WHERE source_id=%s AND
             ((status IN ('pending','failed') AND next_attempt_at<=now()) OR (status='processing' AND lease_until<now()))
           ORDER BY attempts,CASE WHEN source_id='kenyanstocks' THEN
@@ -44,7 +46,11 @@ class DocumentJobs:
             created_at,id FOR UPDATE SKIP LOCKED LIMIT %s)
           UPDATE scraping.document_jobs j SET status='processing',attempts=j.attempts+1,
             lease_until=now()+interval '2 hours',updated_at=now()
-          FROM pending WHERE j.id=pending.id RETURNING j.id,j.document,j.attempts""",(source_id,limit))
+          FROM pending WHERE j.id=pending.id RETURNING j.id,j.document,j.attempts"""
+        if self.max_attempts is not None:
+            sql=sql.replace('ORDER BY attempts,','AND attempts<%s ORDER BY attempts,')
+            return await self.database.query(sql,(source_id,self.max_attempts,limit))
+        return await self.database.query(sql,(source_id,limit))
 
     async def finish(self,job_id,attempts,error=None):
         # Attempt token prevents an expired worker overwriting a newer claim.

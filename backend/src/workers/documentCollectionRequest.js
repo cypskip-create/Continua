@@ -2,6 +2,7 @@ import { env } from '../config/index.js';
 import { logger } from '../monitoring/logger.js';
 let active = null, last = 0;
 export function requestDocumentCollection() {
+    if (env.COLLECTOR_EXECUTION_MODE === 'actions') return;
     const collector = env.NEWS_SCRAPER_URL ?? (env.NODE_ENV === 'production' ? 'https://continua-scraper.onrender.com' : undefined);
     if (!collector || active || Date.now() - last < 10 * 60_000)
         return;

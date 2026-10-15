@@ -79,6 +79,7 @@ const EnvSchema = z.object({
     DOCUMENT_PUBLICATION_BATCH_SIZE: z.coerce.number().int().min(1).max(100).default(25),
     NEWS_BRIDGE_CRON: z.string().default("*/2 * * * *"), // keep newly scraped headlines close to real time
     NEWS_SCRAPER_URL: z.string().url().optional(), // production Render collector is the fallback; override on other hosts
+    COLLECTOR_EXECUTION_MODE: z.enum(['render', 'actions']).default('render'),
     // ── CORS ────────────────────────────────────────────────────────────
     // Comma-separated list of origins allowed to call this API from a browser
     // (e.g. "https://afrifinance.lovable.app,https://app.afrifinance.co.ke").

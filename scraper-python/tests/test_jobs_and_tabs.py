@@ -17,6 +17,12 @@ class FakeDatabase:
         return []
 
 class JobTests(unittest.IsolatedAsyncioTestCase):
+    async def test_scheduled_retry_ceiling_is_parameter_bound(self):
+        database=FakeDatabase()
+        await DocumentJobs(database,max_attempts=5).claim('fixture',2)
+        sql,params=database.calls[0]
+        self.assertIn('AND attempts<%s',sql)
+        self.assertEqual(params,('fixture',5,2))
     async def test_enqueue_batches_and_keeps_retry_states(self):
         database=FakeDatabase()
         jobs=DocumentJobs(database)

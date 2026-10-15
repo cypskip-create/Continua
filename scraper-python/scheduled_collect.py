@@ -62,6 +62,7 @@ async def run(kind,source_id=None):
                 transfer_budget.active=budget
                 storage=RawStorage.from_environment()
                 runtime=CollectorRuntime(database,storage,scheduler_enabled=False)
+                runtime.jobs.max_attempts=5
                 try:
                     async with asyncio.timeout(seconds):
                         sources=await runtime.sources.enabled()
@@ -87,7 +88,7 @@ async def run(kind,source_id=None):
                                     # newest two feed entries on fresh runners.
                                     adapter.persistent_batch_size=2
                                     result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=2)
-                                entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped')})
+                                entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','errorClasses')})
                             except transfer_budget.TransferLimitReached:
                                 receipt['status']='budget-paused';break
                             except Exception:

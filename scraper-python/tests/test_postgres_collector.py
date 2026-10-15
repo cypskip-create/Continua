@@ -113,3 +113,14 @@ class CollectorPostgresTests(unittest.IsolatedAsyncioTestCase):
         for _ in range(2):await dead.record(self.source_id,'https://fixture.example/a.pdf','parse','synthetic parse failure')
         rows=await dead.list(self.source_id,10)
         self.assertEqual(len(rows),1);self.assertEqual(rows[0]['attempts'],2)
+
+    async def test_daily_reservations_are_atomic_across_competing_runners(self):
+        sql='''INSERT INTO scraping.scheduled_transfer_days(day,reserved_bytes)
+            VALUES('2099-01-01',%s) ON CONFLICT(day) DO UPDATE SET
+            reserved_bytes=scraping.scheduled_transfer_days.reserved_bytes+EXCLUDED.reserved_bytes
+            WHERE scraping.scheduled_transfer_days.reserved_bytes+EXCLUDED.reserved_bytes<=%s RETURNING reserved_bytes'''
+        await self.database.query(sql,(100,200))
+        results=await asyncio.gather(self.database.query(sql,(100,200)),self.database.query(sql,(100,200)))
+        self.assertEqual(sum(bool(result) for result in results),1)
+        rows=await self.database.query("SELECT reserved_bytes FROM scraping.scheduled_transfer_days WHERE day='2099-01-01'")
+        self.assertEqual(rows[0]['reserved_bytes'],200)
