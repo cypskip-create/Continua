@@ -27,6 +27,7 @@ import zlib from "node:zlib";
 import { assertPublicUrl, UnsafeUrlError } from "./urlSafety.js";
 import { throttleHost } from "./rateLimiter.js";
 import { env } from "../config/index.js";
+import { reserveLightRequest } from '../scheduler/renderLight.js';
 export class FetchTooLargeError extends Error {
 }
 export class FetchTimeoutError extends Error {
@@ -56,6 +57,7 @@ function decompressStream(res) {
     }
 }
 function requestOnce(url, opts) {
+    if (env.SCRAPER_WORKLOAD_ROLE === 'render-light') reserveLightRequest();
     return new Promise((resolve, reject) => {
         const lib = url.protocol === "https:" ? https : http;
         const req = lib.request(url, {
@@ -102,7 +104,7 @@ function requestOnce(url, opts) {
     });
 }
 export async function safeFetch(url, opts = {}) {
-    const maxBytes = opts.maxBytes ?? env.MAX_RESPONSE_SIZE_BYTES;
+    const maxBytes = env.SCRAPER_WORKLOAD_ROLE === 'render-light' ? Math.min(opts.maxBytes ?? env.MAX_RESPONSE_SIZE_BYTES, 256 * 1024) : opts.maxBytes ?? env.MAX_RESPONSE_SIZE_BYTES;
     const timeoutMs = opts.timeoutMs ?? env.DEFAULT_REQUEST_TIMEOUT_MS;
     const requestsPerSecond = opts.requestsPerSecond ?? env.DEFAULT_REQUESTS_PER_SECOND;
     let currentUrl = url;
@@ -140,7 +142,7 @@ function sleep(ms) {
  * already telling us no.
  */
 export async function fetchWithRetry(url, opts = {}) {
-    const maxRetries = opts.maxRetries ?? env.DEFAULT_MAX_RETRIES;
+    const maxRetries = env.SCRAPER_WORKLOAD_ROLE === 'render-light' ? 0 : opts.maxRetries ?? env.DEFAULT_MAX_RETRIES;
     const baseDelayMs = opts.baseDelayMs ?? 1000;
     let lastResult;
     let lastError;

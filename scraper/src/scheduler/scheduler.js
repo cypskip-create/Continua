@@ -20,6 +20,8 @@ import { ensureDefaultSources } from "../config/defaultSources.js";
 import { sourceSchedule } from "./newsSchedule.js";
 import { createSerialWorkQueue } from '../extraction/serialWorkQueue.js';
 import { archiveToR2 } from '../storage/r2Archive.js';
+import { query } from '../storage/db.js';
+import { lightSourceId, lightSlotId, runLightScope } from './renderLight.js';
 const enqueueBackground = createSerialWorkQueue();
 let archiveQueued = false;
 function queueArchive() {
@@ -40,6 +42,7 @@ let lastDocumentRefreshAt = 0;
 /** A real financial-page read can wake the free collector. This is bounded
  * catch-up, not an always-on keepalive or arbitrary URL-fetch endpoint. */
 export function refreshFinancialDocuments() {
+    if (env.SCRAPER_WORKLOAD_ROLE === 'render-light') return Promise.resolve();
     if (documentRefresh)
         return documentRefresh;
     if (!env.SCHEDULER_ENABLED || Date.now() - lastDocumentRefreshAt < 10 * 60_000)
@@ -66,6 +69,7 @@ export function refreshIndexSource() {
 }
 /** Reader-triggered catch-up shares the cron locks and publisher throttles. */
 export function refreshNewsSources() {
+    if (env.SCRAPER_WORKLOAD_ROLE === 'render-light') return Promise.resolve();
     if (newsRefresh)
         return newsRefresh;
     if (!env.SCHEDULER_ENABLED || Date.now() - lastNewsRefreshAt < 10 * 60_000)
@@ -85,9 +89,32 @@ export function refreshNewsSources() {
     return newsRefresh;
 }
 export function newsScheduleStatus() {
+    if (env.SCRAPER_WORKLOAD_ROLE === 'render-light') return {enabled:false,owner:'github-actions',running:[],sources:[]};
     return { enabled: env.SCHEDULER_ENABLED, cron: env.NEWS_CRAWL_CRON, running: [...runningSources].filter(id => newsRuns.has(id)), sources: [...newsRuns].map(([sourceId, state]) => ({ sourceId, ...state })) };
 }
 async function runSourceOnce(source, drainOnly = false) {
+    if (env.SCRAPER_WORKLOAD_ROLE === 'render-light') {
+        if (source.id !== lightSourceId || source.adapter !== 'web' || drainOnly) return;
+        if (runningSources.has(source.id)) return;
+        runningSources.add(source.id);
+        try {
+            // Existing SQL audit table: unique slot survives restarts and replicas.
+            // Claim before I/O; a failed attempt is not refunded into a retry loop.
+            const id = lightSlotId();
+            const claim = await query(`INSERT INTO scraping.scheduled_runs(id,kind,status)
+                VALUES($1,'drain','running') ON CONFLICT(id) DO NOTHING RETURNING id`, [id]);
+            if (!claim.rows.length) return;
+            let status = 'failed', result = {};
+            try {
+                result = await runLightScope(() => crawlSource(source.id, 1));
+                if (!result.failed) status = 'completed';
+            } finally {
+                await query(`UPDATE scraping.scheduled_runs SET status=$2,completed_at=now(),receipt=$3::jsonb WHERE id=$1`,
+                    [id, status, JSON.stringify({role:'render-light',sourceId:source.id,...result})]);
+            }
+        } finally { runningSources.delete(source.id); }
+        return;
+    }
     // A slow publisher must not accumulate another crawl every cron tick.
     if (runningSources.has(source.id))
         return;
@@ -127,6 +154,14 @@ export async function startScheduler() {
     if (!env.SCHEDULER_ENABLED) {
         logger.info("Scheduler disabled via SCHEDULER_ENABLED=false");
         return [];
+    }
+    if (env.SCRAPER_WORKLOAD_ROLE === 'render-light') {
+        // No source seeding, archive backfill, queue drain, OCR or news startup.
+        const refresh = () => { void refreshIndexSource().catch(() => logger.warn('Light index collection unavailable; stored observations retained')); };
+        scheduledTasks.push(cron.schedule('15 */6 * * *', refresh));
+        refresh();
+        logger.info('Render light role: index only, one URL per six-hour SQL slot; bulk collection belongs to Actions');
+        return scheduledTasks;
     }
     await ensureDefaultSources();
     const sources = await listEnabledSources();

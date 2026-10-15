@@ -18,6 +18,7 @@ export function booleanEnv(defaultValue) {
  * the same Postgres instance.
  */
 const EnvSchema = z.object({
+    SCRAPER_WORKLOAD_ROLE: z.enum(['full', 'render-light']).default('full'),
     PDF_NATIVE_ENGINE: z.enum(['poppler', 'python']).default('poppler'),
     PYTHON_BIN: z.string().min(1).default('/opt/pdf-python/bin/python'),
     SCRAPER_ADMIN_API_KEY: z.string().min(32).optional(),

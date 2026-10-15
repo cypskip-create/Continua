@@ -10,7 +10,7 @@ async function visit(directory){
   if(entry.isDirectory()){await visit(file);continue;}
   if(/\.test\.(js|d\.ts)$/.test(file))continue;
   if(file.endsWith('.ts')&&!file.endsWith('.d.ts'))throw new Error('Unexpected TypeScript implementation remains');
-  if(!/\.(js|json)$/.test(file)&&!file.endsWith('.d.ts'))continue;
+  if(!/\.(js|json)$/.test(file))continue;
   if(file.endsWith('.js')){
    const check=spawnSync(process.execPath,['--check',file],{encoding:'utf8',windowsHide:true});
    if(check.status!==0)throw new Error(check.stderr||'JavaScript syntax validation failed');

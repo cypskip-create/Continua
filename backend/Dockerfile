@@ -4,7 +4,6 @@ FROM node:24-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install
-COPY tsconfig.json tsconfig.build.json ./
 COPY src ./src
 COPY scripts ./scripts
 RUN npm run build

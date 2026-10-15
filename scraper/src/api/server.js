@@ -1,5 +1,6 @@
 import express from "express";
 import { publicCollectorRoute, validOperatorKey } from './operatorAccess.js';
+import { lightRouteAllowed } from '../scheduler/renderLight.js';
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 import { checkHealth } from "../monitoring/healthCheck.js";
@@ -28,8 +29,15 @@ export function createServer() {
         }
         next();
     });
+    app.use((req, res, next) => {
+        if (env.SCRAPER_WORKLOAD_ROLE === 'render-light' && !lightRouteAllowed(req.method, req.path)) {
+            res.status(409).json({error:'bulk_collection_runs_in_github_actions',manualWorkflow:'scheduled-collector.yml'});
+            return;
+        }
+        next();
+    });
     app.use(express.json({ limit: '64kb' }));
-    app.get('/health/live',(_req,res)=>res.json({status:'alive',revision:process.env.RENDER_GIT_COMMIT??null,runtime:process.version,implementation:'javascript',timestamp:new Date().toISOString()}));
+    app.get('/health/live',(_req,res)=>res.json({status:'alive',revision:process.env.RENDER_GIT_COMMIT??null,runtime:process.version,implementation:'javascript',workloadRole:env.SCRAPER_WORKLOAD_ROLE,schedulerEnabled:env.SCHEDULER_ENABLED,timestamp:new Date().toISOString()}));
     app.post('/documents/refresh', (_req, res) => {
         void refreshFinancialDocuments().catch(() => logger.warn('Reader-triggered financial document collection failed; queued jobs retained'));
         res.status(202).json({ status: 'accepted' });

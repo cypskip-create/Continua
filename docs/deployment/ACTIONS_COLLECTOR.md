@@ -1,5 +1,35 @@
 # Scheduled collection outside Render
 
+## Hybrid restoration requested 15 October 2026
+
+The revised split retains the existing Render service in `SCRAPER_WORKLOAD_ROLE=render-light`.
+It exclusively owns `nse-index-summary`; the Python Actions runner excludes that
+source. Render does not run RSS, PDF discovery/drains, OCR, archive backfills or
+the global extraction sweep. Its mutation routes reject bulk work with HTTP 409
+and point operators to the manual Actions workflow; no GitHub token is exposed.
+The existing backend reader and payment configuration remains unchanged.
+
+Index collection is limited to one official homepage URL per six-hour UTC slot,
+four source HTTP attempts (including robots/redirects), 256 KiB per decompressed
+response, no HTTP retries or link expansion. A pre-I/O SQL unique receipt prevents
+restart/replica retries from bypassing the slot. New HTML index evidence is parsed
+in memory and saved directly to private R2 and SQL, without a global OCR sweep.
+If the current page exceeds the limit, collection fails and retains the previous
+publisher-dated values; it does not truncate or fabricate prices. Permissions and
+robots gates remain. This reduces freshness to at most four checks per day and
+free Render sleeping can delay them further; no always-on keepalive is added.
+
+These limits bound assigned collection, not total Render invoices: database,
+HTTP responses, TLS overhead, SDK requests and main backend traffic still count.
+No guarantee that the entire workspace stays below $2 is made. The legacy Node
+service is still needed until the native rewrite meets its cutover gates.
+
+Removed obsolete `backend/tsconfig.build.json`, `scraper/tsconfig.build.json`
+and the completed one-time TypeScript conversion script. Docker no longer copies
+those configs, and fresh builds no longer copy `.d.ts` contracts into runtime
+output. Development declarations/tests remain; no frontend code, stored document
+or production rollback implementation is deleted. Git retains the removed files.
+
 The new Python entrypoint is `scraper-python/scheduled_collect.py`; the workflow
 is `.github/workflows/scheduled-collector.yml`. It has no Render URL, API call,
 HTTP listener, continuous scheduler, paid AI or Paystack dependency. Go remains

@@ -5,6 +5,15 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "scraper/src/scheduler/renderLight.js",
+      "category": "existing production deployment guard",
+      "language": "JavaScript",
+      "runtime": "Existing Render rollback service only",
+      "reason": "Constrain the currently deployed runtime before restoring it, without an unverified Python production cutover. SQL unique six-hour slots survive restarts; AsyncLocalStorage bounds source requests per job. Bulk discovery, PDFs, OCR and news remain in the Python Actions runner. This guard is not completion of the native migration.",
+      "references": ["https://nodejs.org/api/async_context.html", "https://render.com/docs/outbound-bandwidth"],
+      "classificationBasis": "Small maintenance guard in existing runtime; no new TypeScript or additional service"
+    },
+    {
       "file": "scraper-python/scheduled_collect.py",
       "category": "scheduled collection",
       "language": "Python",

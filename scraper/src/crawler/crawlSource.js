@@ -26,6 +26,8 @@ import { extractFromHtml } from "./htmlExtract.js";
 import { canonicalizeUrl, isSameOrSubdomain } from "./urlNormalize.js";
 import { sha256 } from "./hash.js";
 import { env } from "../config/index.js";
+import { extractNseIndexSummary } from '../extraction/nseIndexSummary.js';
+import { insertExtraction } from '../storage/extractionsRepository.js';
 import { matchesDiscoveryPaths } from "./discoveryPolicy.js";
 const CRAWLER_VERSION = "scraper-phase6-0.1.0";
 /** Seeds a source's crawl_state with its configured seed URLs, if not already present. */
@@ -45,7 +47,7 @@ export async function crawlSource(sourceId, batchSize = 20) {
     }
     const seeds = source.config.seeds ?? [];
     const allowedDomains = source.config.allowedDomains ?? [];
-    const maxDepth = source.config.maxDepth ?? 3;
+    const maxDepth = env.SCRAPER_WORKLOAD_ROLE === 'render-light' ? 0 : source.config.maxDepth ?? 3;
     const requestsPerSecond = source.config.requestsPerSecond ?? env.DEFAULT_REQUESTS_PER_SECOND;
     await seedIfNeeded(sourceId, seeds, source.config.revisitAfterMinutes);
     const batch = await claimNextBatch(sourceId, batchSize);
@@ -54,6 +56,8 @@ export async function crawlSource(sourceId, batchSize = 20) {
         summary.visited++;
         await markCrawling(item.id);
         try {
+            if (env.SCRAPER_WORKLOAD_ROLE === 'render-light' && (sourceId !== 'nse-index-summary' || item.url !== 'https://www.nse.co.ke/'))
+                throw new Error('URL is outside the lightweight index assignment');
             const allowed = await isAllowedByRobots(item.url);
             if (!allowed) {
                 await markFailed(item.id, "disallowed_by_robots_txt");
@@ -62,6 +66,8 @@ export async function crawlSource(sourceId, batchSize = 20) {
             }
             const res = await fetchWithRetry(item.url, { requestsPerSecond });
             const contentType = res.headers.get("content-type");
+            if (env.SCRAPER_WORKLOAD_ROLE === 'render-light' && !/^(text\/html|application\/xhtml\+xml)(?:;|$)/i.test(contentType ?? ''))
+                throw new Error('Render light collection accepts HTML summaries only');
             const bodyHash = sha256(res.body);
             const changed = item.contentHash !== bodyHash;
             await markCrawled({
@@ -80,7 +86,7 @@ export async function crawlSource(sourceId, batchSize = 20) {
             // preserve the bytes and provenance so nothing has to be
             // re-crawled once that logic exists.
             const storagePath = await storeRawArtifact({ sourceId, sha256: bodyHash, contentType, body: res.body });
-            const { isNew } = await upsertArtifact({
+            const { isNew, artifact } = await upsertArtifact({
                 sourceId,
                 adapter: source.adapter,
                 sha256: bodyHash,
@@ -95,6 +101,11 @@ export async function crawlSource(sourceId, batchSize = 20) {
             });
             if (isNew)
                 summary.stored++;
+            if (env.SCRAPER_WORKLOAD_ROLE === 'render-light' && isNew) {
+                const tables = extractNseIndexSummary(res.body.toString('utf-8'));
+                await insertExtraction({artifactId:artifact.id,method:'html',parserVersion:'render-index-html-v1',
+                    confidence:tables.length ? 0.6 : 0.1,text:null,tables,entity:{},needsReview:tables.length === 0});
+            }
             // Only HTML pages get link discovery — a PDF's bytes aren't parsed
             // for links here.
             const isHtml = (contentType ?? "").includes("text/html");

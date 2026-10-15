@@ -66,6 +66,9 @@ async def run(kind,source_id=None):
                 try:
                     async with asyncio.timeout(seconds):
                         sources=await runtime.sources.enabled()
+                        # Disjoint ownership: the resumed Render light service
+                        # owns this HTML-only summary, never Actions documents.
+                        sources=[s for s in sources if s['id']!='nse-index-summary']
                         sources=[s for s in sources if (s['adapter']=='rss')==(kind=='news')]
                         if source_id:sources=[s for s in sources if s['id']==source_id]
                         if source_id and not sources:raise ValueError('Source disabled or incompatible with selected batch')

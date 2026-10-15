@@ -17,7 +17,6 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends poppler-utils && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json* ./
 RUN npm install
-COPY tsconfig.json tsconfig.build.json ./
 COPY src ./src
 COPY scripts ./scripts
 RUN npm run build
