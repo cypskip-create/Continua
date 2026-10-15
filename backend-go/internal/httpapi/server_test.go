@@ -27,6 +27,31 @@ func (b *accountBillingSpy) AccountHTTP(_ context.Context, w http.ResponseWriter
 
 type userPlanFixture struct{}
 
+func TestNativeResponseSecurityAndCORSExposeRecoveryHeaders(t *testing.T) {
+	s, _ := fixtureServer()
+	r := httptest.NewRequest("GET", "/api/v1/health/live", nil)
+	r.Header.Set("Origin", "http://localhost:8080")
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, r)
+	for _, header := range []string{"Content-Security-Policy", "X-Content-Type-Options", "X-Frame-Options", "Strict-Transport-Security", "Cross-Origin-Opener-Policy", "Access-Control-Expose-Headers"} {
+		if w.Header().Get(header) == "" {
+			t.Fatal("missing response protection", header)
+		}
+	}
+	if !strings.Contains(w.Header().Get("Access-Control-Expose-Headers"), "Retry-After") {
+		t.Fatal("browser cannot read payment/retry recovery headers")
+	}
+}
+
+func TestMissingAuthenticatorFailsClosed(t *testing.T) {
+	s := New(nil, nil)
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/v1/quotes", nil))
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("missing authentication must fail closed, got %d", w.Code)
+	}
+}
+
 func (userPlanFixture) EffectivePlan(context.Context, string) (string, error) { return "free", nil }
 func TestNativeBillingIsDelegatedOnlyAfterBothAuthentications(t *testing.T) {
 	s, _ := fixtureServer()
@@ -134,13 +159,13 @@ func TestSingleQuoteRetainsNullsAndWireNames(t *testing.T) {
 		t.Fatal(w.Body.String())
 	}
 }
-func TestUnknownQuoteIs404AndUnsupportedPortIsNotFakeSuccess(t *testing.T) {
+func TestUnknownQuoteAndUnknownRoutePreserve404(t *testing.T) {
 	s, _ := fixtureServer()
 	if w := request(s, "/api/v1/quotes/UNKNOWN", "fixture-dev"); w.Code != 404 {
 		t.Fatal(w.Code)
 	}
-	if w := request(s, "/api/v1/unmigrated-feature", "fixture-dev"); w.Code != 501 {
-		t.Fatal("unimplemented Engine falsely available", w.Code)
+	if w := request(s, "/api/v1/nonexistent-feature", "fixture-dev"); w.Code != 404 {
+		t.Fatal("unknown route did not preserve the API contract", w.Code)
 	}
 }
 func TestBatchRequiresSymbolsAndKnownExchange(t *testing.T) {

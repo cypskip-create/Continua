@@ -1,7 +1,7 @@
 """Reported annual diagnostics and source-quality warnings, not suitability scores."""
 import math
 import re
-from .numbers import finite
+from .numbers import finite, compatible_currency
 from .dates import parse
 
 def _divide(a,b):
@@ -11,7 +11,7 @@ def analyze_financials(rows,sector):
     ordered=sorted(rows,key=lambda r:r["fiscalYear"])
     latest=ordered[-1] if ordered else {}
     previous=ordered[-2] if len(ordered)>1 else {}
-    consecutive=bool(latest and previous and latest["fiscalYear"]==previous["fiscalYear"]+1)
+    consecutive=bool(latest and previous and latest["fiscalYear"]==previous["fiscalYear"]+1 and compatible_currency(latest.get('currency'),previous.get('currency')))
     def growth(field):
         a,b=latest.get(field),previous.get(field)
         return (a-b)/abs(b)*100 if consecutive and finite(a) and finite(b) and b!=0 else None
@@ -72,3 +72,36 @@ def scenarios(row):
              "revenue":row["revenue"]*(1+growth) if finite(row.get("revenue")) else None,
              "netIncome":row["netIncome"]*(1+growth) if finite(row.get("netIncome")) and finite(row.get("revenue")) and row["revenue"]>0 else None,
              "assumption":"Illustrative one-year revenue change at constant net margin; no probability or price target is implied."} for growth,name in [(-.1,"Bear"),(0,"Base"),(.1,"Bull")]]
+def fingerprint(state):
+    from hashlib import sha256
+    from .evidence_json import stringify
+    return sha256(stringify(state).encode('utf-8')).hexdigest()
+
+
+def changes_between(previous, current):
+    from .evidence_json import number_text
+    from .briefing import fixed
+    if not previous:
+        return {'baseline': True, 'changes': []}
+    missing = object()
+    changes = []
+    def text(value):
+        if value is missing or value is None:
+            return 'unavailable'
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return number_text(value)
+        return str(value)
+    for key in ['fiscalYear', 'revenue', 'netIncome', 'debtToEquity', 'fairValue']:
+        a, b = previous.get(key, missing), current.get(key, missing)
+        if (a is missing and b is missing) or (a is not missing and b is not missing and a == b):
+            continue
+        material = key == 'fiscalYear' or (finite(a) and finite(b) and abs(b - a) / max(abs(a), .0001) >= .05)
+        changes.append({'topic': key, 'text': f'{key}: {text(a)} → {text(b)}', 'material': bool(material)})
+    fresh = [id for id in current['newsIds'] if id not in previous['newsIds']]
+    if fresh:
+        changes.append({'topic': 'News', 'text': f'{len(fresh)} newly ingested company-linked article(s).', 'material': True})
+    holders = {h['name']: h['percent'] for h in previous['ownership']}
+    for h in current['ownership']:
+        if h['name'] in holders and abs(holders[h['name']] - h['percent']) >= .5:
+            changes.append({'topic': 'Ownership', 'text': f"{h['name']}: disclosed stake {fixed(holders[h['name']], 2)}% → {fixed(h['percent'], 2)}%. Snapshot change does not prove a purchase or sale.", 'material': True})
+    return {'baseline': False, 'changes': changes}

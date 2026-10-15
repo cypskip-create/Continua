@@ -3,16 +3,20 @@ package marketdata
 import (
 	"context"
 	"continua/backend/internal/auth"
+	"crypto/tls"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
+	"strings"
 	"time"
 )
 
 type Store struct {
-	DB              *sql.DB
-	AllowUnreviewed bool
+	DB                  *sql.DB
+	AllowUnreviewed     bool
+	DurableQuoteRefresh bool
 }
 
 func (s *Store) EffectivePlan(ctx context.Context, id string) (string, error) {
@@ -122,5 +126,36 @@ func nativeConnectionConfig(connection string) (*pgx.ConnConfig, error) {
 	// strings/arrays whose types PostgreSQL must infer from the SQL context.
 	config.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 	config.ConnectTimeout = 10 * time.Second
+	local := config.Host == "localhost" || config.Host == "127.0.0.1" || config.Host == "::1" || strings.HasPrefix(config.Host, "/")
+	if !local {
+		if config.TLSConfig == nil {
+			return nil, errors.New("Remote database requires verified TLS")
+		}
+		config.TLSConfig = config.TLSConfig.Clone()
+		config.TLSConfig.RootCAs, err = databaseRoots(config.Host, config.TLSConfig.RootCAs)
+		if err != nil {
+			return nil, err
+		}
+		config.TLSConfig.InsecureSkipVerify = false
+		config.TLSConfig.ServerName = config.Host
+		config.TLSConfig.MinVersion = tls.VersionTLS12
+		fallbacks := config.Fallbacks[:0]
+		for _, fallback := range config.Fallbacks {
+			if fallback.TLSConfig == nil {
+				continue
+			}
+			copy := *fallback
+			copy.TLSConfig = fallback.TLSConfig.Clone()
+			copy.TLSConfig.RootCAs, err = databaseRoots(copy.Host, copy.TLSConfig.RootCAs)
+			if err != nil {
+				return nil, err
+			}
+			copy.TLSConfig.InsecureSkipVerify = false
+			copy.TLSConfig.ServerName = copy.Host
+			copy.TLSConfig.MinVersion = tls.VersionTLS12
+			fallbacks = append(fallbacks, &copy)
+		}
+		config.Fallbacks = fallbacks
+	}
 	return config, nil
 }

@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { createHash } from 'node:crypto';
 import { env } from '../config/index.js';
 export function safeObjectKey(key) {
@@ -36,14 +36,23 @@ export async function readR2(key) {
         s3.destroy();
     }
 }
-export async function writeR2(key, body, sha256, contentType) {
+export async function writeR2(key, body, sha256, contentType, contentEncoding) {
     safeObjectKey(key);
     if (key.split('/').at(-1)?.split('.')[0] !== sha256 || body.length > env.MAX_RESPONSE_SIZE_BYTES || !/^[a-f0-9]{64}$/.test(sha256) || createHash('sha256').update(body).digest('hex') !== sha256)
         throw new Error('Invalid R2 artifact content');
     const s3 = client();
     try {
+        // A repeated immutable receipt need not resend a multi-megabyte body.
+        // Still GET and hash-check existing content; HEAD metadata alone is not
+        // sufficient evidence for updating the database reference.
+        let exists = false;
         try {
-            await s3.send(new PutObjectCommand({ Bucket: env.R2_BUCKET, Key: key, Body: body, ContentType: contentType ?? 'application/octet-stream', Metadata: { sha256 }, IfNoneMatch: '*' }));
+            const head = await s3.send(new HeadObjectCommand({Bucket:env.R2_BUCKET,Key:key}));
+            if (head.ContentLength !== body.length) throw new Error('R2 existing object size mismatch');
+            exists = true;
+        } catch(error) { if(error.$metadata?.httpStatusCode !== 404) throw error; }
+        try {
+            if(!exists) await s3.send(new PutObjectCommand({ Bucket: env.R2_BUCKET, Key: key, Body: body, ContentType: contentType ?? 'application/octet-stream', Metadata: { sha256 }, IfNoneMatch: '*',...(contentEncoding?{ContentEncoding:contentEncoding}:{}) }));
         }
         catch (error) {
             if (error.$metadata?.httpStatusCode !== 412)

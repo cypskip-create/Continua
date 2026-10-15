@@ -1,0 +1,985 @@
+[
+  {
+    "id": "centum-filings",
+    "name": "Centum Investment Company PLC official report archive",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://centum.co.ke/annual-reports/"
+      ],
+      "allowedDomains": [
+        "centum.co.ke"
+      ],
+      "maxDepth": 2,
+      "issuerName": "Centum Investment Company PLC",
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "30 4 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://centum.co.ke/annual-reports/",
+    "robotsUrl": "https://centum.co.ke/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Official issuer financial facts with source provenance; exact issuer/group scope and accounting validation required. Do not republish full documents."
+  },
+  {
+    "id": "jubilee-filings",
+    "name": "Jubilee Holdings Limited official report archive",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://jubileeinsurance.com/group/investor-relations/annual-reports/"
+      ],
+      "allowedDomains": [
+        "jubileeinsurance.com"
+      ],
+      "maxDepth": 2,
+      "issuerName": "Jubilee Holdings Limited",
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "30 4 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://jubileeinsurance.com/group/investor-relations/annual-reports/",
+    "robotsUrl": "https://jubileeinsurance.com/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Official issuer financial facts with source provenance; exact issuer/group scope and accounting validation required. Do not republish full documents."
+  },
+  {
+    "id": "cic-filings",
+    "name": "CIC Insurance Group PLC official report archive",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.cicinsurancegroup.com/investor-relations/"
+      ],
+      "allowedDomains": [
+        "cicinsurancegroup.com"
+      ],
+      "maxDepth": 2,
+      "issuerName": "CIC Insurance Group PLC",
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "30 4 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://www.cicinsurancegroup.com/investor-relations/",
+    "robotsUrl": "https://cicinsurancegroup.com/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Official issuer financial facts with source provenance; exact issuer/group scope and accounting validation required. Do not republish full documents."
+  },
+  {
+    "id": "bat-filings",
+    "name": "British American Tobacco Kenya PLC official report archive",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.batkenya.com/investors-and-reporting"
+      ],
+      "allowedDomains": [
+        "batkenya.com"
+      ],
+      "maxDepth": 2,
+      "issuerName": "British American Tobacco Kenya PLC",
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "30 4 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://www.batkenya.com/investors-and-reporting",
+    "robotsUrl": "https://batkenya.com/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Official issuer financial facts with source provenance; exact issuer/group scope and accounting validation required. Do not republish full documents."
+  },
+  {
+    "id": "boc-filings",
+    "name": "BOC Kenya PLC official report archive",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.boc.co.ke/our-business/investor-relations"
+      ],
+      "allowedDomains": [
+        "boc.co.ke"
+      ],
+      "maxDepth": 2,
+      "issuerName": "BOC Kenya PLC",
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "30 4 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://www.boc.co.ke/our-business/investor-relations",
+    "robotsUrl": "https://boc.co.ke/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Official issuer financial facts with source provenance; exact issuer/group scope and accounting validation required. Do not republish full documents."
+  },
+  {
+    "id": "afx-company-history",
+    "name": "AFX NSE company facts and history candidates",
+    "adapter": "afx",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://afx.kwayisi.org/nse/"
+      ],
+      "allowedDomains": [
+        "afx.kwayisi.org"
+      ],
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "15 3 * * *"
+    },
+    "termsUrl": "https://afx.kwayisi.org/nse/",
+    "robotsUrl": "https://afx.kwayisi.org/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public factual profile observations and history candidates with provenance. No full text redistribution or replacing official financial statements."
+  },
+  {
+    "id": "kakuzi-record-filings",
+    "name": "Kakuzi official five-year record",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.kakuzi.co.ke/five-year-record"
+      ],
+      "allowedDomains": [
+        "kakuzi.co.ke"
+      ],
+      "maxDepth": 0,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "revisitAfterMinutes": 1440,
+      "schedule": "40 6 * * *",
+      "documents": {
+        "pdf": false,
+        "ocr": false,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://www.kakuzi.co.ke/terms-of-use",
+    "robotsUrl": "https://www.kakuzi.co.ke/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public issuer financial facts with provenance; exact reviewed HTML layout only. No full-document republication."
+  },
+  {
+    "id": "cbk-bond-history",
+    "name": "CBK Treasury bond auction archive",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.centralbank.go.ke/bills-bonds/treasury-bonds/"
+      ],
+      "allowedDomains": [
+        "www.centralbank.go.ke",
+        "centralbank.go.ke"
+      ],
+      "maxDepth": 1,
+      "discoveryPaths": [
+        "/uploads/",
+        "/wp-content/",
+        "/bills-bonds/"
+      ],
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "0 5 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://www.centralbank.go.ke/",
+    "robotsUrl": "https://www.centralbank.go.ke/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public auction documents for review with attribution. Auction yields are not secondary-market trading yields. No full-document republication."
+  },
+  {
+    "id": "cbk-bill-history",
+    "name": "CBK Treasury bill auction archive",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.centralbank.go.ke/bills-bonds/treasury-bills/"
+      ],
+      "allowedDomains": [
+        "www.centralbank.go.ke",
+        "centralbank.go.ke"
+      ],
+      "maxDepth": 1,
+      "discoveryPaths": [
+        "/uploads/",
+        "/wp-content/",
+        "/bills-bonds/"
+      ],
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "0 5 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://www.centralbank.go.ke/",
+    "robotsUrl": "https://www.centralbank.go.ke/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public auction documents for review with attribution. Auction yields are not secondary-market trading yields. No full-document republication."
+  },
+  {
+    "id": "techtrendske-rss",
+    "name": "TechTrends Kenya",
+    "adapter": "rss",
+    "enabled": true,
+    "config": {
+      "feedUrl": "https://techtrendske.co.ke/feed/",
+      "schedule": "*/5 * * * *",
+      "requestsPerSecond": 0.25,
+      "concurrency": 1,
+      "maxItemsPerRun": 60
+    },
+    "termsUrl": "https://techtrendske.co.ke/",
+    "robotsUrl": "https://techtrendske.co.ke/robots.txt",
+    "license": "Publisher RSS feed",
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Attributed headlines and short public feed summaries, subject to robots.txt and publisher terms. No paywall bypass or full-article republication."
+  },
+  {
+    "id": "soko-directory-rss",
+    "name": "Soko Directory",
+    "adapter": "rss",
+    "enabled": true,
+    "config": {
+      "feedUrl": "https://sokodirectory.com/feed/",
+      "schedule": "*/5 * * * *",
+      "requestsPerSecond": 0.25,
+      "concurrency": 1,
+      "maxItemsPerRun": 60
+    },
+    "termsUrl": "https://sokodirectory.com/",
+    "robotsUrl": "https://sokodirectory.com/robots.txt",
+    "license": "Publisher RSS feed",
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Attributed headlines and short public feed summaries, subject to robots.txt and publisher terms. No paywall bypass or full-article republication."
+  },
+  {
+    "id": "business-daily-rss",
+    "name": "Business Daily Africa",
+    "adapter": "rss",
+    "enabled": true,
+    "config": {
+      "feedUrl": "https://www.businessdailyafrica.com/service/rss/bd/1939132/feed.rss",
+      "schedule": "*/5 * * * *",
+      "requestsPerSecond": 0.25,
+      "concurrency": 1,
+      "maxItemsPerRun": 60
+    },
+    "termsUrl": "https://www.businessdailyafrica.com/",
+    "robotsUrl": "https://www.businessdailyafrica.com/robots.txt",
+    "license": "Publisher RSS feed",
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Attributed headlines and short public feed summaries, subject to robots.txt and publisher terms. No paywall bypass or full-article republication."
+  },
+  {
+    "id": "nse-index-summary",
+    "name": "NSE Official Index Summary",
+    "adapter": "web",
+    "enabled": false,
+    "config": {
+      "seeds": [
+        "https://www.nse.co.ke/"
+      ],
+      "allowedDomains": [
+        "www.nse.co.ke",
+        "nse.co.ke"
+      ],
+      "maxDepth": 0,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "revisitAfterMinutes": 15,
+      "schedule": "*/15 * * * *",
+      "requiresCommercialPermission": true,
+      "documents": {
+        "pdf": false,
+        "ocr": false,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://www.nse.co.ke/data/",
+    "robotsUrl": "https://www.nse.co.ke/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Requires written NSE commercial permission; record permissionReference before enabling. Attribution alone is not a licence."
+  },
+  {
+    "id": "nse-market-reports",
+    "name": "NSE licensed market reports",
+    "adapter": "web",
+    "enabled": false,
+    "config": {
+      "seeds": [
+        "https://www.nse.co.ke/dataservices/market-statistics/"
+      ],
+      "allowedDomains": [
+        "www.nse.co.ke",
+        "nse.co.ke"
+      ],
+      "maxDepth": 1,
+      "discoveryPaths": [
+        "/uploads/",
+        ".pdf"
+      ],
+      "requiresCommercialPermission": true,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "30 18 * * 1-5",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://www.nse.co.ke/dataservices/market-statistics/",
+    "robotsUrl": "https://www.nse.co.ke/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Disabled pending written NSE commercial permission. Preserve observation dates and separate equities, indices, bonds, derivatives and USP; extracted report tables require review."
+  },
+  {
+    "id": "safaricom-filings",
+    "name": "Safaricom PLC historical filings",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.safaricom.co.ke/investor-relations-landing/reports/financial-report/financial-results"
+      ],
+      "allowedDomains": [
+        "safaricom.co.ke"
+      ],
+      "discoveryPaths": [
+        "/investor-relations",
+        "/annualreport",
+        "/images/downloads/"
+      ],
+      "issuerName": "Safaricom PLC",
+      "maxDepth": 3,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "10 4 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://safaricom.co.ke/",
+    "robotsUrl": "https://safaricom.co.ke/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public issuer filings for financial-statement review, with period, currency and unit verification. Retain provenance; no automatic full-document republication."
+  },
+  {
+    "id": "kcb-filings",
+    "name": "KCB Group PLC historical filings",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://kcbgroup.com/investor-relations/",
+        "https://kcbgroup.com/financial-statements"
+      ],
+      "allowedDomains": [
+        "kcbgroup.com"
+      ],
+      "discoveryPaths": [
+        "/investor",
+        "/financial",
+        "/annual",
+        ".pdf"
+      ],
+      "issuerName": "KCB Group PLC",
+      "maxDepth": 3,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "25 4 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://kcbgroup.com/",
+    "robotsUrl": "https://kcbgroup.com/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public issuer filings for financial-statement review, with period, currency and unit verification. Retain provenance; no automatic full-document republication."
+  },
+  {
+    "id": "kakuzi-filings",
+    "name": "Kakuzi PLC historical filings",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.kakuzi.co.ke/company-reports"
+      ],
+      "allowedDomains": [
+        "kakuzi.co.ke"
+      ],
+      "discoveryPaths": [
+        "/company-reports",
+        "/pages/",
+        ".pdf"
+      ],
+      "issuerName": "Kakuzi PLC",
+      "maxDepth": 3,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "40 4 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://kakuzi.co.ke/",
+    "robotsUrl": "https://kakuzi.co.ke/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public issuer filings for financial-statement review, with period, currency and unit verification. Retain provenance; no automatic full-document republication."
+  },
+  {
+    "id": "equity-filings",
+    "name": "Equity Group Holdings PLC historical filings",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://equitygroupholdings.com/investor-relation/?cat=financial-results"
+      ],
+      "allowedDomains": [
+        "equitygroupholdings.com"
+      ],
+      "discoveryPaths": [
+        "/investor",
+        "/wp-content/uploads/",
+        "financial-results",
+        "annual-report"
+      ],
+      "issuerName": "Equity Group Holdings PLC",
+      "maxDepth": 3,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "55 4 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://equitygroupholdings.com/",
+    "robotsUrl": "https://equitygroupholdings.com/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public issuer filings for financial-statement review, with period, currency and unit verification. Retain provenance; no automatic full-document republication."
+  },
+  {
+    "id": "absa-filings",
+    "name": "Absa Bank Kenya PLC historical filings",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.absabank.co.ke/investor-relations/"
+      ],
+      "allowedDomains": [
+        "absabank.co.ke"
+      ],
+      "discoveryPaths": [
+        "/investor-relations",
+        "/content/dam/",
+        ".pdf"
+      ],
+      "issuerName": "Absa Bank Kenya PLC",
+      "maxDepth": 3,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "10 5 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://absabank.co.ke/",
+    "robotsUrl": "https://absabank.co.ke/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public issuer filings for financial-statement review, with period, currency and unit verification. Retain provenance; no automatic full-document republication."
+  },
+  {
+    "id": "eabl-filings",
+    "name": "East African Breweries PLC historical filings",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.eabl.com/investors/annual-reports"
+      ],
+      "allowedDomains": [
+        "eabl.com"
+      ],
+      "discoveryPaths": [
+        "/investors/",
+        "/sites/",
+        ".pdf"
+      ],
+      "issuerName": "East African Breweries PLC",
+      "maxDepth": 3,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "25 5 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://eabl.com/",
+    "robotsUrl": "https://eabl.com/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public issuer filings for financial-statement review, with period, currency and unit verification. Retain provenance; no automatic full-document republication."
+  },
+  {
+    "id": "coop-filings",
+    "name": "Co-operative Bank of Kenya historical filings",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.co-opbank.co.ke/investor-relations/financial-statements/",
+        "https://www.co-opbank.co.ke/investor_categories/co-op-bank-group-agm/"
+      ],
+      "allowedDomains": [
+        "co-opbank.co.ke"
+      ],
+      "discoveryPaths": [
+        "/investor",
+        "/wp-content/uploads/",
+        ".pdf"
+      ],
+      "issuerName": "Co-operative Bank of Kenya",
+      "maxDepth": 3,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "40 5 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://co-opbank.co.ke/",
+    "robotsUrl": "https://co-opbank.co.ke/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public issuer filings for financial-statement review, with period, currency and unit verification. Retain provenance; no automatic full-document republication."
+  },
+  {
+    "id": "kengen-filings",
+    "name": "Kenya Electricity Generating Company PLC historical filings",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.kengen.co.ke/investor-relations/"
+      ],
+      "allowedDomains": [
+        "kengen.co.ke"
+      ],
+      "discoveryPaths": [
+        "/investor",
+        "/download/",
+        "/images/",
+        ".pdf"
+      ],
+      "issuerName": "Kenya Electricity Generating Company PLC",
+      "maxDepth": 3,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "55 5 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://kengen.co.ke/",
+    "robotsUrl": "https://kengen.co.ke/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public issuer filings for financial-statement review, with period, currency and unit verification. Retain provenance; no automatic full-document republication."
+  },
+  {
+    "id": "kplc-filings",
+    "name": "Kenya Power and Lighting Company PLC historical filings",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.kplc.co.ke/investor-relations"
+      ],
+      "allowedDomains": [
+        "kplc.co.ke"
+      ],
+      "discoveryPaths": [
+        "/investor",
+        "/storage/",
+        ".pdf"
+      ],
+      "issuerName": "Kenya Power and Lighting Company PLC",
+      "maxDepth": 3,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "10 6 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://kplc.co.ke/",
+    "robotsUrl": "https://kplc.co.ke/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public issuer filings for financial-statement review, with period, currency and unit verification. Retain provenance; no automatic full-document republication."
+  },
+  {
+    "id": "ncba-filings",
+    "name": "NCBA Group PLC historical filings",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://ncbagroup.com/investor-relations/"
+      ],
+      "allowedDomains": [
+        "ncbagroup.com"
+      ],
+      "discoveryPaths": [
+        "/investor",
+        "/wp-content/",
+        ".pdf"
+      ],
+      "issuerName": "NCBA Group PLC",
+      "maxDepth": 3,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "25 6 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://ncbagroup.com/",
+    "robotsUrl": "https://ncbagroup.com/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public issuer filings for financial-statement review, with period, currency and unit verification. Retain provenance; no automatic full-document republication."
+  },
+  {
+    "id": "dtb-filings",
+    "name": "Diamond Trust Bank Kenya Limited historical filings",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://dtbk.dtbafrica.com/reports/integrated-reports"
+      ],
+      "allowedDomains": [
+        "dtbk.dtbafrica.com"
+      ],
+      "discoveryPaths": [
+        "/reports/",
+        "/sites/default/files/",
+        ".pdf"
+      ],
+      "issuerName": "Diamond Trust Bank Kenya Limited",
+      "maxDepth": 3,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "40 6 * * *",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://dtbk.dtbafrica.com/",
+    "robotsUrl": "https://dtbk.dtbafrica.com/robots.txt",
+    "license": null,
+    "redistributionAllowed": null,
+    "attributionRequired": true,
+    "allowedUsage": "Public issuer filings for financial-statement review, with period, currency and unit verification. Retain provenance; no automatic full-document republication."
+  },
+  {
+    "id": "nse",
+    "name": "Nairobi Securities Exchange",
+    "adapter": "nse",
+    "enabled": true,
+    "config": {
+      "schedule": "*/30 * * * *",
+      "requestsPerSecond": 0.5,
+      "concurrency": 1
+    },
+    "termsUrl": "https://www.nse.co.ke/",
+    "robotsUrl": "https://www.nse.co.ke/robots.txt",
+    "license": null,
+    "allowedUsage": "Public listed-company announcements; retain source attribution and canonical link.",
+    "redistributionAllowed": null,
+    "attributionRequired": true
+  },
+  {
+    "id": "standard-business-rss",
+    "name": "The Standard Business",
+    "adapter": "rss",
+    "enabled": true,
+    "config": {
+      "feedUrl": "https://www.standardmedia.co.ke/rss/business.php",
+      "schedule": "*/15 * * * *",
+      "requestsPerSecond": 0.5,
+      "concurrency": 2,
+      "maxItemsPerRun": 50
+    },
+    "termsUrl": "https://www.standardmedia.co.ke/rssfeeds?categoryID=9",
+    "robotsUrl": "https://www.standardmedia.co.ke/robots.txt",
+    "license": "Publisher RSS feed",
+    "allowedUsage": "Headline and short feed/article excerpt with attribution and canonical link.",
+    "redistributionAllowed": null,
+    "attributionRequired": true
+  },
+  {
+    "id": "nairobi-leo-business-rss",
+    "name": "Nairobi Leo Business",
+    "adapter": "rss",
+    "enabled": true,
+    "config": {
+      "feedUrl": "https://nairobileo.co.ke/feed/business",
+      "schedule": "*/15 * * * *",
+      "requestsPerSecond": 0.5,
+      "concurrency": 2,
+      "maxItemsPerRun": 50
+    },
+    "termsUrl": "https://nairobileo.co.ke/feeds",
+    "robotsUrl": "https://nairobileo.co.ke/robots.txt",
+    "license": "Publisher RSS feed",
+    "allowedUsage": "Headline and short feed/article excerpt with attribution and canonical link.",
+    "redistributionAllowed": null,
+    "attributionRequired": true
+  },
+  {
+    "id": "capital-business-rss",
+    "name": "Capital Business",
+    "adapter": "rss",
+    "enabled": true,
+    "config": {
+      "feedUrl": "https://capitalfm.africa/business/feed/",
+      "schedule": "7,22,37,52 * * * *",
+      "requestsPerSecond": 0.4,
+      "concurrency": 1,
+      "maxItemsPerRun": 60
+    },
+    "termsUrl": "https://capitalfm.africa/terms-and-conditions/",
+    "robotsUrl": "https://capitalfm.africa/robots.txt",
+    "license": "Publisher RSS feed",
+    "allowedUsage": "Headline and short feed/article excerpt with attribution and canonical link.",
+    "redistributionAllowed": null,
+    "attributionRequired": true
+  },
+  {
+    "id": "cma-kenya-rss",
+    "name": "Capital Markets Authority Kenya",
+    "adapter": "rss",
+    "enabled": true,
+    "config": {
+      "feedUrl": "https://www.cma.or.ke/feed/",
+      "schedule": "12 */2 * * *",
+      "requestsPerSecond": 0.25,
+      "concurrency": 1,
+      "maxItemsPerRun": 40
+    },
+    "termsUrl": "https://www.cma.or.ke/",
+    "robotsUrl": "https://www.cma.or.ke/robots.txt",
+    "license": null,
+    "allowedUsage": "Public regulator notices with source attribution and canonical link.",
+    "redistributionAllowed": null,
+    "attributionRequired": true
+  },
+  {
+    "id": "african-financials-kenya",
+    "name": "AfricanFinancials Kenya",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://africanfinancials.com/country/kenya/",
+        "https://africanfinancials.com/document/"
+      ],
+      "allowedDomains": [
+        "africanfinancials.com"
+      ],
+      "maxDepth": 2,
+      "schedule": "15 2 * * *",
+      "requestsPerSecond": 0.25,
+      "concurrency": 1,
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://africanfinancials.com/terms-and-conditions/",
+    "robotsUrl": "https://africanfinancials.com/robots.txt",
+    "license": null,
+    "allowedUsage": "Discover issuer pages and public annual/interim report documents; preserve provenance and review extracted figures before publication.",
+    "redistributionAllowed": null,
+    "attributionRequired": true
+  },
+  {
+    "id": "kenyastocks-history",
+    "name": "KenyaStocks Historical Company Data",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://kenyastocks.co.ke/stocks",
+        "https://kenyastocks.co.ke/news"
+      ],
+      "allowedDomains": [
+        "kenyastocks.co.ke"
+      ],
+      "maxDepth": 2,
+      "schedule": "30 3 * * *",
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "documents": {
+        "pdf": false,
+        "ocr": false,
+        "tables": true
+      }
+    },
+    "termsUrl": "https://kenyastocks.co.ke/about",
+    "robotsUrl": "https://kenyastocks.co.ke/robots.txt",
+    "license": "Historical close data attributed by publisher to CC BY 4.0 source datasets",
+    "allowedUsage": "Discover public NSE company history, facts, dividends and linked filings; retain field-level provenance and review extracted values.",
+    "redistributionAllowed": true,
+    "attributionRequired": true
+  },
+  {
+    "id": "kenyanstocks",
+    "name": "Kenyan Stocks NSE Company Pages",
+    "adapter": "kenyanstocks",
+    "enabled": true,
+    "config": {
+      "tickers": [
+        "ABSA",
+        "BAMB",
+        "BAT",
+        "BKG",
+        "BRIT",
+        "CGEN",
+        "CIC",
+        "COOP",
+        "DTB",
+        "EABL",
+        "EQTY",
+        "IMH",
+        "JUB",
+        "KCB",
+        "KEGN",
+        "KPLC",
+        "KQ",
+        "NCBA",
+        "NMG",
+        "NSE",
+        "SCBK",
+        "SCOM",
+        "STANBIC",
+        "TOTL"
+      ],
+      "schedule": "45 2 * * *",
+      "requestsPerSecond": 0.25,
+      "concurrency": 1
+    },
+    "termsUrl": "https://kenyanstocks.com/",
+    "robotsUrl": "https://kenyanstocks.com/robots.txt",
+    "license": null,
+    "allowedUsage": "Public company-page intelligence for analysis candidates; browser-rendered extractions always require review.",
+    "redistributionAllowed": null,
+    "attributionRequired": true
+  }
+]

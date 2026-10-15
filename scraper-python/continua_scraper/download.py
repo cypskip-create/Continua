@@ -8,9 +8,22 @@ import pathlib
 import ssl
 import tempfile
 import time
+import math
+import zlib
 from dataclasses import dataclass
-from urllib.parse import urljoin
+from urllib.parse import urljoin,urlencode,quote
 from .policy import resolve_public, robots_allows
+from .retry import with_retry
+
+class SourceHTTPError(ValueError):
+    def __init__(self,status):self.status=status;super().__init__('Source HTTP failure')
+
+def transient_source_error(error):
+    if isinstance(error,(ssl.SSLCertVerificationError,PermissionError)):return False
+    if isinstance(error,SourceHTTPError):return error.status in (500,502,503,504)
+    return isinstance(error,(TimeoutError,OSError))
+
+_host_next_request={}
 
 @dataclass(frozen=True)
 class Artifact:
@@ -19,6 +32,37 @@ class Artifact:
     content_type: str
     size: int
     sha256: str
+    content_encoding: str | None = None
+
+class DecodedWriter:
+    """Bound allocation on decompressed bytes, including gzip bomb inputs."""
+    def __init__(self,destination,encoding,max_bytes):
+        self.destination,self.encoding,self.max_bytes=destination,encoding.lower(),max_bytes
+        self.size=0;self.digest=hashlib.sha256()
+        self.decoder=None if self.encoding in ('','identity') else zlib.decompressobj(31 if self.encoding in ('gzip','x-gzip') else 15)
+        if self.encoding not in ('','identity','gzip','x-gzip','deflate'):raise ValueError('Unsupported source compression')
+    def _output(self,data):
+        self.size+=len(data)
+        if self.size>self.max_bytes:raise ValueError('Source response exceeds limit after decompression')
+        self.destination.write(data);self.digest.update(data)
+    def write(self,data):
+        if self.decoder is None:self._output(data);return
+        pending=data
+        while pending:
+            if self.decoder.eof:
+                if self.encoding not in ('gzip','x-gzip'):raise ValueError('Trailing compressed source bytes')
+                self.decoder=zlib.decompressobj(31)
+            output=self.decoder.decompress(pending,65536)
+            self._output(output)
+            pending=self.decoder.unused_data if self.decoder.eof else self.decoder.unconsumed_tail
+    def finish(self):
+        if self.decoder is not None and not self.decoder.eof:raise ValueError('Truncated compressed source response')
+        return self.size,self.digest.hexdigest()
+
+async def copy_decoded_body(reader,headers,destination,max_bytes):
+    output=DecodedWriter(destination,headers.get('content-encoding',''),max_bytes)
+    await copy_body(reader,headers,output,max_bytes)
+    return output.finish()
 
 async def copy_body(reader, headers, destination, max_bytes):
     digest=hashlib.sha256()
@@ -76,31 +120,51 @@ async def copy_body(reader, headers, destination, max_bytes):
     return total,digest.hexdigest()
 
 class Downloader:
-    def __init__(self, policy, *, max_bytes=50*1024*1024, directory=None):
+    def __init__(self, policy, *, max_bytes=50*1024*1024, directory=None,requests_per_second=1):
         self.policy=policy
         self.max_bytes=max_bytes
         self.directory=directory
         self.slots=asyncio.Semaphore(1)
         self.next_request={}
         self.robots={}
+        if not isinstance(requests_per_second,(int,float)) or not math.isfinite(requests_per_second) or not 0<requests_per_second<=10:
+            raise ValueError('Invalid source request rate')
+        self.request_interval=1/requests_per_second
 
-    async def _connection(self, url):
+    async def _connection(self, url,form=None,request_headers=None):
         parsed=self.policy.check_url(url)
+        header_lines=''
+        if request_headers is not None:
+            if not isinstance(request_headers,dict) or len(request_headers)>3:raise ValueError('Source header budget')
+            for name,value in request_headers.items():
+                if name not in ('Accept','Referer','X-MSL-Chart') or not isinstance(value,str) or len(value)>4096 or any(ord(c)<32 or ord(c)>126 for c in value):raise ValueError('Invalid source request header')
+                if name=='Referer':self.policy.check_url(value)
+                header_lines+=name+': '+value+'\r\n'
         host=parsed.hostname
         port=parsed.port or (443 if parsed.scheme=="https" else 80)
         addresses=await resolve_public(host,port)
-        wait=self.next_request.get(host,0)-time.monotonic()
+        if host not in _host_next_request and len(_host_next_request)>=2000:raise ValueError('Source host budget exceeded')
+        now=time.monotonic();scheduled=max(now,_host_next_request.get(host,0))
+        # Reserve before awaiting, so separate adapters cannot race a host's
+        # configured rate budget. Cancellation only leaves a harmless short gap.
+        _host_next_request[host]=scheduled+self.request_interval
+        wait=scheduled-now
         if wait>0:
             await asyncio.sleep(wait)
-        self.next_request[host]=time.monotonic()+1
+        self.next_request[host]=_host_next_request[host]
+        payload=urlencode(form).encode('ascii') if form is not None else b''
+        if len(payload)>65536:raise ValueError('Source form exceeds limit')
         tls=ssl.create_default_context() if parsed.scheme=="https" else None
         # The socket uses the vetted address, while TLS verifies the hostname.
         reader,writer=await asyncio.open_connection(addresses[0],port,ssl=tls,server_hostname=host if tls else None,limit=32768)
-        target=(parsed.path or "/")+("?"+parsed.query if parsed.query else "")
+        target=quote(parsed.path or "/",safe="/%:@!$&'()*+,;=-._~")+("?"+quote(parsed.query,safe="%=&?/:@!$'()*+,;-._~") if parsed.query else "")
         host_header=host if parsed.port is None else f"{host}:{port}"
-        request=f"GET {target} HTTP/1.1\r\nHost: {host_header}\r\nUser-Agent: {self.policy.user_agent}\r\nAccept-Encoding: identity\r\nConnection: close\r\n\r\n"
+        method='POST' if form is not None else 'GET'
+        extra=f'Content-Type: application/x-www-form-urlencoded\r\nContent-Length: {len(payload)}\r\n' if form is not None else ''
+        extra+=header_lines
+        request=f"{method} {target} HTTP/1.1\r\nHost: {host_header}\r\nUser-Agent: {self.policy.user_agent}\r\nAccept-Encoding: gzip, deflate\r\n{extra}Connection: close\r\n\r\n"
         try:
-            writer.write(request.encode("ascii"));await writer.drain()
+            writer.write(request.encode("ascii")+payload);await writer.drain()
             status_line=await reader.readline()
             protocol,code,_=status_line.decode("ascii").rstrip().split(" ",2)
             if protocol not in ("HTTP/1.0","HTTP/1.1"):
@@ -122,7 +186,7 @@ class Downloader:
                     headers[name]+=", "+value.strip()
                 else:
                     headers[name]=value.strip()
-            if headers.get("content-encoding","").lower() not in ("","identity"):
+            if headers.get("content-encoding","").lower() not in ("","identity","gzip","x-gzip","deflate"):
                 raise ValueError("Unsupported source compression")
             return status,headers,reader,writer
         except BaseException:
@@ -142,7 +206,7 @@ class Downloader:
                 text="User-agent: *\nAllow: /"
             elif status==200:
                 content=io.BytesIO()
-                await copy_body(reader,headers,content,1024*1024)
+                await copy_decoded_body(reader,headers,content,1024*1024)
                 text=content.getvalue().decode("utf-8",errors="replace")
             else:
                 # Challenge, authorization failure or unavailable robots is not
@@ -153,27 +217,39 @@ class Downloader:
         finally:
             writer.close();await writer.wait_closed()
 
-    async def fetch(self, url):
+    async def robots_allowed(self,url):
+        async with self.slots:
+            async with asyncio.timeout(60):return await self._robots_allowed(url)
+
+    async def fetch(self, url,*,form=None,request_headers=None):
+        # Retrying a submitted POST could duplicate a source action/session.
+        # Durable job recovery owns that decision; automatic retries are GET-only.
+        return await with_retry(lambda:self._fetch_once(url,form=form,request_headers=request_headers),max_retries=0 if form is not None else 2,base_delay_ms=300,is_retryable=transient_source_error)
+
+    async def _fetch_once(self, url,*,form=None,request_headers=None):
         async with self.slots:
             async with asyncio.timeout(60):
                 for hop in range(6):
                     self.policy.check_url(url)
                     if not await self._robots_allowed(url):
                         raise PermissionError("Source robots policy prevents collection")
-                    status,headers,reader,writer=await self._connection(url)
+                    status,headers,reader,writer=await self._connection(url,form) if not request_headers else await self._connection(url,form,request_headers)
                     try:
                         if status in (301,302,303,307,308):
                             if hop==5 or not headers.get("location"):
                                 raise ValueError("Source redirect limit")
+                            previous=self.policy.check_url(url)
                             url=urljoin(url,headers["location"])
+                            destination=self.policy.check_url(url)
+                            if previous.hostname!=destination.hostname:request_headers=None
                             self.policy.check_url(url)
                             continue
                         if status!=200:
-                            raise ValueError(f"Source HTTP {status}; retained job must retry")
+                            raise SourceHTTPError(status)
                         file=tempfile.NamedTemporaryFile(prefix="continua-native-",suffix=".raw",dir=self.directory,delete=False)
                         try:
                             with file:
-                                size,digest=await copy_body(reader,headers,file,self.max_bytes)
+                                size,digest=await copy_decoded_body(reader,headers,file,self.max_bytes)
                             return Artifact(pathlib.Path(file.name),url,headers.get("content-type","application/octet-stream"),size,digest)
                         except BaseException:
                             pathlib.Path(file.name).unlink(missing_ok=True)

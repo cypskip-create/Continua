@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -19,6 +20,26 @@ func worker(t *testing.T) *Worker {
 		t.Fatal(err)
 	}
 	return NewWorker(python, script)
+}
+
+func TestDocumentWorkerHasSeparateOperationAndSizeBudget(t *testing.T) {
+	normal := worker(t)
+	document := NewDocumentWorker(normal.Python, normal.Script)
+	input := Request{Operation: "document_publication_plan", Args: []any{map[string]any{"method": "ocr", "text": strings.Repeat("x", 3*1024*1024)}, []any{}}}
+	if _, err := normal.Calculate(context.Background(), input); err == nil {
+		t.Fatal("ordinary worker accepted document operation")
+	}
+	raw, err := document.Calculate(context.Background(), input)
+	var result struct {
+		Valid  bool   `json:"valid"`
+		Reason string `json:"reason"`
+	}
+	if err != nil || json.Unmarshal(raw, &result) != nil || result.Valid || result.Reason == "" {
+		t.Fatal(string(raw), err)
+	}
+	if _, err = document.Calculate(context.Background(), Request{Operation: "ratios", Args: []any{}}); err == nil {
+		t.Fatal("document worker accepted unrelated operation")
+	}
 }
 func TestRealPythonRatiosAndLabs(t *testing.T) {
 	w := worker(t)

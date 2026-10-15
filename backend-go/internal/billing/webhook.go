@@ -11,7 +11,8 @@ import (
 
 // Webhook validates exact raw bytes before JSON parsing. Verified provider
 // receipts, never event-supplied amounts or user IDs, drive fulfillment.
-// It remains unmounted until the native billing route integration is validated.
+// The local native candidate mounts this in Test Mode only. Production remains
+// gated by the complete migration and hosted billing/recovery checks.
 func (s *Service) Webhook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	writeError := func(status int, message string) {

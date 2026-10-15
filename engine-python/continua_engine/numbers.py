@@ -14,3 +14,9 @@ def divide(a, b):
 
 def positive(value):
     return finite(value) and value > 0
+
+
+def compatible_currency(left, right):
+    # Real stored periods/quotes declare currency. Preserve older optional
+    # contracts, but never compare two explicitly different currencies.
+    return left is None or right is None or left == right

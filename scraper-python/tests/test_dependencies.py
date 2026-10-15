@@ -27,6 +27,7 @@ class R2DependencyTests(unittest.TestCase):
             path=pathlib.Path(directory)/"fixture.pdf"
             path.write_bytes(data)
             artifact=Artifact(path,"https://fixture.example/report.pdf","application/pdf",len(data),digest)
+            stub.add_client_error('head_object',service_error_code='404',http_status_code=404,expected_params={'Bucket':'private-fixture','Key':key})
             stub.add_response("put_object",{}, {"Bucket":"private-fixture","Key":key,"Body":ANY,"ContentLength":len(data),"ContentType":"application/pdf","Metadata":{"sha256":digest},"IfNoneMatch":"*"})
             stub.add_response("get_object",{"ContentLength":len(data),"Body":StreamingBody(io.BytesIO(data),len(data))},{"Bucket":"private-fixture","Key":key})
             storage=R2Storage(client,"private-fixture",dual_write=False)

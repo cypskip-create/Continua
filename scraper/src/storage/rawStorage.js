@@ -7,8 +7,11 @@
  */
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
+import { createHash } from 'node:crypto';
+import { gzipSync,gunzipSync } from 'node:zlib';
 import { env } from "../config/index.js";
 import { safeObjectKey, readR2, writeR2 } from './r2Storage.js';
+import { assertDurableStorage } from './storagePolicy.js';
 function extensionFor(contentType) {
     if (!contentType)
         return "bin";
@@ -29,13 +32,20 @@ function extensionFor(contentType) {
     return map[base ?? ""] ?? "bin";
 }
 export async function storeRawArtifact(params) {
+    assertDurableStorage(process.env, env.RAW_STORAGE_DRIVER);
     const now = new Date();
     const year = now.getUTCFullYear();
     const ext = extensionFor(params.contentType);
     const relativePath = path.join(params.sourceId, String(year), `${params.sha256}.${ext}`);
     if (env.RAW_STORAGE_DRIVER === 'r2') {
-        const objectKey = safeObjectKey(relativePath.replaceAll('\\', '/'));
-        await writeR2(objectKey, params.body, params.sha256, params.contentType);
+        let objectKey = safeObjectKey(relativePath.replaceAll('\\', '/'));
+        let storedBody=params.body,storedHash=params.sha256,encoding;
+        if(!env.R2_DUAL_WRITE&&['html','json','csv','xml'].includes(ext)&&params.body.length>=4096){
+            if(params.body.length>env.MAX_RESPONSE_SIZE_BYTES||createHash('sha256').update(params.body).digest('hex')!==params.sha256)throw new Error('Invalid source evidence');
+            const encoded=gzipSync(params.body,{level:6});
+            if(encoded.length<params.body.length){storedBody=encoded;storedHash=createHash('sha256').update(encoded).digest('hex');encoding='gzip';objectKey=safeObjectKey(`${params.sourceId}/${year}/${storedHash}.${ext}.gz`);}
+        }
+        await writeR2(objectKey, storedBody, storedHash, params.contentType,encoding);
         if (env.R2_DUAL_WRITE) {
             const response = await fetch(storageUrl(objectKey), { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(60000), headers: { ...storageHeaders(), 'Content-Type': params.contentType ?? 'application/octet-stream', 'x-upsert': 'true' }, body: new Uint8Array(params.body) });
             if (!response.ok)
@@ -69,8 +79,10 @@ export async function readRawArtifact(storagePath) {
         if (location.hostname !== env.R2_BUCKET || location.search || location.hash)
             throw new Error('Invalid R2 artifact location');
         const key = safeObjectKey(location.pathname.slice(1));
-        if (env.RAW_STORAGE_DRIVER === 'r2')
-            return readR2(key);
+        if (env.RAW_STORAGE_DRIVER === 'r2') {
+            const bytes=await readR2(key);
+            return key.split('/').length===3&&/\.(?:html|json|csv|xml)\.gz$/.test(key)?gunzipSync(bytes,{maxOutputLength:env.MAX_RESPONSE_SIZE_BYTES}):bytes;
+        }
         storagePath = key; // Dual-written rollback copy; original data is retained.
     }
     safeObjectKey(storagePath.replaceAll('\\', '/'));

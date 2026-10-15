@@ -17,19 +17,28 @@ for (const service of ['backend', 'scraper'])
         const ast = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
         const routes = [];
         const exports = [];
+        const imports = {};
         const visit = (node) => {
             if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && ['get', 'post', 'put', 'patch', 'delete', 'use'].includes(node.expression.name.text)) {
                 const owner = node.expression.expression.getText(ast);
                 if (/(router|routes|app)$/i.test(owner)) {
                     const first = node.arguments[0];
-                    routes.push({ method: node.expression.name.text.toUpperCase(), path: first && ts.isStringLiteralLike(first) ? first.text : null, line: ast.getLineAndCharacterOfPosition(node.getStart(ast)).line + 1 });
+                    routes.push({ method: node.expression.name.text.toUpperCase(), path: first && ts.isStringLiteralLike(first) ? first.text : null,
+                        arguments:node.arguments.map(argument=>argument.getText(ast)),
+                        line: ast.getLineAndCharacterOfPosition(node.getStart(ast)).line + 1 });
                 }
             }
             if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) && node.name && ts.getModifiers(node)?.some(m => m.kind === ts.SyntaxKind.ExportKeyword))
                 exports.push(node.name.text);
+            if (ts.isImportDeclaration(node) && ts.isStringLiteralLike(node.moduleSpecifier)) {
+                const clause=node.importClause;
+                if(clause?.name)imports[clause.name.text]=node.moduleSpecifier.text;
+                if(clause?.namedBindings && ts.isNamedImports(clause.namedBindings))
+                    for(const element of clause.namedBindings.elements)imports[element.name.text]=node.moduleSpecifier.text;
+            }
             ts.forEachChild(node, visit);
         };
         visit(ast);
-        modules.push({ file: path.relative(root, file).replaceAll('\\', '/'), sha256: createHash('sha256').update(text).digest('hex'), routes, exports });
+        modules.push({ file: path.relative(root, file).replaceAll('\\', '/'), sha256: createHash('sha256').update(text).digest('hex'), routes, exports,imports });
     }
 console.log(JSON.stringify({ schemaVersion: 1, scope: 'Static inventory only; preserve mounts, middleware, transactions, workers and behavior tests during ports', modules }, null, 2));

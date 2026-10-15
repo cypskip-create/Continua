@@ -4593,6 +4593,326 @@
       "database": "Retained SQL/RLS/atomic fulfillment",
       "providerEdge": "Retained provider-compatible JavaScript/Deno"
     },
-    "validation": "Go/Python component and read-only compatibility checks are not full release approval."
+    "validation": "Go/Python component and read-only compatibility checks are not full release approval.",
+    "featureDecisions": [
+      {
+        "features": [
+          "backend-go/internal/publication/reviewed.go",
+          "backend-go/internal/marketdata/history_import.go",
+          "backend-go/internal/marketdata/research_import.go",
+          "backend-go/internal/maintenance/inspection.go",
+          "scraper-python/continua_scraper/source_operations.py"
+        ],
+        "language": "Go for reviewed transactional imports and bounded SQL diagnostics; Python for scraper source policy operations",
+        "runtime": "Existing native operator commands only; no Node runtime, paid provider or startup mutation",
+        "reason": "These workloads are schema validation, streaming JSON, database transaction coordination and immutable provenance, not numerical modeling. Go keeps them beside canonical persistence, while scraper source configuration remains with its Python ownership boundary. Validation defaults do not publish; explicit apply retains transaction rollback and source-rights assertions. All additions await final validation.",
+        "references": [
+          "https://go.dev/doc/database/execute-transactions",
+          "https://pkg.go.dev/encoding/json",
+          "https://www.postgresql.org/docs/current/explicit-locking.html"
+        ]
+      },
+      {
+        "features": [
+          "backend-go/Dockerfile",
+          "scraper-python/Dockerfile"
+        ],
+        "language": "Native Go binary plus Python Engine; Python collector and system Chromium/Poppler/Tesseract",
+        "runtime": "Separate candidate images, not activated production blueprints",
+        "reason": "Multi-stage Go compilation removes the compiler and Node from the backend runtime. The deterministic Engine needs only Python standard library; collector dependencies use the pinned lock and native extraction packages. Non-root runtime and Chromium sandbox are retained. Mutable official image tags are not claimed as digest-locked or built; final Linux sandbox/resource validation remains required.",
+        "references": [
+          "https://hub.docker.com/_/golang",
+          "https://hub.docker.com/_/python"
+        ]
+      },
+      {
+        "features": [
+          "backend-go/internal/maintenance/behavior.go",
+          "backend-go/internal/maintenance/workflows.go"
+        ],
+        "language": "Go and retained SQL",
+        "runtime": "Explicit native operator CLI; no startup or background fixture writes",
+        "reason": "Preserve the existing operator workflows as atomic cancellable database transactions, including named privacy checks and savepoint-rolled-back behavioral probes. Synthetic fixture IDs use OS cryptographic randomness; raw errors and credentials are not logged. Related notebook/audit migrations commit together or not at all. These additions are implementation-only pending the final validation phase.",
+        "references": [
+          "https://go.dev/doc/database/execute-transactions",
+          "https://www.postgresql.org/docs/current/sql-savepoint.html",
+          "https://pkg.go.dev/crypto/rand"
+        ]
+      },
+      {
+        "features": [
+          "backend-go/internal/marketdata/observed_closes.go",
+          "backend-go/internal/ingestion/close_publication.go",
+          "backend-go/internal/httpapi/close_history.go"
+        ],
+        "language": "Go canonical publication/API and retained PostgreSQL constraints; Python source extraction",
+        "runtime": "Existing backend/collector and private R2 evidence, no new paid service",
+        "reason": "Close-only source records must not become fabricated OHLC/zero-volume candles. Store their literal price and nullable volume separately, retain adjustment/source identity and immutable raw/extraction references, lock recorded source permission during promotion, and use bounded set-based SQL rather than a remote query per history point. Versioned completion receipts support restart reprocessing after source/mapping changes. New implementation remains unvalidated.",
+        "references": [
+          "https://go.dev/doc/database/execute-transactions",
+          "https://www.postgresql.org/docs/current/functions-json.html",
+          "https://www.postgresql.org/docs/current/explicit-locking.html"
+        ]
+      },
+      {
+        "features": [
+          "backend-go/internal/ingestion/nse_adapter.go",
+          "backend-go/internal/ingestion/source_sync.go",
+          "backend-go/internal/ingestion/corporate_pipeline.go",
+          "backend-go/internal/ingestion/fundamentals_pipeline.go",
+          "backend-go/internal/ingestion/candle_pipeline.go",
+          "backend-go/internal/ingestion/index_pipeline.go"
+        ],
+        "language": "Go persistence/transport coordination and Python source/numerical mapping",
+        "runtime": "Existing native backend and secret-free bounded Python worker",
+        "reason": "Keep source callbacks, retry/cancellation, FK-ordered persistence, private audit receipts and scheduled jobs in Go. Batch source mapping, nullable financial normalization and calendar-aligned touched-candle reconstruction in Python avoid one subprocess per source record. No synthetic production transport, assumed listing dates, missing volume substitution or fabricated action fields. Implementation is awaiting final validation after all migration work, not marked as a completed release.",
+        "references": [
+          "https://go.dev/doc/database/execute-transactions",
+          "https://pkg.go.dev/context",
+          "https://docs.python.org/3.13/library/datetime.html",
+          "https://docs.python.org/3.13/library/json.html"
+        ]
+      },
+      {
+        "features": [
+          "backend-go/internal/ingestion/quote_pipeline.go",
+          "backend-go/cmd/continua/publication.go"
+        ],
+        "language": "Go",
+        "runtime": "Existing bounded native publication job; no new service",
+        "reason": "Keep canonical quote validation, private failure receipts, transactional persistence and post-commit event/cache coordination in the existing cancellable backend. Reuse source-approved private extraction reads and SQL outbox rather than forwarding to Node. Count accepted records only after persistence succeeds; empty evidence does not create a database audit write on every timer tick. Source parsing remains Python; complete end-to-end recovery is a separate release gate.",
+        "references": [
+          "https://go.dev/doc/database/execute-transactions",
+          "https://go.dev/doc/database/cancel-operations"
+        ]
+      },
+      {
+        "features": [
+          "backend-go/internal/ingestion/retry.go",
+          "backend-go/internal/ingestion/collectors.go"
+        ],
+        "language": "Go",
+        "runtime": "Existing native backend, two provider calls maximum; no additional runtime",
+        "reason": "Context-aware timers and cancellable typed provider callbacks fit backend orchestration. Preserve bounded default attempts, permanent/quota status semantics, ordered partial receipts and authoritative history-vs-latest behavior. Validate retry schedules before external calls and avoid copying provider exception text into logs. Concrete adapter wiring remains a separate release gate.",
+        "references": [
+          "https://pkg.go.dev/context",
+          "https://pkg.go.dev/time#NewTimer"
+        ]
+      },
+      {
+        "features": [
+          "backend-go/internal/maintenance/keys.go",
+          "backend-go/cmd/continua-key/main.go"
+        ],
+        "language": "Go",
+        "runtime": "Standalone native operator command and existing Go authentication runtime",
+        "reason": "Use standard OS-backed cryptographic randomness and the existing native scrypt function to preserve stored lookup hashes. Parameterized SQL persists hashes only; plaintext is explicit one-time operator output, never routine logging. No extra runtime or service is needed. Exact-ID revocation and existing 30-second auth cache semantics are preserved.",
+        "references": [
+          "https://pkg.go.dev/crypto/rand#Read",
+          "https://go.dev/doc/database/querying"
+        ]
+      },
+      {
+        "features": [
+          "backend-go/internal/maintenance/migration.go",
+          "backend-go/cmd/continua-admin/main.go"
+        ],
+        "language": "Go orchestration and retained SQL",
+        "runtime": "Standalone native operator command; no persistent service",
+        "reason": "Use rooted bounded filesystem access and database/sql transaction cancellation for auditable offline plans and explicit migration operations. Preserve registered postconditions and rollback behavior; unsupported behavioral probes fail closed rather than becoming a generic unsafe SQL runner. Actual PostgreSQL recovery remains a release gate.",
+        "references": [
+          "https://go.dev/doc/database/execute-transactions",
+          "https://pkg.go.dev/os#OpenRoot"
+        ]
+      },
+      {
+        "features": [
+          "engine-python/continua_engine/feed_mapping.py",
+          "backend-go/internal/marketdata/quotes_write.go"
+        ],
+        "language": "Python literal feed extraction/mapping; Go canonical validation, batch persistence and committed-event delivery",
+        "runtime": "Existing native Engine/collector and backend; no additional service",
+        "reason": "Keep feed field/time/unit translation beside source parsing without creating missing volume or changing publisher observation dates. Use one bounded parameterized Go SQL statement, stable issuer ordering, registry identity/currency checks and monotonic/distinct updates for the hot quote table. Mapping fixtures are not approval of undocumented third-party APIs or proof that live transports are migrated.",
+        "references": [
+          "https://docs.python.org/3.12/library/datetime.html",
+          "https://go.dev/doc/database/querying",
+          "https://www.postgresql.org/docs/current/sql-insert.html"
+        ]
+      },
+      {
+        "features": [
+          "engine-python/continua_engine/notebook.py",
+          "engine-python/continua_engine/advanced.py",
+          "engine-python/continua_engine/factor_research.py",
+          "engine-python/continua_engine/market_intelligence.py",
+          "backend-go/internal/engine/notebook.go",
+          "backend-go/internal/marketdata/market_research.go"
+        ],
+        "language": "Python bounded validation/numerical research; Go owner-verified HTTP and transactional SQL",
+        "runtime": "Existing native services, serial bounded advanced worker; no extra paid provider",
+        "reason": "Private Brier calibration and chronological OLS/benchmark/bootstrap/replay/return math fit the existing tested Python worker. Use deterministic seeded simulations, preserved sequential reductions, strict dates/source links and missing-session rejection. Owner row/advisory locks and immutable notebook resolutions belong in Go SQL transactions. Read-only market snapshots and audits use parameterized bounded SQL; a missing research-table migration is coverage, not a fabricated successful query.",
+        "references": [
+          "https://docs.python.org/3.12/library/datetime.html",
+          "https://docs.python.org/3.12/library/json.html",
+          "https://go.dev/doc/database/execute-transactions",
+          "https://go.dev/doc/database/querying"
+        ]
+      },
+      {
+        "features": [
+          "backend-go/internal/streaming/hub.go"
+        ],
+        "language": "Go",
+        "runtime": "Existing backend; pinned coder/websocket v1.8.15",
+        "reason": "Context-aware WebSocket reads/writes and a bounded in-process fanout keep HTTP and push delivery in one native service. First-frame authentication, explicit origin policy, symbol subscriptions, queue/client limits and exact-payload deduplication reduce unauthorized or unnecessary output. No new paid messaging service. Actual collector-event wiring and hosted/resource checks remain pending.",
+        "references": [
+          "https://pkg.go.dev/github.com/coder/websocket@v1.8.15",
+          "https://pkg.go.dev/context"
+        ]
+      },
+      {
+        "features": [
+          "engine-python/continua_engine/execution.py",
+          "backend-go/internal/httpapi/technical_research.go",
+          "backend-go/internal/marketdata/screening.go"
+        ],
+        "language": "Python deterministic historical math; Go verified HTTP and parameterized screening SQL",
+        "runtime": "Existing bounded Engine worker and Go backend",
+        "reason": "Reuse tested native indicator calculations for next-session historical simulations and explicitly approximate recorded-volume profiles. Require actual OHLCV, retain fees/participation/action guards and missing results; no order execution or fabricated volume. Keep screener joins in one whitelisted/parameterized database query. Differential numerical and HTTP/auth tests precede cutover.",
+        "references": [
+          "https://docs.python.org/3.12/library/math.html",
+          "https://go.dev/doc/database/querying",
+          "https://pkg.go.dev/net/http#MaxBytesReader"
+        ]
+      },
+      {
+        "features": [
+          "backend-go/internal/httpapi/admin.go",
+          "backend-go/internal/marketdata/admin.go",
+          "engine-python/continua_engine/filing_draft.py"
+        ],
+        "language": "Go access/persistence; Python review-only drafts",
+        "runtime": "Existing native backend and bounded Engine worker",
+        "reason": "Constant-time secret checks and bounded HTTP bodies belong in Go. PostgreSQL row locks preserve atomic rejection/confirmation. Python carries deterministic ambiguous-label/column drafts beside filing validation without guessing units or source pages. Retain the single-column route but reject unsafe legacy submissions lacking explicit review evidence; caller and owned-database integration remain release gates.",
+        "references": [
+          "https://pkg.go.dev/net/http#MaxBytesReader",
+          "https://go.dev/src/crypto/subtle/constant_time.go",
+          "https://docs.python.org/3.12/library/re.html",
+          "https://go.dev/doc/database/execute-transactions"
+        ]
+      },
+      {
+        "features": [
+          "backend/src/workers/documentPublicationWorker.js",
+          "backend/src/workers/financialStatementCandidatesWorker.js",
+          "backend/src/workers/newsWorker.js"
+        ],
+        "language": "Go",
+        "runtime": "Bounded serial job coordinator; pinned robfig/cron parser and standard context/time",
+        "reason": "Scheduling and durable publication/persistence belong in the cancellable backend runtime, not another service. Coalesce reader/timer triggers, bound registration/queue/timeouts, retain exact UTC cron timing and Node weekday/day intersection, and preserve PostgreSQL lease/version recovery. No paid keepalive or always-on service added.",
+        "references": [
+          "https://pkg.go.dev/github.com/robfig/cron/v3",
+          "https://pkg.go.dev/context",
+          "https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS"
+        ]
+      },
+      {
+        "features": [
+          "backend-go/internal/httpapi/public_transfer.go",
+          "scraper-python/continua_scraper/storage.py",
+          "scraper-python/continua_scraper/archive.py",
+          "infra/cloudflare/worker.mjs"
+        ],
+        "language": "Go backend / Python collector / provider-native JavaScript edge",
+        "runtime": "Existing native runtimes; no extra service",
+        "reason": "Use Go gzip/conditional HTTP for narrowly public API responses and Python streaming gzip/file-backed S3 transfer for exact financial evidence. Cloudflare Cache API/rate-limit bindings remain provider-native JavaScript. R2-only durable writes, duplicate suppression, lossless representation encoding and smaller archive polling reduce avoidable transfers without pretending R2 uploads from Render avoid Render egress billing. Privacy, checksum, decoded-size and bounded-memory tests are required; hosted savings remain unmeasured.",
+        "references": [
+          "https://pkg.go.dev/compress/gzip",
+          "https://docs.python.org/3.13/library/gzip.html",
+          "https://developers.cloudflare.com/workers/runtime-apis/cache/",
+          "https://render.com/docs/outbound-bandwidth"
+        ]
+      },
+      {
+        "features": [
+          "scraper/src/adapters/afx/afxAdapter.js",
+          "scraper/src/adapters/kenyanstocks/archiveLinks.js",
+          "scraper/src/adapters/kenyanstocks/kenyanstocksAdapter.js",
+          "scraper/src/adapters/kenyanstocks/stockTables.js",
+          "scraper/src/adapters/nse/announcementsAdapter.js",
+          "scraper/src/adapters/nse/archiveDiscovery.js",
+          "scraper/src/adapters/registry.js",
+          "scraper/src/adapters/rss/createRssFeedAdapter.js",
+          "scraper/src/adapters/runAdapter.js",
+          "scraper/src/api/operatorAccess.js",
+          "scraper/src/api/server.js",
+          "scraper/src/config/defaultSources.js",
+          "scraper/src/crawler/crawlSource.js",
+          "scraper/src/crawler/discoveryPolicy.js",
+          "scraper/src/crawler/htmlExtract.js",
+          "scraper/src/crawler/httpClient.js",
+          "scraper/src/crawler/rateLimiter.js",
+          "scraper/src/crawler/renderWithBrowser.js",
+          "scraper/src/crawler/robotsCheck.js",
+          "scraper/src/crawler/urlNormalize.js",
+          "scraper/src/extraction/articleBodyText.js",
+          "scraper/src/extraction/extractByContentType.js",
+          "scraper/src/extraction/extractionSweep.js",
+          "scraper/src/extraction/htmlFinancialTables.js",
+          "scraper/src/extraction/nseIndexSummary.js",
+          "scraper/src/extraction/ocrText.js",
+          "scraper/src/extraction/pdfText.js",
+          "scraper/src/extraction/reprocessArtifact.js",
+          "scraper/src/extraction/tableExtract.js",
+          "scraper/src/monitoring/crawlStatus.js",
+          "scraper/src/monitoring/healthCheck.js",
+          "scraper/src/monitoring/memoryDiagnostics.js",
+          "scraper/src/scheduler/newsSchedule.js",
+          "scraper/src/scheduler/scheduler.js",
+          "scraper/src/storage/archiveCheckpointsRepository.js",
+          "scraper/src/storage/deadLettersRepository.js",
+          "scraper/src/storage/rawStorage.js",
+          "scraper/src/index.js"
+        ],
+        "language": "Python",
+        "runtime": "One bounded asyncio collector process; isolated native document/browser subprocesses",
+        "reason": "Supported Python parsing, feed, PostgreSQL and S3 SDKs keep the collector in one maintained runtime. Chromium remains a native browser dependency, not a Node server. File-backed transfer, a serial heavy-work queue, DNS-pinned source-scoped proxy and explicit cancellation address the actual 512MB workload; hosted performance still requires measurement.",
+        "references": [
+          "https://docs.python.org/3.13/library/asyncio-task.html",
+          "https://docs.aiohttp.org/en/stable/web_quickstart.html",
+          "https://feedparser.readthedocs.io/en/latest/",
+          "https://www.selenium.dev/documentation/webdriver/browsers/chrome/",
+          "https://github.com/jsvine/pdfplumber"
+        ]
+      },
+      {
+        "features": [
+          "backend/src/ingestion/confirmHistoricalColumns.js",
+          "backend/src/ingestion/pipelines/automaticDocumentPublication.js"
+        ],
+        "language": "Go",
+        "runtime": "Native backend transaction coordinator with serial Python document validator",
+        "reason": "Publication depends on database leases, atomic savepoints, immutable audit records and retry boundaries. Keep these in cancellable Go database transactions; delegate only deterministic source-layout computation to secret-free Python. Read IDs first and one document body per lease rather than retaining entire PDF batches.",
+        "references": [
+          "https://go.dev/doc/database/execute-transactions",
+          "https://docs.python.org/3.13/library/subprocess.html"
+        ]
+      },
+      {
+        "features": [
+          "backend/src/services/research/engineBriefing.js",
+          "backend/src/services/research/engineSynthesis.js",
+          "backend/src/services/research/researchReadiness.js",
+          "backend/src/services/research/engineAnalytics.js"
+        ],
+        "language": "Python",
+        "runtime": "Existing bounded Engine worker",
+        "reason": "Pure evidence/numerical assembly belongs alongside tested indicators and reporting math, without another service. Preserve missing values, consecutive-year rules, exact binary-float display rounding and reproducible evidence identities through differential tests; do not claim numerical correctness from language choice.",
+        "references": [
+          "https://docs.python.org/3.13/library/decimal.html",
+          "https://docs.python.org/3.13/library/hashlib.html"
+        ]
+      }
+    ]
   }
 }

@@ -7,6 +7,8 @@ on:
       - 'engine-python/**'
       - 'scraper-python/**'
       - 'infra/migration/native-*.mjs'
+      - 'infra/migration/native-*.py'
+      - 'infra/cloudflare/**'
       - '.github/workflows/native-rewrite-tests.yml'
   pull_request:
     paths:
@@ -14,6 +16,8 @@ on:
       - 'engine-python/**'
       - 'scraper-python/**'
       - 'infra/migration/native-*.mjs'
+      - 'infra/migration/native-*.py'
+      - 'infra/cloudflare/**'
       - '.github/workflows/native-rewrite-tests.yml'
 permissions:
   contents: read
@@ -21,6 +25,23 @@ jobs:
   candidate-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      native-postgres:
+        image: postgres@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+        env:
+          POSTGRES_PASSWORD: continua-fixture-only
+          POSTGRES_DB: continua_native_fixture
+        ports:
+          - '127.0.0.1:5432:5432'
+        options: >-
+          --user 70:70 --read-only --cap-drop ALL
+          --security-opt no-new-privileges
+          --memory 256m --memory-swap 256m --cpus 1 --pids-limit 128
+          --tmpfs /tmp:rw,nosuid,noexec,size=16m
+          --tmpfs /var/run/postgresql:rw,nosuid,noexec,size=4m,uid=70,gid=70
+          --tmpfs /var/lib/postgresql/data:rw,nosuid,noexec,size=128m,uid=70,gid=70,mode=0700
+          --health-cmd "pg_isready -h 127.0.0.1 -U postgres -d continua_native_fixture"
+          --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       NATIVE_PYTHON_BIN: python
     steps:
@@ -37,11 +58,33 @@ jobs:
           node-version: '24'
       - run: go -C backend-go mod verify
       - run: go -C backend-go test ./...
+      - run: go -C backend-go test -race ./...
+      - name: Real disposable PostgreSQL migration, authentication and atomicity fixture
+        run: go -C backend-go test ./internal/marketdata -run '^TestPostgresOwnedFixtureMigrationAndAtomicQuoteOutbox$' -count=1 -v
+        env:
+          NATIVE_POSTGRES_FIXTURE_URL: postgresql://postgres:continua-fixture-only@127.0.0.1:5432/continua_native_fixture?sslmode=disable&application_name=continua-native-fixture
       - run: go -C backend-go vet ./...
       - run: python -m unittest discover -s engine-python/tests -v
       - run: python -m pip install -r scraper-python/requirements-lock.txt
       - run: python -m pip check
+      - name: Collector PostgreSQL lease, recovery and artifact persistence fixture
+        run: python -m unittest discover -s scraper-python/tests -p 'test_postgres_collector.py' -v
+        env:
+          NATIVE_COLLECTOR_POSTGRES_FIXTURE_URL: postgresql://postgres:continua-fixture-only@127.0.0.1:5432/continua_native_fixture?sslmode=disable&application_name=continua-native-fixture
       - run: python -m unittest discover -s scraper-python/tests -v
+      - run: node --test infra/cloudflare/worker.test.mjs
       - run: npm ci --prefix backend
+      - run: npm ci --prefix scraper
+      - run: npm --prefix scraper test -- --run tests/storage/storagePolicy.test.ts tests/storage/r2Storage.test.ts tests/storage/r2Archive.test.ts tests/storage/sourceCompression.test.ts
       - run: node infra/migration/native-engine-parity.mjs
       - run: node infra/migration/native-scraper-parity.mjs
+      - run: node infra/migration/native-source-parity.mjs
+      - run: node infra/migration/native-report-parity.mjs
+      - run: node infra/migration/native-bundle-parity.mjs
+      - run: node infra/migration/native-valuation-parity.mjs
+      - run: node infra/migration/native-execution-parity.mjs
+      - run: node infra/migration/native-notebook-parity.mjs
+      - run: node infra/migration/native-advanced-parity.mjs
+      - run: node infra/migration/native-risk-lab-parity.mjs
+      - run: node infra/migration/native-feed-parity.mjs
+      - run: node infra/migration/native-answer-parity.mjs

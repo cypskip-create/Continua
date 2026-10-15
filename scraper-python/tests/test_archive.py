@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import gzip
 import io
 import json
 import pathlib
@@ -10,12 +11,16 @@ from contextlib import contextmanager
 from datetime import datetime,timezone
 from decimal import Decimal
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]))
-from continua_scraper.archive import R2Archive,snapshot_json
+from continua_scraper.archive import R2Archive,snapshot_json,read_snapshot
 from continua_scraper.download import Artifact
 from continua_scraper.r2 import R2Storage
 
 class MemoryClient:
     def __init__(self):self.objects={};self.puts=0
+    def head_object(self,**args):
+        if args['Key'] not in self.objects:
+            error=RuntimeError('fixture missing');error.response={'ResponseMetadata':{'HTTPStatusCode':404}};raise error
+        return {'ContentLength':len(self.objects[args['Key']])}
     def put_object(self,**args):self.objects[args['Key']]=args['Body'].read();self.puts+=1
     def get_object(self,**args):
         data=self.objects[args['Key']]
@@ -49,10 +54,27 @@ class ArchiveTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(args[-1],"")
             metadata=json.loads(args[1]);self.assertEqual(metadata['r2ExtractionId'],'7')
             self.assertTrue(path.exists())
-            snapshot=json.loads(next(v for k,v in client.objects.items() if k.endswith('.json')))
+            snapshot=json.loads(gzip.decompress(next(v for k,v in client.objects.items() if k.endswith('.json.gz'))))
+            self.assertEqual(metadata['r2ExtractionFormat'],'gzip-json-v1')
             self.assertEqual(snapshot['extraction']['confidence'],.8)
             self.assertEqual(snapshot['extraction']['extracted_at'],'2026-10-13T00:00:00.000Z')
             await archive.close()
+
+    async def test_compressed_snapshot_restores_exact_evidence_and_reuses_object(self):
+        client=MemoryClient();archive=R2Archive(None,R2Storage(client,'private-fixture'),None)
+        row={'id':1,'source_id':'fixture','document_url':'https://fixture.example/a.pdf'}
+        snapshot={'id':7,'text':'literal financial evidence '*10000,'needs_review':True}
+        first=archive._copy_snapshot(row,'fixture/original.pdf',snapshot)
+        second=archive._copy_snapshot(row,'fixture/original.pdf',snapshot)
+        self.assertEqual(first,second);self.assertEqual(client.puts,1)
+        payload=next(iter(client.objects.values()))
+        self.assertLess(len(payload),len(snapshot['text'])//5)
+        with tempfile.TemporaryDirectory() as directory:
+            path=pathlib.Path(directory)/'snapshot.json.gz';path.write_bytes(payload)
+            self.assertEqual(read_snapshot(path,format='gzip-json-v1')['extraction'],snapshot)
+            with self.assertRaisesRegex(ValueError,'Decoded snapshot'):read_snapshot(path,format='gzip-json-v1',max_bytes=100)
+            plain=pathlib.Path(directory)/'retained.json';plain.write_bytes(gzip.decompress(payload))
+            self.assertEqual(read_snapshot(plain)['extraction'],snapshot)
 
     async def test_failed_or_concurrently_updated_source_never_claims_copy(self):
         row={"id":1,"source_id":"source","document_url":"https://fixture.example/a.pdf","storage_path":"r2://private-fixture/source/old.pdf","extraction_id":None}

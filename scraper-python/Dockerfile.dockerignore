@@ -1,0 +1,17 @@
+**
+!scraper-python/
+!scraper-python/main.py
+!scraper-python/browser_worker.py
+!scraper-python/scraper_cli.py
+!scraper-python/requirements-lock.txt
+!scraper-python/continua_scraper/
+!scraper-python/continua_scraper/**
+!scraper/
+!scraper/python/
+!scraper/python/pdf_extract.py
+**/__pycache__/**
+**/*.pyc
+**/.env
+**/.env.*
+**/node_modules/**
+**/.git/**

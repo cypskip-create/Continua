@@ -7,6 +7,7 @@ import tempfile
 from contextlib import contextmanager
 from urllib.parse import urlsplit
 from .download import Artifact
+from .transfers import TransferCounters
 
 def safe_key(value):
     if not isinstance(value,str) or not value or len(value)>1024 or any(part in ("",".","..") for part in value.split("/")) or re.search(r"[\\\x00-\x1f?#]",value):
@@ -14,10 +15,11 @@ def safe_key(value):
     return value
 
 class R2Storage:
-    def __init__(self,client,bucket,*,rollback_write=None,dual_write=True,max_bytes=50*1024*1024):
+    def __init__(self,client,bucket,*,rollback_write=None,dual_write=False,max_bytes=50*1024*1024,transfers=None):
         self.client,self.bucket=client,bucket
         self.rollback_write,self.dual_write=rollback_write,dual_write
         self.max_bytes=max_bytes
+        self.transfers=transfers or TransferCounters()
 
     @classmethod
     def from_environment(cls,*,rollback_write=None):
@@ -31,7 +33,7 @@ class R2Storage:
             raise ValueError("Private R2 configuration is incomplete")
         client=boto3.client("s3",region_name="auto",endpoint_url=f"https://{account}.r2.cloudflarestorage.com",aws_access_key_id=key,aws_secret_access_key=secret,
             config=Config(connect_timeout=10,read_timeout=60,retries={"max_attempts":3,"mode":"standard"},request_checksum_calculation="when_required",response_checksum_validation="when_required"))
-        return cls(client,bucket,rollback_write=rollback_write,dual_write=os.environ.get("R2_DUAL_WRITE","true").lower() in ("true","1","yes"))
+        return cls(client,bucket,rollback_write=rollback_write,dual_write=os.environ.get("R2_DUAL_WRITE","false").lower() in ("true","1","yes"))
 
     def upload(self,key,artifact):
         safe_key(key)
@@ -44,8 +46,20 @@ class R2Storage:
             if digest.hexdigest()!=artifact.sha256 or body.tell()!=artifact.size:
                 raise ValueError("Artifact content changed")
             body.seek(0)
+            exists=False
             try:
-                self.client.put_object(Bucket=self.bucket,Key=key,Body=body,ContentLength=artifact.size,ContentType=artifact.content_type,Metadata={"sha256":artifact.sha256},IfNoneMatch="*")
+                head=self.client.head_object(Bucket=self.bucket,Key=key)
+                if head.get('ContentLength')!=artifact.size:
+                    raise ValueError('R2 existing object size mismatch')
+                exists=True
+            except Exception as error:
+                if getattr(error,'response',{}).get('ResponseMetadata',{}).get('HTTPStatusCode')!=404:
+                    raise
+            try:
+                if not exists:
+                    self.transfers.add('uploadPayloadBytesAttempted',artifact.size)
+                    attributes=getattr(artifact,'content_encoding',None)
+                    self.client.put_object(Bucket=self.bucket,Key=key,Body=body,ContentLength=artifact.size,ContentType=artifact.content_type,Metadata={"sha256":artifact.sha256},IfNoneMatch="*",**({'ContentEncoding':attributes} if attributes else {}))
             except Exception as error:
                 if getattr(error,"response",{}).get("ResponseMetadata",{}).get("HTTPStatusCode")!=412:
                     raise
@@ -63,9 +77,12 @@ class R2Storage:
                 raise ValueError("R2 checksum verification failed")
         finally:
             stored["Body"].close()
+        self.transfers.add('existingObjectsVerified' if exists else 'uploadedObjectsVerified',1)
+        if exists:self.transfers.add('uploadPayloadBytesAvoided',artifact.size)
         if self.dual_write:
             if self.rollback_write is None:
                 raise ValueError("Required rollback copy is not configured")
+            self.transfers.add('legacyUploadPayloadBytesAttempted',artifact.size)
             self.rollback_write(key,artifact)
         # Only this verified return value may become the database storage_path.
         return f"r2://{self.bucket}/{key}"

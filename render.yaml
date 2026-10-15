@@ -79,6 +79,24 @@ services:
     region: oregon
     healthCheckPath: /health/live
     envVars:
+      # Compute-only Render; durable originals and snapshots belong in R2.
+      # Existing private legacy objects are retained for recovery, not rewritten.
+      - key: RAW_STORAGE_DRIVER
+        value: r2
+      - key: R2_DUAL_WRITE
+        value: "false"
+      - key: R2_ARCHIVE_CRON
+        value: "*/15 * * * *"
+      - key: R2_ARCHIVE_BATCH_SIZE
+        value: "5"
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_BUCKET
+        value: continua-financial-documents
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
       - key: NODE_ENV
         value: production
       - key: NEWS_CRAWL_CRON

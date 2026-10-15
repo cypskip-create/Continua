@@ -11,13 +11,22 @@ import (
 
 // Native SQL readers retain production provenance gates. The candidate defaults
 // to reviewed/sourced data; unreviewed fixtures require explicit opt-in.
+var ErrReadBudget = errors.New("native read response budget exceeded")
+
 func (s *Store) JSONRows(ctx context.Context, query string, args ...any) ([]json.RawMessage, error) {
+	return s.JSONRowsBounded(ctx, 8*1024*1024, query, args...)
+}
+func (s *Store) JSONRowsBounded(ctx context.Context, maxBytes int, query string, args ...any) ([]json.RawMessage, error) {
+	if maxBytes < 1 || maxBytes > 32*1024*1024 {
+		return nil, errors.New("invalid native read budget")
+	}
 	rows, err := s.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	out := []json.RawMessage{}
+	total := 0
 	for rows.Next() {
 		var raw []byte
 		if err := rows.Scan(&raw); err != nil {
@@ -25,6 +34,10 @@ func (s *Store) JSONRows(ctx context.Context, query string, args ...any) ([]json
 		}
 		if !json.Valid(raw) {
 			return nil, errors.New("invalid database JSON")
+		}
+		total += len(raw)
+		if total > maxBytes {
+			return nil, ErrReadBudget
 		}
 		out = append(out, json.RawMessage(raw))
 	}

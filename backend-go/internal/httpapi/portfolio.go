@@ -13,6 +13,43 @@ type PortfolioStore interface {
 	PortfolioPositions(context.Context, string, string) ([]json.RawMessage, error)
 }
 
+type PortfolioResearchService interface {
+	Research(context.Context, string, string) (json.RawMessage, error)
+}
+
+func (s *Server) portfolioResearch(ctx context.Context, w http.ResponseWriter, r *http.Request, id *auth.Identity) bool {
+	if r.URL.Path != "/api/v1/engine/portfolio" {
+		return false
+	}
+	if err := auth.RequirePlus(id); err != nil {
+		failure(w, auth.AccessStatus(err), err.Error())
+		return true
+	}
+	if r.Method != "GET" {
+		failure(w, 405, "Method not allowed")
+		return true
+	}
+	exchange := r.URL.Query().Get("exchange")
+	if !r.URL.Query().Has("exchange") {
+		exchange = "NSE"
+	}
+	if exchange != "NSE" || len(r.URL.Query()["exchange"]) > 1 {
+		failure(w, 400, "Invalid exchange")
+		return true
+	}
+	if s.PortfolioResearch == nil {
+		failure(w, 503, "Native portfolio research unavailable")
+		return true
+	}
+	raw, err := s.PortfolioResearch.Research(ctx, id.UserID, exchange)
+	if err != nil || !json.Valid(raw) {
+		failure(w, 503, "Portfolio research is temporarily unavailable. Please retry.")
+		return true
+	}
+	respond(w, 200, map[string]any{"data": raw})
+	return true
+}
+
 func (s *Server) portfolioOverview(ctx context.Context, w http.ResponseWriter, r *http.Request, id *auth.Identity, exchange string) bool {
 	if r.URL.Path != "/api/v1/engine/portfolio/overview" {
 		return false

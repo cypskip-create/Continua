@@ -1,5 +1,6 @@
 import {beforeEach,expect,it,vi} from 'vitest';
 import {createHash} from 'node:crypto';
+import {gunzipSync} from 'node:zlib';
 const mocks=vi.hoisted(()=>({query:vi.fn(),read:vi.fn(),write:vi.fn(),env:{RAW_STORAGE_DRIVER:'r2',R2_BUCKET:'private-documents'}}));
 vi.mock('../../src/config/index.js',()=>({env:mocks.env}));
 vi.mock('../../src/storage/db.js',()=>({query:mocks.query}));
@@ -12,7 +13,7 @@ const row={id:7,source_id:'nse',storage_path:`nse/2026/${hash}.pdf`,sha256:hash,
 beforeEach(()=>{vi.clearAllMocks();mocks.env.RAW_STORAGE_DRIVER='r2';mocks.query.mockResolvedValue({rows:[]});mocks.read.mockResolvedValue(bytes);mocks.write.mockResolvedValue(undefined);});
 it('archives raw bytes and provenance JSON before updating the reference, retaining originals',async()=>{
  mocks.query.mockResolvedValueOnce({rows:[row]}).mockResolvedValueOnce({rows:[row.extraction_snapshot]}); expect(await archiveToR2()).toEqual({copied:1,failed:0});
- expect(mocks.write).toHaveBeenCalledTimes(2);expect(JSON.parse(mocks.write.mock.calls[1]![1].toString()).extraction.needs_review).toBe(true);
+ expect(mocks.write).toHaveBeenCalledTimes(2);expect(JSON.parse(gunzipSync(mocks.write.mock.calls[1]![1]).toString()).extraction.needs_review).toBe(true);
  const update=mocks.query.mock.calls[2]!;expect(update[0]).toContain('storage_path=$4');expect(update[1][1]).toMatch(/^r2:\/\/private-documents\//);expect(update[0]).not.toContain('DELETE');
 });
 it('failed verification never switches the original storage reference',async()=>{

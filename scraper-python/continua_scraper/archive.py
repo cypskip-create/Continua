@@ -1,6 +1,7 @@
 """Bounded native R2 backfill. No original or extraction version is deleted."""
 import asyncio
 import hashlib
+import gzip
 import json
 import math
 import pathlib
@@ -10,7 +11,7 @@ from decimal import Decimal
 from .download import Artifact
 from .r2 import R2Storage,safe_key
 
-def snapshot_json(value):
+def snapshot_encoder():
     def convert(v):
         if isinstance(v,datetime):
             if v.tzinfo is None:raise ValueError("Unzoned snapshot timestamp")
@@ -21,7 +22,23 @@ def snapshot_json(value):
             if not math.isfinite(n):raise ValueError("Invalid snapshot number")
             return n
         raise TypeError("Unsupported snapshot field")
-    return json.dumps(value,default=convert,allow_nan=False,ensure_ascii=False,separators=(",",":")).encode()
+    return json.JSONEncoder(default=convert,allow_nan=False,ensure_ascii=False,separators=(",",":"))
+
+def snapshot_json(value):return snapshot_encoder().encode(value).encode()
+
+def read_snapshot(path,*,format='json-v1',max_bytes=50*1024*1024):
+    """Restore both retained plain JSON and new compressed evidence snapshots.
+
+    Call only after private object/hash verification. Limit decoded bytes too;
+    a small gzip object must never permit an unbounded decompression allocation.
+    """
+    if format not in ('json-v1','gzip-json-v1'):raise ValueError('Unknown snapshot format')
+    opener=gzip.open if format=='gzip-json-v1' else open
+    with opener(path,'rb') as body:payload=body.read(max_bytes+1)
+    if len(payload)>max_bytes:raise ValueError('Decoded snapshot exceeds limit')
+    value=json.loads(payload,parse_constant=lambda _: (_ for _ in ()).throw(ValueError('Invalid snapshot number')))
+    if not isinstance(value,dict) or value.get('schemaVersion')!=1 or not isinstance(value.get('extraction'),dict):raise ValueError('Invalid extraction snapshot')
+    return value
 
 class R2Archive:
     def __init__(self,database,storage,legacy_reader,*,enabled=True):
@@ -53,8 +70,8 @@ class R2Archive:
         key=safe_key(old.replace("\\","/"))
         # The original private reader is injected, never a user-provided URL.
         # Archive copies already have a retained original: no redundant rollback
-        # write, and no change to collection's required dual-write policy.
-        archive_storage=R2Storage(self.storage.client,self.storage.bucket,dual_write=False,max_bytes=self.storage.max_bytes)
+        # write. Originals remain readable; new writes default to R2 only.
+        archive_storage=R2Storage(self.storage.client,self.storage.bucket,dual_write=False,max_bytes=self.storage.max_bytes,transfers=self.storage.transfers)
         with self.legacy_reader(old) as artifact:
             if artifact.size!=row["size_bytes"] or artifact.sha256!=row["sha256"]:
                 raise ValueError("Archive source content mismatch")
@@ -62,15 +79,26 @@ class R2Archive:
         return key
 
     def _copy_snapshot(self,row,key,snapshot):
-        payload=snapshot_json({"schemaVersion":1,"artifactId":row["id"],"sourceId":row["source_id"],"documentUrl":row["document_url"],"rawObject":f"r2://{self.storage.bucket}/{key}","extraction":snapshot})
-        if len(payload)>self.storage.max_bytes:raise ValueError("Snapshot exceeds response limit")
-        digest=hashlib.sha256(payload).hexdigest()
-        snapshot_key=safe_key(f"extractions/{row['source_id']}/{row['id']}/{digest}.json")
+        value={"schemaVersion":1,"artifactId":row["id"],"sourceId":row["source_id"],"documentUrl":row["document_url"],"rawObject":f"r2://{self.storage.bucket}/{key}","extraction":snapshot}
         with tempfile.TemporaryDirectory(prefix="continua-r2-snapshot-") as directory:
-            path=pathlib.Path(directory)/"snapshot.json"
-            with path.open("xb") as body:body.write(payload)
-            storage=R2Storage(self.storage.client,self.storage.bucket,dual_write=False,max_bytes=self.storage.max_bytes)
-            return storage.upload(snapshot_key,Artifact(path,row["document_url"],"application/json",len(payload),digest))
+            path=pathlib.Path(directory)/"snapshot.json.gz"
+            decoded=0
+            # Deterministic gzip (no wall-clock or temporary-path fields).
+            # Stream the JSON encoder directly into a temporary compressed file.
+            with path.open('xb') as body,gzip.GzipFile(fileobj=body,mode='wb',filename='',mtime=0,compresslevel=6) as compressed:
+                for part in snapshot_encoder().iterencode(value):
+                    chunk=part.encode();decoded+=len(chunk)
+                    if decoded>self.storage.max_bytes:raise ValueError('Snapshot exceeds response limit')
+                    compressed.write(chunk)
+            size=path.stat().st_size
+            if size>self.storage.max_bytes:raise ValueError('Compressed snapshot exceeds response limit')
+            digest=hashlib.sha256()
+            with path.open('rb') as body:
+                while chunk:=body.read(65536):digest.update(chunk)
+            digest=digest.hexdigest()
+            snapshot_key=safe_key(f"extractions/{row['source_id']}/{row['id']}/{digest}.json.gz")
+            storage=R2Storage(self.storage.client,self.storage.bucket,dual_write=False,max_bytes=self.storage.max_bytes,transfers=self.storage.transfers)
+            return storage.upload(snapshot_key,Artifact(path,row["document_url"],"application/gzip",size,digest))
 
     async def _run(self,limit):
         pending=await self.database.query("""SELECT a.*,e.id AS extraction_id FROM scraping.raw_artifacts a
@@ -92,6 +120,7 @@ class R2Archive:
                     if not snapshots:raise ValueError("Extraction snapshot disappeared")
                     metadata["r2ExtractionObject"]=await asyncio.to_thread(self._copy_snapshot,row,key,snapshots[0])
                     metadata["r2ExtractionId"]=str(row["extraction_id"])
+                    metadata['r2ExtractionFormat']='gzip-json-v1'
                 updated=await self.database.query("""UPDATE scraping.raw_artifacts SET storage_path=%s,
                     metadata=COALESCE(metadata,'{}'::jsonb)||%s::jsonb WHERE id=%s AND storage_path=%s
                     AND COALESCE(metadata->>'r2ExtractionId','')=%s RETURNING id""",

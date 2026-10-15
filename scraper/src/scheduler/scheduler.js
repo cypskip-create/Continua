@@ -25,7 +25,7 @@ let archiveQueued = false;
 function queueArchive() {
     if (archiveQueued) return;
     archiveQueued = true;
-    void enqueueBackground(() => archiveToR2()).catch(error => logger.warn({reason:String(error.message??error)}, 'R2 archive unavailable; retained files will retry'))
+    void enqueueBackground(() => archiveToR2(env.R2_ARCHIVE_BATCH_SIZE)).catch(error => logger.warn({reason:String(error.message??error)}, 'R2 archive unavailable; retained files will retry'))
       .finally(() => {archiveQueued = false;});
 }
 const scheduledTasks = [];
@@ -131,7 +131,8 @@ export async function startScheduler() {
     await ensureDefaultSources();
     const sources = await listEnabledSources();
     queueArchive(); // Copy retained documents before memory-heavy archive discovery.
-    scheduledTasks.push(cron.schedule('*/2 * * * *', queueArchive));
+    if(cron.validate(env.R2_ARCHIVE_CRON))scheduledTasks.push(cron.schedule(env.R2_ARCHIVE_CRON, queueArchive));
+    else logger.warn('Invalid R2 archive schedule; scheduled backfill is disabled');
     // Discovery retains its publisher schedule. Already queued documents do
     // not wait another six hours for the next archive crawl.
     if (cron.validate(env.DOCUMENT_DRAIN_CRON)) {

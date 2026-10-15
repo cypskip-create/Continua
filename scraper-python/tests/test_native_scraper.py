@@ -46,17 +46,21 @@ class StorageTests(unittest.TestCase):
     def test_verified_streaming_upload_and_rollback(self):
         data=b"%PDF-fixture";hash=hashlib.sha256(data).hexdigest();calls=[]
         class Client:
+            def head_object(self,**kwargs):
+                error=RuntimeError('fixture missing');error.response={'ResponseMetadata':{'HTTPStatusCode':404}};raise error
             def put_object(self,**kwargs):self.body=kwargs["Body"].read();calls.append(kwargs["IfNoneMatch"])
             def get_object(self,**kwargs):return {"Body":io.BytesIO(self.body),"ContentLength":len(self.body)}
         with tempfile.TemporaryDirectory(prefix="continua-native-test-") as directory:
             file=pathlib.Path(directory)/"fixture.pdf";file.write_bytes(data)
             artifact=Artifact(file,"https://fixture.example/report.pdf","application/pdf",len(data),hash)
-            storage=R2Storage(Client(),"private-documents",rollback_write=lambda key,artifact:calls.append("rollback"))
+            storage=R2Storage(Client(),"private-documents",dual_write=True,rollback_write=lambda key,artifact:calls.append("rollback"))
             self.assertTrue(storage.upload(f"nse/2026/{hash}.pdf",artifact).startswith("r2://private-documents/"))
             self.assertEqual(calls,["*","rollback"])
     def test_corruption_never_returns_storage_reference(self):
         data=b"fixture";hash=hashlib.sha256(data).hexdigest()
         class Client:
+            def head_object(self,**kwargs):
+                error=RuntimeError('fixture missing');error.response={'ResponseMetadata':{'HTTPStatusCode':404}};raise error
             def put_object(self,**kwargs):pass
             def get_object(self,**kwargs):return {"Body":io.BytesIO(b"changed"),"ContentLength":7}
         with tempfile.TemporaryDirectory(prefix="continua-native-test-") as directory:

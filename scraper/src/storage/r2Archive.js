@@ -2,6 +2,7 @@
  * Node handles storage I/O; PostgreSQL records only verified object references.
  */
 import { createHash } from 'node:crypto';
+import { gzipSync } from 'node:zlib';
 import { query } from './db.js';
 import { env } from '../config/index.js';
 import { readRawArtifact } from './rawStorage.js';
@@ -45,14 +46,17 @@ async function runArchive(limit) {
                 const extracted = await query('SELECT * FROM scraping.extractions WHERE id=$1 AND artifact_id=$2', [artifact.extraction_id,artifact.id]);
                 const snapshot = extracted.rows[0];
                 if (!snapshot) throw new Error('Extraction snapshot disappeared');
-                const bytes = Buffer.from(JSON.stringify({schemaVersion:1, artifactId:artifact.id,
+                const plain = Buffer.from(JSON.stringify({schemaVersion:1, artifactId:artifact.id,
                     sourceId:artifact.source_id, documentUrl:artifact.document_url,
                     rawObject:`r2://${env.R2_BUCKET}/${key}`, extraction:snapshot}));
+                if(plain.length>env.MAX_RESPONSE_SIZE_BYTES)throw new Error('Snapshot exceeds response limit');
+                const bytes=gzipSync(plain,{level:6});
                 const hash = createHash('sha256').update(bytes).digest('hex');
-                const snapshotKey = `extractions/${artifact.source_id}/${artifact.id}/${hash}.json`;
-                await writeR2(snapshotKey, bytes, hash, 'application/json');
+                const snapshotKey = `extractions/${artifact.source_id}/${artifact.id}/${hash}.json.gz`;
+                await writeR2(snapshotKey, bytes, hash, 'application/gzip');
                 metadata.r2ExtractionId = String(artifact.extraction_id);
                 metadata.r2ExtractionObject = `r2://${env.R2_BUCKET}/${snapshotKey}`;
+                metadata.r2ExtractionFormat = 'gzip-json-v1';
             }
             // Compare-and-set keeps a concurrently refreshed raw reference intact.
             await query(`UPDATE scraping.raw_artifacts SET storage_path=$2,

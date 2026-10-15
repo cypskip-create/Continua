@@ -25,6 +25,8 @@ declare const EnvSchema: z.ZodObject<{
     R2_SECRET_ACCESS_KEY: z.ZodOptional<z.ZodString>;
     R2_BUCKET: z.ZodOptional<z.ZodString>;
     R2_DUAL_WRITE: z.ZodEffects<z.ZodOptional<z.ZodString>, boolean, string | undefined>;
+    R2_ARCHIVE_CRON: z.ZodDefault<z.ZodString>;
+    R2_ARCHIVE_BATCH_SIZE: z.ZodDefault<z.ZodNumber>;
     RAW_STORAGE_LOCAL_PATH: z.ZodDefault<z.ZodString>;
     SUPABASE_URL: z.ZodOptional<z.ZodString>;
     SUPABASE_SERVICE_ROLE_KEY: z.ZodOptional<z.ZodString>;
@@ -52,6 +54,8 @@ declare const EnvSchema: z.ZodObject<{
     DATABASE_URL: string;
     RAW_STORAGE_DRIVER: "local" | "supabase" | "r2";
     R2_DUAL_WRITE: boolean;
+    R2_ARCHIVE_CRON: string;
+    R2_ARCHIVE_BATCH_SIZE: number;
     RAW_STORAGE_LOCAL_PATH: string;
     SUPABASE_STORAGE_BUCKET: string;
     DEFAULT_REQUESTS_PER_SECOND: number;
@@ -89,6 +93,8 @@ declare const EnvSchema: z.ZodObject<{
     R2_SECRET_ACCESS_KEY?: string | undefined;
     R2_BUCKET?: string | undefined;
     R2_DUAL_WRITE?: string | undefined;
+    R2_ARCHIVE_CRON?: string | undefined;
+    R2_ARCHIVE_BATCH_SIZE?: number | undefined;
     RAW_STORAGE_LOCAL_PATH?: string | undefined;
     SUPABASE_URL?: string | undefined;
     SUPABASE_SERVICE_ROLE_KEY?: string | undefined;
@@ -118,6 +124,8 @@ export declare const env: {
     DATABASE_URL: string;
     RAW_STORAGE_DRIVER: "local" | "supabase" | "r2";
     R2_DUAL_WRITE: boolean;
+    R2_ARCHIVE_CRON: string;
+    R2_ARCHIVE_BATCH_SIZE: number;
     RAW_STORAGE_LOCAL_PATH: string;
     SUPABASE_STORAGE_BUCKET: string;
     DEFAULT_REQUESTS_PER_SECOND: number;

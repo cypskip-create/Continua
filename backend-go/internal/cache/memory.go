@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 )
@@ -19,9 +20,10 @@ type entry struct {
 	expires time.Time
 }
 type flight struct {
-	done  chan struct{}
-	value json.RawMessage
-	err   error
+	done        chan struct{}
+	value       json.RawMessage
+	err         error
+	invalidated bool
 }
 type Memory struct {
 	mu                                      sync.Mutex
@@ -34,6 +36,16 @@ type Memory struct {
 
 func NewMemory() *Memory {
 	return &Memory{items: map[string]*list.Element{}, lru: list.New(), pending: map[string]*flight{}, maxBytes: 4 * 1024 * 1024, maxEntries: 5000, maxPending: 64, Now: time.Now}
+}
+
+func NewMemoryWithBudget(entries, bytes int) (*Memory, error) {
+	if entries < 1 || entries > 10000 || bytes < 1024 || bytes > 64*1024*1024 {
+		return nil, errors.New("invalid cache budget")
+	}
+	memory := NewMemory()
+	memory.maxEntries = entries
+	memory.maxBytes = bytes
+	return memory, nil
 }
 func clone(value json.RawMessage) json.RawMessage { return append(json.RawMessage(nil), value...) }
 func (c *Memory) remove(element *list.Element) {
@@ -62,6 +74,12 @@ func (c *Memory) Get(key string) json.RawMessage { c.mu.Lock(); defer c.mu.Unloc
 func (c *Memory) Set(key string, value json.RawMessage, ttl time.Duration) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if job := c.pending[key]; job != nil {
+		job.invalidated = true
+	}
+	c.set(key, value, ttl)
+}
+func (c *Memory) set(key string, value json.RawMessage, ttl time.Duration) {
 	if element := c.items[key]; element != nil {
 		c.remove(element)
 	}
@@ -78,8 +96,28 @@ func (c *Memory) Set(key string, value json.RawMessage, ttl time.Duration) {
 func (c *Memory) Delete(key string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if job := c.pending[key]; job != nil {
+		job.invalidated = true
+	}
 	if e := c.items[key]; e != nil {
 		c.remove(e)
+	}
+}
+
+// Invalidates existing and in-flight reads without retaining an unbounded
+// generation map. Already-running callers may finish, but cannot repopulate it.
+func (c *Memory) DeletePrefix(prefix string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for key, e := range c.items {
+		if strings.HasPrefix(key, prefix) {
+			c.remove(e)
+		}
+	}
+	for key, job := range c.pending {
+		if strings.HasPrefix(key, prefix) {
+			job.invalidated = true
+		}
 	}
 }
 func (c *Memory) GetOrLoad(ctx context.Context, key string, ttl time.Duration, load func(context.Context) (json.RawMessage, error)) (json.RawMessage, error) {
@@ -89,6 +127,10 @@ func (c *Memory) GetOrLoad(ctx context.Context, key string, ttl time.Duration, l
 		return value, nil
 	}
 	if job := c.pending[key]; job != nil {
+		if job.invalidated {
+			c.mu.Unlock()
+			return nil, ErrBusy
+		}
 		c.mu.Unlock()
 		select {
 		case <-ctx.Done():
@@ -107,10 +149,10 @@ func (c *Memory) GetOrLoad(ctx context.Context, key string, ttl time.Duration, l
 	// Run in the leader request, not a detached unbounded goroutine. A canceled
 	// follower does not cancel the leader; loader errors are never cached.
 	value, err := load(ctx)
-	if err == nil {
-		c.Set(key, value, ttl)
-	}
 	c.mu.Lock()
+	if err == nil && !job.invalidated {
+		c.set(key, value, ttl)
+	}
 	job.value = clone(value)
 	job.err = err
 	delete(c.pending, key)

@@ -1,6 +1,6 @@
 import datetime
 from .dates import parse
-from .numbers import positive
+from .numbers import positive, compatible_currency
 from .ratios import compute_ratios
 from .valuation import annual_ratio_at
 
@@ -10,7 +10,7 @@ def reported_research_ratios(security_id,quote,history,dividend_per_share,now=No
     if not quote or quote.get("source")=="mock" or not positive(quote.get("lastPrice")) or observed is None or date is None or observed>date:
         return None
     at=quote["timestamp"][:10]
-    rows=[r for r in history if r.get("periodEnd") and r.get("reportedAt") and r["periodEnd"][:10]<=at and r["reportedAt"][:10]<=at and any(isinstance(u,str) and u.lower().startswith("https://") for u in r.get("sourceUrls",[]))]
+    rows=[r for r in history if compatible_currency(r.get('currency'),quote.get('currency')) and r.get("periodEnd") and r.get("reportedAt") and r["periodEnd"][:10]<=at and r["reportedAt"][:10]<=at and any(isinstance(u,str) and u.lower().startswith("https://") for u in r.get("sourceUrls",[]))]
     if not rows:
         return None
     latest=sorted(rows,key=lambda p:p["fiscalYear"],reverse=True)[0]

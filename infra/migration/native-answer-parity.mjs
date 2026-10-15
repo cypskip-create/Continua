@@ -1,0 +1,15 @@
+/** Original deterministic reader is a fixture oracle only; no provider or DB. */
+import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {isDeepStrictEqual} from 'node:util';
+import {calculatedAnswer} from '../../backend/src/services/research/calculatedAnswer.js';
+const root=fileURLToPath(new URL('../..',import.meta.url));
+const python=process.env.NATIVE_PYTHON_BIN;if(!python)throw Error('Set the fixture Python executable');
+const evidence=[{id:'KCB:company',title:'KCB financial analysis',asOf:'2026-03-01',url:'https://issuer.example/report.pdf',facts:{financial:{period:2025,metrics:{revenueGrowth:2.675,earningsGrowth:-.005,cashConversion:1.25,debtToEquity:2.5,returnOnAssets:.014,currentRatio:null},findings:['Consecutive observed growth']},briefing:{risks:['Dated liquidity risk']},quality:{warnings:['Missing interim']},diagnostics:{checks:[{label:'Balance equation',result:'pass',reason:'Verified'},{label:'Shares',result:'flag',reason:'Review'},{label:'Cash',result:'missing'}]},scenarios:[{name:'Base',growthPercent:5,revenue:100,netIncome:null,assumption:'Illustrative'}],missing:['Volume history']}},{id:'KCB:technical',title:'KCB technical',asOf:null,url:null,facts:{observations:[{topic:'SMA',text:'Recorded close'}]}},{id:'KCB:news:1',title:'Issuer filing',asOf:'2026-10-01',url:'https://issuer.example/news',facts:{summary:'Observed reported result'}}];
+const portfolio={id:'portfolio',title:'Your portfolio',asOf:'2026-10-14',url:null,facts:{positions:[{symbol:'KCB',weight:.3333,asOf:'2026-10-13'},{symbol:'ABSA',weight:.6667,asOf:null}],warnings:['Dates differ'],coverage:'2/3',risk:{observations:63,reason:null,metrics:{attribution:{contributions:[{symbol:'KCB',riskShare:.2545}],historicalVaR95:2.5,expectedShortfall95:3.1}}},performance:{twr:12.4,moneyWeighted:null,reason:'Dated snapshots'}}};
+const cases=[];
+for(const question of ['revenue growth','earnings profit','cash quality check','debt leverage risk','return on assets','current ratio liquidity','scenario','coverage missing','news change','technical trend momentum price','unrelated'])cases.push([question,evidence]);
+for(const question of ['risk loss drawdown','return performance','concentration','unknown'])cases.push([question,[portfolio]]);
+cases.push(['unknown',[evidence[2]]]);
+for(const args of cases){const expected=calculatedAnswer(...args);const result=spawnSync(python,['engine-python/worker.py'],{cwd:root,input:JSON.stringify({operation:'calculated_answer',args}),encoding:'utf8',maxBuffer:1048576,timeout:10000,env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,PYTHONUTF8:'1'}});if(result.status!==0)throw Error('Native answer fixture rejected');const actual=JSON.parse(result.stdout);delete actual.sources;delete actual.cached;if(!isDeepStrictEqual(actual,expected)){throw Error('Answer mismatch: '+args[0]+'\n'+JSON.stringify({actual,expected}));}}
+console.log(JSON.stringify({answerReferenceComparisons:cases.length,passed:true,providerRequests:0,productionCutover:false}));

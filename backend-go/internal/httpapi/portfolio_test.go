@@ -17,6 +17,34 @@ type portfolioFixture struct {
 	fail  bool
 }
 
+type portfolioResearchFixture struct {
+	owner string
+	calls int
+}
+
+func (p *portfolioResearchFixture) Research(_ context.Context, owner, exchange string) (json.RawMessage, error) {
+	p.owner = owner
+	p.calls++
+	return json.RawMessage(`{"positions":[]}`), nil
+}
+func TestPortfolioResearchUsesVerifiedOwnerAndPlusGate(t *testing.T) {
+	s, _ := fixtureServer()
+	p := new(portfolioResearchFixture)
+	s.PortfolioResearch = p
+	for _, plan := range []string{"free", "premium_plus"} {
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest("GET", "/api/v1/engine/portfolio?userId=other-owner", nil)
+		s.portfolioResearch(context.Background(), w, r, &auth.Identity{UserID: "verified-owner", Plan: plan})
+		if plan == "free" {
+			if w.Code != 403 || p.calls != 0 {
+				t.Fatal("entitlement bypass")
+			}
+		} else if w.Code != 200 || p.owner != "verified-owner" || p.calls != 1 {
+			t.Fatal("unverified owner reached workspace")
+		}
+	}
+}
+
 func (p *portfolioFixture) PortfolioPositions(_ context.Context, owner, exchange string) ([]json.RawMessage, error) {
 	p.owner = owner
 	p.calls++

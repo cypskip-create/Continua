@@ -1,6 +1,7 @@
 package billing
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -10,7 +11,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"net/mail"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -36,6 +39,59 @@ type Transaction struct {
 		UserID    string `json:"continua_user"`
 		Mode      string `json:"mode"`
 	} `json:"metadata"`
+}
+
+func providerInteger(raw json.RawMessage) (int64, error) {
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	var value any
+	if decoder.Decode(&value) != nil {
+		return 0, errors.New("invalid provider integer")
+	}
+	number, ok := value.(json.Number)
+	if !ok {
+		return 0, errors.New("invalid provider integer")
+	}
+	if len(number) > 128 {
+		return 0, errors.New("invalid provider integer")
+	}
+	if index := strings.IndexAny(string(number), "eE"); index >= 0 {
+		exponent, err := strconv.ParseInt(string(number)[index+1:], 10, 16)
+		if err != nil || exponent > 32 || exponent < -32 {
+			return 0, errors.New("invalid provider integer")
+		}
+	}
+	decimal, ok := new(big.Rat).SetString(string(number))
+	if !ok || !decimal.IsInt() || !decimal.Num().IsInt64() {
+		return 0, errors.New("invalid provider integer")
+	}
+	return decimal.Num().Int64(), nil
+}
+
+// JSON numbers 100000, 100000.0 and 1e5 are the same integral minor-unit
+// amount. Preserve that contract without accepting numeric strings, booleans,
+// fractional values or a float-rounding approximation.
+func (t *Transaction) UnmarshalJSON(raw []byte) error {
+	type plain Transaction
+	var decoded struct {
+		ID     json.RawMessage `json:"id"`
+		Amount json.RawMessage `json:"amount"`
+		*plain
+	}
+	decoded.plain = (*plain)(t)
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		return err
+	}
+	id, err := providerInteger(decoded.ID)
+	if err != nil {
+		return err
+	}
+	amount, err := providerInteger(decoded.Amount)
+	if err != nil {
+		return err
+	}
+	t.ID, t.Amount = id, amount
+	return nil
 }
 
 func ValidateTransaction(raw []byte, order Order) (Transaction, error) {

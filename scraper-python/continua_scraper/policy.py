@@ -14,6 +14,8 @@ class SourcePolicy:
     allowed_domains: tuple[str, ...]
     redistribution_allowed: bool
     user_agent: str = "ContinuaBot/0.1"
+    collection_allowed: bool | None = None
+    allow_subdomains: bool = False
 
     def __post_init__(self):
         if not self.user_agent.isascii() or any(ord(c)<32 or ord(c)==127 for c in self.user_agent):
@@ -32,10 +34,10 @@ class SourcePolicy:
         if port not in (None,80,443) or "\r" in value or "\n" in value:
             raise UnsafeURL("Invalid source URL")
         hostname=parsed.hostname.lower().rstrip(".")
-        if hostname not in self.allowed_domains:
+        if hostname not in self.allowed_domains and not (self.allow_subdomains and any(hostname.endswith('.'+domain) for domain in self.allowed_domains)):
             raise UnsafeURL("URL is outside the source allowlist")
-        if not self.redistribution_allowed:
-            raise PermissionError("Source redistribution permission is required")
+        if not (self.redistribution_allowed if self.collection_allowed is None else self.collection_allowed):
+            raise PermissionError("Source collection permission is required")
         return parsed
 
 async def resolve_public(hostname, port):

@@ -8,9 +8,10 @@ class Database:
 
     @classmethod
     async def open(cls, connection):
+        from .database_tls import secure_connection
         from psycopg.rows import dict_row
         from psycopg_pool import AsyncConnectionPool
-        pool=AsyncConnectionPool(connection,min_size=0,max_size=2,max_waiting=16,
+        pool=AsyncConnectionPool(secure_connection(connection),min_size=0,max_size=2,max_waiting=16,
             timeout=10,open=False,kwargs={"autocommit":True,"row_factory":dict_row,"connect_timeout":10,"prepare_threshold":None,
                                         "options":"-c statement_timeout=12000 -c lock_timeout=10000"})
         await pool.open()

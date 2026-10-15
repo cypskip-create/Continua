@@ -1,5 +1,8 @@
 """Immutable evidence/extraction repositories. No canonical publication here."""
 from .documents import encode
+import re
+
+QUOTE_TRANSPORT=re.compile(r'^https://live\.mystocks\.co\.ke/x/f[0-9]+-([A-Z0-9.\-]{1,20})$')
 
 ARTIFACT_FIELDS={"id":"id","source_id":"sourceId","adapter":"adapter","sha256":"sha256","document_url":"documentUrl",
     "source_url":"sourceUrl","parent_url":"parentUrl","content_type":"contentType","size_bytes":"sizeBytes","storage_path":"storagePath",
@@ -38,7 +41,22 @@ class EvidenceRepository:
             if not rows:
                 raise RuntimeError("Artifact persistence returned no record")
             row=rows[0]
-            await database.query("INSERT INTO scraping.artifact_urls(artifact_id,url) VALUES(%s,%s) ON CONFLICT(artifact_id,url) DO NOTHING",(row["id"],artifact["documentUrl"]))
+            incoming=QUOTE_TRANSPORT.fullmatch(artifact['documentUrl']) if artifact['adapter']=='mystocks' else None
+            original=QUOTE_TRANSPORT.fullmatch(row.get('document_url') or '') if incoming else None
+            if row.get('is_new') is False and original and original[1]==incoming[1]:
+                # Identical source bytes, same ticker, different transport nonce:
+                # the first real URL is already retained atomically. Do not grow
+                # millions of aliases while the market is closed/unchanged.
+                pass
+            elif incoming:
+                # Identical bytes can legitimately be returned for two issuers.
+                # Keep one actually fetched URL per ticker, not one per nonce.
+                pattern=r'^https://live[.]mystocks[.]co[.]ke/x/f[0-9]+-'+re.escape(incoming[1])+r'$'
+                await database.query("""INSERT INTO scraping.artifact_urls(artifact_id,url)
+                  SELECT %s,%s WHERE NOT EXISTS(SELECT 1 FROM scraping.artifact_urls WHERE artifact_id=%s AND url ~ %s)
+                  ON CONFLICT(artifact_id,url) DO NOTHING""",(row['id'],artifact['documentUrl'],row['id'],pattern))
+            else:
+                await database.query("INSERT INTO scraping.artifact_urls(artifact_id,url) VALUES(%s,%s) ON CONFLICT(artifact_id,url) DO NOTHING",(row["id"],artifact["documentUrl"]))
             return {"artifact":mapped(row,ARTIFACT_FIELDS),"isNew":row.get("is_new",True)}
 
     async def insert_extraction(self,extraction):
@@ -55,6 +73,11 @@ class EvidenceRepository:
         rows=await self.database.query("SELECT * FROM scraping.extractions WHERE artifact_id=%s ORDER BY extracted_at DESC,id DESC LIMIT 1",(artifact_id,))
         return mapped(rows[0],EXTRACTION_FIELDS) if rows else None
 
+    async def latest_extraction_for_ticker(self,artifact_id,ticker):
+        if not isinstance(ticker,str) or not re.fullmatch(r'[A-Z0-9.\-]{1,20}',ticker):raise ValueError('Invalid extraction scope')
+        rows=await self.database.query("SELECT * FROM scraping.extractions WHERE artifact_id=%s AND entity->>'ticker'=%s ORDER BY extracted_at DESC,id DESC LIMIT 1",(artifact_id,ticker))
+        return mapped(rows[0],EXTRACTION_FIELDS) if rows else None
+
     async def needs_review(self,limit=100):
         if type(limit) is not int or not 1<=limit<=100:
             raise ValueError("invalid review batch")
@@ -68,7 +91,7 @@ class EvidenceRepository:
     async def unextracted(self,limit=50,driver="r2",rollback_bucket="scraper-raw"):
         if type(limit) is not int or not 1<=limit<=100:
             raise ValueError("invalid extraction batch")
-        rows=await self.database.query("""SELECT a.id AS artifact_id,a.source_id,a.adapter,a.content_type,a.storage_path,a.document_url
+        rows=await self.database.query("""SELECT a.id AS artifact_id,a.source_id,a.adapter,a.content_type,a.storage_path,a.document_url,a.sha256,a.size_bytes
           FROM scraping.raw_artifacts a LEFT JOIN LATERAL (
             SELECT e.id,e.text FROM scraping.extractions e WHERE e.artifact_id=a.id ORDER BY e.extracted_at DESC,e.id DESC LIMIT 1) e ON true
           WHERE (e.id IS NULL OR (a.content_type ILIKE '%%pdf%%' AND length(trim(coalesce(e.text,'')))<50))
@@ -77,5 +100,5 @@ class EvidenceRepository:
             AND NOT EXISTS(SELECT 1 FROM scraping.dead_letters d WHERE d.source_id=a.source_id AND d.url=a.document_url
               AND d.stage='parse' AND d.last_failed>now()-interval '1 hour')
           ORDER BY (a.content_type ILIKE '%%pdf%%') DESC,a.discovered_at ASC LIMIT %s""",(driver=="supabase",rollback_bucket,limit))
-        fields={"artifact_id":"artifactId","source_id":"sourceId","adapter":"adapter","content_type":"contentType","storage_path":"storagePath","document_url":"documentUrl"}
+        fields={"artifact_id":"artifactId","source_id":"sourceId","adapter":"adapter","content_type":"contentType","storage_path":"storagePath","document_url":"documentUrl","sha256":"sha256","size_bytes":"sizeBytes"}
         return [mapped(row,fields) for row in rows]

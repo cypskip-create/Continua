@@ -44,3 +44,21 @@ def aggregate_candles(source, interval):
             bar["sourceUrl"] = urls[0]
         result.append(bar)
     return result
+
+def aggregate_touched_candles(daily,history):
+    if not isinstance(daily,list) or not isinstance(history,list) or len(daily)>10000 or len(history)>50000:
+        raise ValueError('candle_limit')
+    identities={row.get('securityId') for row in daily+history}
+    if len(identities)!=1 or None in identities:raise ValueError('mixed_candle_identity')
+    for row in daily+history:
+        if row.get('interval')!='1d' or parse(row.get('timestamp')) is None:raise ValueError('daily_history_required')
+        values=[row.get(key) for key in ('open','high','low','close','volume')]
+        if any(isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value) or value<0 for value in values):
+            raise ValueError('literal_daily_observations_required')
+        if row['volume']!=math.floor(row['volume']) or row['high']<max(row['open'],row['close']) or row['low']>min(row['open'],row['close']):
+            raise ValueError('invalid_daily_range')
+    result=[]
+    for interval in ('1w','1M','1y'):
+        touched={row['timestamp'] for row in aggregate_candles(daily,interval)}
+        result.extend(row for row in aggregate_candles(history,interval) if row['timestamp'] in touched)
+    return result
