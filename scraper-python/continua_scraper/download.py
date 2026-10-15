@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from urllib.parse import urljoin,urlencode,quote
 from .policy import resolve_public, robots_allows
 from .retry import with_retry
+from .transfer_budget import MeteredReader,account
 
 class SourceHTTPError(ValueError):
     def __init__(self,status):self.status=status;super().__init__('Source HTTP failure')
@@ -157,6 +158,7 @@ class Downloader:
         tls=ssl.create_default_context() if parsed.scheme=="https" else None
         # The socket uses the vetted address, while TLS verifies the hostname.
         reader,writer=await asyncio.open_connection(addresses[0],port,ssl=tls,server_hostname=host if tls else None,limit=32768)
+        reader=MeteredReader(reader)
         target=quote(parsed.path or "/",safe="/%:@!$&'()*+,;=-._~")+("?"+quote(parsed.query,safe="%=&?/:@!$'()*+,;-._~") if parsed.query else "")
         host_header=host if parsed.port is None else f"{host}:{port}"
         method='POST' if form is not None else 'GET'
@@ -164,6 +166,7 @@ class Downloader:
         extra+=header_lines
         request=f"{method} {target} HTTP/1.1\r\nHost: {host_header}\r\nUser-Agent: {self.policy.user_agent}\r\nAccept-Encoding: gzip, deflate\r\n{extra}Connection: close\r\n\r\n"
         try:
+            account('uploadBytes',len(request.encode('ascii'))+len(payload))
             writer.write(request.encode("ascii")+payload);await writer.drain()
             status_line=await reader.readline()
             protocol,code,_=status_line.decode("ascii").rstrip().split(" ",2)

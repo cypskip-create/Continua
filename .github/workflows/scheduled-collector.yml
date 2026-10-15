@@ -1,0 +1,81 @@
+name: Bounded financial collection outside Render
+on:
+  schedule:
+    - cron: '17 */8 * * *'
+    - cron: '43 20 * * *'
+  workflow_dispatch:
+    inputs:
+      kind:
+        type: choice
+        options: [documents, news, drain]
+        default: documents
+      source:
+        description: Optional exact registered source ID
+        type: string
+      maintenance:
+        description: Explicit additive schema setup or one tiny private storage verification
+        type: choice
+        options: [none, prepare, verify-storage]
+        default: none
+      apply:
+        description: Run approved collection (otherwise offline plan only)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: continua-scheduled-collector
+  cancel-in-progress: false
+jobs:
+  collect:
+    if: github.event_name == 'workflow_dispatch' || vars.CONTINUA_SCHEDULED_SCRAPER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: scraper-python/requirements-lock.txt
+      - run: python -m pip install -r scraper-python/requirements-lock.txt
+      - name: Install document and browser tools
+        if: github.event_name == 'schedule' || (inputs.apply && inputs.maintenance == 'none')
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends poppler-utils tesseract-ocr
+          chrome=$(command -v google-chrome || command -v chromium)
+          driver=$(command -v chromedriver)
+          test -x "$chrome" && test -x "$driver"
+          echo "CHROMIUM_BIN=$chrome" >> "$GITHUB_ENV"
+          echo "CHROMEDRIVER_BIN=$driver" >> "$GITHUB_ENV"
+      - name: Collect directly to private R2 and Supabase
+        env:
+          DATABASE_URL: ${{ secrets.COLLECTOR_DATABASE_URL }}
+          R2_ACCOUNT_ID: ${{ secrets.COLLECTOR_R2_ACCOUNT_ID }}
+          R2_BUCKET: continua-financial-documents
+          R2_ACCESS_KEY_ID: ${{ secrets.COLLECTOR_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.COLLECTOR_R2_SECRET_ACCESS_KEY }}
+          RAW_STORAGE_DRIVER: r2
+          R2_DUAL_WRITE: 'false'
+          COLLECTOR_RUN_TRANSFER_BYTES: '33554432'
+          COLLECTOR_DAILY_TRANSFER_BYTES: '134217728'
+          COLLECTOR_SOURCE_LIMIT: '5'
+          COLLECTOR_RUN_SECONDS: '600'
+          EVENT_NAME: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+          INPUT_KIND: ${{ inputs.kind }}
+          INPUT_SOURCE: ${{ inputs.source }}
+          INPUT_APPLY: ${{ inputs.apply }}
+          INPUT_MAINTENANCE: ${{ inputs.maintenance }}
+        run: |
+          args=(--kind "${INPUT_KIND:-documents}")
+          if [ "$EVENT_NAME" = schedule ]; then
+            args=(--kind documents --apply)
+            if [ "$SCHEDULE" = '17 */8 * * *' ]; then args=(--kind news --apply); fi
+          elif [ "$INPUT_APPLY" = true ]; then args+=(--apply); fi
+          if [ -n "$INPUT_SOURCE" ]; then args+=(--source "$INPUT_SOURCE"); fi
+          if [ -n "$INPUT_MAINTENANCE" ] && [ "$INPUT_MAINTENANCE" != none ]; then args+=(--maintenance "$INPUT_MAINTENANCE"); fi
+          python scraper-python/scheduled_collect.py "${args[@]}"

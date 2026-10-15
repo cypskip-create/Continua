@@ -5,6 +5,7 @@ cookies/keys, authentication bypass or generic outbound proxy is provided.
 """
 import asyncio
 from .policy import resolve_public
+from .transfer_budget import account
 
 class BrowserProxy:
     def __init__(self,policy,*,max_bytes=50*1024*1024):
@@ -40,16 +41,17 @@ class BrowserProxy:
                 addresses=await resolve_public(parsed.hostname,443)
                 upstream,remote=await asyncio.open_connection(addresses[0],443)
                 writer.write(b'HTTP/1.1 200 Connection Established\r\n\r\n');await writer.drain()
-                async def relay(source,destination):
+                async def relay(source,destination,direction):
                     while data:=await source.read(65536):
                         # One budget for the entire rendered page, not a fresh
                         # allowance for every asset/connection or retry.
                         self.account_transfer(len(data))
+                        account(direction,len(data))
                         destination.write(data);await destination.drain()
                     try:destination.write_eof()
                     except (OSError,NotImplementedError):pass
                 async with asyncio.TaskGroup() as group:
-                    group.create_task(relay(reader,remote));group.create_task(relay(upstream,writer))
+                    group.create_task(relay(reader,remote,'uploadBytes'));group.create_task(relay(upstream,writer,'downloadBytes'))
         except asyncio.CancelledError:raise
         except Exception:pass # Never emit private tunnel destinations/error details.
         finally:

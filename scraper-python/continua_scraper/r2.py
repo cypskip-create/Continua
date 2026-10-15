@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from urllib.parse import urlsplit
 from .download import Artifact
 from .transfers import TransferCounters
+from .transfer_budget import account
 
 def safe_key(value):
     if not isinstance(value,str) or not value or len(value)>1024 or any(part in ("",".","..") for part in value.split("/")) or re.search(r"[\\\x00-\x1f?#]",value):
@@ -57,6 +58,9 @@ class R2Storage:
                     raise
             try:
                 if not exists:
+                    # Reserve all permitted SDK payload attempts before upload.
+                    # The receipt is conservative, not actual billable bytes.
+                    account('uploadBytes',artifact.size*4)
                     self.transfers.add('uploadPayloadBytesAttempted',artifact.size)
                     attributes=getattr(artifact,'content_encoding',None)
                     self.client.put_object(Bucket=self.bucket,Key=key,Body=body,ContentLength=artifact.size,ContentType=artifact.content_type,Metadata={"sha256":artifact.sha256},IfNoneMatch="*",**({'ContentEncoding':attributes} if attributes else {}))
@@ -69,6 +73,7 @@ class R2Storage:
             if stored.get("ContentLength")!=artifact.size:
                 raise ValueError("R2 size verification failed")
             while chunk:=stored["Body"].read(65536):
+                account('downloadBytes',len(chunk))
                 total+=len(chunk)
                 if total>artifact.size:
                     raise ValueError("R2 size verification failed")
@@ -118,6 +123,7 @@ class R2Storage:
                 digest,total=hashlib.sha256(),0
                 with path.open("xb") as output:
                     while chunk:=body.read(65536):
+                        account('downloadBytes',len(chunk))
                         total+=len(chunk)
                         if total>length or total>self.max_bytes:
                             raise ValueError("R2 size verification failed")

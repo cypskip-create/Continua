@@ -2,6 +2,7 @@
 import asyncio
 import math
 import random
+from .transfer_budget import retry
 
 async def with_retry(operation,*,max_retries,base_delay_ms,is_retryable=None,on_retry=None,sleep=asyncio.sleep,random_value=random.random):
     if not callable(operation) or type(max_retries) is not int or not 0<=max_retries<=10:
@@ -15,6 +16,7 @@ async def with_retry(operation,*,max_retries,base_delay_ms,is_retryable=None,on_
         except asyncio.CancelledError:raise
         except Exception as error:
             if attempt==max_retries or (is_retryable is not None and not is_retryable(error)):raise
+            retry()
             spread=random_value()
             if not isinstance(spread,(int,float)) or not math.isfinite(spread) or not 0<=spread<=1:raise ValueError('Invalid retry randomness') from None
             if on_retry is not None:
