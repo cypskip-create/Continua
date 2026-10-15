@@ -13,6 +13,7 @@ func verifyFinancialPostgresFixture(t *testing.T, store *Store, ctx context.Cont
 	t.Helper()
 	for _, relative := range []string{
 		"scraper/migrations/20260827090000 scraping engine foundation schema.sql",
+		"scraper/migrations/20260829090000 dead letters unique constraint.sql",
 		"backend/migration/20260901090000 financial statement candidates bridge.sql",
 		"supabase/migrations/20261010140000_filing_history_reviews.sql",
 		"supabase/migrations/20261011123000_partial_reported_statements.sql",
