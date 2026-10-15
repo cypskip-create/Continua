@@ -5,6 +5,19 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "scraper-python/scheduled_collect.py",
+      "category": "scheduled collection",
+      "language": "Python",
+      "runtime": "Finite GitHub Actions process; SQL durable quotas and private R2",
+      "reason": "Reuse native asynchronous adapters, Selenium, Poppler and OCR without another runtime or Render bulk transport. Actions suits bounded filings/news jobs, not continuous quotes or synchronous HTTP admin controls. SQL reservations and session locks survive runner replacement; logical limits are not invoice caps.",
+      "references": [
+        "https://docs.python.org/3/library/asyncio-task.html",
+        "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows",
+        "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax"
+      ],
+      "classificationBasis": "Existing native library integration and scheduled-workload review; hosted activation requires storage and source checks"
+    },
+    {
       "file": "backend/python/engine_calculations.py",
       "category": "python",
       "language": "Python",

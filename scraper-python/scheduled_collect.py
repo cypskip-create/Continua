@@ -136,8 +136,11 @@ def main():
         result=asyncio.run(operation,loop_factory=database_event_loop)
         print(json.dumps(result,allow_nan=False,separators=(',',':')))
         return 1 if result['status']=='failed' else 0
-    except Exception:
-        print('{"status":"failed","reason":"Scheduled collector failed; private credentials and source details omitted"}')
+    except Exception as error:
+        # Never print SDK exception strings: they may contain URLs or secrets.
+        status=getattr(error,'response',{}).get('ResponseMetadata',{}).get('HTTPStatusCode')
+        print(json.dumps({'status':'failed','reason':'Scheduled collector failed; private credentials and source details omitted',
+            'errorClass':type(error).__name__,'providerHTTPStatus':status if type(status) is int else None}))
         return 1
 
 if __name__=='__main__':raise SystemExit(main())
