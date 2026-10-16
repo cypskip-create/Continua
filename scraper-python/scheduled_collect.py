@@ -166,7 +166,8 @@ async def maintenance(operation):
             from continua_scraper.research_processing import ResearchProcessor
             async with asyncio.timeout(120):
                 summary=await ResearchProcessor(database).run(100)
-            return {'status':'completed','operation':operation,'processing':summary,'sourceDownloadBytes':0,'r2DownloadBytes':0}
+                inventory=await ResearchProcessor(database).inventory()
+            return {'status':'completed','operation':operation,'processing':summary,'kenyanstocksInventory':inventory,'sourceDownloadBytes':0,'r2DownloadBytes':0}
         if operation=='prepare':
             path=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261015190000 scheduled collector budgets.sql'
             async with database.pool.connection() as connection:

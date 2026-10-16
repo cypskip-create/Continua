@@ -33,7 +33,10 @@ class ResearchProcessor:
                       AND a.sha256 ~ '^[a-f0-9]{64}$' AND a.storage_path LIKE 'r2://continua-financial-documents/%%'))
                   AND NOT EXISTS(SELECT 1 FROM scraping.extractions n WHERE n.artifact_id=e.artifact_id
                     AND n.entity->>'ticker' IS NOT DISTINCT FROM e.entity->>'ticker' AND (n.extracted_at,n.id)>(e.extracted_at,e.id))
-                  ORDER BY e.id FOR UPDATE OF e SKIP LOCKED LIMIT 1""",(VERSION,))
+                  ORDER BY (s.enabled AND s.redistribution_allowed=true AND sec.id IS NOT NULL
+                    AND length(trim(s.config->>'permissionReference')) BETWEEN 1 AND 200
+                    AND a.sha256 ~ '^[a-f0-9]{64}$' AND a.storage_path LIKE 'r2://continua-financial-documents/%%') DESC NULLS LAST,
+                    e.id FOR UPDATE OF e SKIP LOCKED LIMIT 1""",(VERSION,))
                 if not rows:break
                 row=rows[0]
                 reference=(row.get('config') or {}).get('permissionReference')
@@ -55,7 +58,11 @@ class ResearchProcessor:
                     if identity_conflict:
                         payload={'version':VERSION,'status':'review_required','destination':'review','issues':[{'code':'document_issuer_context_conflict'}]}
                     elif not allowed or not evidence or not row.get('security_id'):
-                        payload={'version':VERSION,'status':'blocked','destination':'review','issues':[{'code':'source_permission_evidence_or_issuer_missing'}]}
+                        issues=[]
+                        if not allowed:issues.append({'code':'source_permission_unavailable'})
+                        if not evidence:issues.append({'code':'private_verified_evidence_unavailable'})
+                        if not row.get('security_id'):issues.append({'code':'exact_issuer_unavailable'})
+                        payload={'version':VERSION,'status':'blocked','destination':'review','issues':issues}
                     else:
                         payload=process_evidence({'entity':row['entity'],'tables':row['tables'],'text':row['text'],
                             'method':row['method'],'needsReview':row['needs_review'],'sourceUrl':row['document_url'],
@@ -81,3 +88,15 @@ class ResearchProcessor:
                 for issue in payload.get('issues') or []:
                     code=issue['code'];summary['issueCounts'][code]=summary['issueCounts'].get(code,0)+issue.get('count',1)
         return summary
+
+    async def inventory(self):
+        rows=await self.database.query("""SELECT count(*)::integer AS extractions,
+          count(*) FILTER(WHERE a.storage_path LIKE 'r2://continua-financial-documents/%%' AND a.sha256 ~ '^[a-f0-9]{64}$')::integer AS private_evidence,
+          count(*) FILTER(WHERE s.enabled AND s.redistribution_allowed=true AND length(trim(s.config->>'permissionReference')) BETWEEN 1 AND 200)::integer AS permission_ready,
+          count(*) FILTER(WHERE e.entity->>'ticker' IS NOT NULL)::integer AS ticker_scoped,
+          count(*) FILTER(WHERE sec.id IS NOT NULL)::integer AS known_issuer
+          FROM scraping.extractions e JOIN scraping.raw_artifacts a ON a.id=e.artifact_id JOIN scraping.sources s ON s.id=a.source_id
+          LEFT JOIN market.securities sec ON sec.exchange='NSE' AND sec.symbol=
+            CASE e.entity->>'ticker' WHEN 'DTK' THEN 'DTB' WHEN 'SBIC' THEN 'STANBIC' WHEN 'HFCK' THEN 'HFCB' ELSE e.entity->>'ticker' END
+          WHERE a.source_id='kenyanstocks'""")
+        return rows[0] if rows else {}
