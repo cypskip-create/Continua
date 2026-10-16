@@ -5,6 +5,15 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "scraper-python/continua_scraper/browser_controls.py",
+      "category": "KenyanStocks dynamic content coverage",
+      "language": "Python",
+      "runtime": "Existing isolated Selenium worker in bounded GitHub Actions",
+      "reason": "Reuse native async collection, PDF/OCR and private R2 storage. Recursive DOM expansion and explicit settle checks capture nested financial rows without adding a Node runtime or Render browser workload. SQL leases and alternating tab/PDF lanes preserve restart recovery and bounded backfill.",
+      "references": ["https://www.selenium.dev/documentation/webdriver/waits/", "https://docs.python.org/3/library/asyncio-task.html"],
+      "classificationBasis": "Feature-specific browser and document workload; incremental archive coverage remains subject to daily budgets and source availability"
+    },
+    {
       "file": "scraper/src/scheduler/renderLight.js",
       "category": "existing production deployment guard",
       "language": "JavaScript",

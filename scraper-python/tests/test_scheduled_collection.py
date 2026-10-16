@@ -10,6 +10,12 @@ spec=importlib.util.spec_from_file_location('scheduled_collect',root/'scheduled_
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 
 class ScheduledTests(unittest.TestCase):
+    def test_kenyanstocks_is_primary_without_removing_fallbacks(self):
+        rows=[{'adapter':'nse'},{'adapter':'kenyanstocks'},{'adapter':'afx'}]
+        for hour in range(3):
+            ordered=module.ordered_sources(rows,'documents',hour)
+            self.assertEqual(ordered[0]['adapter'],'kenyanstocks')
+            self.assertEqual(len(ordered),3)
     def test_limits_fail_closed(self):
         self.assertEqual(module.limits({}),[33554432,134217728,600,5])
         for config in ({'COLLECTOR_RUN_SECONDS':'0'},{'COLLECTOR_RUN_TRANSFER_BYTES':'-1'},{'COLLECTOR_SOURCE_LIMIT':'100'},{'COLLECTOR_DAILY_TRANSFER_BYTES':'1'}):

@@ -5,14 +5,16 @@ import re
 import tempfile
 from urllib.parse import urlsplit
 from .download import Artifact
-from .html import soup,resolve_url,kenyan_stock_links,kenyan_file_links
+from .html import soup,resolve_url,kenyan_stock_links,kenyan_file_links,kenyan_news_cards
 from .tables import stock_tables,html_financial_tables
 from .tabs import stock_tab_documents
 
 class KenyanStocksAdapter:
     document_concurrency=1
     persistent_batch_size=10
-    parser_version='kenyanstocks-adapter-0.3.0'
+    parser_version='kenyanstocks-adapter-0.4.0'
+    scope_extractions_by_ticker=True
+    claim_lanes=('Files','Financials','Summary','News','Corporate Actions','Historical Data','Holders','Statistics','PDF','Financials','PDF','Files')
     def __init__(self,io,jobs,renderer,pdf,*,universe=()):
         self.io,self.jobs,self.renderer,self.pdf=io,jobs,renderer,pdf;self.id=io.source['id']
         aliases={'DTB':'DTK','STANBIC':'SBIC','HFCB':'HFCK'}
@@ -69,8 +71,15 @@ class KenyanStocksAdapter:
         if context.get('tab')=='Financials':
             categories=[n.get_text().strip() for n in page.select('button.tab-btn')]
             if categories:await self.jobs.enqueue(self.id,stock_tab_documents(url,['Financials'],categories))
-        if context.get('tab')=='Files' or not context.get('tab'):
-            await self.jobs.enqueue(self.id,kenyan_file_links(rendered['html'],rendered['finalUrl']))
+        # PDFs may be embedded in any tab, not just the Files view. Preserve
+        # issuer context so extracted statements can be matched to their stock.
+        files=kenyan_file_links(rendered['html'],rendered['finalUrl'])
+        for document_file in files:
+            document_file['context']=dict(document_file.get('context') or {},ticker=context.get('ticker'))
+        if files:await self.jobs.enqueue(self.id,files)
+        coverage=rendered.get('coverage') or {}
+        if coverage.get('scrollLimitReached') or coverage.get('expansionLimitReached'):
+            raise ValueError('Publisher view coverage incomplete; durable job remains retryable')
         body=rendered['html'].encode('utf-8')
         file=tempfile.NamedTemporaryFile(prefix='continua-rendered-publisher-',suffix='.raw',delete=False)
         with file:file.write(body)
@@ -78,11 +87,13 @@ class KenyanStocksAdapter:
         return await self.io.persist(document,artifact,'kenyanstocks',self.parser_version,metadata=dict(context,renderedWithBrowser=True,coverage=rendered.get('coverage')))
 
     async def parse(self,fetched):
-        if fetched.get('contentType')=='application/pdf':return dict(await self.pdf.extract(fetched['artifact'].path),entity={'companyName':None,'ticker':None,'exchange':'NSE'})
+        if fetched.get('contentType')=='application/pdf':return dict(await self.pdf.extract(fetched['artifact'].path),entity={'companyName':None,'ticker':(fetched['document'].get('context') or {}).get('ticker'),'exchange':'NSE'})
         html=self.io.text(fetched['artifact']);doc=soup(html)
         for node in doc.select('script,style,nav,header,footer,noscript'):node.decompose()
         text='\n'.join(line.strip() for line in (doc.body.get_text() if doc.body else '').split('\n') if line.strip()).strip()
         context=fetched['document'].get('context') or {};tab=str(context.get('tab') or 'Summary');category=context.get('category')
         tables=stock_tables(html,tab,category if isinstance(category,str) else None)+html_financial_tables(html)
+        news=kenyan_news_cards(html,fetched['document']['url'])
+        if news['entries']:tables.append(news)
         return {'method':'html','confidence':.4 if len(text)>=200 else .1,'text':text if len(text)>=200 else None,'tables':tables,
             'entity':{'companyName':None,'ticker':context.get('ticker'),'exchange':'NSE'},'needsReview':True}

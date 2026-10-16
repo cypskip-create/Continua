@@ -51,7 +51,8 @@ class AdapterRunner:
                 remaining-=1
                 job=None
                 if durable:
-                    claims=await self.jobs.claim(adapter.id,1)
+                    lanes=getattr(adapter,'claim_lanes',())
+                    claims=await self.jobs.claim(adapter.id,1,lane=lanes[(batch-remaining-1)%len(lanes)]) if lanes else await self.jobs.claim(adapter.id,1)
                     if not claims:return
                     job=claims[0];document=job['document']
                 else:

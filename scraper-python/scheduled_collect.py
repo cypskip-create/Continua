@@ -31,6 +31,12 @@ def limits(environment):
     if result[0]>result[1]:raise ValueError('Run reservation exceeds daily limit')
     return result
 
+def ordered_sources(sources,kind,hour):
+    """KenyanStocks is primary for document discovery, with rotating fallbacks."""
+    offset=hour%max(1,len(sources))
+    rotated=sources[offset:]+sources[:offset]
+    return sorted(rotated,key=lambda s:0 if kind!='news' and s['adapter']=='kenyanstocks' else 1)
+
 async def run(kind,source_id=None):
     validate_environment(os.environ)
     if os.environ.get('R2_DUAL_WRITE','false').lower() not in ('false','0','no',''):
@@ -73,8 +79,7 @@ async def run(kind,source_id=None):
                         if source_id:sources=[s for s in sources if s['id']==source_id]
                         if source_id and not sources:raise ValueError('Source disabled or incompatible with selected batch')
                         # Fair rotation across runs; no source list or URL enters logs.
-                        offset=int(time.time()//3600)%max(1,len(sources))
-                        sources=(sources[offset:]+sources[:offset])[:source_limit]
+                        sources=ordered_sources(sources,kind,int(time.time()//3600))[:source_limit]
                         for source in sources:
                             if budget.exhausted:break
                             if sum(budget.snapshot()[k] for k in ('uploadBytes','downloadBytes'))>=ceiling:break
@@ -90,8 +95,9 @@ async def run(kind,source_id=None):
                                     # a two-document batch must not silently drop
                                     # the remainder or repeatedly select only the
                                     # newest two feed entries on fresh runners.
-                                    adapter.persistent_batch_size=2
-                                    result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=2)
+                                    batch=12 if source['adapter']=='kenyanstocks' else 2
+                                    adapter.persistent_batch_size=batch
+                                    result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=batch)
                                 entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','errorClasses')})
                             except transfer_budget.TransferLimitReached:
                                 receipt['status']='budget-paused';break

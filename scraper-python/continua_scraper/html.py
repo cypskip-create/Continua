@@ -111,6 +111,20 @@ def official_nse_url(raw):
         return p.scheme=='https' and p.hostname in ('nse.co.ke','www.nse.co.ke') and p.port in (None,443) and p.username is None and p.password is None
     except (TypeError,ValueError):return False
 
+def kenyan_news_cards(html,page_url):
+    """Retain displayed headlines/excerpts, never fetch external article bodies."""
+    entries={}
+    for card in soup(html).select('a.news-card[href]'):
+        url=resolve_url(page_url,card['href'])
+        title=_text(card.select_one('.news-title')).strip()
+        if not url or not title:continue
+        time=card.select_one('time')
+        entries[url]={'url':url,'title':title,'summary':_text(card.select_one('.news-description')).strip(),
+            'publisher':_text(card.select_one('.publisher-name')).strip(),
+            'publishedAtRaw':_text(time).strip(),'publishedAt':time.get('datetime') if time else None,
+            'tickers':[urlsplit(link).path.rsplit('/',1)[-1] for link in kenyan_stock_links(str(card))]}
+    return {'kind':'publisher_news','listingUrl':page_url,'entries':list(entries.values()),'scope':'Displayed publisher excerpts and external links only'}
+
 def canonical_archive_url(raw):
     normalized=resolve_url(raw,raw)
     if not normalized:raise ValueError('Invalid archive URL')

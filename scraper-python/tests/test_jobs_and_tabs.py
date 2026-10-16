@@ -29,6 +29,8 @@ class JobTests(unittest.IsolatedAsyncioTestCase):
         await jobs.enqueue("fixture",[{"url":f"https://fixture.example/{i}"} for i in range(401)])
         self.assertEqual([len(json.loads(params[1])) for _,params in database.calls],[200,200,1])
         self.assertTrue(all("interval '7 days'" in sql for sql,_ in database.calls))
+        self.assertTrue(all('THEN 0 ELSE document_jobs.attempts END' in sql for sql,_ in database.calls))
+        self.assertTrue(all('THEN now() ELSE document_jobs.updated_at END' in sql for sql,_ in database.calls))
 
     async def test_claim_reclaims_expired_leases_and_skip_locked(self):
         database=FakeDatabase()

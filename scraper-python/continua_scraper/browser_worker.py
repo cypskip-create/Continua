@@ -5,6 +5,7 @@ import sys
 import tempfile
 from urllib.parse import urlsplit,urlunsplit,parse_qsl,urlencode
 from .browser_settle import PublisherSettle,settled_view
+from .browser_controls import expand_groups
 
 ERROR_EXIT_CODES={
     'TimeoutException':2,
@@ -61,7 +62,7 @@ def _render(config,profile):
             monitor.last_activity=monitor.clock()
             WebDriverWait(driver,30,poll_frequency=.1).until(lambda d:settled_view(d,monitor))
         settle()
-        expanded=0;scroll_limit=False
+        expanded=0;scroll_limit=False;expansion_limit=False
         tab=selected.get('stock_tab')
         if tab:
             WebDriverWait(driver,30).until(lambda d:any(tab in n.text for n in d.find_elements(By.CSS_SELECTOR,'.normal-tab.selected-tab')))
@@ -71,10 +72,7 @@ def _render(config,profile):
             driver.execute_script("arguments[0].scrollIntoView({block:'center',inline:'center',behavior:'instant'});",button)
             button.click();settle()
             WebDriverWait(driver,15).until(lambda d:any(n.text.strip()==category for n in d.find_elements(By.CSS_SELECTOR,'button.tab-btn.active')))
-            for button in driver.find_elements(By.CSS_SELECTOR,'table .expand-button')[:200]:
-                driver.execute_script("arguments[0].scrollIntoView({block:'center',inline:'center',behavior:'instant'});",button)
-                button.click();expanded+=1
-            settle()
+            expanded,expansion_limit=expand_groups(driver,By,settle)
         if selected.get('history_start'):
             label=next((n for n in driver.find_elements(By.TAG_NAME,'label') if n.text.strip()=='Start Date'),None)
             if label is None or not label.get_attribute('for'):raise ValueError('Observed history date control unavailable')
@@ -96,7 +94,7 @@ def _render(config,profile):
         html=driver.page_source
         if len(html.encode())>8*1024*1024:raise ValueError('Rendered HTML limit')
         result={'html':html,'finalUrl':driver.current_url,'status':monitor.status}
-        if tab:result['coverage']={'tab':tab,'category':category,'rows':len(driver.find_elements(By.TAG_NAME,'tr')),'expandedRows':expanded,'scrollLimitReached':scroll_limit,'networkAndDOMSettled':True,'categoryVerified':bool(category),'expansionLimitReached':expanded==200}
+        if tab:result['coverage']={'tab':tab,'category':category,'rows':len(driver.find_elements(By.TAG_NAME,'tr')),'expandedRows':expanded,'scrollLimitReached':scroll_limit,'networkAndDOMSettled':True,'categoryVerified':bool(category),'expansionLimitReached':expansion_limit}
         return result
     finally:
         driver.quit()

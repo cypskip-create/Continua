@@ -60,7 +60,9 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.COLLECTOR_R2_SECRET_ACCESS_KEY }}
           RAW_STORAGE_DRIVER: r2
           R2_DUAL_WRITE: 'false'
-          COLLECTOR_RUN_TRANSFER_BYTES: '33554432'
+          # 3 news runs x16MiB + one 64MiB document run <=128MiB/day.
+          # Larger reports need room for both download and direct R2 upload.
+          COLLECTOR_RUN_TRANSFER_BYTES: ${{ (github.event.schedule == '17 */8 * * *' || inputs.kind == 'news') && '16777216' || '67108864' }}
           COLLECTOR_DAILY_TRANSFER_BYTES: '134217728'
           COLLECTOR_SOURCE_LIMIT: '5'
           COLLECTOR_RUN_SECONDS: '600'

@@ -15,6 +15,12 @@ class DocumentJobs:
             await self.database.query("""INSERT INTO scraping.document_jobs(source_id,url,document)
               SELECT %s, item->>'url', item FROM jsonb_array_elements(%s::jsonb) item
               ON CONFLICT(source_id,url) DO UPDATE SET document=EXCLUDED.document,
+                attempts=CASE WHEN document_jobs.status='complete' AND document_jobs.updated_at < now()-interval '7 days'
+                  THEN 0 ELSE document_jobs.attempts END,
+                next_attempt_at=CASE WHEN document_jobs.status='complete' AND document_jobs.updated_at < now()-interval '7 days'
+                  THEN now() ELSE document_jobs.next_attempt_at END,
+                updated_at=CASE WHEN document_jobs.status='complete' AND document_jobs.updated_at < now()-interval '7 days'
+                  THEN now() ELSE document_jobs.updated_at END,
                 status=CASE WHEN document_jobs.status='complete' AND document_jobs.updated_at < now()-interval '7 days'
                 THEN 'pending' ELSE document_jobs.status END""",(source_id,encode(documents[offset:offset+200])))
 
@@ -34,7 +40,7 @@ class DocumentJobs:
             error_reason='Recovering incomplete legacy PDF extraction'
           FROM incomplete WHERE j.id=incomplete.id""",(source_id,limit))
 
-    async def claim(self,source_id,limit):
+    async def claim(self,source_id,limit,*,lane=None):
         if type(limit) is not int or not 1<=limit<=25:
             raise ValueError("invalid document batch")
         sql="""WITH pending AS (
@@ -43,14 +49,22 @@ class DocumentJobs:
           ORDER BY attempts,CASE WHEN source_id='kenyanstocks' THEN
             CASE WHEN url ~* '\\.pdf($|[?])' THEN 0 WHEN document->'context'->>'tab'='Files' THEN 1
               WHEN document->'context'->>'tab'='Financials' THEN 2 ELSE 3 END ELSE 0 END,
-            created_at,id FOR UPDATE SKIP LOCKED LIMIT %s)
+            updated_at,id FOR UPDATE SKIP LOCKED LIMIT %s)
           UPDATE scraping.document_jobs j SET status='processing',attempts=j.attempts+1,
             lease_until=now()+interval '2 hours',updated_at=now()
           FROM pending WHERE j.id=pending.id RETURNING j.id,j.document,j.attempts"""
+        values=[source_id]
         if self.max_attempts is not None:
             sql=sql.replace('ORDER BY attempts,','AND attempts<%s ORDER BY attempts,')
-            return await self.database.query(sql,(source_id,self.max_attempts,limit))
-        return await self.database.query(sql,(source_id,limit))
+            values.append(self.max_attempts)
+        if lane is not None:
+            if lane not in ('Files','Financials','Summary','News','Corporate Actions','Historical Data','Holders','Statistics','PDF'):
+                raise ValueError('Invalid document lane')
+            sql=sql.replace('ORDER BY attempts,',"""ORDER BY CASE WHEN
+              (CASE WHEN url ~* '\\.pdf($|[?])' THEN 'PDF' ELSE document->'context'->>'tab' END)=%s
+              THEN 0 ELSE 1 END,attempts,""")
+            values.append(lane)
+        return await self.database.query(sql,tuple([*values,limit]))
 
     async def finish(self,job_id,attempts,error=None):
         # Attempt token prevents an expired worker overwriting a newer claim.
