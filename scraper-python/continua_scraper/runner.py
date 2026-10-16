@@ -114,4 +114,8 @@ class AdapterRunner:
                     await _dispose(fetched)
         async with asyncio.TaskGroup() as group:
             for _ in range(min(concurrency,remaining)):group.create_task(worker())
+        if issuer:
+            complete=summary['failed']==0 and summary['fetched']==len(documents)
+            summary['targetCoverage']={'issuer':issuer,'tab':'Financials','plannedViews':len(documents),'complete':complete}
+            if not complete and summary['failed']==0:summary['failed']=1
         return summary

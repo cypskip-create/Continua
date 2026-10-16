@@ -79,6 +79,21 @@ allow interrupted work to resume. Failed runs exit nonzero for Actions reporting
 
 ## Bandwidth accounting
 
+On 16 October the owner explicitly approved **64 MiB extra daily**, making the
+current allowance **192 MiB**. Repository variable
+`CONTINUA_COLLECTOR_DAILY_TRANSFER_BYTES=201326592` supplies that limit without
+changing existing receipts or resetting reservations. An unset variable retains
+the previous 128 MiB default. This is still not a hard dollar spending cap.
+
+For one selected issuer, manually run `kind=documents, source=kenyanstocks,
+issuer=<exact publisher ticker>, fresh=true, apply=true`. This fetches all five
+planned Financials categories without a broad listing crawl, resets only those
+queue jobs that are not actively leased, and retains all original evidence.
+The existing Python Engine processes the batch automatically after collection.
+`availableFinancials` receipts enumerate only source-permitted, private-evidence
+observations with nonempty tables; they are not claims of canonical accounting
+approval or full coverage of every tab for that issuer.
+
 16 MiB per news run and 64 MiB per ordinary document run are reserved durably
 against a shared UTC daily allowance of 128 MiB (three news runs plus one
 document run reserve 112 MiB). Manual diagnostics also consume that allowance.

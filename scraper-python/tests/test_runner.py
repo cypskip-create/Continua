@@ -45,9 +45,19 @@ class RunnerTests(unittest.IsolatedAsyncioTestCase):
         jobs,evidence=TargetJobs(),Evidence()
         result=await AdapterRunner(jobs,evidence,Dead()).run(TargetAdapter(),issuer='COOP',fresh=True)
         self.assertEqual(result['extracted'],1)
+        self.assertEqual(result['targetCoverage'],{'issuer':'COOP','tab':'Financials','plannedViews':1,'complete':True})
         self.assertEqual(jobs.asserted_issuer,'COOP')
         self.assertEqual(len(jobs.refreshed),1)
         with self.assertRaises(ValueError):await AdapterRunner(jobs,evidence,Dead()).run(TargetAdapter(),fresh=True)
+
+    async def test_target_with_unavailable_claims_is_not_reported_complete(self):
+        class LeasedJobs(Jobs):
+            async def claim(self,source,limit,**options):return []
+        class TargetAdapter(Adapter):
+            async def discover_issuer_financials(self,ticker):return [{'url':'https://fixture.example/a.pdf'}]
+        result=await AdapterRunner(LeasedJobs(),Evidence(),Dead()).run(TargetAdapter(),issuer='COOP')
+        self.assertFalse(result['targetCoverage']['complete'])
+        self.assertEqual(result['failed'],1)
 
     async def test_identical_bytes_keep_separate_issuer_extractions(self):
         class ScopedEvidence(Evidence):
