@@ -187,7 +187,7 @@ export default function Markets() {
     retry: 2,
     refetchIntervalInBackground: false,
   });
-  const marketSnapshot = (intelligence.data?.coverage ?? 0) > 0 ? intelligence.data : marketQuoteSummary(Object.values(quotes), metadata) ?? intelligence.data;
+  const marketSnapshot = marketQuoteSummary(Object.values(quotes), metadata) ?? intelligence.data;
   const recordsQuery = useQuery({
     queryKey: ["continua", "market-records"],
     queryFn: marketResearchApi.records,

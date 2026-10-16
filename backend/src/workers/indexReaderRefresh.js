@@ -1,6 +1,7 @@
 import { env } from '../config/index.js';
 import { runIndexIngestionOnce } from './indexWorker.js';
 import { logger } from '../monitoring/logger.js';
+import { cache, CacheKeys } from '../storage/cache.js';
 let pending = null, lastAttempt = 0;
 /** Nonblocking reader catch-up, not paid always-on hosting or keep-alive. */
 export function requestIndexCollection() {
@@ -15,5 +16,6 @@ export function requestIndexCollection() {
             throw new Error('Index collector unavailable');
         await response.body?.cancel();
         await runIndexIngestionOnce({ respectTradingCalendar: false });
+        await cache.del(CacheKeys.indices('NSE'));
     })().catch(() => logger.warn('Reader index catch-up unavailable; retaining publisher-dated closing levels')).finally(() => { pending = null; });
 }

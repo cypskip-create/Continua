@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams,Link } from "react-router-dom";
+import { useNavigate, useSearchParams,Link,useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Check, Crown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {checkoutDestination} from '@/lib/checkout';
 const freeFeatures = ["Portfolio tracking, watchlists and charts", "TradersHub posts, media and discussions", "Fundamentals: 5 distinct stocks per month, with free revisits", "Basic ratings, forecast summaries and return on capital"];
 export default function Upgrade() {
   const navigate=useNavigate();
+  const location=useLocation();
   const {user}=useAuth(), {profile,refetch}=useProfile();
   const [params,setParams]=useSearchParams();
   const reference=params.get("reference");
@@ -42,13 +43,13 @@ export default function Upgrade() {
     setBusy(plan);
     try {
       const target=new URL(checkoutDestination(import.meta.env.VITE_CONTINUA_WEBSITE_ORIGIN||window.location.origin,plan,annual?'annual':'monthly'));
-      if(target.origin===window.location.origin)navigate(target.pathname+target.search);
+      if(target.origin===window.location.origin)navigate(target.pathname+target.search,{state:{fromPlans:true}});
       else window.location.assign(target.href);
     }catch(error){toast({title:"Upgrade not completed",description:error instanceof Error?error.message:"Please try again.",variant:"destructive"});}
     finally{setBusy(null);}
   };
   return <div className="min-h-screen bg-background pb-24">
-    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b"><div className="flex items-center gap-3 px-4 py-3"><Button variant="ghost" size="icon" aria-label="Back" onClick={()=>reference ? navigate("/account",{replace:true}) : navigateBack(navigate,"/account")}><ArrowLeft/></Button><h1 className="text-lg font-bold">Choose your Continua plan</h1></div></header>
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b"><div className="flex items-center gap-3 px-4 py-3"><Button variant="ghost" size="icon" aria-label="Back" onClick={()=>reference || location.state?.fromCheckout ? navigate("/account",{replace:true}) : navigateBack(navigate,"/account")}><ArrowLeft/></Button><h1 className="text-lg font-bold">Choose your Continua plan</h1></div></header>
     <main className="mx-auto max-w-5xl px-4 py-8 space-y-7">
       <div className="text-center space-y-3"><Crown className="mx-auto text-primary"/><h2 className="text-2xl font-semibold">Start simple. Research more deeply.</h2><p className="text-sm text-muted-foreground">Free keeps the essentials. Premium expands stock research. Premium Plus unlocks the whole Engine.</p></div>
       {paymentStatus.data?.enabled&&<section className="rounded-xl border p-4 text-sm" role="status"><strong>Secure checkout with Paystack</strong><p>Payments charge real money and activate your selected membership after verification. Renewals are manual; we won’t automatically charge you. Renewing the same tier extends its expiry; switching tiers starts a new term with no prorated credit.</p></section>}

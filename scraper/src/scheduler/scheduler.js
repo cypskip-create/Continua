@@ -99,10 +99,17 @@ async function runSourceOnce(source, drainOnly = false) {
         runningSources.add(source.id);
         try {
             // Existing SQL audit table: unique slot survives restarts and replicas.
-            // Claim before I/O; a failed attempt is not refunded into a retry loop.
+            // Claim before I/O; permit one failed-slot recovery after source revisit.
             const id = lightSlotId();
-            const claim = await query(`INSERT INTO scraping.scheduled_runs(id,kind,status)
-                VALUES($1,'drain','running') ON CONFLICT(id) DO NOTHING RETURNING id`, [id]);
+            const claim = await query(`INSERT INTO scraping.scheduled_runs(id,kind,status,receipt)
+                VALUES($1,'drain','running','{"attempt":1}'::jsonb)
+                ON CONFLICT(id) DO UPDATE SET status='running',started_at=now(),completed_at=NULL,
+                  receipt=jsonb_set(scraping.scheduled_runs.receipt,'{attempt}',
+                    to_jsonb(COALESCE((scraping.scheduled_runs.receipt->>'attempt')::int,1)+1))
+                WHERE scraping.scheduled_runs.status='failed'
+                  AND COALESCE((scraping.scheduled_runs.receipt->>'attempt')::int,1)<2
+                  AND scraping.scheduled_runs.completed_at<now()-interval '20 minutes'
+                RETURNING id,receipt->>'attempt' AS attempt`, [id]);
             if (!claim.rows.length) return;
             let status = 'failed', result = {};
             try {
@@ -110,7 +117,7 @@ async function runSourceOnce(source, drainOnly = false) {
                 if (!result.failed) status = 'completed';
             } finally {
                 await query(`UPDATE scraping.scheduled_runs SET status=$2,completed_at=now(),receipt=$3::jsonb WHERE id=$1`,
-                    [id, status, JSON.stringify({role:'render-light',sourceId:source.id,...result})]);
+                    [id, status, JSON.stringify({role:'render-light',sourceId:source.id,attempt:Number(claim.rows[0].attempt),...result})]);
             }
         } finally { runningSources.delete(source.id); }
         return;

@@ -5,7 +5,10 @@ import { ArrowLeft, TrendingUp, TrendingDown, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SparklineChart } from "@/components/shared/SparklineChart";
-import { CANONICAL_SYMBOLS, STOCK_META } from "@/lib/stockPrices";
+import { useStockDirectory } from '@/hooks/useStockDirectory';
+import { sectorMembers, sectorKey } from '@/lib/sectors';
+import { useQuery } from '@tanstack/react-query';
+import { marketResearchApi } from '@/api/marketResearchApi';
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { useSparklines } from "@/hooks/useSparklines";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,11 +16,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function SectorDetail() {
   const navigate = useNavigate();
   const { sector } = useParams();
-  const sectorName = decodeURIComponent(sector || "");
+  const sectorName = sector || ""; // React Router already decodes route parameters.
+  const {directory,metadata,isLoading:directoryLoading}=useStockDirectory();
+  const knownMembers=useMemo(()=>sectorMembers(directory,sectorName),[directory,sectorName]);
+  const sourceSector=useQuery({queryKey:['continua','market-intelligence'],queryFn:marketResearchApi.intelligence,
+    enabled:knownMembers.length===0,staleTime:60_000,retry:1});
 
   const sectorSymbols = useMemo(
-    () => CANONICAL_SYMBOLS.filter(symbol => STOCK_META[symbol].sector === sectorName),
-    [sectorName]
+    () => knownMembers.length ? knownMembers.map(stock=>stock.symbol) :
+      sourceSector.data?.sectors.find(group=>sectorKey(group.name)===sectorKey(sectorName))?.symbols ?? [],
+    [knownMembers,sourceSector.data,sectorName]
   );
   const { quotes } = useLiveQuotes(sectorSymbols);
   const { getSparkline } = useSparklines(sectorSymbols);
@@ -33,14 +41,14 @@ export default function SectorDetail() {
         const quote = quotes[symbol];
         return {
           symbol,
-          name: STOCK_META[symbol].name,
+          name: metadata[symbol]?.name ?? symbol,
           price: quote?.lastPrice ?? null,
           change: quote?.changePercent ?? null,
           isLive: !!quote,
         };
       })
       .sort((a, b) => (b.change ?? -Infinity) - (a.change ?? -Infinity));
-  }, [sectorSymbols, quotes]);
+  }, [sectorSymbols, quotes,metadata]);
 
   const liveStocks = stocks.filter(s => s.isLive);
   const avgChange = liveStocks.length > 0 ? liveStocks.reduce((sum, s) => sum + s.change!, 0) / liveStocks.length : null;
@@ -48,10 +56,12 @@ export default function SectorDetail() {
   const topMover = liveStocks[0] ?? null;
 
   if (stocks.length === 0) {
+    const loading=directoryLoading||sourceSector.isPending;
     return (
       <div className="page-canvas min-h-screen bg-background pb-24 px-4 pt-16 text-center">
-        <p className="text-sm font-semibold mb-2">Sector not found</p>
-        <p className="text-xs text-muted-foreground mb-4">No NSE-listed stocks match this sector.</p>
+        <p role="status" className="text-sm font-semibold mb-2">{loading?'Loading sector…':sourceSector.isError?'Sector could not load':'Sector not found'}</p>
+        <p className="text-xs text-muted-foreground mb-4">{loading?'Checking listed companies.':sourceSector.isError?'Please retry; this does not mean the sector has no stocks.':'No NSE-listed stocks match this sector.'}</p>
+        {sourceSector.isError&&<Button variant="outline" size="sm" onClick={()=>void sourceSector.refetch()}>Retry</Button>}
         <Button variant="outline" size="sm" onClick={() => navigate("/markets")}>Back to Markets</Button>
       </div>
     );

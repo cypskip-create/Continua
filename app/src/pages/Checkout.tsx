@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   Check,
@@ -17,7 +17,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { continuaFetch } from "@/api/client";
 import { PLANS, type PaidPlan } from "@/lib/subscription";
 import { LEGAL_POLICY_VERSION } from "@/lib/legalPolicy";
-import { paymentReferencePattern, validKenyanMobile } from "@/lib/checkout";
+import { paymentReferencePattern, validKenyanMobile, checkoutBackTarget } from "@/lib/checkout";
 import {useQuery} from '@tanstack/react-query';
 type Order = {
   reference: string;
@@ -44,6 +44,7 @@ type Receipt = {
   paymentMethod?:'mpesa'|'airtel'|'card';
 };
 export default function Checkout() {
+  const location=useLocation();
   const [params, setParams] = useSearchParams(),
     navigate = useNavigate();
   const plan: PaidPlan =
@@ -240,12 +241,17 @@ export default function Checkout() {
     intent.current=null;
     setTimedOut(false);
   }
+  const backToPlans=()=>{
+    const target=checkoutBackTarget(window.history.state?.idx,location.state?.fromPlans===true);
+    if(target===-1)navigate(-1);
+    else navigate(target,{replace:true,state:{fromCheckout:true}});
+  };
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b">
         <div className="mx-auto max-w-5xl flex items-center justify-between px-5 py-4">
           <Logo />
-          <Link to="/upgrade" className="text-sm text-muted-foreground">
+          <Link to="/upgrade" onClick={event=>{event.preventDefault();backToPlans();}} className="text-sm text-muted-foreground">
             Back to plans
           </Link>
         </div>
@@ -256,7 +262,7 @@ export default function Checkout() {
             variant="ghost"
             size="icon"
             aria-label="Back to plans"
-            onClick={() => navigate("/upgrade")}
+            onClick={backToPlans}
           >
             <ArrowLeft />
           </Button>

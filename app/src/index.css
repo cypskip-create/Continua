@@ -582,6 +582,12 @@ button:not(:disabled):active, [role="button"]:not([aria-disabled="true"]):active
   min-height: 0; height: auto; padding-block: .375rem; line-height: 1.25rem;
 }
 html, body, #root { width: 100%; max-width: 100%; min-width: 0; }
+/* Clip at the viewport scroll owner as well as the shell: Safari can otherwise
+   include translated/nested rails in the document width and shrink the page.
+   Body stays non-scrolling so sticky headers retain the document as owner. */
+html { overflow-x: hidden; }
+body { overflow-x: clip; }
+#root { overflow-x: clip; }
 .page-canvas { min-width: 0; overflow-wrap: anywhere; }
 .page-canvas .recharts-responsive-container { min-width: 0; }
 /* Translated ticker rails must not enlarge Safari's document/visual viewport.
