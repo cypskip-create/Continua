@@ -5,11 +5,17 @@ export type PublisherObservation={destination:string;status:string;category?:str
 const fields=new Set(['revenue','netIncome','eps','totalAssets','totalLiabilities','totalEquity','currentAssets','currentLiabilities','cash','totalDebt','sharesOutstanding','operatingIncome','ebitda','grossProfit','operatingExpenses','costOfRevenue','operatingCashFlow','investingCashFlow','financingCashFlow','freeCashFlow']);
 export function publisherFinancialPeriods(observations:(PublisherObservation&{financialFields?:{metric:string;year:number;value:number}[]})[]):FinancialHistoryEntry[]{
  const years=new Map<number,FinancialHistoryEntry>();
- const seen=new Map<string,number>();const conflicts=new Set<string>();
+ const seen=new Map<string,number>();const conflicts=new Set<string>();const priorities=new Map<string,number>();const categories=new Set<string>();
  for(const o of observations){if(o.status!=='publisher_observation')continue;
+  // API order is newest first. Use the same category revision as the chart,
+  // and prefer detailed statements over rounded summary-card duplicates.
+  if(o.destination==='financials'&&o.category){if(categories.has(o.category))continue;categories.add(o.category);}
   for(const f of o.financialFields||[]){
    if(!fields.has(f.metric)||!Number.isInteger(f.year)||!Number.isFinite(f.value))continue;
    const id=`${f.year}:${f.metric}`;
+   const priority=o.destination==='financials'?2:1;
+   if((priorities.get(id)??0)>priority)continue;
+   if((priorities.get(id)??0)<priority){seen.delete(id);conflicts.delete(id);priorities.set(id,priority);}
    if(seen.has(id)&&seen.get(id)!==f.value){conflicts.add(id);continue;}seen.set(id,f.value);
    if(!years.has(f.year))years.set(f.year,{fiscalYear:f.year,revenue:null,netIncome:null,eps:null,basis:'publisher_observation'});
    (years.get(f.year)! as unknown as Record<string,unknown>)[f.metric]=f.value;
