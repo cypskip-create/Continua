@@ -16,6 +16,7 @@ class AdapterIO:
                 try:await task
                 finally:raise
             stored_metadata=dict(metadata if metadata is not None else document.get('context') or {})
+            stored_metadata['requestedUrl']=document['url']
             if location.endswith(('.html.gz','.json.gz','.csv.gz','.xml.gz')):stored_metadata['r2StoredRepresentation']='gzip-source-v1'
             saved=await self.evidence.upsert_artifact({'sourceId':self.source['id'],'adapter':adapter,'sha256':artifact.sha256,
                 'documentUrl':artifact.url,'sourceUrl':document.get('discoveredFrom'),'contentType':artifact.content_type,'sizeBytes':artifact.size,

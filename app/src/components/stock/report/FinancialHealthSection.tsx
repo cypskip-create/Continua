@@ -15,12 +15,12 @@ function fmtB(v: number | undefined | null) {
 }
 
 export function FinancialHealthSection({ symbol, currency }: Props) {
-  const { latest, isLoading } = useStockFinancials(symbol);
+  const { latest, isLoading } = useStockFinancials(symbol,{publisherObservations:true});
   const { research } = useResearch(symbol);
-  const ratios = research?.ratios;
+  const ratios = latest?.basis ? undefined : research?.ratios;
 
-  const longTermAssets = latest && latest.currentAssets != null ? latest.totalAssets - latest.currentAssets : null;
-  const longTermLiabilities = latest && latest.currentLiabilities != null ? latest.totalLiabilities - latest.currentLiabilities : null;
+  const longTermAssets = latest?.totalAssets!=null && latest.currentAssets != null ? latest.totalAssets - latest.currentAssets : null;
+  const longTermLiabilities = latest?.totalLiabilities!=null && latest.currentLiabilities != null ? latest.totalLiabilities - latest.currentLiabilities : null;
 
   const checks = [
     { label: "Short-term assets exceed short-term liabilities", status: latest?.currentAssets != null && latest?.currentLiabilities != null ? (latest.currentAssets > latest.currentLiabilities ? "pass" as const : "fail" as const) : "unknown" as const },
@@ -34,6 +34,7 @@ export function FinancialHealthSection({ symbol, currency }: Props) {
 
   return (
     <ReportSection number={4} title="Balance Sheet Health">
+      {latest?.basis&&<p className="text-xs text-muted-foreground">Includes Engine-mapped publisher observations. Filing-based ratios are withheld when their period does not match.</p>}
       <CriteriaChecklist
         checks={checks}
         narrative={!latest ? `No balance sheet on file for ${symbol} yet.` : `${symbol} has total shareholder equity of ${currency}${fmtB(latest.totalEquity)} and total debt of ${currency}${fmtB(latest.totalDebt)}, giving a debt-to-equity ratio of ${ratios?.debtToEquity != null ? `${ratios.debtToEquity.toFixed(0)}%` : "n/a"}. ${passed}/${checks.length} real checks pass.`}

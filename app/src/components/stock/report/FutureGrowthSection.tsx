@@ -27,7 +27,7 @@ function pctChange(latest: number, prior: number): number | null {
 export function FutureGrowthSection({ symbol, currency="KES", basic=false }: Props) {
   const [metric, setMetric] = useState<Metric>("revenue");
   const [period, setPeriod] = useState<'annual'|'quarterly'>('annual');
-  const { history, isLoading } = useStockFinancials(symbol);
+  const { history, isLoading } = useStockFinancials(symbol,{publisherObservations:true});
   // Only actual quarterly disclosures; annual totals are never split into
   // invented quarters. Both views use the same shared financial chart.
   const { history: quarterlyHistory } = useStockFinancials(symbol, { periodType: "quarterly", limit: 5 });
@@ -39,6 +39,7 @@ export function FutureGrowthSection({ symbol, currency="KES", basic=false }: Pro
 
   return (
     <ReportSection number={2} title="Future Growth">
+      {history.some(r=>r.basis)&&<p className="text-xs text-muted-foreground">Trailing history includes publisher observations. Analyst estimates remain separate and are not inferred from historical growth.</p>}
       <CriteriaChecklist
         checks={[{ label: "Analyst forecast coverage", status: "unknown" }]}
         narrative={`Forward growth rates and analyst coverage counts are not supplied for ${symbol}. Any sourced revenue/EPS estimates appear in Financial estimates. The trailing figures below are already-reported numbers, not a forecast.`}

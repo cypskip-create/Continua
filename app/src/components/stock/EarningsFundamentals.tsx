@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { corporateActionsApi } from "@/api/corporateActionsApi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { EarningsDetailButton, EarningsMovePreview, EarningsOverview } from "./EarningsDetail";
 import { useStockFinancials } from "@/hooks/useStockFinancials";
@@ -14,6 +14,7 @@ function compact(value: number, currency: string) {
 export function EarningsFundamentals({ symbol, currency, mode = "all" }: { symbol: string; currency: string; mode?: "reported" | "analysis" | "forecast" | "all" }) {
   const [metric, setMetric] = useState<"revenue" | "eps" | "netIncome" | "ebit">("revenue");
   const {history,usingPublisherObservations} = useStockFinancials(symbol,{periodType:"annual",limit:10,publisherObservations:true});
+  useEffect(()=>{if(!history.some(r=>r.revenue!=null)&&history.some(r=>r.netIncome!=null))setMetric('netIncome');},[symbol,history.length]);
   const { data: earnings = [] } = useQuery({
     queryKey: ["continua", "earnings", symbol],
     queryFn: () => corporateActionsApi.getEarningsForSymbol(symbol),

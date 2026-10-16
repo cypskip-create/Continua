@@ -44,7 +44,7 @@ export function FinancialStatementExplorer({title,history,currency,periodType,sy
 }
 function FinancialDetailBody({symbol,currency,initial,initialMetric,initialPeriod}: {symbol:string;currency:string;initial:string;initialMetric:number;initialPeriod:FiscalPeriodType}) {
   const [section,setSection]=useState(initial), [selected,setSelected]=useState(initialMetric), [period,setPeriod]=useState(initialPeriod), [yoy,setYoy]=useState(true);
-  const {history,isLoading,historyError,refetchHistory}=useStockFinancials(symbol,{periodType:period,limit:20});
+  const {history,isLoading,historyError,refetchHistory,usingPublisherObservations}=useStockFinancials(symbol,{periodType:period,limit:20,publisherObservations:true});
   const metrics=statementMetrics[section],metric=metrics[selected]??metrics[0];
   return <>
     <div className="flex gap-1 overflow-x-auto border-b border-border py-2" role="tablist" aria-label="Financial detail section">{Object.keys(statementMetrics).map(title=><button key={title} role="tab" aria-selected={section===title} className={financialTab(section===title)} onClick={()=>{setSection(title);setSelected(0);}}>{title}</button>)}</div>
@@ -54,7 +54,7 @@ function FinancialDetailBody({symbol,currency,initial,initialMetric,initialPerio
     {isLoading&&!history.length?<p className="text-sm py-3">Loading statements…</p>:<FinancialTrend history={history} metric={metric} title={section}/>}
     <label className="flex items-center gap-2 py-2 text-sm"><input type="checkbox" checked={yoy} onChange={e=>setYoy(e.target.checked)}/>Show YoY changes</label>
     <StatementTable history={history} metrics={metrics} yoy={yoy}/>
-    <p className="text-xs text-muted-foreground py-2">Source: company filings. YoY compares the same fiscal quarter or annual period one year earlier. Missing values are not zero. Ratio returns use period income and closing balances.</p>
+    <p className="text-xs text-muted-foreground py-2">{usingPublisherObservations?'Includes Engine-mapped publisher observations alongside available filings.':'Source: company filings.'} YoY compares the same fiscal quarter or annual period one year earlier. Missing values are not zero. Ratio returns use period income and closing balances.</p>
     {history.some(r=>r.reportedAt)&&<p className="text-xs text-muted-foreground">Latest filing: {[...history].filter(r=>r.reportedAt).sort((a,b)=>String(b.reportedAt).localeCompare(String(a.reportedAt)))[0]?.reportedAt?.slice(0,10)}</p>}
   </>;
 }

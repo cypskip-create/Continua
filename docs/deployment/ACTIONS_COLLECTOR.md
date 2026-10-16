@@ -64,9 +64,9 @@ receipt. These must succeed before setting repository variable
 Both variables were verified **true** in the live repository on 16 October 2026.
 The earlier news-only rollout is historical, not the current configuration.
 
-Schedules are 00:17/08:17/16:17 UTC for news and 20:43 UTC for documents (03:17,
-11:17,19:17 and 23:43 Africa/Nairobi). Only enabled, permission-recorded sources
-are considered; at most five sources, twelve KenyanStocks jobs and two jobs per
+Schedules are 00:17/08:17/16:17 UTC for news and 06:43/12:43/20:43 UTC for documents
+(03:17/11:17/19:17 and 09:43/15:43/23:43 Africa/Nairobi). Only enabled, permission-recorded sources
+are considered; at most five sources, 48 KenyanStocks jobs and two jobs per
 other source per run. KenyanStocks is prioritized. Runs
 rotate sources rather than starting a historical rescrape. The manual `drain`
 mode processes durable queues and does not discover new URLs. Non-durable
@@ -94,11 +94,13 @@ The existing Python Engine processes the batch automatically after collection.
 observations with nonempty tables; they are not claims of canonical accounting
 approval or full coverage of every tab for that issuer.
 
-16 MiB per news run and 64 MiB per ordinary document run are reserved durably
-against a shared UTC daily allowance of 128 MiB (three news runs plus one
-document run reserve 112 MiB). Manual diagnostics also consume that allowance.
+16 MiB per news run and 48 MiB per ordinary document run are reserved durably
+against the approved 192 MiB allowance (three news and three document runs).
+Manual diagnostics also consume that allowance.
 Reservations are deliberately not refunded after crashes or partial
-failures. These are conservative logical transfer limits, NOT cloud spending caps.
+failures. Successful completed runs now settle unused reservations with an atomic,
+idempotent audit receipt, retaining measured counters plus a 1 MiB buffer. These
+are conservative logical transfer limits, NOT cloud spending caps.
 Download and request bytes, browser tunnel directions and R2 verification reads
 are counted. R2 uploads reserve four possible payload attempts up front. Database,
 TLS framing and SDK headers are excluded. Reads can exceed the logical accounting

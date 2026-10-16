@@ -8,6 +8,24 @@ from continua_scraper.kenyanstocks import KenyanStocksAdapter
 from continua_scraper.documents import DocumentJobs
 
 class FreshFinancialTests(unittest.IsolatedAsyncioTestCase):
+    async def test_bulk_recovery_is_bounded_exact_source_and_preserves_evidence_and_leases(self):
+        db=SimpleNamespace(query=AsyncMock(return_value=[{'requeued':42}]))
+        self.assertEqual(await DocumentJobs(db).recover_unarchived('kenyanstocks'),42)
+        sql,args=db.query.call_args.args
+        self.assertEqual(args,('kenyanstocks',1000))
+        self.assertIn("j.status='complete'",sql)
+        self.assertIn('FOR UPDATE OF j SKIP LOCKED LIMIT %s',sql)
+        self.assertNotIn('DELETE',sql)
+        with self.assertRaises(ValueError):await DocumentJobs(db).recover_unarchived('other-source')
+    async def test_legacy_complete_without_private_issuer_evidence_is_not_a_seven_day_block(self):
+        db=SimpleNamespace(query=AsyncMock(return_value=[]));jobs=DocumentJobs(db)
+        await jobs.enqueue('kenyanstocks',[{'url':'https://kenyanstocks.com/stock/nse/ABSA?tab=Summary','context':{'ticker':'ABSA'}}])
+        sql,args=db.query.call_args.args
+        self.assertIn("document_jobs.status='complete'",sql)
+        self.assertIn("a.storage_path LIKE 'r2://continua-financial-documents/%%'",sql)
+        self.assertIn("a.metadata->>'requestedUrl'=document_jobs.url",sql)
+        self.assertIn("e.entity->>'ticker' IS NOT DISTINCT FROM",sql)
+        self.assertNotIn('DELETE',sql)
     async def test_only_registered_issuer_and_all_financial_categories(self):
         adapter=KenyanStocksAdapter(SimpleNamespace(source={'id':'kenyanstocks','config':{}}),None,None,None,universe=['COOP'])
         docs=await adapter.discover_issuer_financials('COOP')

@@ -209,6 +209,8 @@ async def maintenance(operation):
                 await connection.execute(path.read_text(encoding='utf-8'),prepare=False)
             from continua_scraper.research_processing import ResearchProcessor
             async with asyncio.timeout(120):
+                from continua_scraper.documents import DocumentJobs
+                recovered=await DocumentJobs(database).recover_unarchived('kenyanstocks')
                 summary=await ResearchProcessor(database).run(100)
                 inventory=await ResearchProcessor(database).inventory()
                 available=await ResearchProcessor(database).available_financials()
@@ -217,7 +219,7 @@ async def maintenance(operation):
               length(trim(coalesce(config->>'permissionReference',''))) BETWEEN 1 AND 200 AS permission_recorded
               FROM scraping.sources ORDER BY id""")
             return {'status':'completed','operation':operation,'processing':summary,'kenyanstocksInventory':inventory,
-                    'availableFinancials':available,'stockCoverage':coverage,'sourceConfiguration':sources,'sourceDownloadBytes':0,'r2DownloadBytes':0}
+                    'availableFinancials':available,'stockCoverage':coverage,'queueRecovery':{'requeuedMissingPrivateEvidence':recovered},'sourceConfiguration':sources,'sourceDownloadBytes':0,'r2DownloadBytes':0}
         if operation=='prepare':
             path=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261015190000 scheduled collector budgets.sql'
             async with database.pool.connection() as connection:

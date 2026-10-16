@@ -11,17 +11,24 @@ class DocumentJobs:
         self.max_attempts=max_attempts
 
     async def enqueue(self,source_id,documents):
+        refresh="""document_jobs.status='complete' AND (document_jobs.updated_at < now()-interval '7 days'
+          OR (document_jobs.source_id='kenyanstocks' AND NOT EXISTS(
+            SELECT 1 FROM scraping.raw_artifacts a WHERE a.source_id=document_jobs.source_id
+              AND (a.document_url=document_jobs.url OR a.metadata->>'requestedUrl'=document_jobs.url)
+              AND a.storage_path LIKE 'r2://continua-financial-documents/%%' AND a.sha256 ~ '^[a-f0-9]{64}$'
+              AND EXISTS(SELECT 1 FROM scraping.extractions e WHERE e.artifact_id=a.id
+                AND e.entity->>'ticker' IS NOT DISTINCT FROM EXCLUDED.document->'context'->>'ticker'))))"""
         for offset in range(0,len(documents),200):
-            await self.database.query("""INSERT INTO scraping.document_jobs(source_id,url,document)
+            await self.database.query(f"""INSERT INTO scraping.document_jobs(source_id,url,document)
               SELECT %s, item->>'url', item FROM jsonb_array_elements(%s::jsonb) item
               ON CONFLICT(source_id,url) DO UPDATE SET document=EXCLUDED.document,
-                attempts=CASE WHEN document_jobs.status='complete' AND document_jobs.updated_at < now()-interval '7 days'
+                attempts=CASE WHEN {refresh}
                   THEN 0 ELSE document_jobs.attempts END,
-                next_attempt_at=CASE WHEN document_jobs.status='complete' AND document_jobs.updated_at < now()-interval '7 days'
+                next_attempt_at=CASE WHEN {refresh}
                   THEN now() ELSE document_jobs.next_attempt_at END,
-                updated_at=CASE WHEN document_jobs.status='complete' AND document_jobs.updated_at < now()-interval '7 days'
+                updated_at=CASE WHEN {refresh}
                   THEN now() ELSE document_jobs.updated_at END,
-                status=CASE WHEN document_jobs.status='complete' AND document_jobs.updated_at < now()-interval '7 days'
+                status=CASE WHEN {refresh}
                 THEN 'pending' ELSE document_jobs.status END""",(source_id,encode(documents[offset:offset+200])))
 
     async def requeue_incomplete(self,source_id,limit):
@@ -39,6 +46,22 @@ class DocumentJobs:
           UPDATE scraping.document_jobs j SET status='pending',next_attempt_at=now(),updated_at=now(),
             error_reason='Recovering incomplete legacy PDF extraction'
           FROM incomplete WHERE j.id=incomplete.id""",(source_id,limit))
+
+    async def recover_unarchived(self,source_id,limit=1000):
+        if source_id!='kenyanstocks' or type(limit) is not int or not 1<=limit<=2000:raise ValueError('Invalid private-evidence recovery scope')
+        rows=await self.database.query("""WITH missing AS (
+          SELECT j.id FROM scraping.document_jobs j WHERE j.source_id=%s AND j.status='complete'
+            AND NOT EXISTS(SELECT 1 FROM scraping.raw_artifacts a WHERE a.source_id=j.source_id
+              AND (a.document_url=j.url OR a.metadata->>'requestedUrl'=j.url)
+              AND a.storage_path LIKE 'r2://continua-financial-documents/%%' AND a.sha256 ~ '^[a-f0-9]{64}$'
+              AND EXISTS(SELECT 1 FROM scraping.extractions e WHERE e.artifact_id=a.id
+                AND e.entity->>'ticker' IS NOT DISTINCT FROM j.document->'context'->>'ticker'))
+          ORDER BY j.id FOR UPDATE OF j SKIP LOCKED LIMIT %s
+        ), recovered AS (UPDATE scraping.document_jobs j SET status='pending',attempts=0,next_attempt_at=now(),
+          updated_at=now(),error_reason='Missing private issuer evidence; automatic recollection pending'
+          FROM missing WHERE j.id=missing.id RETURNING j.id)
+        SELECT count(*)::integer AS requeued FROM recovered""",(source_id,limit))
+        return rows[0]['requeued'] if rows else 0
 
     async def refresh_documents(self,source_id,documents):
         """Explicit fresh batch: retain originals and never steal active leases."""

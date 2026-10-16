@@ -45,7 +45,7 @@ export function useStockFinancials(
   return {
     history: combined,
     usingPublisherObservations:combined.some(r=>r.basis==='publisher_observation'),
-    latest: latest.data && isPublishedFinancialPeriod(latest.data) ? latest.data : undefined,
+    latest: opts.publisherObservations&&periodType==='annual'?combined.at(-1):latest.data && isPublishedFinancialPeriod(latest.data) ? latest.data : undefined,
     isLoading: history.isLoading || latest.isLoading,
     historyError: history.error,
     refetchHistory: history.refetch,

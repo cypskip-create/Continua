@@ -20,6 +20,12 @@ returned byte counts. Failed, interrupted and budget-paused runs are not refunde
 The daily counter is never reset and the daily ceiling is not increased. This is
 logical-transfer accounting, not a hard dollar invoice cap.
 
+Legacy complete jobs lacking private issuer-scoped evidence are returned to
+pending, rather than hidden behind the ordinary seven-day freshness window.
+Recovery is exact-source, bounded and skips active leases. Requested source URLs
+are retained in artifact metadata so redirects do not break the recovery check.
+No original, extraction or processed evidence is deleted.
+
 Automatic post-collection Engine processing handles up to 100 observations. A
 presentation-version upgrade reprocesses older eligible records from retained
 extractions without downloading their originals again. Exact source labels map

@@ -92,6 +92,7 @@ export interface CompanyProfile {
 export type FiscalPeriodType = "annual" | "quarterly";
 
 export interface FinancialPeriodBundle {
+  basis?: 'publisher_observation';
   periodId: string;
   securityId: string;
   periodType: FiscalPeriodType;

@@ -38,7 +38,7 @@ export function ScenarioWorkbench({symbol,currency}: {symbol:string;currency:str
 }
 
 export function GrowthWorkbench({symbol,currency}: {symbol:string;currency:string}) {
-  const {history,isLoading}=useStockFinancials(symbol,{periodType:"annual",limit:10});
+  const {history,isLoading}=useStockFinancials(symbol,{periodType:"annual",limit:10,publisherObservations:true});
   const [metric,setMetric]=useState<"revenue"|"netIncome"|"eps">("revenue");const [span,setSpan]=useState(5);
   const latestYear=Math.max(...history.map(r=>r.fiscalYear));
   const result=growthResearch(history.filter(r=>r.fiscalYear>latestYear-span),metric);
