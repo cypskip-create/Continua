@@ -5,6 +5,14 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "scraper-python/scheduled_collect.py",
+      "category": "Fresh issuer financials and automatic delivery receipts",
+      "language": "Python and SQL",
+      "runtime": "Existing bounded Actions collector and Engine package",
+      "reason": "Keep targeted browser fetch, extraction and automatic Engine processing in the existing asynchronous Python runtime. SQL exact-issuer queue filters and active-lease checks preserve retries and immutable originals; availability receipts recheck the same permission, hash and private-storage gates used by API reads. No manual transcription or additional service is needed.",
+      "references": ["https://docs.python.org/3.13/library/asyncio-task.html", "https://www.postgresql.org/docs/current/explicit-locking.html"]
+    },
+    {
       "file": "tools/audit-service-files.mjs",
       "category": "Read-only service cleanup audit",
       "language": "JavaScript",

@@ -40,7 +40,15 @@ class DocumentJobs:
             error_reason='Recovering incomplete legacy PDF extraction'
           FROM incomplete WHERE j.id=incomplete.id""",(source_id,limit))
 
-    async def claim(self,source_id,limit,*,lane=None):
+    async def refresh_documents(self,source_id,documents):
+        """Explicit fresh batch: retain originals and never steal active leases."""
+        if not 1<=len(documents)<=25:raise ValueError('Invalid fresh document batch')
+        await self.database.query("""UPDATE scraping.document_jobs SET status='pending',attempts=0,
+          next_attempt_at=now(),updated_at=now(),error_reason=NULL,lease_until=NULL
+          WHERE source_id=%s AND url=ANY(%s::text[])
+          AND (status<>'processing' OR lease_until<now())""",(source_id,[d['url'] for d in documents]))
+
+    async def claim(self,source_id,limit,*,lane=None,issuer=None):
         if type(limit) is not int or not 1<=limit<=25:
             raise ValueError("invalid document batch")
         sql="""WITH pending AS (
@@ -54,6 +62,11 @@ class DocumentJobs:
             lease_until=now()+interval '2 hours',updated_at=now()
           FROM pending WHERE j.id=pending.id RETURNING j.id,j.document,j.attempts"""
         values=[source_id]
+        if issuer is not None:
+            import re
+            if not isinstance(issuer,str) or not re.fullmatch('[A-Z0-9-]{1,20}',issuer):raise ValueError('Invalid issuer')
+            sql=sql.replace('ORDER BY attempts,',"AND document->'context'->>'ticker'=%s AND document->'context'->>'tab'='Financials' ORDER BY attempts,")
+            values.append(issuer)
         if self.max_attempts is not None:
             sql=sql.replace('ORDER BY attempts,','AND attempts<%s ORDER BY attempts,')
             values.append(self.max_attempts)

@@ -33,6 +33,10 @@ class KenyanStocksAdapter:
         configured=(io.source.get('config') or {}).get('tickers',[])
         self.tickers=list(dict.fromkeys(aliases.get(t.upper(),t.upper()) for t in [*configured,*universe] if isinstance(t,str) and re.fullmatch(r'[A-Za-z0-9-]+',t)))
 
+    async def discover_issuer_financials(self,ticker):
+        if ticker not in self.tickers:raise ValueError('Issuer is not registered for this source')
+        return stock_tab_documents('https://kenyanstocks.com/stock/nse/'+ticker,['Financials'])
+
     async def _discovery_page(self,url):
         rendered=await self.renderer.render(url,discovery=True)
         if (rendered.get('coverage') or {}).get('scrollLimitReached'):

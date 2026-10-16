@@ -69,7 +69,9 @@ async def scheduled_slot(database,run_id,kind,ceiling,daily):
         # Exceptions/cancellation cannot leave a completed runner marked active.
         await database.query("UPDATE scraping.scheduled_runs SET status='failed',completed_at=now() WHERE id=%s AND status='running'",(run_id,))
 
-async def run(kind,source_id=None):
+async def run(kind,source_id=None,issuer=None,fresh=False):
+    if (issuer or fresh) and (source_id!='kenyanstocks' or kind!='documents' or not issuer):
+        raise ValueError('Fresh issuer financials require the exact KenyanStocks document source')
     validate_environment(os.environ)
     if os.environ.get('R2_DUAL_WRITE','false').lower() not in ('false','0','no',''):
         raise ValueError('Scheduled collector forbids legacy duplicate uploads')
@@ -92,6 +94,7 @@ async def run(kind,source_id=None):
             from continua_scraper.research_processing import ResearchProcessor
             async with asyncio.timeout(60):
                 receipt['processingBefore']=await ResearchProcessor(database).run(25)
+                receipt['availableFinancialsBefore']=await ResearchProcessor(database).available_financials()
         async with scheduled_slot(database,run_id,kind,ceiling,daily) as skipped:
             if skipped:return dict(receipt,status=skipped)
             try:
@@ -131,7 +134,7 @@ async def run(kind,source_id=None):
                                     batch=source_batch(os.environ,source['adapter'])
                                     if os.environ.get('COLLECTOR_VERIFY_ONE')=='true':batch=1
                                     adapter.persistent_batch_size=batch
-                                    result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=batch)
+                                    result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=batch,issuer=issuer,fresh=fresh)
                                 entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','errorClasses','discoveryCoverage')})
                             except transfer_budget.TransferLimitReached:
                                 receipt['status']='budget-paused';break
@@ -151,6 +154,7 @@ async def run(kind,source_id=None):
                         try:
                             async with asyncio.timeout(60):
                                 receipt['processingAfter']=await ResearchProcessor(database).run(25)
+                                receipt['availableFinancials']=await ResearchProcessor(database).available_financials()
                         except Exception:
                             receipt['processingAfter']={'status':'failed','retryable':True}
                             receipt['status']='failed'
@@ -177,11 +181,12 @@ async def maintenance(operation):
             async with asyncio.timeout(120):
                 summary=await ResearchProcessor(database).run(100)
                 inventory=await ResearchProcessor(database).inventory()
+                available=await ResearchProcessor(database).available_financials()
             sources=await database.query("""SELECT id,adapter,enabled,redistribution_allowed,
               length(trim(coalesce(config->>'permissionReference',''))) BETWEEN 1 AND 200 AS permission_recorded
               FROM scraping.sources ORDER BY id""")
             return {'status':'completed','operation':operation,'processing':summary,'kenyanstocksInventory':inventory,
-                    'sourceConfiguration':sources,'sourceDownloadBytes':0,'r2DownloadBytes':0}
+                    'availableFinancials':available,'sourceConfiguration':sources,'sourceDownloadBytes':0,'r2DownloadBytes':0}
         if operation=='prepare':
             path=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261015190000 scheduled collector budgets.sql'
             async with database.pool.connection() as connection:
@@ -210,13 +215,15 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--kind',choices=('news','documents','drain'),default='documents')
     parser.add_argument('--source')
+    parser.add_argument('--issuer')
+    parser.add_argument('--fresh',action='store_true')
     parser.add_argument('--apply',action='store_true')
     parser.add_argument('--maintenance',choices=('prepare','verify-storage','process-research'))
     args=parser.parse_args()
     if not args.apply:
         print(json.dumps({'mode':'offline-plan','kind':args.kind,'submitted':False}));return 0
     try:
-        operation=maintenance(args.maintenance) if args.maintenance else run(args.kind,args.source)
+        operation=maintenance(args.maintenance) if args.maintenance else run(args.kind,args.source,args.issuer,args.fresh)
         result=asyncio.run(operation,loop_factory=database_event_loop)
         print(json.dumps(result,allow_nan=False,separators=(',',':')))
         return 1 if result['status']=='failed' else 0

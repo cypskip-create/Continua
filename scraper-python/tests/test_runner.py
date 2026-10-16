@@ -32,6 +32,23 @@ class Adapter:
     async def parse(self,fetched):return {'method':'native_pdf_text','text':self.text,'confidence':.8,'tables':[],'entity':{},'needsReview':True}
 
 class RunnerTests(unittest.IsolatedAsyncioTestCase):
+    async def test_fresh_issuer_batch_does_not_discover_or_claim_other_stocks(self):
+        class TargetJobs(Jobs):
+            async def refresh_documents(self,source,docs):self.refreshed=docs
+            async def claim(self,source,limit,*,issuer):
+                self.asserted_issuer=issuer
+                return await super().claim(source,limit)
+        class TargetAdapter(Adapter):
+            async def discover(self):raise AssertionError('Broad discovery must not run')
+            async def discover_issuer_financials(self,ticker):
+                return [{'url':'https://fixture.example/financials.pdf','context':{'ticker':ticker,'tab':'Financials'}}]
+        jobs,evidence=TargetJobs(),Evidence()
+        result=await AdapterRunner(jobs,evidence,Dead()).run(TargetAdapter(),issuer='COOP',fresh=True)
+        self.assertEqual(result['extracted'],1)
+        self.assertEqual(jobs.asserted_issuer,'COOP')
+        self.assertEqual(len(jobs.refreshed),1)
+        with self.assertRaises(ValueError):await AdapterRunner(jobs,evidence,Dead()).run(TargetAdapter(),fresh=True)
+
     async def test_identical_bytes_keep_separate_issuer_extractions(self):
         class ScopedEvidence(Evidence):
             async def latest_extraction(self, id):

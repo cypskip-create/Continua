@@ -12,6 +12,13 @@ on:
       source:
         description: Optional exact registered source ID
         type: string
+      issuer:
+        description: Optional exact KenyanStocks ticker for a Financials-only batch
+        type: string
+      fresh:
+        description: Re-fetch the selected issuer financials without deleting evidence
+        type: boolean
+        default: false
       maintenance:
         description: Explicit additive schema setup or one tiny private storage verification
         type: choice
@@ -70,7 +77,7 @@ jobs:
           # Larger reports need room for both download and direct R2 upload.
           COLLECTOR_RUN_TRANSFER_BYTES: ${{ (inputs.verify_one || github.event.schedule == '17 */8 * * *' || inputs.kind == 'news') && '16777216' || '67108864' }}
           COLLECTOR_VERIFY_ONE: ${{ inputs.verify_one && 'true' || 'false' }}
-          COLLECTOR_DAILY_TRANSFER_BYTES: '134217728'
+          COLLECTOR_DAILY_TRANSFER_BYTES: ${{ vars.CONTINUA_COLLECTOR_DAILY_TRANSFER_BYTES || '134217728' }}
           COLLECTOR_SOURCE_LIMIT: '5'
           COLLECTOR_PRIMARY_BATCH: ${{ vars.CONTINUA_COLLECTOR_PRIMARY_BATCH || '12' }}
           COLLECTOR_FALLBACK_BATCH: ${{ vars.CONTINUA_COLLECTOR_FALLBACK_BATCH || '2' }}
@@ -79,6 +86,8 @@ jobs:
           SCHEDULE: ${{ github.event.schedule }}
           INPUT_KIND: ${{ inputs.kind }}
           INPUT_SOURCE: ${{ inputs.source }}
+          INPUT_ISSUER: ${{ inputs.issuer }}
+          INPUT_FRESH: ${{ inputs.fresh }}
           INPUT_APPLY: ${{ inputs.apply }}
           INPUT_MAINTENANCE: ${{ inputs.maintenance }}
         run: |
@@ -88,5 +97,7 @@ jobs:
             if [ "$SCHEDULE" = '17 */8 * * *' ]; then args=(--kind news --apply); fi
           elif [ "$INPUT_APPLY" = true ]; then args+=(--apply); fi
           if [ -n "$INPUT_SOURCE" ]; then args+=(--source "$INPUT_SOURCE"); fi
+          if [ -n "$INPUT_ISSUER" ]; then args+=(--issuer "$INPUT_ISSUER"); fi
+          if [ "$INPUT_FRESH" = true ]; then args+=(--fresh); fi
           if [ -n "$INPUT_MAINTENANCE" ] && [ "$INPUT_MAINTENANCE" != none ]; then args+=(--maintenance "$INPUT_MAINTENANCE"); fi
           python scraper-python/scheduled_collect.py "${args[@]}"

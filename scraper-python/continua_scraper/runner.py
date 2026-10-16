@@ -27,7 +27,7 @@ class AdapterRunner:
     def __init__(self,jobs,evidence,dead_letters):
         self.jobs,self.evidence,self.dead_letters=jobs,evidence,dead_letters
 
-    async def run(self,adapter,*,drain_only=False,batch_size=None):
+    async def run(self,adapter,*,drain_only=False,batch_size=None,issuer=None,fresh=False):
         durable=getattr(adapter,'persistent_batch_size',None) is not None
         if drain_only and not durable:raise ValueError('Adapter has no durable document queue')
         batch=adapter.persistent_batch_size if batch_size is None and durable else batch_size
@@ -35,7 +35,10 @@ class AdapterRunner:
         if drain_only:
             try:await self.jobs.requeue_incomplete(adapter.id,batch)
             except Exception:pass # Existing queued work remains usable during recovery outage.
-        documents=[] if drain_only else await adapter.discover()
+        if fresh and not issuer:raise ValueError('Fresh collection requires an exact issuer')
+        if issuer and (drain_only or not durable or not hasattr(adapter,'discover_issuer_financials')):
+            raise ValueError('Targeted financial collection is unavailable for this adapter')
+        documents=await adapter.discover_issuer_financials(issuer) if issuer else [] if drain_only else await adapter.discover()
         if not isinstance(documents,list):raise ValueError('Invalid adapter discovery result')
         summary={'adapterId':adapter.id,'discovered':len(documents),'fetched':0,'newArtifacts':0,'extracted':0,'needsReview':0,'failed':0,'skipped':0}
         coverage=getattr(adapter,'discovery_coverage',None)
@@ -43,6 +46,8 @@ class AdapterRunner:
             summary['discoveryCoverage']=coverage
             if coverage.get('listingFailures'):summary['failed']+=coverage['listingFailures']
         if durable:await self.jobs.enqueue(adapter.id,documents)
+        if fresh:await self.jobs.refresh_documents(adapter.id,documents)
+        if issuer:batch=min(batch,len(documents))
         remaining=batch if durable else len(documents)
         cursor=0
         concurrency=getattr(adapter,'document_concurrency',1)
@@ -56,7 +61,9 @@ class AdapterRunner:
                 job=None
                 if durable:
                     lanes=getattr(adapter,'claim_lanes',())
-                    claims=await self.jobs.claim(adapter.id,1,lane=lanes[(batch-remaining-1)%len(lanes)]) if lanes else await self.jobs.claim(adapter.id,1)
+                    options={'issuer':issuer} if issuer else {}
+                    if lanes:options['lane']=lanes[(batch-remaining-1)%len(lanes)]
+                    claims=await self.jobs.claim(adapter.id,1,**options)
                     if not claims:return
                     job=claims[0];document=job['document']
                 else:

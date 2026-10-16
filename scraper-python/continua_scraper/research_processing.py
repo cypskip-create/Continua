@@ -42,6 +42,23 @@ class ResearchProcessor:
     def __init__(self,database):
         self.database=database
 
+    async def available_financials(self):
+        """Only observations passing the same current rights/evidence gates as API reads."""
+        return await self.database.query("""SELECT symbol,category,observed_at,table_count,chart_series FROM (
+          SELECT DISTINCT ON(sec.symbol,p.payload->>'category') sec.symbol,
+            p.payload->>'category' AS category,p.payload->>'observedAt' AS observed_at,
+            jsonb_array_length(p.payload->'tables') AS table_count,
+            jsonb_array_length(p.payload->'charts') AS chart_series,e.extracted_at,e.id
+          FROM scraping.processed_research p JOIN scraping.extractions e ON e.id=p.extraction_id
+          JOIN scraping.raw_artifacts a ON a.id=e.artifact_id JOIN scraping.sources s ON s.id=a.source_id
+          JOIN market.securities sec ON sec.id=p.security_id
+          WHERE p.processor_version='collected-research-v1' AND p.destination='financials'
+            AND p.status='publisher_observation' AND s.enabled AND s.redistribution_allowed=true
+            AND length(trim(s.config->>'permissionReference')) BETWEEN 1 AND 200
+            AND a.storage_path LIKE 'r2://continua-financial-documents/%%' AND a.sha256 ~ '^[a-f0-9]{64}$'
+          ORDER BY sec.symbol,p.payload->>'category',e.extracted_at DESC,e.id DESC
+        ) latest WHERE table_count>0 ORDER BY extracted_at DESC,id DESC LIMIT 100""")
+
     async def run(self,limit=25):
         from continua_engine.collected import process_evidence,VERSION
         if type(limit) is not int or not 1<=limit<=100:raise ValueError('Invalid processing batch')
