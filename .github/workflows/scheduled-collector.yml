@@ -21,6 +21,10 @@ on:
         description: Run approved collection (otherwise offline plan only)
         type: boolean
         default: false
+      verify_one:
+        description: Diagnose one queued document within a 16MiB run reservation
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -62,7 +66,8 @@ jobs:
           R2_DUAL_WRITE: 'false'
           # 3 news runs x16MiB + one 64MiB document run <=128MiB/day.
           # Larger reports need room for both download and direct R2 upload.
-          COLLECTOR_RUN_TRANSFER_BYTES: ${{ (github.event.schedule == '17 */8 * * *' || inputs.kind == 'news') && '16777216' || '67108864' }}
+          COLLECTOR_RUN_TRANSFER_BYTES: ${{ (inputs.verify_one || github.event.schedule == '17 */8 * * *' || inputs.kind == 'news') && '16777216' || '67108864' }}
+          COLLECTOR_VERIFY_ONE: ${{ inputs.verify_one && 'true' || 'false' }}
           COLLECTOR_DAILY_TRANSFER_BYTES: '134217728'
           COLLECTOR_SOURCE_LIMIT: '5'
           COLLECTOR_RUN_SECONDS: '600'

@@ -91,6 +91,9 @@ class AdapterRunner:
                     summary['failed']+=1
                     errors=summary.setdefault('errorClasses',{})
                     category=f'{stage}:{type(error).__name__}'
+                    safe_code=getattr(error,'safe_code',None)
+                    if safe_code in {*(f'browser_exit_{i}' for i in range(1,14)),'browser_exit_other'}:
+                        category=f'{stage}:{safe_code}'
                     errors[category]=errors.get(category,0)+1
                     # Classification is safe even when SDK exceptions include
                     # server credentials; detailed private provider errors are

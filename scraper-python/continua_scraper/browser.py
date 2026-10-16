@@ -6,6 +6,11 @@ import sys
 from .browser_proxy import BrowserProxy
 from .process import run_process,NativeWorkerError
 
+class PublisherRenderError(ValueError):
+    def __init__(self,code):
+        self.safe_code=f'browser_exit_{code}' if type(code) is int and 1<=code<=13 else 'browser_exit_other'
+        super().__init__(self.safe_code)
+
 class BrowserRenderer:
     def __init__(self,queue,downloader,*,python=None,chromium=None,driver=None):
         self.queue,self.downloader=queue,downloader
@@ -28,7 +33,7 @@ class BrowserRenderer:
             try:raw=await run_process([self.python,worker,json.dumps(config)],timeout=150,max_output=12*1024*1024)
             except NativeWorkerError as error:
                 message={2:'Publisher view did not settle or expose requested controls',3:'Native browser dependency failed',4:'Publisher returned an HTTP error',5:'Publisher requested control unavailable',6:'Native browser rejected configuration',7:'Publisher DOM script failed',8:'Native browser executable unavailable',9:'Native browser protocol field unavailable',10:'Native browser execution denied',11:'Native browser validation failed',12:'Publisher control is obscured',13:'Publisher controls changed during interaction'}.get(error.returncode,'Native publisher rendering failed')
-                raise ValueError(message) from None
+                raise PublisherRenderError(error.returncode) from None
         result=json.loads(raw)
         if not isinstance(result,dict) or not isinstance(result.get('html'),str) or len(result['html'].encode())>8*1024*1024:raise ValueError('Invalid rendered publisher document')
         self.downloader.policy.check_url(result.get('finalUrl'))

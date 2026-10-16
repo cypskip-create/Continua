@@ -96,6 +96,7 @@ async def run(kind,source_id=None):
                                     # the remainder or repeatedly select only the
                                     # newest two feed entries on fresh runners.
                                     batch=12 if source['adapter']=='kenyanstocks' else 2
+                                    if os.environ.get('COLLECTOR_VERIFY_ONE')=='true':batch=1
                                     adapter.persistent_batch_size=batch
                                     result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=batch)
                                 entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','errorClasses','discoveryCoverage')})
