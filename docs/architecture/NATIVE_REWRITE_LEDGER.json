@@ -1541,7 +1541,7 @@
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "remaining": "Native Python whole company assembly passes four fixture-only executions of the original bundle. Native Go source concurrency/deadlines, snapshot transactions, last-good preservation and invalidation-race checks pass. All company input providers are wired in the loopback candidate, with native paged news evidence sessions and valuation/technical calculation. Full news/read/schema comparisons, ICU ownership collation, real restart/resource and hosted release checks remain pending."
+      "remaining": "Native Python whole company assembly passes five fixture-only executions of the original bundle, including nonempty collected publisher research and its outage. Native Go source concurrency/deadlines, snapshot transactions, last-good preservation and invalidation-race checks pass. All company input providers, including collected research, are wired in the loopback candidate, with native paged news evidence sessions and valuation/technical calculation. Full news/read/schema comparisons, ICU ownership collation, real restart/resource and hosted release checks remain pending."
     },
     {
       "legacyFile": "backend/src/services/research/engineCacheKeys.js",
