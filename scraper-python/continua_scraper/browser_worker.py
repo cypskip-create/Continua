@@ -15,6 +15,9 @@ ERROR_EXIT_CODES={
     'ElementClickInterceptedException':12,'StaleElementReferenceException':13,
 }
 
+class PublisherStageTimeout(Exception):
+    def __init__(self,code):self.code=code
+
 def render(config):
     # Crashpad and Chromium require a writable home/cache even with a read-only
     # container root. Never reuse the operator's real home or browser profile.
@@ -45,6 +48,7 @@ def _render(config,profile):
     environment.update({'HOME':profile,'XDG_CACHE_HOME':profile+'/cache','XDG_CONFIG_HOME':profile+'/config'})
     service=Service(config['driver'],env=environment,log_output=os.devnull)
     driver=webdriver.Chrome(service=service,options=options)
+    phase=14
     try:
         driver.set_page_load_timeout(30);driver.set_script_timeout(10)
         driver.execute_cdp_cmd('Network.enable',{})
@@ -55,31 +59,35 @@ def _render(config,profile):
         navigation=urlunsplit((parts.scheme,parts.netloc,parts.path,urlencode(query),''))
         driver.get(navigation)
         WebDriverWait(driver,30).until(lambda d:d.execute_script("return document.readyState==='interactive'||document.readyState==='complete'"))
-        monitor=PublisherSettle()
+        monitor=PublisherSettle(allowed_hosts=config.get('allowedHosts',()))
         def settle():
             # Require a fresh quiet window after each action, even if its XHR
             # starts on the next browser event-loop tick.
             monitor.last_activity=monitor.clock()
             WebDriverWait(driver,30,poll_frequency=.1).until(lambda d:settled_view(d,monitor))
-        settle()
+        phase=15;settle()
         expanded=0;scroll_limit=False;expansion_limit=False
         tab=selected.get('stock_tab')
         if tab:
+            phase=16
             WebDriverWait(driver,30).until(lambda d:any(tab in n.text for n in d.find_elements(By.CSS_SELECTOR,'.normal-tab.selected-tab')))
         category=selected.get('category')
         if category:
+            phase=17
             button=WebDriverWait(driver,15).until(lambda d:next((n for n in d.find_elements(By.CSS_SELECTOR,'button.tab-btn') if n.text.strip()==category),None))
             driver.execute_script("arguments[0].scrollIntoView({block:'center',inline:'center',behavior:'instant'});",button)
             button.click();settle()
             WebDriverWait(driver,15).until(lambda d:any(n.text.strip()==category for n in d.find_elements(By.CSS_SELECTOR,'button.tab-btn.active')))
             expanded,expansion_limit=expand_groups(driver,By,settle)
         if selected.get('history_start'):
+            phase=18
             label=next((n for n in driver.find_elements(By.TAG_NAME,'label') if n.text.strip()=='Start Date'),None)
             if label is None or not label.get_attribute('for'):raise ValueError('Observed history date control unavailable')
             control=driver.find_element(By.ID,label.get_attribute('for'))
             driver.execute_script("arguments[0].value=arguments[1];arguments[0].dispatchEvent(new Event('input',{bubbles:true}));arguments[0].dispatchEvent(new Event('change',{bubbles:true}));",control,selected['history_start'])
             control.send_keys(Keys.TAB);settle()
         if tab or selected.get('discovery'):
+            phase=19
             for step in range(12):
                 before=driver.execute_script("return [document.body.scrollHeight,document.querySelectorAll('tr').length,document.querySelectorAll('.file-content').length,document.querySelectorAll('a[href]').length]")
                 driver.execute_script('window.scrollTo(0,document.body.scrollHeight)');settle()
@@ -97,6 +105,9 @@ def _render(config,profile):
         if tab:result['coverage']={'tab':tab,'category':category,'rows':len(driver.find_elements(By.TAG_NAME,'tr')),'expandedRows':expanded,'scrollLimitReached':scroll_limit,'networkAndDOMSettled':True,'categoryVerified':bool(category),'expansionLimitReached':expansion_limit}
         elif selected.get('discovery'):result['coverage']={'scrollLimitReached':scroll_limit,'networkAndDOMSettled':True}
         return result
+    except Exception as error:
+        if type(error).__name__=='TimeoutException':raise PublisherStageTimeout(phase) from None
+        raise
     finally:
         driver.quit()
 
@@ -107,7 +118,7 @@ def main():
     except Exception as error:
         # Stable error categories only: never forward URLs, page content,
         # Chrome diagnostics, anonymous session values or stack traces.
-        code=4 if str(error)=='Publisher HTTP error' else ERROR_EXIT_CODES.get(type(error).__name__,1)
+        code=error.code if isinstance(error,PublisherStageTimeout) else 4 if str(error)=='Publisher HTTP error' else ERROR_EXIT_CODES.get(type(error).__name__,1)
         print('Native publisher rendering failed',file=sys.stderr);sys.exit(code)
 
 if __name__=='__main__':main()

@@ -11,6 +11,13 @@ def event(method, **params):
 
 
 class SettleTests(unittest.TestCase):
+    def test_blocked_analytics_does_not_prevent_publisher_quiet_window(self):
+        clock=[0];monitor=PublisherSettle(clock=lambda:clock[0],allowed_hosts=('kenyanstocks.com',))
+        self.assertFalse(monitor.observe([event('Network.requestWillBeSent',requestId='analytics',type='Script',request={'url':'https://analytics.example/script.js'})],'stable'))
+        clock[0]=1
+        self.assertTrue(monitor.observe([event('Network.loadingFailed',requestId='analytics')],'stable'))
+        self.assertFalse(monitor.observe([event('Network.requestWillBeSent',requestId='data',type='Fetch',request={'url':'https://kenyanstocks.com/data'})],'stable'))
+        clock[0]=5;self.assertFalse(monitor.observe([],'stable'))
     def test_pending_and_dom_mutations_cannot_be_mistaken_for_complete_data(self):
         clock = [0]
         monitor = PublisherSettle(clock=lambda: clock[0])

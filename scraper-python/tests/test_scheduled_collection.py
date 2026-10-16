@@ -3,6 +3,7 @@ import pathlib
 import subprocess
 import sys
 import unittest
+from contextlib import asynccontextmanager
 
 root=pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(root))
@@ -33,3 +34,29 @@ class ScheduledTests(unittest.TestCase):
         self.assertIn("github.event.schedule == '17 */8 * * *' && vars.CONTINUA_SCHEDULED_NEWS_ENABLED == 'true'",workflow)
         self.assertIn("github.event.schedule == '43 20 * * *' && vars.CONTINUA_SCHEDULED_DOCUMENTS_ENABLED == 'true'",workflow)
         self.assertNotIn('vars.CONTINUA_SCHEDULED_SCRAPER_ENABLED',workflow)
+
+class SlotTests(unittest.IsolatedAsyncioTestCase):
+    async def test_slot_uses_transaction_guard_and_cleans_failed_exit(self):
+        class DB:
+            def __init__(self):self.calls=[];self.results=[[{'acquired':True}],[],[],[{'day':'fixture'}],[]]
+            @asynccontextmanager
+            async def transaction(self):yield self
+            async def query(self,sql,params=()):
+                self.calls.append((sql,params));return self.results.pop(0) if self.results else []
+        db=DB()
+        with self.assertRaises(RuntimeError):
+            async with module.scheduled_slot(db,'fixture','documents',16,128) as skipped:
+                self.assertIsNone(skipped);raise RuntimeError('fixture')
+        self.assertIn('pg_try_advisory_xact_lock',db.calls[0][0])
+        self.assertIn("interval '30 minutes'",db.calls[2][0])
+        self.assertEqual(db.calls[3][1],(16,128))
+        self.assertIn("status='running'",db.calls[-1][0])
+    async def test_overlap_does_not_reserve_bandwidth(self):
+        class DB:
+            calls=[]
+            @asynccontextmanager
+            async def transaction(self):yield self
+            async def query(self,sql,params=()):self.calls.append(sql);return [{'acquired':False}]
+        db=DB()
+        async with module.scheduled_slot(db,'fixture','documents',16,128) as skipped:self.assertEqual(skipped,'overlap-skipped')
+        self.assertEqual(len(db.calls),1)

@@ -8,6 +8,7 @@ import uuid
 import pathlib
 import tempfile
 import hashlib
+from contextlib import asynccontextmanager
 from continua_scraper.download import Artifact
 from continua_scraper import transfer_budget
 from continua_scraper.config import validate_environment
@@ -37,6 +38,31 @@ def ordered_sources(sources,kind,hour):
     rotated=sources[offset:]+sources[:offset]
     return sorted(rotated,key=lambda s:0 if kind!='news' and s['adapter']=='kenyanstocks' else 1)
 
+@asynccontextmanager
+async def scheduled_slot(database,run_id,kind,ceiling,daily):
+    """Transaction-pooler-safe atomic claim; never leave a session lock behind."""
+    skipped=None
+    async with database.transaction() as tx:
+        acquired=await tx.query('SELECT pg_try_advisory_xact_lock(77123,15002) AS acquired')
+        if not acquired[0]['acquired']:skipped='overlap-skipped'
+        elif await tx.query('SELECT id FROM scraping.scheduled_runs WHERE id=%s',(run_id,)):skipped='duplicate-skipped'
+        elif await tx.query("SELECT id FROM scraping.scheduled_runs WHERE status='running' AND id NOT LIKE 'render-index-%%' AND started_at>now()-interval '30 minutes' LIMIT 1"):
+            skipped='overlap-skipped'
+        else:
+            reserved=await tx.query('''INSERT INTO scraping.scheduled_transfer_days(day,reserved_bytes)
+                VALUES((now() AT TIME ZONE 'UTC')::date,%s)
+                ON CONFLICT(day) DO UPDATE SET reserved_bytes=scraping.scheduled_transfer_days.reserved_bytes+EXCLUDED.reserved_bytes
+                WHERE scraping.scheduled_transfer_days.reserved_bytes+EXCLUDED.reserved_bytes<=%s RETURNING day''',(ceiling,daily))
+            if not reserved:skipped='budget-paused'
+            else:await tx.query('INSERT INTO scraping.scheduled_runs(id,kind,status) VALUES(%s,%s,%s)',(run_id,kind,'running'))
+    if skipped:
+        yield skipped
+        return
+    try:yield None
+    finally:
+        # Exceptions/cancellation cannot leave a completed runner marked active.
+        await database.query("UPDATE scraping.scheduled_runs SET status='failed',completed_at=now() WHERE id=%s AND status='running'",(run_id,))
+
 async def run(kind,source_id=None):
     validate_environment(os.environ)
     if os.environ.get('R2_DUAL_WRITE','false').lower() not in ('false','0','no',''):
@@ -49,22 +75,9 @@ async def run(kind,source_id=None):
     run_id=os.environ.get('GITHUB_RUN_ID','local-'+uuid.uuid4().hex)+'-'+os.environ.get('GITHUB_RUN_ATTEMPT','1')
     started=time.monotonic()
     try:
-        # Session-pooler/direct PostgreSQL only. Keep the lock's connection
-        # checked out until all jobs finish, including cancellation cleanup.
-        async with database.pool.connection() as lock:
-            cursor=await lock.execute('SELECT pg_try_advisory_lock(77123,15001) AS acquired')
-            if not (await cursor.fetchone())['acquired']:
-                return dict(receipt,status='overlap-skipped')
+        async with scheduled_slot(database,run_id,kind,ceiling,daily) as skipped:
+            if skipped:return dict(receipt,status=skipped)
             try:
-                async with database.transaction() as tx:
-                    duplicate=await tx.query('SELECT id FROM scraping.scheduled_runs WHERE id=%s',(run_id,))
-                    if duplicate:return dict(receipt,status='duplicate-skipped')
-                    reserved=await tx.query('''INSERT INTO scraping.scheduled_transfer_days(day,reserved_bytes)
-                        VALUES((now() AT TIME ZONE 'UTC')::date,%s)
-                        ON CONFLICT(day) DO UPDATE SET reserved_bytes=scraping.scheduled_transfer_days.reserved_bytes+EXCLUDED.reserved_bytes
-                        WHERE scraping.scheduled_transfer_days.reserved_bytes+EXCLUDED.reserved_bytes<=%s RETURNING day''',(ceiling,daily))
-                    if not reserved:return dict(receipt,status='budget-paused')
-                    await tx.query('INSERT INTO scraping.scheduled_runs(id,kind,status) VALUES(%s,%s,%s)',(run_id,kind,'running'))
                 transfer_budget.active=budget
                 storage=RawStorage.from_environment()
                 runtime=CollectorRuntime(database,storage,scheduler_enabled=False)
@@ -115,7 +128,7 @@ async def run(kind,source_id=None):
                 finally:
                     receipt.update(budget.snapshot(),durationSeconds=round(time.monotonic()-started,3))
                     await database.query('UPDATE scraping.scheduled_runs SET status=%s,completed_at=now(),receipt=%s::jsonb WHERE id=%s',(receipt['status'],encode(receipt),run_id))
-            finally:await lock.execute('SELECT pg_advisory_unlock(77123,15001)')
+            finally:transfer_budget.active=None
     finally:
         transfer_budget.active=None
         if runtime:await runtime.close()

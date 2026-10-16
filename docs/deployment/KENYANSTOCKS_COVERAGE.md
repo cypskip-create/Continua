@@ -40,3 +40,13 @@ Three scheduled news runs reserve 16MiB each; the daily document run reserves
 allowance accommodates download plus R2 upload of larger reports. Existing
 600-second execution limit, domain/robots rules and TLS checks remain. Render
 does not handle bulk collection or store these files. Limits are not invoice caps.
+
+Live verification on 16 October queued 828 views from the combined universe and
+stored/extracted two artifacts, but exposed ten browser timeouts. Publisher-only
+network settling fixes the reproduced timeout: intentionally blocked analytics
+must not hold the source-data quiet window open. A real isolated Files render
+then passed locally. Safe exit codes identify navigation/settling/control phases
+without logging URLs, page content or credentials. Run claims now use a short
+transaction advisory lock plus durable 30-minute active-run records, rather than
+session locks that are not reliable through transaction poolers. The daily quota
+reservation remains atomic with the claim, and is never refunded by retries.

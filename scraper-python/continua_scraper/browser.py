@@ -8,7 +8,7 @@ from .process import run_process,NativeWorkerError
 
 class PublisherRenderError(ValueError):
     def __init__(self,code):
-        self.safe_code=f'browser_exit_{code}' if type(code) is int and 1<=code<=13 else 'browser_exit_other'
+        self.safe_code=f'browser_exit_{code}' if type(code) is int and 1<=code<=19 else 'browser_exit_other'
         super().__init__(self.safe_code)
 
 class BrowserRenderer:
@@ -27,12 +27,11 @@ class BrowserRenderer:
         if not self.chromium or not self.driver:raise ValueError('Native Chromium/ChromeDriver configuration is required')
         worker=pathlib.Path(__file__).resolve().parents[1]/'browser_worker.py'
         async with BrowserProxy(self.downloader.policy) as proxy:
-            config={'url':url,'options':options,'proxyPort':proxy.port,'userAgent':self.downloader.policy.user_agent,'chromium':self.chromium,'driver':self.driver}
+            config={'url':url,'options':options,'proxyPort':proxy.port,'allowedHosts':list(self.downloader.policy.allowed_domains),'userAgent':self.downloader.policy.user_agent,'chromium':self.chromium,'driver':self.driver}
             # Configuration has no database, Paystack or R2 credentials. Input is
             # a bounded command argument; it never contains document bodies.
             try:raw=await run_process([self.python,worker,json.dumps(config)],timeout=150,max_output=12*1024*1024)
             except NativeWorkerError as error:
-                message={2:'Publisher view did not settle or expose requested controls',3:'Native browser dependency failed',4:'Publisher returned an HTTP error',5:'Publisher requested control unavailable',6:'Native browser rejected configuration',7:'Publisher DOM script failed',8:'Native browser executable unavailable',9:'Native browser protocol field unavailable',10:'Native browser execution denied',11:'Native browser validation failed',12:'Publisher control is obscured',13:'Publisher controls changed during interaction'}.get(error.returncode,'Native publisher rendering failed')
                 raise PublisherRenderError(error.returncode) from None
         result=json.loads(raw)
         if not isinstance(result,dict) or not isinstance(result.get('html'),str) or len(result['html'].encode())>8*1024*1024:raise ValueError('Invalid rendered publisher document')
