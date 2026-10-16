@@ -56,6 +56,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - run: node scraper/scripts/testRenderLight.mjs
       - run: go -C backend-go mod verify
       - run: go -C backend-go test ./...
       - run: go -C backend-go test -race ./...
