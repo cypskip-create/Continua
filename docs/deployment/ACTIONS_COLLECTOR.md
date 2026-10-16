@@ -10,7 +10,7 @@ and point operators to the manual Actions workflow; no GitHub token is exposed.
 The existing backend reader and payment configuration remains unchanged.
 
 Index collection is limited to one official homepage URL per six-hour UTC slot,
-four source HTTP attempts (including robots/redirects), 256 KiB per decompressed
+four source HTTP attempts (including robots/redirects), 512 KiB per decompressed
 response, no HTTP retries or link expansion. A pre-I/O SQL unique receipt prevents
 restart/replica retries from bypassing the slot. New HTML index evidence is parsed
 in memory and saved directly to private R2 and SQL, without a global OCR sweep.
@@ -29,6 +29,14 @@ and the completed one-time TypeScript conversion script. Docker no longer copies
 those configs, and fresh builds no longer copy `.d.ts` contracts into runtime
 output. Development declarations/tests remain; no frontend code, stored document
 or production rollback implementation is deleted. Git retains the removed files.
+
+On 16 October, the live Render role and database health passed; Render rejected
+bulk document refresh with HTTP 409 and reported news ownership as Actions. The
+first index attempt correctly rejected a 274,372-byte HTML page against the
+initial 256 KiB ceiling. The ceiling was corrected to 512 KiB after one bounded
+public measurement. Its failed SQL slot remains intact: no restart or manual
+test bypasses the six-hour quota. This remains a collection-configuration restore,
+not proof that all upstream documents succeed or that native cutover is complete.
 
 The new Python entrypoint is `scraper-python/scheduled_collect.py`; the workflow
 is `.github/workflows/scheduled-collector.yml`. It has no Render URL, API call,

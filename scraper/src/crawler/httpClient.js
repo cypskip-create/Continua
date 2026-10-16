@@ -27,7 +27,7 @@ import zlib from "node:zlib";
 import { assertPublicUrl, UnsafeUrlError } from "./urlSafety.js";
 import { throttleHost } from "./rateLimiter.js";
 import { env } from "../config/index.js";
-import { reserveLightRequest } from '../scheduler/renderLight.js';
+import { reserveLightRequest, lightResponseBytes } from '../scheduler/renderLight.js';
 export class FetchTooLargeError extends Error {
 }
 export class FetchTimeoutError extends Error {
@@ -104,7 +104,7 @@ function requestOnce(url, opts) {
     });
 }
 export async function safeFetch(url, opts = {}) {
-    const maxBytes = env.SCRAPER_WORKLOAD_ROLE === 'render-light' ? Math.min(opts.maxBytes ?? env.MAX_RESPONSE_SIZE_BYTES, 256 * 1024) : opts.maxBytes ?? env.MAX_RESPONSE_SIZE_BYTES;
+    const maxBytes = env.SCRAPER_WORKLOAD_ROLE === 'render-light' ? Math.min(opts.maxBytes ?? env.MAX_RESPONSE_SIZE_BYTES, lightResponseBytes) : opts.maxBytes ?? env.MAX_RESPONSE_SIZE_BYTES;
     const timeoutMs = opts.timeoutMs ?? env.DEFAULT_REQUEST_TIMEOUT_MS;
     const requestsPerSecond = opts.requestsPerSecond ?? env.DEFAULT_REQUESTS_PER_SECOND;
     let currentUrl = url;

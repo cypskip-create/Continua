@@ -2,6 +2,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 const scope = new AsyncLocalStorage();
 export const lightSourceId = 'nse-index-summary';
+export const lightResponseBytes = 512 * 1024;
 export function lightRouteAllowed(method, path) {
     return method === 'GET' && ['/health', '/health/live', '/news/status', '/sources', '/crawl-status'].includes(path) ||
         method === 'POST' && path === '/indices/refresh';

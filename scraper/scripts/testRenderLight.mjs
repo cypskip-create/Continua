@@ -1,6 +1,10 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {lightRouteAllowed,lightSlotId,runLightScope,reserveLightRequest} from '../src/scheduler/renderLight.js';
+import {lightRouteAllowed,lightSlotId,runLightScope,reserveLightRequest,lightResponseBytes} from '../src/scheduler/renderLight.js';
+test('measured official HTML fits without allowing large reports',()=>{
+    assert.ok(lightResponseBytes >= 274372);
+    assert.equal(lightResponseBytes,512*1024);
+});
 test('light role rejects every bulk route including public refresh and admin execution',()=>{
     for(const [method,path] of [['POST','/documents/refresh'],['POST','/news/refresh'],['POST','/extractions/sweep'],['POST','/sources/nse/crawl'],['GET','/adapters/nse/announcements/preview']])
         assert.equal(lightRouteAllowed(method,path),false);
