@@ -53,6 +53,7 @@ class ProcessingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(summary['processed'],1)
         self.assertIn('FOR UPDATE OF e SKIP LOCKED LIMIT 1',db.calls[0][0])
         self.assertIn('DESC NULLS LAST',db.calls[0][0])
+        self.assertIn('p.gate_signature IS DISTINCT FROM',db.calls[0][0])
         self.assertIn('ON CONFLICT',db.calls[1][0])
         payload=json.loads(db.calls[1][1][-1])
         self.assertEqual(payload['destination'],'overview')

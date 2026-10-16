@@ -55,7 +55,8 @@ class ResearchProcessor:
                 rows=await tx.query("""SELECT e.id,e.method,e.text,e.tables,e.entity,e.needs_review,
                     a.document_url,a.content_type,a.metadata,a.title,a.source_id,a.sha256,a.storage_path,
                     a.retrieved_at,s.enabled,s.redistribution_allowed,s.config,
-                    sec.id AS security_id
+                    sec.id AS security_id,
+                    md5(jsonb_build_array(s.enabled,s.redistribution_allowed,s.config->>'permissionReference',a.storage_path,a.sha256,sec.id)::text) AS gate_signature
                   FROM scraping.extractions e JOIN scraping.raw_artifacts a ON a.id=e.artifact_id
                   JOIN scraping.sources s ON s.id=a.source_id
                   LEFT JOIN market.securities sec ON sec.exchange='NSE' AND sec.symbol=
@@ -63,9 +64,8 @@ class ResearchProcessor:
                   WHERE (a.source_id='kenyanstocks' OR a.content_type LIKE '%%application/pdf%%')
                   AND NOT EXISTS(SELECT 1 FROM scraping.processed_research p
                     WHERE p.extraction_id=e.id AND p.processor_version=%s AND NOT (
-                      p.status='blocked' AND sec.id IS NOT NULL AND s.enabled AND s.redistribution_allowed=true
-                      AND length(trim(s.config->>'permissionReference')) BETWEEN 1 AND 200
-                      AND a.sha256 ~ '^[a-f0-9]{64}$' AND a.storage_path LIKE 'r2://continua-financial-documents/%%'))
+                      p.status='blocked' AND p.gate_signature IS DISTINCT FROM
+                        md5(jsonb_build_array(s.enabled,s.redistribution_allowed,s.config->>'permissionReference',a.storage_path,a.sha256,sec.id)::text)))
                   AND NOT EXISTS(SELECT 1 FROM scraping.extractions n WHERE n.artifact_id=e.artifact_id
                     AND n.entity->>'ticker' IS NOT DISTINCT FROM e.entity->>'ticker' AND (n.extracted_at,n.id)>(e.extracted_at,e.id))
                   ORDER BY (s.enabled AND s.redistribution_allowed=true AND sec.id IS NOT NULL
@@ -109,11 +109,11 @@ class ResearchProcessor:
                 if len(serialized.encode('utf-8'))>8*1024*1024:
                     payload={'version':VERSION,'status':'review_required','destination':'review','issues':[{'code':'processed_payload_budget_exceeded'}]}
                     serialized=encode(payload)
-                await tx.query("""INSERT INTO scraping.processed_research(extraction_id,processor_version,security_id,destination,status,payload)
-                  VALUES(%s,%s,%s,%s,%s,%s::jsonb) ON CONFLICT(extraction_id,processor_version)
+                await tx.query("""INSERT INTO scraping.processed_research(extraction_id,processor_version,security_id,destination,status,gate_signature,payload)
+                  VALUES(%s,%s,%s,%s,%s,%s,%s::jsonb) ON CONFLICT(extraction_id,processor_version)
                   DO UPDATE SET security_id=EXCLUDED.security_id,destination=EXCLUDED.destination,status=EXCLUDED.status,
-                    payload=EXCLUDED.payload,processed_at=now() WHERE processed_research.status='blocked'""",
-                  (row['id'],VERSION,row.get('security_id'),payload['destination'],payload['status'],serialized))
+                    gate_signature=EXCLUDED.gate_signature,payload=EXCLUDED.payload,processed_at=now() WHERE processed_research.status='blocked'""",
+                  (row['id'],VERSION,row.get('security_id'),payload['destination'],payload['status'],row.get('gate_signature'),serialized))
                 summary['processed']+=1
                 summary[{'publisher_observation':'observations','review_required':'review'}.get(payload['status'],payload['status'])]+=1
                 summary['destinations'][payload['destination']]=summary['destinations'].get(payload['destination'],0)+1
