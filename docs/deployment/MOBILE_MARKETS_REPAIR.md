@@ -9,6 +9,9 @@ This is not a frontend redesign or native backend cutover.
 - Clip horizontal overflow at the document viewport while retaining scrollable
   market rails and document-owned sticky headers. Previously a 393px viewport
   reported a 534px document width.
+- Position each rolling-number wrapper relatively. Its absolute screen-reader
+  text otherwise escapes the nested rail's clipping because its containing block
+  is the page, contributing offscreen width even when visual digits are clipped.
 - Resolve sector display aliases against the current instrument directory; use
   API-provided member symbols for groups absent from that directory. Do not
   declare a sector missing while its directory is loading.

@@ -26,6 +26,7 @@ test('viewport clips overflow at the document, leaving body sticky ownership int
  const css=readFileSync(new URL('../src/index.css',import.meta.url),'utf8');
  assert.match(css,/html\s*\{\s*overflow-x:\s*hidden/);
  assert.match(css,/body\s*\{\s*overflow-x:\s*clip/);
+ assert.match(css,/\.rolling-number\s*\{\s*position:\s*relative/,'Accessible absolute text must not escape horizontal rails into the document');
  const checkout=readFileSync(new URL('../src/pages/Checkout.tsx',import.meta.url),'utf8');
  assert.ok(checkout.includes('onClick={backToPlans}'));assert.ok(checkout.includes('replace:true,state:{fromCheckout:true}'));
 });
