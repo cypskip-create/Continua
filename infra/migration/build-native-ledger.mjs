@@ -5,6 +5,10 @@ import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../..',import.meta.url));
 const inventory=JSON.parse(await readFile(new URL('../../docs/architecture/FEATURE_LANGUAGE_DECISIONS.json',import.meta.url),'utf8'));
+// Deleted only after whole-repository import/entrypoint audit. Preserve the
+// historical feature hash and release status instead of hiding a migration gate.
+const retiredUnused = new Map([['backend/src/services/portfolio/corporateActionAdjustments.js',
+ '2e6a0ca6d932ce0ae8314ae675ee66be02989352d517e32ef437968d682459ea']]);
 const nativePorts={
  'backend/src/ingestion/retry.js':['backend-go/internal/ingestion/retry.go','Native Go bounded retry preserves default three attempts, 300/600ms backoff and permanent 401/403/404/429 handling. Tests cover wrapped provider errors, exhaustion, success, cancellation and fail-before-call policy budgets. Provider exception text is not logged; callback cancellation remains explicit.'],
  'backend/src/storage/repositories/apiKeyRepository.js':['backend-go/internal/maintenance/keys.go','Native Go lookup/touch, legacy-compatible scrypt hashing, OS-random hash-only creation and exact-ID revocation pass SQL-driver fixtures and a real dedicated PostgreSQL create/lookup/auth/revoke test. Existing short auth-cache behavior is preserved; no user/admin/Premium rights added.'],
@@ -297,13 +301,14 @@ const developmentReferences=new Set([
 const features=[];
 const declarationOnly=new Set(['backend/src/adapters/types.js','backend/src/adapters/nse/nseRawTypes.js','backend/src/types/market.js','scraper/src/types.js','scraper/src/adapters/types.js']);
 for(const item of inventory.features){
- const source=await readFile(new URL('../../'+item.file,import.meta.url),'utf8');
+ const source=retiredUnused.has(item.file)?'':await readFile(new URL('../../'+item.file,import.meta.url),'utf8');
  const contract=declarationOnly.has(item.file);
  if(contract&&!/^export\s*\{\s*\}\s*;?$/.test(source.replace(/\/\*[\s\S]*?\*\//g,'').trim()))throw new Error('Declaration-only file gained runtime behavior: '+item.file);
  const retained=contract||developmentReferences.has(item.file)||item.file.endsWith('.sql')||item.file.endsWith('.py')||item.file.startsWith('supabase/functions/');
  const targetLanguage=contract?'Non-runtime declaration':item.file.endsWith('.sql')?'SQL':item.file.startsWith('supabase/functions/')?'JavaScript/Deno (provider-native)':nativePorts[item.file]?.[0].startsWith('engine-python/')||item.file.startsWith('scraper/')||item.file.endsWith('.py')||/backend\/src\/services\/(research|technical|analytics|portfolio|screening)\//.test(item.file)?'Python':'Go';
  const status=nativePorts[item.file]?'ported':retained?'retained':partial[item.file]?'partial':'pending';
- features.push({legacyFile:item.file,legacySha256:createHash('sha256').update(source).digest('hex'),targetLanguage,status,
+ features.push({legacyFile:item.file,legacySha256:retiredUnused.get(item.file)??createHash('sha256').update(source).digest('hex'),targetLanguage,status,
+  ...(retiredUnused.has(item.file)?{legacyReferenceRetired:'Unused runtime module removed after import audit; historical feature and native release gates preserved'}:{}),
   rationale:developmentReferences.has(item.file)?'Legacy development-only build/inventory/oracle/sandbox or one-off evidence verification reference. Not included or executed in either native container. Native Go/Python commands and tests replace production execution; retaining a comparison fixture is not a Node production dependency.':contract?'Inspected emitter contains only comments and export {}; no executable feature to port. Retained declaration contracts are not a native behavioral port.':targetLanguage==='Go'?'Native bounded HTTP/database/security/job runtime; no Node forwarding.':targetLanguage==='Python'?'Evidence/numerical/document tooling and asynchronous collection; bounded work required.':'Retain authoritative SQL or provider-compatible entrypoint.',
   ...(nativePorts[item.file]?{replacement:nativePorts[item.file][0],validation:nativePorts[item.file][1]}:{}),
   ...(partial[item.file]&&!nativePorts[item.file]?{remaining:partial[item.file]}:{}),

@@ -3,7 +3,7 @@ import { query, pool } from '../src/storage/db.js';
 try {
     const reference = process.argv[2];
     if (!reference || !process.argv.includes('--scope-confirmed'))
-        throw new Error('Usage: tsx scripts/enableLicensedNse.ts "permission reference" --scope-confirmed');
+        throw new Error('Usage: node scripts/enableLicensedNse.js "permission reference" --scope-confirmed');
     const audit = { permissionReference: reference, permissionConfirmedAt: new Date().toISOString(),
         permissionEvidence: 'operator_attestation',
         permissionScope: ['historical_prices', 'indices', 'bonds', 'derivatives', 'automated_downloads', 'paid_app_display'] };

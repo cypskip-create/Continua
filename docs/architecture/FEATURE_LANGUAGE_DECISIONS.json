@@ -1981,6 +1981,7 @@
     },
     {
       "file": "backend/src/services/portfolio/corporateActionAdjustments.js",
+      "legacyReferenceRetired": "Removed after whole-repository unused-module audit on 2026-10-16; historical migration entry retained",
       "category": "engine",
       "language": "JavaScript",
       "runtime": "Node.js",

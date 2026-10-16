@@ -14,7 +14,7 @@ const schema = z.object({
 try {
     const filename = process.argv[2];
     if (!filename)
-        throw new Error("Usage: tsx scripts/publishReviewedFiling.ts review.json [--reviewed]");
+        throw new Error("Usage: node scripts/publishReviewedFiling.js review.json [--reviewed]");
     const input = schema.parse(JSON.parse(await readFile(filename, "utf8")));
     const artifact = (await query("SELECT a.*,e.id AS extraction_id FROM scraping.raw_artifacts a JOIN LATERAL (SELECT id FROM scraping.extractions WHERE artifact_id=a.id ORDER BY extracted_at DESC LIMIT 1) e ON true WHERE a.id=$1", [input.artifactId])).rows[0];
     if (!artifact || artifact.sha256 !== input.sha256 || artifact.document_url !== input.documentUrl)

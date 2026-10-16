@@ -88,7 +88,7 @@ backend/
 
 | Script | What it does |
 |---|---|
-| `npm run dev` | Full stack (API + WS + workers), hot-reload via `tsx watch` |
+| `npm run dev` | Full stack (API + WS + workers), hot-reload via `node --watch` |
 | `npm run build` / `npm start` | Production build + run |
 | `npm test` | Vitest unit tests. Set `DATABASE_URL` to also run the integration test. |
 | `npm run typecheck` | `tsc --noEmit` |

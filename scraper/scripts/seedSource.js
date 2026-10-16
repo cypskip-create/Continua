@@ -5,7 +5,7 @@
  * this script remains the manual stand-in for that.
  *
  * Usage:
- *   npx tsx scripts/seedSource.ts \
+ *   node scripts/seedSource.js \
  *     --id nse-generic-test \
  *     --name "NSE (generic crawl test)" \
  *     --adapter generic \
@@ -15,7 +15,7 @@
  *     [--rps 1]
  *
  * For an RSS source:
- *   npx tsx scripts/seedSource.ts --id my-feed --name "My Feed" \
+ *   node scripts/seedSource.js --id my-feed --name "My Feed" \
  *     --adapter rss --feed-url https://example.com/feed.xml [--schedule <cron>] [--rps <number>]
  */
 import { upsertSource } from "../src/storage/sourcesRepository.js";
@@ -35,7 +35,7 @@ async function main() {
     const feedUrl = arg("feed-url");
     if (adapter === "rss") {
         if (!id || !name || !feedUrl) {
-            console.error("Usage for --adapter rss: npx tsx scripts/seedSource.ts --id <id> --name <name> --adapter rss --feed-url <url> [--schedule <cron>] [--rps <number>]");
+            console.error("Usage for --adapter rss: node scripts/seedSource.js --id <id> --name <name> --adapter rss --feed-url <url> [--schedule <cron>] [--rps <number>]");
             process.exit(1);
         }
         await upsertSource({
@@ -60,7 +60,7 @@ async function main() {
         return;
     }
     if (!id || !name || !seed || !domain) {
-        console.error("Usage: npx tsx scripts/seedSource.ts --id <id> --name <name> --seed <url> --domain <allowed-domain> [--adapter generic] [--schedule <cron>] [--rps <number>]");
+        console.error("Usage: node scripts/seedSource.js --id <id> --name <name> --seed <url> --domain <allowed-domain> [--adapter generic] [--schedule <cron>] [--rps <number>]");
         process.exit(1);
     }
     await upsertSource({

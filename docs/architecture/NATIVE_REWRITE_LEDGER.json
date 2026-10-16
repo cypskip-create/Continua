@@ -1439,6 +1439,7 @@
     },
     {
       "legacyFile": "backend/src/services/portfolio/corporateActionAdjustments.js",
+      "legacyReferenceRetired": "Unused runtime module removed after import audit; historical feature and native release gates preserved",
       "legacySha256": "2e6a0ca6d932ce0ae8314ae675ee66be02989352d517e32ef437968d682459ea",
       "targetLanguage": "Python",
       "status": "partial",
