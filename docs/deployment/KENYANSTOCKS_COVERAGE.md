@@ -50,3 +50,25 @@ without logging URLs, page content or credentials. Run claims now use a short
 transaction advisory lock plus durable 30-minute active-run records, rather than
 session locks that are not reliable through transaction poolers. The daily quota
 reservation remains atomic with the claim, and is never refunded by retries.
+
+## Verified execution — 16 October 2026
+
+[Actions run 38902163789](https://github.com/cypskip-create/Continua/actions/runs/38902163789)
+on revision `93f5093` completed actual collection (not overlap/budget skipped):
+56 publisher stocks, 69 queued stocks including catalogue fallbacks, 828 planned
+views, one fetched/new/extracted artifact, zero failures and zero listing failures.
+The one-document check downloaded 2,557,491 logical bytes and uploaded 652,250
+bytes directly to private R2 under its 16MiB reservation. No Render transport.
+
+A separate credential-free local check executed all twelve COOP view/category
+jobs through the real isolated renderer: all succeeded without coverage limits.
+Profit/Loss exposed 30 rows and five expanded groups; Cash Flow 27 rows/four
+groups; Assets 18 rows; Liabilities and Equity eleven rows each; Historical Data
+2,942 table rows; Holders eleven rows; Files 23 PDF links. Statistics, News and
+Corporate Actions also rendered and settled; zero table rows there does not mean
+their text/cards are absent. The adapter retains rendered HTML and displayed
+text/cards as evidence rather than inventing numerical table data.
+
+This verifies discovery and execution, not completion of all 828 queued views or
+all linked PDF downloads. Remaining work is durable, incremental scheduled
+backfill within the daily budget; no unlimited fetch or complete-archive claim.
