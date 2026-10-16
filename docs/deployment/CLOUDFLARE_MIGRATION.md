@@ -41,9 +41,31 @@ Do not trust a public header or CORS alone as authentication.
 Cloudflare's Git connection requires dashboard authorization. Build from the
 repository root; command `npm ci && npm --workspace app test && npm run build`;
 deploy command `npx wrangler deploy --config infra/cloudflare/wrangler.jsonc`.
-Scope watched paths to app/, infra/cloudflare/ and root package manifests.
+Watch all repository paths (`*`) on the production branch `main`, as requested.
 Keep Render and Vercel integrations. Do not mark Git auto-deploy operational
 until a pushed frontend commit actually produces a successful Worker release.
+
+## Automatic deployment repair — 16 October 2026
+
+The Git integration and production deploy command were enabled and the previous
+builds had succeeded. Recent backend/scraper commits were skipped because the
+include watch paths were restricted to `app/**`, `infra/cloudflare/**`,
+`package.json` and `package-lock.json`. No build failure was observed for those
+skipped commits: they never matched the trigger.
+
+Changed the existing Worker build trigger to include `*`, with no excluded paths,
+while retaining production branch `main`, the repository root, existing build
+tests, Wrangler deploy command and all existing secrets. Every pushed commit to
+`main`, including docs/backend-only changes, now qualifies for a build. Local
+uncommitted edits and pushes to other branches are not production deployments.
+An unsuccessful build must leave the last good release active; automatic does
+not mean bypassing tests or guaranteeing upstream build-service availability.
+This broadens build frequency, not account permissions, paid plans or domains.
+
+Validate by pushing a documentation-only commit outside the former include
+paths, then confirm Cloudflare creates and successfully deploys its exact SHA.
+Do not use a manual retry as proof of the repaired push trigger. Primary reference:
+[Cloudflare build watch paths](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/).
 
 ## Payment compatibility
 
