@@ -5,6 +5,14 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "app/src/components/stock/PublisherFinancialTables.tsx",
+      "category": "Automatic processed financial chart presentation",
+      "language": "Existing React/TypeScript frontend; Python Engine series retained",
+      "runtime": "Existing browser chart library, no new backend runtime",
+      "reason": "Use the existing Recharts renderer for interactive bars/lines and the existing Python Engine's persisted decimal-derived series for values. The browser does not parse source financial cells, fabricate missing years, merge observations into verified statements or require per-stock chart code. Every available processed metric stays selectable in its source financial category.",
+      "references": ["https://github.com/recharts/recharts", "https://docs.python.org/3.13/library/decimal.html"]
+    },
+    {
       "file": "scraper-python/scheduled_collect.py",
       "category": "Fresh issuer financials and automatic delivery receipts",
       "language": "Python and SQL",
