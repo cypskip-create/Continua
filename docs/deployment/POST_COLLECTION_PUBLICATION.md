@@ -64,11 +64,30 @@ The new endpoint is `no-store`. No frontend redesign is part of this change;
 prepared datasets are available to app consumers, not a claim every screen has
 already adopted new sections.
 
+The endpoint uses `limit` (1–100, default 20) and `offset`, returning a
+`pagination.nextOffset` continuation for older documents. It does not silently
+make records beyond the first page unreachable.
+
 Archive reprocessing now retains issuer/tab metadata. Collector parser v0.5.0
 adds non-table cards, definition-list facts, PDF manifests and visible Chart.js
 snapshots; old archives may need a queued refresh to acquire missing DOM facts.
+Each reserved collection run also upgrades at most two older R2 HTML views using
+the checksum-verifying reprocessing service. These reads use the same transfer
+budget; the DB-only maintenance action cannot download originals. Upgrade
+failures rotate through dead-letter timestamps rather than blocking collection.
 
-Verification before deployment: 11 pure Engine tests, 25 targeted backend tests,
+Verification before deployment: 11 pure Engine tests, 27 targeted backend tests,
 the scraper suite (6 optional DB-fixture tests skipped), and native Go marketdata,
 HTTP API and publication packages. Production execution and visual app updates
 must be recorded separately from these local results.
+
+## Live receipts, 16 October 2026
+
+Actions run `38910236608`, revision `a99efc4`, applied the additive schema and
+processed 100 records: 7 empty legacy-format document views, 93 blocked by absent
+verified private evidence, zero infrastructure failures, zero source/R2 downloads.
+KenyanStocks inventory: 689 extractions, 39 with private R2 evidence, 689 permission
+ready and 541 ticker-scoped/known issuers. This is evidence of working DB processing
+and gates, **not** proof that the publisher backfill or canonical financial
+publication is complete. The format-upgrade path addresses old empty views;
+remaining originals must actually reach R2 before their data is eligible.

@@ -8,6 +8,10 @@ ROOT=pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'scraper-python'))
 sys.path.insert(0,str(ROOT/'engine-python'))
 from continua_scraper.research_processing import ResearchProcessor
+from continua_scraper.research_processing import reparse_archived_views
+from continua_scraper import transfer_budget
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 from continua_scraper.kenyanstocks import parse_publisher_view
 
 
@@ -31,6 +35,19 @@ def row(**changes):
 
 
 class ProcessingTests(unittest.IsolatedAsyncioTestCase):
+    async def test_archive_upgrade_requires_reserved_budget_and_uses_existing_extraction_checks(self):
+        runtime=SimpleNamespace(database=SimpleNamespace(query=AsyncMock(return_value=[{'id':9}])),
+            extraction=SimpleNamespace(reprocess=AsyncMock()))
+        previous=transfer_budget.active
+        try:
+            transfer_budget.active=None
+            with self.assertRaises(ValueError):await reparse_archived_views(runtime)
+            transfer_budget.active=transfer_budget.TransferBudget(1024)
+            self.assertEqual((await reparse_archived_views(runtime))['reprocessed'],1)
+            runtime.extraction.reprocess.assert_awaited_once_with(9)
+            self.assertIn("a.metadata->>'ticker'=e.entity->>'ticker'",runtime.database.query.call_args[0][0])
+        finally:transfer_budget.active=previous
+
     async def test_versioned_transaction_claims_and_receipts_are_bounded(self):
         db=DB([row()]);summary=await ResearchProcessor(db).run(1)
         self.assertEqual(summary['processed'],1)

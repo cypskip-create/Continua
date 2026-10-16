@@ -18,6 +18,7 @@ it('acknowledges only after research and both cache invalidations finish', async
     expect(m.query.mock.calls.at(-1)[0]).toContain('researchRefreshPending":false');
     expect(m.query.mock.calls[0][0]).toContain('SKIP LOCKED');
     expect(m.query.mock.calls[0][0]).toContain('LIMIT 5');
+    expect(m.query.mock.calls[0][0]).toContain('NULLS FIRST,extraction_id');
 });
 it.each(['missingQuote', 'missingInputs', 'calculationFailure', 'cacheFailure'])('retains durable retry on %s', async failure => {
     if (failure === 'missingQuote') m.quote.mockResolvedValue(null);

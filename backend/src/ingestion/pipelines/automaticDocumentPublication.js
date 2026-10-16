@@ -155,7 +155,7 @@ async function refreshPendingDocuments() {
       SELECT extraction_id,validator_version FROM market.document_validations
       WHERE outcome='published' AND result->>'researchRefreshPending'='true'
       AND (result->>'researchRefreshAfter' IS NULL OR (result->>'researchRefreshAfter')::timestamptz<=now())
-      ORDER BY extraction_id FOR UPDATE SKIP LOCKED LIMIT 5)
+      ORDER BY (result->>'researchRefreshAfter')::timestamptz NULLS FIRST,extraction_id FOR UPDATE SKIP LOCKED LIMIT 5)
       UPDATE market.document_validations v SET result=v.result || jsonb_build_object('researchRefreshAfter',now()+interval '10 minutes')
       FROM due WHERE v.extraction_id=due.extraction_id AND v.validator_version=due.validator_version
       RETURNING v.extraction_id,v.validator_version,v.result`);

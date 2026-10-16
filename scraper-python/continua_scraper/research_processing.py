@@ -3,6 +3,41 @@ from .documents import encode
 import re
 
 
+async def reparse_archived_views(runtime,limit=2):
+    """Upgrade old HTML extraction formats using budgeted private R2 reads.
+
+    Called only inside the collector's reserved transfer budget, never by the
+    DB-only maintenance path. No original is rewritten or copied to Render.
+    """
+    if type(limit) is not int or not 1<=limit<=5:raise ValueError('Invalid archive reparse batch')
+    from .transfer_budget import active
+    if active is None:raise ValueError('Archive reprocessing requires an active reserved transfer budget')
+    rows=await runtime.database.query("""SELECT a.id FROM scraping.raw_artifacts a
+      JOIN scraping.sources s ON s.id=a.source_id
+      JOIN LATERAL (SELECT e.tables,e.entity FROM scraping.extractions e WHERE e.artifact_id=a.id
+        ORDER BY e.extracted_at DESC,e.id DESC LIMIT 1) e ON true
+      WHERE a.source_id='kenyanstocks' AND s.enabled AND s.redistribution_allowed=true
+        AND length(trim(s.config->>'permissionReference')) BETWEEN 1 AND 200
+        AND a.content_type LIKE 'text/html%%' AND a.storage_path LIKE 'r2://continua-financial-documents/%%'
+        AND a.metadata->>'ticker'=e.entity->>'ticker' AND a.metadata->>'tab' IS NOT NULL
+        AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(CASE WHEN jsonb_typeof(e.tables)='array' THEN e.tables ELSE '[]'::jsonb END) t
+          WHERE t->>'kind'='publisher_view')
+      ORDER BY coalesce((SELECT max(d.last_failed) FROM scraping.dead_letters d
+        WHERE d.source_id=a.source_id AND d.url=a.document_url AND d.stage='parse'),'epoch'::timestamptz),a.id LIMIT %s""",(limit,))
+    summary={'examined':len(rows),'reprocessed':0,'failed':0}
+    for row in rows:
+        from .transfer_budget import TransferLimitReached
+        try:
+            await runtime.extraction.reprocess(row['id'])
+            summary['reprocessed']+=1
+        except TransferLimitReached:raise
+        except Exception:
+            summary['failed']+=1
+            artifact=await runtime.evidence.artifact_by_id(row['id'])
+            if artifact:await runtime.dead_letters.record(artifact['sourceId'],artifact['documentUrl'],'parse','Archive format upgrade failed; retry scheduled')
+    return summary
+
+
 class ResearchProcessor:
     def __init__(self,database):
         self.database=database

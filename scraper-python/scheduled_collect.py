@@ -95,6 +95,9 @@ async def run(kind,source_id=None):
                 runtime.jobs.max_attempts=5
                 try:
                     async with asyncio.timeout(seconds):
+                        if process_research:
+                            from continua_scraper.research_processing import reparse_archived_views
+                            receipt['archiveReprocessing']=await reparse_archived_views(runtime,2)
                         sources=await runtime.sources.enabled()
                         # Disjoint ownership: the resumed Render light service
                         # owns this HTML-only summary, never Actions documents.
@@ -136,6 +139,7 @@ async def run(kind,source_id=None):
                         if receipt['status']=='running':
                             receipt['status']='failed' if any(s.get('failed',0) for s in receipt['sources']) else 'completed'
                 except TimeoutError:receipt['status']='failed'
+                except transfer_budget.TransferLimitReached:receipt['status']='budget-paused'
                 finally:
                     if process_research:
                         try:
