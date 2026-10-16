@@ -22,7 +22,9 @@ class KenyanStocksAdapter:
         self.tickers=list(dict.fromkeys(aliases.get(t.upper(),t.upper()) for t in [*configured,*universe] if isinstance(t,str) and re.fullmatch(r'[A-Za-z0-9-]+',t)))
 
     async def _discovery_page(self,url):
-        rendered=await self.renderer.render(url)
+        rendered=await self.renderer.render(url,discovery=True)
+        if (rendered.get('coverage') or {}).get('scrollLimitReached'):
+            raise ValueError('Publisher listing discovery incomplete')
         body=rendered['html'].encode('utf-8')
         file=tempfile.NamedTemporaryFile(prefix='continua-discovery-',suffix='.raw',delete=False)
         path=pathlib.Path(file.name)
@@ -36,9 +38,10 @@ class KenyanStocksAdapter:
 
     async def discover(self):
         base='https://kenyanstocks.com';home=''
+        self.discovery_coverage={'listingFailures':0,'listedStocks':0,'queuedStocks':0,'plannedViews':0}
         if await self.io.downloader.robots_allowed(base):
             try:home=await self._discovery_page(base)
-            except Exception:pass # Known issuers remain discoverable when a rail fails.
+            except Exception:self.discovery_coverage['listingFailures']+=1
         links=kenyan_stock_links(home);listing_urls={}
         for node in soup(home).select('a[href]'):
             value=resolve_url(base,node['href'])
@@ -48,10 +51,12 @@ class KenyanStocksAdapter:
         for listing in listing_urls:
             if await self.io.downloader.robots_allowed(listing):
                 try:links.extend(kenyan_stock_links(await self._discovery_page(listing)))
-                except Exception:pass
+                except Exception:self.discovery_coverage['listingFailures']+=1
         documents=[]
+        self.discovery_coverage['listedStocks']=len(set(links))
         for url in dict.fromkeys([*links,*[base+'/stock/nse/'+t for t in self.tickers]]):
             if await self.io.downloader.robots_allowed(url):documents.extend(stock_tab_documents(url))
+        self.discovery_coverage.update(queuedStocks=len({d['context']['ticker'] for d in documents}),plannedViews=len(documents))
         return documents
 
     async def fetch(self,document):

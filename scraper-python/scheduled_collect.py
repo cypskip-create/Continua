@@ -98,7 +98,7 @@ async def run(kind,source_id=None):
                                     batch=12 if source['adapter']=='kenyanstocks' else 2
                                     adapter.persistent_batch_size=batch
                                     result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=batch)
-                                entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','errorClasses')})
+                                entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','errorClasses','discoveryCoverage')})
                             except transfer_budget.TransferLimitReached:
                                 receipt['status']='budget-paused';break
                             except Exception:

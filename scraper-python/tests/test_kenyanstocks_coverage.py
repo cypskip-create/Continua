@@ -36,6 +36,33 @@ class CoverageTests(unittest.TestCase):
         self.assertEqual(kenyan_news_cards(html.replace('https://publisher.example/story','javascript:alert(1)'),'https://kenyanstocks.com/')['entries'],[])
 
 class AsyncCoverageTests(unittest.IsolatedAsyncioTestCase):
+    async def test_each_discovered_and_catalogue_stock_gets_every_tab_and_category(self):
+        class Downloader:
+            async def robots_allowed(self,url):return True
+        class IO:source={'id':'kenyanstocks'};downloader=Downloader()
+        class Adapter(KenyanStocksAdapter):
+            async def _discovery_page(self,url):
+                if url=='https://kenyanstocks.com':return '<a href="/stock">Stocks</a><a href="/stock/nse/COOP">COOP</a>'
+                return '<a href="/stock/nse/NEW1">New issuer not in app</a><a href="/stock/nse/COOP">Duplicate</a>'
+        adapter=Adapter(IO(),None,None,None,universe=['KPC'])
+        docs=await adapter.discover()
+        for ticker in ('COOP','NEW1','KPC'):
+            rows=[d for d in docs if d['context']['ticker']==ticker]
+            self.assertEqual({r['context']['tab'] for r in rows},{'Summary','Financials','Statistics','News','Corporate Actions','Historical Data','Holders','Files'})
+            self.assertEqual(len(rows),12)
+            self.assertEqual(len([r for r in rows if r['context']['tab']=='Financials']),5)
+        self.assertEqual(adapter.discovery_coverage,{'listingFailures':0,'listedStocks':2,'queuedStocks':3,'plannedViews':36})
+
+    async def test_discovery_failure_remains_explicit_while_catalogue_fallback_runs(self):
+        class Downloader:
+            async def robots_allowed(self,url):return True
+        class IO:source={'id':'kenyanstocks'};downloader=Downloader()
+        class Adapter(KenyanStocksAdapter):
+            async def _discovery_page(self,url):raise ValueError('fixture')
+        adapter=Adapter(IO(),None,None,None,universe=['COOP'])
+        self.assertEqual(len(await adapter.discover()),12)
+        self.assertEqual(adapter.discovery_coverage['listingFailures'],1)
+
     async def test_pdf_parse_preserves_issuer(self):
         class PDF:
             async def extract(self,path):return {'method':'native_pdf_text','text':'literal report','tables':[],'needsReview':True}

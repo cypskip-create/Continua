@@ -16,6 +16,12 @@ News, Corporate Actions, Historical Data, Holders and Files. Financial groups
 expand recursively and settle after each action. All DOM table columns are
 retained, including horizontally clipped years. Scrolling collects lazy-loaded
 content; hitting its safety or expansion ceiling is retryable, not complete.
+Discovery pages receive the same scrolling pass. Receipts retain discovered
+stock count, queued stock count, planned view count and listing failures;
+fallback catalogue work must not conceal failed publisher discovery. On the
+16 October audit the public stock list exposed 56 issuer rows and 56 distinct
+issuer links, without pagination controls. Each receives twelve initial views
+(eight tabs, with five Financials categories), before dynamically found PDFs.
 
 Files from every view enqueue private PDF downloads, with issuer attribution
 preserved through extraction. News cards retain displayed headline, excerpt,

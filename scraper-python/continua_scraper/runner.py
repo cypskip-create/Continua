@@ -38,6 +38,10 @@ class AdapterRunner:
         documents=[] if drain_only else await adapter.discover()
         if not isinstance(documents,list):raise ValueError('Invalid adapter discovery result')
         summary={'adapterId':adapter.id,'discovered':len(documents),'fetched':0,'newArtifacts':0,'extracted':0,'needsReview':0,'failed':0,'skipped':0}
+        coverage=getattr(adapter,'discovery_coverage',None)
+        if coverage is not None:
+            summary['discoveryCoverage']=coverage
+            if coverage.get('listingFailures'):summary['failed']+=coverage['listingFailures']
         if durable:await self.jobs.enqueue(adapter.id,documents)
         remaining=batch if durable else len(documents)
         cursor=0

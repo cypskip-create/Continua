@@ -79,11 +79,11 @@ def _render(config,profile):
             control=driver.find_element(By.ID,label.get_attribute('for'))
             driver.execute_script("arguments[0].value=arguments[1];arguments[0].dispatchEvent(new Event('input',{bubbles:true}));arguments[0].dispatchEvent(new Event('change',{bubbles:true}));",control,selected['history_start'])
             control.send_keys(Keys.TAB);settle()
-        if tab:
+        if tab or selected.get('discovery'):
             for step in range(12):
-                before=driver.execute_script("return [document.body.scrollHeight,document.querySelectorAll('tr').length,document.querySelectorAll('.file-content').length]")
+                before=driver.execute_script("return [document.body.scrollHeight,document.querySelectorAll('tr').length,document.querySelectorAll('.file-content').length,document.querySelectorAll('a[href]').length]")
                 driver.execute_script('window.scrollTo(0,document.body.scrollHeight)');settle()
-                after=driver.execute_script("return [document.body.scrollHeight,document.querySelectorAll('tr').length,document.querySelectorAll('.file-content').length]")
+                after=driver.execute_script("return [document.body.scrollHeight,document.querySelectorAll('tr').length,document.querySelectorAll('.file-content').length,document.querySelectorAll('a[href]').length]")
                 if before==after:break
                 if step==11:scroll_limit=True
         # Verify the selected financial category and mark whole-table visibility.
@@ -95,6 +95,7 @@ def _render(config,profile):
         if len(html.encode())>8*1024*1024:raise ValueError('Rendered HTML limit')
         result={'html':html,'finalUrl':driver.current_url,'status':monitor.status}
         if tab:result['coverage']={'tab':tab,'category':category,'rows':len(driver.find_elements(By.TAG_NAME,'tr')),'expandedRows':expanded,'scrollLimitReached':scroll_limit,'networkAndDOMSettled':True,'categoryVerified':bool(category),'expansionLimitReached':expansion_limit}
+        elif selected.get('discovery'):result['coverage']={'scrollLimitReached':scroll_limit,'networkAndDOMSettled':True}
         return result
     finally:
         driver.quit()
