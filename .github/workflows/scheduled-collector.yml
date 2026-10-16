@@ -72,6 +72,8 @@ jobs:
           COLLECTOR_VERIFY_ONE: ${{ inputs.verify_one && 'true' || 'false' }}
           COLLECTOR_DAILY_TRANSFER_BYTES: '134217728'
           COLLECTOR_SOURCE_LIMIT: '5'
+          COLLECTOR_PRIMARY_BATCH: ${{ vars.CONTINUA_COLLECTOR_PRIMARY_BATCH || '12' }}
+          COLLECTOR_FALLBACK_BATCH: ${{ vars.CONTINUA_COLLECTOR_FALLBACK_BATCH || '2' }}
           COLLECTOR_RUN_SECONDS: '600'
           EVENT_NAME: ${{ github.event_name }}
           SCHEDULE: ${{ github.event.schedule }}

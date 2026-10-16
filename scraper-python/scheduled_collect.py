@@ -38,6 +38,12 @@ def ordered_sources(sources,kind,hour):
     rotated=sources[offset:]+sources[:offset]
     return sorted(rotated,key=lambda s:0 if kind!='news' and s['adapter']=='kenyanstocks' else 1)
 
+def source_batch(environment,adapter):
+    key,default=('COLLECTOR_PRIMARY_BATCH',12) if adapter=='kenyanstocks' else ('COLLECTOR_FALLBACK_BATCH',2)
+    value=int(environment.get(key,str(default)))
+    if not 1<=value<=100:raise ValueError('Invalid source batch configuration')
+    return value
+
 @asynccontextmanager
 async def scheduled_slot(database,run_id,kind,ceiling,daily):
     """Transaction-pooler-safe atomic claim; never leave a session lock behind."""
@@ -122,7 +128,7 @@ async def run(kind,source_id=None):
                                     # a two-document batch must not silently drop
                                     # the remainder or repeatedly select only the
                                     # newest two feed entries on fresh runners.
-                                    batch=12 if source['adapter']=='kenyanstocks' else 2
+                                    batch=source_batch(os.environ,source['adapter'])
                                     if os.environ.get('COLLECTOR_VERIFY_ONE')=='true':batch=1
                                     adapter.persistent_batch_size=batch
                                     result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=batch)

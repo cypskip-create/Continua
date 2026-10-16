@@ -11,6 +11,12 @@ spec=importlib.util.spec_from_file_location('scheduled_collect',root/'scheduled_
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 
 class ScheduledTests(unittest.TestCase):
+    def test_batches_are_configurable_and_bounded(self):
+        self.assertEqual(module.source_batch({},'kenyanstocks'),12)
+        self.assertEqual(module.source_batch({'COLLECTOR_PRIMARY_BATCH':'24'},'kenyanstocks'),24)
+        self.assertEqual(module.source_batch({'COLLECTOR_FALLBACK_BATCH':'3'},'nse'),3)
+        for value in ('0','101','no'):
+            with self.assertRaises(ValueError):module.source_batch({'COLLECTOR_PRIMARY_BATCH':value},'kenyanstocks')
     def test_kenyanstocks_is_primary_without_removing_fallbacks(self):
         rows=[{'adapter':'nse'},{'adapter':'kenyanstocks'},{'adapter':'afx'}]
         for hour in range(3):
