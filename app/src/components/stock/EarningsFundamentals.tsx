@@ -13,7 +13,7 @@ function compact(value: number, currency: string) {
 
 export function EarningsFundamentals({ symbol, currency, mode = "all" }: { symbol: string; currency: string; mode?: "reported" | "analysis" | "forecast" | "all" }) {
   const [metric, setMetric] = useState<"revenue" | "eps" | "netIncome" | "ebit">("revenue");
-  const {history} = useStockFinancials(symbol,{periodType:"annual",limit:10});
+  const {history,usingPublisherObservations} = useStockFinancials(symbol,{periodType:"annual",limit:10,publisherObservations:true});
   const { data: earnings = [] } = useQuery({
     queryKey: ["continua", "earnings", symbol],
     queryFn: () => corporateActionsApi.getEarningsForSymbol(symbol),
@@ -24,13 +24,16 @@ export function EarningsFundamentals({ symbol, currency, mode = "all" }: { symbo
   const ordered = [...earnings].sort((a, b) => a.fiscalYear - b.fiscalYear || (a.fiscalQuarter ?? 0) - (b.fiscalQuarter ?? 0));
   const latest = [...ordered].reverse().find(event => event.reportedDate);
   const estimated = earnings.filter(event => event.revenueEstimate != null || event.epsEstimate != null);
-  const points = ordered.slice(-8).map(event => ({
+  const reportedPoints = ordered.slice(-8).map(event => ({
     period: `${event.fiscalYear}/${event.fiscalQuarter ? `Q${event.fiscalQuarter}` : "FY"}`,
-    actual: metric === "revenue" ? event.revenueActual : metric === "eps" ? event.epsActual : metric === "netIncome" ? history.find(r=>r.fiscalYear===event.fiscalYear && (r.fiscalQuarter??null)===(event.fiscalQuarter??null))?.netIncome ?? null : null,
+    actual: metric === "revenue" ? event.revenueActual ?? history.find(r=>r.fiscalYear===event.fiscalYear && (r.fiscalQuarter??null)===(event.fiscalQuarter??null))?.revenue ?? null : metric === "eps" ? event.epsActual ?? history.find(r=>r.fiscalYear===event.fiscalYear && (r.fiscalQuarter??null)===(event.fiscalQuarter??null))?.eps ?? null : metric === "netIncome" ? history.find(r=>r.fiscalYear===event.fiscalYear && (r.fiscalQuarter??null)===(event.fiscalQuarter??null))?.netIncome ?? null : null,
     estimate: metric === "revenue" ? event.revenueEstimate : metric === "eps" ? event.epsEstimate : null,
   }));
+  const supplementalPoints=history.filter(row=>!ordered.some(e=>!e.fiscalQuarter&&e.fiscalYear===row.fiscalYear)).map(row=>({period:`${row.fiscalYear}/FY`,actual:metric==='revenue'?row.revenue:metric==='netIncome'?row.netIncome:metric==='eps'?row.eps:null,estimate:null}));
+  const points=[...reportedPoints,...supplementalPoints].sort((a,b)=>a.period.localeCompare(b.period)).slice(-10);
   const format = (value: number) => metric === "eps" ? Number(value).toFixed(2) : financialNumber(value,currency);
   return <>
+    {usingPublisherObservations&&<p className="py-2 text-xs text-muted-foreground">Actual-history charts include Engine-mapped publisher observations. Estimates remain sourced separately; historical actuals are not forecasts.</p>}
     {mode !== "analysis" && mode !== "forecast" && <section className="border-t border-border/70 py-6 space-y-4">
       <div className="flex items-center justify-between gap-2"><h3 className="text-lg font-semibold">Latest earnings</h3><EarningsDetailButton symbol={symbol} currency={currency} events={earnings}/></div>
       {latest ? <>

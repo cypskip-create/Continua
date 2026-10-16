@@ -44,6 +44,35 @@ def source_batch(environment,adapter):
     if not 1<=value<=100:raise ValueError('Invalid source batch configuration')
     return value
 
+async def settle_completed_reservations(tx):
+    """Return measured unused allowance, not failed/crashed reservations.
+
+    Called under the shared scheduler transaction lock. Retain a 1MiB buffer
+    above already conservative transfer counters; append an idempotent receipt.
+    Never reset a day, raise its allowance or refund incomplete work.
+    """
+    rows=await tx.query("""SELECT id,receipt FROM scraping.scheduled_runs
+      WHERE status='completed' AND started_at >= date_trunc('day',now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'
+        AND id NOT LIKE 'render-index-%%' AND NOT(receipt ? 'reservationSettlement')
+        AND receipt ? 'limitBytes' AND receipt ? 'downloadBytes' AND receipt ? 'uploadBytes'
+      ORDER BY started_at,id FOR UPDATE LIMIT 100""")
+    settlements=[]
+    for row in rows:
+        receipt=row.get('receipt') or {}
+        if not isinstance(receipt,dict):continue
+        reserved,download,upload=(receipt.get(k) for k in ('limitBytes','downloadBytes','uploadBytes'))
+        if any(type(n) is not int or n<0 for n in (reserved,download,upload)):continue
+        if reserved>256*1024**2 or reserved<1 or download+upload>reserved:continue
+        retained=min(reserved,download+upload+1024**2)
+        settlements.append((row['id'],{'originalReservedBytes':reserved,'retainedBytes':retained,'refundedBytes':reserved-retained}))
+    refund=sum(s['refundedBytes'] for _,s in settlements)
+    if not settlements:return
+    balance=await tx.query("SELECT reserved_bytes FROM scraping.scheduled_transfer_days WHERE day=(now() AT TIME ZONE 'UTC')::date FOR UPDATE")
+    if not balance or balance[0]['reserved_bytes']<refund:raise ValueError('Reservation audit does not match the daily ledger')
+    await tx.query("UPDATE scraping.scheduled_transfer_days SET reserved_bytes=reserved_bytes-%s WHERE day=(now() AT TIME ZONE 'UTC')::date",(refund,))
+    for run_id,settlement in settlements:
+        await tx.query("UPDATE scraping.scheduled_runs SET receipt=receipt || %s::jsonb WHERE id=%s",(encode({'reservationSettlement':settlement}),run_id))
+
 @asynccontextmanager
 async def scheduled_slot(database,run_id,kind,ceiling,daily):
     """Transaction-pooler-safe atomic claim; never leave a session lock behind."""
@@ -55,6 +84,7 @@ async def scheduled_slot(database,run_id,kind,ceiling,daily):
         elif await tx.query("SELECT id FROM scraping.scheduled_runs WHERE status='running' AND id NOT LIKE 'render-index-%%' AND started_at>now()-interval '30 minutes' LIMIT 1"):
             skipped='overlap-skipped'
         else:
+            await settle_completed_reservations(tx)
             reserved=await tx.query('''INSERT INTO scraping.scheduled_transfer_days(day,reserved_bytes)
                 VALUES((now() AT TIME ZONE 'UTC')::date,%s)
                 ON CONFLICT(day) DO UPDATE SET reserved_bytes=scraping.scheduled_transfer_days.reserved_bytes+EXCLUDED.reserved_bytes
@@ -152,8 +182,8 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
                 finally:
                     if process_research:
                         try:
-                            async with asyncio.timeout(60):
-                                receipt['processingAfter']=await ResearchProcessor(database).run(25)
+                            async with asyncio.timeout(120):
+                                receipt['processingAfter']=await ResearchProcessor(database).run(100)
                                 receipt['availableFinancials']=await ResearchProcessor(database).available_financials()
                         except Exception:
                             receipt['processingAfter']={'status':'failed','retryable':True}
@@ -182,11 +212,12 @@ async def maintenance(operation):
                 summary=await ResearchProcessor(database).run(100)
                 inventory=await ResearchProcessor(database).inventory()
                 available=await ResearchProcessor(database).available_financials()
+                coverage=await ResearchProcessor(database).stock_coverage()
             sources=await database.query("""SELECT id,adapter,enabled,redistribution_allowed,
               length(trim(coalesce(config->>'permissionReference',''))) BETWEEN 1 AND 200 AS permission_recorded
               FROM scraping.sources ORDER BY id""")
             return {'status':'completed','operation':operation,'processing':summary,'kenyanstocksInventory':inventory,
-                    'availableFinancials':available,'sourceConfiguration':sources,'sourceDownloadBytes':0,'r2DownloadBytes':0}
+                    'availableFinancials':available,'stockCoverage':coverage,'sourceConfiguration':sources,'sourceDownloadBytes':0,'r2DownloadBytes':0}
         if operation=='prepare':
             path=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261015190000 scheduled collector budgets.sql'
             async with database.pool.connection() as connection:

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { financialsApi } from "@/api/financialsApi";
 import type { FiscalPeriodType } from "@/api/types";
 import {isPublishedFinancialPeriod} from '@/lib/financialCoverage';
+import {usePublisherResearch,publisherFinancialPeriods} from './usePublisherResearch';
 
 /** Real financial statements for one stock. History includes the stored
  * income, balance-sheet, and cash-flow fields for each reported period.
@@ -12,10 +13,11 @@ import {isPublishedFinancialPeriod} from '@/lib/financialCoverage';
  *  still support shorter windows. */
 export function useStockFinancials(
   symbol: string | undefined,
-  opts: { periodType?: FiscalPeriodType; limit?: number } = {},
+  opts: { periodType?: FiscalPeriodType; limit?: number; publisherObservations?:boolean } = {},
 ) {
   const { periodType = "annual" } = opts;
   const limit = opts.limit ?? (periodType === "annual" ? 20 : 50);
+  const publisher=usePublisherResearch(symbol,opts.publisherObservations===true&&periodType==='annual');
 
   const history = useQuery({
     queryKey: ["continua", "financials-history", symbol, periodType, limit],
@@ -37,8 +39,12 @@ export function useStockFinancials(
     retry: 1,
   });
 
+  const verified=(history.data??[]).filter(row=>isPublishedFinancialPeriod(row));
+  const supplements=opts.publisherObservations&&periodType==='annual'?publisherFinancialPeriods(publisher.data??[]).filter(p=>!verified.some(v=>v.fiscalYear===p.fiscalYear)):[];
+  const combined=opts.publisherObservations&&periodType==='annual'?[...verified,...supplements].sort((a,b)=>a.fiscalYear-b.fiscalYear).slice(-limit):verified;
   return {
-    history: (history.data ?? []).filter(row=>isPublishedFinancialPeriod(row)),
+    history: combined,
+    usingPublisherObservations:combined.some(r=>r.basis==='publisher_observation'),
     latest: latest.data && isPublishedFinancialPeriod(latest.data) ? latest.data : undefined,
     isLoading: history.isLoading || latest.isLoading,
     historyError: history.error,

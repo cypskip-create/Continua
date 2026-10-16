@@ -5,6 +5,14 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "engine-python/continua_engine/publisher_context.py",
+      "category": "All-stock publisher research field and ownership projection",
+      "language": "Python and SQL; existing React frontend consumers",
+      "runtime": "Existing bounded automatic post-collection Engine",
+      "reason": "Project exact source-labelled annual metrics and ownership percentages beside the existing deterministic extraction pipeline, retaining source data and accounting approval boundaries. Versioned presentation upgrades reprocess existing eligible evidence automatically. UI research consumers opt into labelled observations without modifying verified valuation records, inventing reporting dates or converting reported actuals into analyst estimates.",
+      "references": ["https://docs.python.org/3.13/library/decimal.html", "https://www.postgresql.org/docs/current/explicit-locking.html"]
+    },
+    {
       "file": "app/src/components/stock/PublisherFinancialTables.tsx",
       "category": "Automatic processed financial chart presentation",
       "language": "Existing React/TypeScript frontend; Python Engine series retained",

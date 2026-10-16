@@ -59,6 +59,22 @@ class ResearchProcessor:
           ORDER BY sec.symbol,p.payload->>'category',e.extracted_at DESC,e.id DESC
         ) latest WHERE table_count>0 ORDER BY extracted_at DESC,id DESC LIMIT 100""")
 
+    async def stock_coverage(self):
+        return await self.database.query("""SELECT sec.symbol,
+          count(DISTINCT p.payload->>'category') FILTER(WHERE p.destination='financials')::integer AS financial_categories,
+          count(DISTINCT p.destination) FILTER(WHERE p.destination<>'review')::integer AS processed_destinations,
+          count(p.extraction_id) FILTER(WHERE p.destination='ownership' AND jsonb_array_length(coalesce(p.payload->'ownership','[]'::jsonb))>0)::integer AS ownership_snapshots
+          FROM market.securities sec LEFT JOIN (
+            SELECT p.* FROM scraping.processed_research p
+            JOIN scraping.extractions e ON e.id=p.extraction_id
+            JOIN scraping.raw_artifacts a ON a.id=e.artifact_id JOIN scraping.sources s ON s.id=a.source_id
+            WHERE p.processor_version='collected-research-v1' AND p.status='publisher_observation'
+              AND s.enabled AND s.redistribution_allowed=true
+              AND length(trim(s.config->>'permissionReference')) BETWEEN 1 AND 200
+              AND a.storage_path LIKE 'r2://continua-financial-documents/%%' AND a.sha256 ~ '^[a-f0-9]{64}$'
+          ) p ON p.security_id=sec.id
+          WHERE sec.exchange='NSE' AND sec.status<>'delisted' GROUP BY sec.symbol ORDER BY sec.symbol""")
+
     async def run(self,limit=25):
         from continua_engine.collected import process_evidence,VERSION
         if type(limit) is not int or not 1<=limit<=100:raise ValueError('Invalid processing batch')
@@ -81,8 +97,9 @@ class ResearchProcessor:
                   WHERE (a.source_id='kenyanstocks' OR a.content_type LIKE '%%application/pdf%%')
                   AND NOT EXISTS(SELECT 1 FROM scraping.processed_research p
                     WHERE p.extraction_id=e.id AND p.processor_version=%s AND NOT (
-                      p.status='blocked' AND p.gate_signature IS DISTINCT FROM
-                        md5(jsonb_build_array(s.enabled,s.redistribution_allowed,s.config->>'permissionReference',a.storage_path,a.sha256,sec.id)::text)))
+                      (p.status='blocked' AND p.gate_signature IS DISTINCT FROM
+                        md5(jsonb_build_array(s.enabled,s.redistribution_allowed,s.config->>'permissionReference',a.storage_path,a.sha256,sec.id)::text))
+                      OR (p.status<>'blocked' AND p.payload->>'presentationVersion' IS DISTINCT FROM '2')))
                   AND NOT EXISTS(SELECT 1 FROM scraping.extractions n WHERE n.artifact_id=e.artifact_id
                     AND n.entity->>'ticker' IS NOT DISTINCT FROM e.entity->>'ticker' AND (n.extracted_at,n.id)>(e.extracted_at,e.id))
                   ORDER BY (s.enabled AND s.redistribution_allowed=true AND sec.id IS NOT NULL
@@ -122,14 +139,16 @@ class ResearchProcessor:
                             'observedAt':row['retrieved_at'].isoformat()})
                 except ValueError:
                     payload={'version':VERSION,'status':'review_required','destination':'review','issues':[{'code':'invalid_or_excessive_evidence'}]}
+                payload['presentationVersion']=2
                 serialized=encode(payload)
                 if len(serialized.encode('utf-8'))>8*1024*1024:
-                    payload={'version':VERSION,'status':'review_required','destination':'review','issues':[{'code':'processed_payload_budget_exceeded'}]}
+                    payload={'version':VERSION,'presentationVersion':2,'status':'review_required','destination':'review','issues':[{'code':'processed_payload_budget_exceeded'}]}
                     serialized=encode(payload)
                 await tx.query("""INSERT INTO scraping.processed_research(extraction_id,processor_version,security_id,destination,status,gate_signature,payload)
                   VALUES(%s,%s,%s,%s,%s,%s,%s::jsonb) ON CONFLICT(extraction_id,processor_version)
                   DO UPDATE SET security_id=EXCLUDED.security_id,destination=EXCLUDED.destination,status=EXCLUDED.status,
-                    gate_signature=EXCLUDED.gate_signature,payload=EXCLUDED.payload,processed_at=now() WHERE processed_research.status='blocked'""",
+                    gate_signature=EXCLUDED.gate_signature,payload=EXCLUDED.payload,processed_at=now()
+                    WHERE processed_research.status='blocked' OR processed_research.payload->>'presentationVersion' IS DISTINCT FROM '2'""",
                   (row['id'],VERSION,row.get('security_id'),payload['destination'],payload['status'],row.get('gate_signature'),serialized))
                 summary['processed']+=1
                 summary[{'publisher_observation':'observations','review_required':'review'}.get(payload['status'],payload['status'])]+=1

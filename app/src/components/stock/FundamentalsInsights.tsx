@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ToolHelp } from "@/components/shared/ToolHelp";
 import {
   CartesianGrid,
@@ -31,6 +31,7 @@ export function FundamentalsInsights({
   const { history } = useStockFinancials(symbol, {
     periodType: "annual",
     limit: 10,
+    publisherObservations:true,
   });
   const [returnMetric, setReturnMetric] = useState<"ROE" | "ROA" | "ROCE">(
     "ROE",
@@ -39,6 +40,7 @@ export function FundamentalsInsights({
     "Revenue" | "Net income"
   >("Revenue");
   const [growth, setGrowth] = useState(5);
+  useEffect(()=>{if(!history.some(r=>r.revenue!=null)&&history.some(r=>r.netIncome!=null))setForecastMetric('Net income');},[symbol,history.length]);
   const sorted = useMemo(
     () => [...history].sort((a, b) => a.fiscalYear - b.fiscalYear),
     [history],
@@ -98,6 +100,7 @@ export function FundamentalsInsights({
 
   return (
     <div className="space-y-0">
+      {history.some(r=>r.basis==='publisher_observation')&&<p className="py-2 text-xs text-muted-foreground">Includes Engine-mapped publisher annual observations. Scenario paths use your assumptions, not analyst estimates.</p>}
       <ValueSignal symbol={symbol} currency={currency}/>
       <section className="border-t border-border/70 py-6 space-y-4">
         <div className="flex items-center gap-2"><h3 className="text-lg font-semibold">Return on capital</h3> <ToolHelp tool="Return on capital"/></div>

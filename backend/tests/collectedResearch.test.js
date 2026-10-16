@@ -23,3 +23,9 @@ it('rejects unsafe symbols without querying', async () => {
     expect(await collectedResearch("COOP' OR true")).toEqual([]);
     expect(query).not.toHaveBeenCalled();
 });
+it('filters research destinations before pagination without loading PDFs or history',async()=>{
+    query.mockResolvedValue({rows:[]});await collectedResearch('COOP',20,0,['financials','ownership']);
+    expect(query.mock.calls.at(-1)[0]).toContain('p.destination=ANY($4::text[])');
+    expect(query.mock.calls.at(-1)[1]).toEqual(['NSE:COOP',20,0,['financials','ownership']]);
+    await expect(collectedResearch('COOP',20,0,["financials' OR true"])).rejects.toThrow('Invalid research destinations');
+});

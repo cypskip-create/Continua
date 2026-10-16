@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { corporateActionsApi } from "@/api/corporateActionsApi";
 import { isNotFound } from "@/api/client";
 import { fx } from "@/lib/chartPalette";
+import {usePublisherResearch} from './usePublisherResearch';
 
 // Same name-matching convention OwnershipTab.tsx itself uses for its
 // internal (mock-data) color assignment — kept here too since
@@ -23,6 +24,7 @@ function colorFor(name: string): string {
  *  Returns empty arrays — not an error — for a symbol with no ownership
  *  records on file yet. */
 export function useOwnership(symbol: string | undefined) {
+  const publisher=usePublisherResearch(symbol);
   const query = useQuery({
     queryKey: ["continua", "ownership", symbol],
     queryFn: () => corporateActionsApi.getOwnership(symbol as string),
@@ -31,14 +33,16 @@ export function useOwnership(symbol: string | undefined) {
     retry: (count, err) => !isNotFound(err) && count < 1,
   });
 
+  const observed=publisher.data?.find(o=>o.destination==='ownership'&&o.status==='publisher_observation'&&o.ownership?.length)?.ownership??[];
+  const records=query.data?.length?query.data:observed;
   const ownership = useMemo(
-    () => (query.data ?? []).map((r) => ({ name: r.holderName, value: Number(r.percentHeld) || 0, color: colorFor(r.holderName) })),
-    [query.data]
+    () => records.map((r) => ({ name: r.holderName, value: Number(r.percentHeld) || 0, color: colorFor(r.holderName) })),
+    [records]
   );
   const topShareholders = useMemo(
-    () => (query.data ?? []).map((r) => ({ name: r.holderName, type: r.holderType, pct: Number(r.percentHeld) || 0 })),
-    [query.data]
+    () => records.map((r) => ({ name: r.holderName, type: r.holderType, pct: Number(r.percentHeld) || 0 })),
+    [records]
   );
 
-  return { ownership, topShareholders, records: query.data ?? [], isLoading: query.isLoading, error: query.error };
+  return { ownership, topShareholders, records, isPublisherObservation:!query.data?.length&&observed.length>0,isLoading:query.isLoading||publisher.isLoading,error:records.length?null:query.error||publisher.error };
 }

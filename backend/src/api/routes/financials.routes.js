@@ -6,7 +6,7 @@ import { FinancialsQuerySchema, FinancialsHistoryQuerySchema } from "../validato
 import { publisherFinancialTables } from '../../services/research/publisherFinancialTables.js';
 import { securitiesRepository } from '../../storage/repositories/securitiesRepository.js';
 import { ApiError } from '../middleware/errorHandler.js';
-import { collectedResearch } from '../../services/research/collectedResearch.js';
+import { collectedResearch,researchDestinations } from '../../services/research/collectedResearch.js';
 export const financialsRoutes = Router();
 financialsRoutes.get('/financials/:symbol/collected-research', asyncHandler(async (req, res) => {
     const symbol = String(req.params.symbol).toUpperCase();
@@ -16,7 +16,9 @@ financialsRoutes.get('/financials/:symbol/collected-research', asyncHandler(asyn
     if (!Number.isInteger(limit) || limit < 1 || limit > 100 || !Number.isInteger(offset) || offset < 0 || offset > 100000)
         throw new ApiError(400, 'Invalid research page');
     res.setHeader('Cache-Control', 'no-store');
-    const data = await collectedResearch(symbol, limit, offset);
+    const destinations=req.query.destinations===undefined?[]:typeof req.query.destinations==='string'?req.query.destinations.split(','):['invalid'];
+    if(destinations.length>9||destinations.some(d=>!researchDestinations.has(d)))throw new ApiError(400,'Invalid research destinations');
+    const data = await collectedResearch(symbol, limit, offset, destinations);
     res.json({ data, pagination: { limit, offset, nextOffset: data.length === limit ? offset + limit : null } });
 }));
 financialsRoutes.get('/financials/:symbol/publisher-tables', asyncHandler(async (req, res) => {

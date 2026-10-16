@@ -2,7 +2,7 @@ name: Bounded financial collection outside Render
 on:
   schedule:
     - cron: '17 */8 * * *'
-    - cron: '43 20 * * *'
+    - cron: '43 6,12,20 * * *'
   workflow_dispatch:
     inputs:
       kind:
@@ -39,7 +39,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   collect:
-    if: github.event_name == 'workflow_dispatch' || (github.event.schedule == '17 */8 * * *' && vars.CONTINUA_SCHEDULED_NEWS_ENABLED == 'true') || (github.event.schedule == '43 20 * * *' && vars.CONTINUA_SCHEDULED_DOCUMENTS_ENABLED == 'true')
+    if: github.event_name == 'workflow_dispatch' || (github.event.schedule == '17 */8 * * *' && vars.CONTINUA_SCHEDULED_NEWS_ENABLED == 'true') || (github.event.schedule == '43 6,12,20 * * *' && vars.CONTINUA_SCHEDULED_DOCUMENTS_ENABLED == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -53,7 +53,7 @@ jobs:
           cache-dependency-path: scraper-python/requirements-lock.txt
       - run: python -m pip install -r scraper-python/requirements-lock.txt
       - name: Install document and browser tools
-        if: (github.event_name == 'schedule' && github.event.schedule == '43 20 * * *') || (inputs.apply && inputs.kind != 'news' && inputs.maintenance == 'none')
+        if: (github.event_name == 'schedule' && github.event.schedule == '43 6,12,20 * * *') || (inputs.apply && inputs.kind != 'news' && inputs.maintenance == 'none')
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends poppler-utils tesseract-ocr
@@ -73,13 +73,12 @@ jobs:
           PYTHONPATH: engine-python
           COLLECTOR_PROCESS_RESEARCH: 'true'
           R2_DUAL_WRITE: 'false'
-          # 3 news runs x16MiB + one 64MiB document run <=128MiB/day.
-          # Larger reports need room for both download and direct R2 upload.
-          COLLECTOR_RUN_TRANSFER_BYTES: ${{ (inputs.verify_one || github.event.schedule == '17 */8 * * *' || inputs.kind == 'news') && '16777216' || '67108864' }}
+          # 3 news x16MiB + 3 document x48MiB = approved 192MiB/day.
+          COLLECTOR_RUN_TRANSFER_BYTES: ${{ (inputs.verify_one || github.event.schedule == '17 */8 * * *' || inputs.kind == 'news') && '16777216' || '50331648' }}
           COLLECTOR_VERIFY_ONE: ${{ inputs.verify_one && 'true' || 'false' }}
           COLLECTOR_DAILY_TRANSFER_BYTES: ${{ vars.CONTINUA_COLLECTOR_DAILY_TRANSFER_BYTES || '134217728' }}
           COLLECTOR_SOURCE_LIMIT: '5'
-          COLLECTOR_PRIMARY_BATCH: ${{ vars.CONTINUA_COLLECTOR_PRIMARY_BATCH || '12' }}
+          COLLECTOR_PRIMARY_BATCH: ${{ vars.CONTINUA_COLLECTOR_PRIMARY_BATCH || '48' }}
           COLLECTOR_FALLBACK_BATCH: ${{ vars.CONTINUA_COLLECTOR_FALLBACK_BATCH || '2' }}
           COLLECTOR_RUN_SECONDS: '600'
           EVENT_NAME: ${{ github.event_name }}

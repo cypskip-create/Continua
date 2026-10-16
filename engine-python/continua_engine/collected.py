@@ -241,4 +241,5 @@ def _process_evidence(row, today=None):
     elif not any(result[k] for k in ('tables', 'charts', 'history', 'news', 'files', 'facts')) and not result.get('blocks'):
         result['status'] = 'empty'
         result['issues'].append({'code': 'no_structured_content'})
-    return result
+    from .publisher_context import annotate_publisher_context
+    return annotate_publisher_context(result)

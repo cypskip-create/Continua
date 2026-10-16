@@ -1,11 +1,11 @@
 import {useState} from 'react';
-import {useQuery} from '@tanstack/react-query';
 import {Bar, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
-import {continuaFetch} from '@/api/client';
-import {publisherChartGroups, type PublisherObservation, type PublisherSeries} from '@/lib/publisherCharts';
+import {publisherChartGroups, type PublisherSeries} from '@/lib/publisherCharts';
+import {usePublisherResearch} from '@/hooks/usePublisherResearch';
 
 export function usePublisherFinancialCharts(symbol:string) {
- return useQuery({queryKey:['publisher-financial-charts',symbol],queryFn:async()=>publisherChartGroups(await continuaFetch<PublisherObservation[]>(`/financials/${encodeURIComponent(symbol)}/collected-research`,{params:{limit:100}})),staleTime:60000,refetchInterval:300000,retry:1});
+ const query=usePublisherResearch(symbol);
+ return {...query,data:query.data?publisherChartGroups(query.data):undefined};
 }
 const compact=(n:number)=>new Intl.NumberFormat(undefined,{notation:'compact',maximumFractionDigits:2}).format(n);
 function CategoryChart({category,series}:{category:string;series:PublisherSeries[]}) {
@@ -21,7 +21,7 @@ function CategoryChart({category,series}:{category:string;series:PublisherSeries
    <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 4"/><XAxis dataKey="year" tickLine={false} axisLine={false} tick={{fontSize:11}}/>
    <YAxis tickFormatter={compact} width={55} tickLine={false} axisLine={false} tick={{fontSize:10}} domain={[(n:number)=>Math.min(0,n),'auto']}/><ReferenceLine y={0} stroke="hsl(var(--border))"/>
    <Tooltip content={({active,payload,label})=>active&&payload?.length?<div className="max-w-64 rounded-lg border border-border bg-popover p-3 text-xs text-popover-foreground shadow-md"><p className="font-semibold">{metric.label} · {label}</p><p>{payload[0]?.payload?.raw||'Unavailable'}</p></div>:null}/>
-   {style==='bar'?<Bar dataKey="value" fill="hsl(var(--primary))" maxBarSize={36} radius={[4,4,0,0]} isAnimationActive={false}/>:<Line dataKey="value" type="linear" stroke="hsl(var(--primary))" strokeWidth={2} dot={{r:3}} connectNulls={false} isAnimationActive={false}/>}
+   {style==='bar'?<Bar dataKey="value" fill="#4f7cf5" maxBarSize={36} radius={[4,4,0,0]} isAnimationActive={false}/>:<Line dataKey="value" type="linear" stroke="#4f7cf5" strokeWidth={2} dot={{r:3}} connectNulls={false} isAnimationActive={false}/>}
   </ComposedChart></ResponsiveContainer></div>
   <div className="overflow-x-auto"><table className="w-full text-center text-xs tabular-nums"><caption className="sr-only">{metric.label} chart values</caption><thead><tr>{metric.points.map(p=><th key={p.year} className="px-2 py-1 font-normal text-muted-foreground">{p.year}</th>)}</tr></thead><tbody><tr>{metric.points.map(p=><td key={p.year} className="px-2 py-1">{p.raw||'—'}</td>)}</tr></tbody></table></div>
  </section>;

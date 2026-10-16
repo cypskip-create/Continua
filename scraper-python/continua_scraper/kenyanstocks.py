@@ -26,7 +26,7 @@ class KenyanStocksAdapter:
     persistent_batch_size=10
     parser_version='kenyanstocks-adapter-0.5.0'
     scope_extractions_by_ticker=True
-    claim_lanes=('Financials','Files','Summary','News','Corporate Actions','Historical Data','Holders','Statistics','PDF','Financials','PDF','Files')
+    claim_lanes=('Financials','Financials','Financials','Financials','Financials','Summary','Statistics','News','Corporate Actions','Historical Data','Holders','Files','PDF')
     def __init__(self,io,jobs,renderer,pdf,*,universe=()):
         self.io,self.jobs,self.renderer,self.pdf=io,jobs,renderer,pdf;self.id=io.source['id']
         aliases={'DTB':'DTK','STANBIC':'SBIC','HFCB':'HFCK'}

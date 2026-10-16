@@ -65,7 +65,35 @@ func (s *Server) publisherReads(ctx context.Context, w http.ResponseWriter, r *h
 			failure(w, 404, "Unknown NSE symbol")
 			return true
 		}
-		rows, err := store.CollectedResearch(ctx, symbol, limit, offset)
+		var rows []json.RawMessage
+		if values, present := r.URL.Query()["destinations"]; present {
+			allowed := map[string]bool{"financials": true, "overview": true, "ownership": true, "statistics": true, "news": true, "corporateActions": true, "history": true, "documents": true, "additionalResearch": true}
+			if len(values) != 1 {
+				failure(w, 400, "Invalid research destinations")
+				return true
+			}
+			destinations := strings.Split(values[0], ",")
+			if len(destinations) > 9 {
+				failure(w, 400, "Invalid research destinations")
+				return true
+			}
+			for _, d := range destinations {
+				if !allowed[d] {
+					failure(w, 400, "Invalid research destinations")
+					return true
+				}
+			}
+			filtered, ok := s.Store.(interface {
+				CollectedResearchFiltered(context.Context, string, int, int, []string) ([]json.RawMessage, error)
+			})
+			if !ok {
+				failure(w, 503, "Filtered research storage unavailable")
+				return true
+			}
+			rows, err = filtered.CollectedResearchFiltered(ctx, symbol, limit, offset, destinations)
+		} else {
+			rows, err = store.CollectedResearch(ctx, symbol, limit, offset)
+		}
 		if err != nil {
 			failure(w, 503, "Collected research unavailable")
 			return true

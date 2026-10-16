@@ -30,6 +30,22 @@ func (f *publisherFixture) CollectedResearch(_ context.Context, ticker string, l
 	f.ticker = ticker
 	return f.observations, f.sourceErr
 }
+func (f *publisherFixture) CollectedResearchFiltered(ctx context.Context, ticker string, limit, offset int, destinations []string) ([]json.RawMessage, error) {
+	return f.CollectedResearch(ctx, ticker, limit, offset)
+}
+func TestCollectedResearchDestinationFilterValidation(t *testing.T) {
+	s, _ := publisherServer()
+	for _, path := range []string{"?destinations=financials,ownership", "?destinations=invalid", "?destinations=financials&destinations=ownership"} {
+		w := request(s, "/api/v1/financials/COOP/collected-research"+path, "fixture-dev")
+		expected := 400
+		if path == "?destinations=financials,ownership" {
+			expected = 200
+		}
+		if w.Code != expected {
+			t.Fatal(w.Code, w.Body.String())
+		}
+	}
+}
 func TestCollectedResearchUsesAuthenticatedIssuerScopedStorage(t *testing.T) {
 	s, p := publisherServer()
 	p.observations = []json.RawMessage{json.RawMessage(`{"destination":"financials","status":"publisher_observation"}`)}

@@ -57,6 +57,8 @@ class AdapterRunner:
         async def worker():
             nonlocal remaining,cursor
             while remaining>0:
+                from .transfer_budget import active
+                if active is not None and active.exhausted:return
                 remaining-=1
                 job=None
                 if durable:

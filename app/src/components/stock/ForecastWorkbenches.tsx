@@ -24,7 +24,7 @@ function ResearchChart({data,x,series,label,percent=false}: {data:object[];x:str
 }
 
 export function ScenarioWorkbench({symbol,currency}: {symbol:string;currency:string}) {
-  const {history}=useStockFinancials(symbol,{periodType:"annual",limit:10});
+  const {history}=useStockFinancials(symbol,{periodType:"annual",limit:10,publisherObservations:true});
   const latest=[...history].sort((a,b)=>a.fiscalYear-b.fiscalYear).at(-1);
   const base=finiteFinancial(latest?.revenue);
   const [years,setYears]=useState(3),[bear,setBear]=useState(-5),[central,setCentral]=useState(5),[bull,setBull]=useState(15),[margin,setMargin]=useState(10),[target,setTarget]=useState(50);

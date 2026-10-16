@@ -128,6 +128,7 @@ export interface FinancialPeriodBundle {
 }
 
 export interface FinancialHistoryEntry {
+  basis?: 'publisher_observation';
   sourceUrls?: string[] | null;
   costOfRevenue?: number | null;
   operatingExpenses?: number | null;

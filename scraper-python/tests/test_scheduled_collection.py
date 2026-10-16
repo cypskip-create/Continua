@@ -38,13 +38,13 @@ class ScheduledTests(unittest.TestCase):
         self.assertIn('persist-credentials: false',workflow)
         self.assertIn('default: false',workflow)
         self.assertIn("github.event.schedule == '17 */8 * * *' && vars.CONTINUA_SCHEDULED_NEWS_ENABLED == 'true'",workflow)
-        self.assertIn("github.event.schedule == '43 20 * * *' && vars.CONTINUA_SCHEDULED_DOCUMENTS_ENABLED == 'true'",workflow)
+        self.assertIn("github.event.schedule == '43 6,12,20 * * *' && vars.CONTINUA_SCHEDULED_DOCUMENTS_ENABLED == 'true'",workflow)
         self.assertNotIn('vars.CONTINUA_SCHEDULED_SCRAPER_ENABLED',workflow)
 
 class SlotTests(unittest.IsolatedAsyncioTestCase):
     async def test_slot_uses_transaction_guard_and_cleans_failed_exit(self):
         class DB:
-            def __init__(self):self.calls=[];self.results=[[{'acquired':True}],[],[],[{'day':'fixture'}],[]]
+            def __init__(self):self.calls=[];self.results=[[{'acquired':True}],[],[],[],[{'day':'fixture'}],[]]
             @asynccontextmanager
             async def transaction(self):yield self
             async def query(self,sql,params=()):
@@ -55,7 +55,7 @@ class SlotTests(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNone(skipped);raise RuntimeError('fixture')
         self.assertIn('pg_try_advisory_xact_lock',db.calls[0][0])
         self.assertIn("interval '30 minutes'",db.calls[2][0])
-        self.assertEqual(db.calls[3][1],(16,128))
+        self.assertEqual(db.calls[4][1],(16,128))
         self.assertIn("status='running'",db.calls[-1][0])
     async def test_overlap_does_not_reserve_bandwidth(self):
         class DB:
@@ -66,3 +66,17 @@ class SlotTests(unittest.IsolatedAsyncioTestCase):
         db=DB()
         async with module.scheduled_slot(db,'fixture','documents',16,128) as skipped:self.assertEqual(skipped,'overlap-skipped')
         self.assertEqual(len(db.calls),1)
+
+    async def test_completed_unused_allowance_has_atomic_audited_settlement_with_buffer(self):
+        class DB:
+            def __init__(self):self.calls=[]
+            async def query(self,sql,params=()):
+                self.calls.append((sql,params))
+                if sql.startswith('SELECT id,receipt'):return [{'id':'completed-fixture','receipt':{'limitBytes':16*1024**2,'downloadBytes':1024**2,'uploadBytes':1024**2}}]
+                if sql.startswith('SELECT reserved_bytes'):return [{'reserved_bytes':16*1024**2}]
+                return []
+        db=DB();await module.settle_completed_reservations(db)
+        self.assertIn("status='completed'",db.calls[0][0])
+        self.assertIn("NOT(receipt ? 'reservationSettlement')",db.calls[0][0])
+        self.assertEqual(db.calls[2][1],(13*1024**2,))
+        self.assertIn('reservationSettlement',db.calls[3][1][0])
