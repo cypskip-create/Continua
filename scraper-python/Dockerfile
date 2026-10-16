@@ -15,8 +15,10 @@ RUN python -m pip check \
     && rm -rf /var/lib/apt/lists/*
 COPY scraper-python/main.py scraper-python/browser_worker.py scraper-python/scraper_cli.py scraper-python/
 COPY scraper-python/continua_scraper/ scraper-python/continua_scraper/
+COPY engine-python/continua_engine/ engine-python/continua_engine/
 COPY scraper/python/pdf_extract.py scraper/python/pdf_extract.py
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/engine-python \
     CHROMIUM_BIN=/usr/bin/chromium CHROMEDRIVER_BIN=/usr/bin/chromedriver
 USER 10001:10001
 # Do not disable Chromium's sandbox. Linux namespace/sandbox compatibility and

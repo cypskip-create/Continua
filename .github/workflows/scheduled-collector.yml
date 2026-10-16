@@ -15,7 +15,7 @@ on:
       maintenance:
         description: Explicit additive schema setup or one tiny private storage verification
         type: choice
-        options: [none, prepare, verify-storage]
+        options: [none, prepare, verify-storage, process-research]
         default: none
       apply:
         description: Run approved collection (otherwise offline plan only)
@@ -63,6 +63,8 @@ jobs:
           R2_ACCESS_KEY_ID: ${{ secrets.COLLECTOR_R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.COLLECTOR_R2_SECRET_ACCESS_KEY }}
           RAW_STORAGE_DRIVER: r2
+          PYTHONPATH: engine-python
+          COLLECTOR_PROCESS_RESEARCH: 'true'
           R2_DUAL_WRITE: 'false'
           # 3 news runs x16MiB + one 64MiB document run <=128MiB/day.
           # Larger reports need room for both download and direct R2 upload.

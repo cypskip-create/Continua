@@ -99,6 +99,25 @@ def _render(config,profile):
         # inactive category panels must not be relabelled as the selected one.
         if category:
             driver.execute_script("document.querySelectorAll('table').forEach(t=>t.setAttribute('data-continua-observed-visible',t.getClientRects().length?'true':'false'))")
+        # Snapshot chart values actually used by visible Chart.js canvases.
+        # Never execute strings found in publisher scripts or infer bars from
+        # pixels. Financial-table derived series cover non-Chart.js layouts.
+        driver.execute_script("""
+          if (window.Chart && typeof window.Chart.getChart === 'function') {
+            document.querySelectorAll('canvas').forEach(canvas => {
+              if (!canvas.getClientRects().length) return;
+              const chart=window.Chart.getChart(canvas);
+              if (!chart || !chart.data || !Array.isArray(chart.data.labels)) return;
+              const labels=chart.data.labels.slice(0,10000).map(x=>String(x).slice(0,100));
+              const datasets=(chart.data.datasets||[]).slice(0,30).map(d=>({
+                label:String(d.label||'').slice(0,200),
+                data:(Array.isArray(d.data)?d.data:[]).slice(0,10000).map(x=>typeof x==='number'&&Number.isFinite(x)?x:null)
+              }));
+              const encoded=JSON.stringify({labels,datasets});
+              if (encoded.length<=1000000) canvas.setAttribute('data-continua-observed-chart',encoded);
+            });
+          }
+        """)
         html=driver.page_source
         if len(html.encode())>8*1024*1024:raise ValueError('Rendered HTML limit')
         result={'html':html,'finalUrl':driver.current_url,'status':monitor.status}

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -21,6 +22,65 @@ var publisherTicker = regexp.MustCompile(`^[A-Z0-9-]{1,20}$`)
 
 func (s *Server) publisherReads(ctx context.Context, w http.ResponseWriter, r *http.Request, exchange string) bool {
 	path := r.URL.Path
+	if strings.HasPrefix(path, "/api/v1/financials/") && strings.HasSuffix(path, "/collected-research") {
+		segments := strings.Split(strings.TrimPrefix(path, "/api/v1/financials/"), "/")
+		if len(segments) != 2 || !publisherTicker.MatchString(strings.ToUpper(segments[0])) || exchange != "NSE" {
+			failure(w, 400, "Invalid NSE symbol")
+			return true
+		}
+		symbol := strings.ToUpper(segments[0])
+		limit, offset := 20, 0
+		for name, target := range map[string]*int{"limit": &limit, "offset": &offset} {
+			if values, present := r.URL.Query()[name]; present {
+				if len(values) != 1 {
+					failure(w, 400, "Invalid research page")
+					return true
+				}
+				n, err := strconv.Atoi(values[0])
+				if err != nil {
+					failure(w, 400, "Invalid research page")
+					return true
+				}
+				*target = n
+			}
+		}
+		if limit < 1 || limit > 100 || offset < 0 || offset > 100000 {
+			failure(w, 400, "Invalid research page")
+			return true
+		}
+		store, ok := s.Store.(interface {
+			SecurityID(context.Context, string, string) (*string, error)
+			CollectedResearch(context.Context, string, int, int) ([]json.RawMessage, error)
+		})
+		if !ok {
+			failure(w, 503, "Collected research storage unavailable")
+			return true
+		}
+		id, err := store.SecurityID(ctx, "NSE", symbol)
+		if err != nil {
+			failure(w, 500, "Internal server error")
+			return true
+		}
+		if id == nil {
+			failure(w, 404, "Unknown NSE symbol")
+			return true
+		}
+		rows, err := store.CollectedResearch(ctx, symbol, limit, offset)
+		if err != nil {
+			failure(w, 503, "Collected research unavailable")
+			return true
+		}
+		if rows == nil {
+			rows = []json.RawMessage{}
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		var next any
+		if len(rows) == limit {
+			next = offset + limit
+		}
+		respond(w, 200, map[string]any{"data": rows, "pagination": map[string]any{"limit": limit, "offset": offset, "nextOffset": next}})
+		return true
+	}
 	profile := strings.HasPrefix(path, "/api/v1/companies/")
 	financial := strings.HasPrefix(path, "/api/v1/financials/") && strings.HasSuffix(path, "/publisher-tables")
 	if !profile && !financial {

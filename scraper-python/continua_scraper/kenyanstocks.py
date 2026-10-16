@@ -6,13 +6,25 @@ import tempfile
 from urllib.parse import urlsplit
 from .download import Artifact
 from .html import soup,resolve_url,kenyan_stock_links,kenyan_file_links,kenyan_news_cards
-from .tables import stock_tables,html_financial_tables
+from .tables import stock_tables,html_financial_tables,publisher_view
 from .tabs import stock_tab_documents
+
+def parse_publisher_view(html,context,url):
+    doc=soup(html)
+    for node in doc.select('script,style,nav,header,footer,noscript'):node.decompose()
+    text='\n'.join(line.strip() for line in (doc.body.get_text() if doc.body else '').split('\n') if line.strip()).strip()
+    tab=str(context.get('tab') or 'Summary');category=context.get('category')
+    tables=stock_tables(html,tab,category if isinstance(category,str) else None)+html_financial_tables(html)
+    news=kenyan_news_cards(html,url)
+    if news['entries']:tables.append(news)
+    tables.append(publisher_view(html,url))
+    return {'method':'html','confidence':.4 if len(text)>=200 else .1,'text':text if len(text)>=200 else None,'tables':tables,
+        'entity':{'companyName':None,'ticker':context.get('ticker'),'exchange':'NSE'},'needsReview':True}
 
 class KenyanStocksAdapter:
     document_concurrency=1
     persistent_batch_size=10
-    parser_version='kenyanstocks-adapter-0.4.0'
+    parser_version='kenyanstocks-adapter-0.5.0'
     scope_extractions_by_ticker=True
     claim_lanes=('Files','Financials','Summary','News','Corporate Actions','Historical Data','Holders','Statistics','PDF','Financials','PDF','Files')
     def __init__(self,io,jobs,renderer,pdf,*,universe=()):
@@ -93,12 +105,4 @@ class KenyanStocksAdapter:
 
     async def parse(self,fetched):
         if fetched.get('contentType')=='application/pdf':return dict(await self.pdf.extract(fetched['artifact'].path),entity={'companyName':None,'ticker':(fetched['document'].get('context') or {}).get('ticker'),'exchange':'NSE'})
-        html=self.io.text(fetched['artifact']);doc=soup(html)
-        for node in doc.select('script,style,nav,header,footer,noscript'):node.decompose()
-        text='\n'.join(line.strip() for line in (doc.body.get_text() if doc.body else '').split('\n') if line.strip()).strip()
-        context=fetched['document'].get('context') or {};tab=str(context.get('tab') or 'Summary');category=context.get('category')
-        tables=stock_tables(html,tab,category if isinstance(category,str) else None)+html_financial_tables(html)
-        news=kenyan_news_cards(html,fetched['document']['url'])
-        if news['entries']:tables.append(news)
-        return {'method':'html','confidence':.4 if len(text)>=200 else .1,'text':text if len(text)>=200 else None,'tables':tables,
-            'entity':{'companyName':None,'ticker':context.get('ticker'),'exchange':'NSE'},'needsReview':True}
+        return parse_publisher_view(self.io.text(fetched['artifact']),fetched['document'].get('context') or {},fetched['document']['url'])

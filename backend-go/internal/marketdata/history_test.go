@@ -79,4 +79,12 @@ func TestPublisherTableReadsRequirePermissionDigestAndLatestCategory(t *testing.
 		t.Fatal(rows, e)
 	}
 }
+func TestCollectedResearchReadRechecksRightsAndPrivateEvidence(t *testing.T) {
+	s, m := mockStore(t)
+	m.ExpectQuery(`SELECT payload.*DISTINCT ON.*s.enabled AND s.redistribution_allowed=true.*permissionReference.*r2://continua-financial-documents/.*ORDER BY.*LIMIT \$2 OFFSET \$3`).WithArgs("NSE:COOP", 20, 0).WillReturnRows(sqlmock.NewRows([]string{"payload"}).AddRow(`{"destination":"history"}`))
+	rows, err := s.CollectedResearch(context.Background(), "COOP", 20, 0)
+	if err != nil || len(rows) != 1 {
+		t.Fatal(rows, err)
+	}
+}
 func mustJSON(value any) []byte { raw, _ := json.Marshal(value); return raw }

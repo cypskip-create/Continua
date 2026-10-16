@@ -26,6 +26,29 @@ func (f *publisherFixture) PublisherFinancialRows(_ context.Context, ticker stri
 	f.ticker = ticker
 	return f.observations, f.sourceErr
 }
+func (f *publisherFixture) CollectedResearch(_ context.Context, ticker string, limit, offset int) ([]json.RawMessage, error) {
+	f.ticker = ticker
+	return f.observations, f.sourceErr
+}
+func TestCollectedResearchUsesAuthenticatedIssuerScopedStorage(t *testing.T) {
+	s, p := publisherServer()
+	p.observations = []json.RawMessage{json.RawMessage(`{"destination":"financials","status":"publisher_observation"}`)}
+	w := request(s, "/api/v1/financials/COOP/collected-research", "fixture-dev")
+	if w.Code != 200 || p.ticker != "COOP" || w.Header().Get("Cache-Control") != "no-store" || !strings.Contains(w.Body.String(), "publisher_observation") {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	p.known = false
+	if w := request(s, "/api/v1/financials/UNKNOWN/collected-research", "fixture-dev"); w.Code != 404 {
+		t.Fatal(w.Code)
+	}
+}
+func TestCollectedResearchOutageIsNotAFalseEmptySuccess(t *testing.T) {
+	s, p := publisherServer()
+	p.sourceErr = errors.New("fixture unavailable")
+	if w := request(s, "/api/v1/financials/COOP/collected-research", "fixture-dev"); w.Code != 503 {
+		t.Fatal(w.Code, w.Body.String())
+	}
+}
 func publisherServer() (*Server, *publisherFixture) {
 	s, h := historyServer()
 	p := &publisherFixture{historyFixture: h}

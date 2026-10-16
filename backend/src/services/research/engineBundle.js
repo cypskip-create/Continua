@@ -20,6 +20,7 @@ import { reportedResearchRatios } from './reportedResearch.js';
 import { computeAfriScore } from './afriScore.js';
 import { yoyGrowth } from './ratiosEngine.js';
 import { engineCacheKeys } from './engineCacheKeys.js';
+import { collectedResearch } from './collectedResearch.js';
 const pendingBundles = new Map();
 export async function getEngineBundle(symbol, exchange) {
     const key = `${exchange}:${symbol}`;
@@ -148,6 +149,7 @@ async function loadEngineBundle(symbol, exchange) {
         };
         const briefing = buildCompanyBriefing({ symbol, latest, prior, ratios });
         return {
+            publisherResearch: exchange === 'NSE' ? await optional('Collected research', collectedResearch(symbol), []) : [],
             refresh: { state: unavailable.length ? 'partial' : 'complete', failedSections: [...new Set(unavailable)], attemptedAt: new Date().toISOString() },
             reliability: researchReadiness({ quote, history: sorted, unavailable, technicalObservations: technicals.filter(t => t != null).length ? Math.min(...technicals.filter(t => t != null).map(t => t.timestamps.length)) : 0, estimateCount: earnings.filter(e => e.epsEstimate != null || e.revenueEstimate != null).length, ownershipCount: ownership.length }),
             diagnostics: companyDiagnostics(sorted),

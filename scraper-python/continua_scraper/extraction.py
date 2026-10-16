@@ -24,10 +24,17 @@ class ExtractionService:
         self.evidence,self.storage,self.pdf,self.dead_letters=evidence,storage,pdf,dead_letters
         self._sweep=None
 
-    async def by_content_type(self,content_type,artifact):
+    async def by_content_type(self,content_type,artifact,record=None):
         type=content_type or ''
-        if 'application/pdf' in type:return await self.pdf.extract(artifact.path)
+        if 'application/pdf' in type:
+            result=await self.pdf.extract(artifact.path)
+            if record and (record.get('metadata') or {}).get('ticker'):
+                result=dict(result,entity={'ticker':record['metadata']['ticker'],'exchange':'NSE'})
+            return result
         if 'text/html' in type:
+            if record and record.get('sourceId')=='kenyanstocks' and (record.get('metadata') or {}).get('tab'):
+                from .kenyanstocks import parse_publisher_view
+                return parse_publisher_view(AdapterIO.text(artifact),record['metadata'],record['documentUrl'])
             html=AdapterIO.text(artifact);tables=html_financial_tables(html);indices=nse_index_summary(html);text=article_body_text(html);usable=len(text)>=100
             return {'method':'html','confidence':.6 if usable else .1,'text':text if usable else None,'tables':tables+indices,
                 'needsReview':bool(tables) or (not usable and not indices)}
@@ -45,9 +52,9 @@ class ExtractionService:
         if artifact is None:raise ValueError('No raw artifact found')
         async with materialized(self.storage,artifact['storagePath'],artifact.get('documentUrl')) as raw:
             self.verify_source(artifact,raw)
-            result=await self.by_content_type(artifact.get('contentType'),raw)
+            result=await self.by_content_type(artifact.get('contentType'),raw,artifact)
         if result is None:raise ValueError('Reprocessing not supported for content type')
-        return await self.evidence.insert_extraction(dict(result,artifactId=artifact_id,parserVersion=result.get('parserVersion') or 'reprocess-0.2.0',entity={}))
+        return await self.evidence.insert_extraction(dict(result,artifactId=artifact_id,parserVersion=result.get('parserVersion') or 'reprocess-0.3.0',entity=result.get('entity') or {}))
 
     async def sweep(self,limit=50):
         if self._sweep is not None and not self._sweep.done():return await asyncio.shield(self._sweep)
@@ -63,10 +70,10 @@ class ExtractionService:
             try:
                 async with materialized(self.storage,artifact['storagePath'],artifact.get('documentUrl')) as raw:
                     self.verify_source(artifact,raw)
-                    result=await self.by_content_type(artifact.get('contentType'),raw)
+                    result=await self.by_content_type(artifact.get('contentType'),raw,artifact)
                 if result is None:summary['skippedUnsupported']+=1;continue
                 if 'pdf' in (artifact.get('contentType') or '') and len((result.get('text') or '').strip())<50:raise ValueError('PDF has no usable text; sweep will retry')
-                await self.evidence.insert_extraction(dict(result,artifactId=artifact['artifactId'],parserVersion=result.get('parserVersion') or 'extraction-sweep-0.2.0',entity={}))
+                await self.evidence.insert_extraction(dict(result,artifactId=artifact['artifactId'],parserVersion=result.get('parserVersion') or 'extraction-sweep-0.3.0',entity=result.get('entity') or {}))
                 summary['extracted']+=1
                 if result['needsReview']:summary['needsReview']+=1
             except Exception as error:

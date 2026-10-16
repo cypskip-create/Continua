@@ -5,6 +5,24 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "engine-python/continua_engine/collected.py",
+      "category": "All-tab observation processing and document layout triage",
+      "language": "Python and SQL",
+      "runtime": "Bounded existing GitHub Actions collector; existing API readers with native Go counterpart",
+      "reason": "Python provides deterministic decimal parsing, chronological series preparation and document/table classification alongside existing PDF/OCR extraction. SQL transactions, row locks and versioned receipts provide restart-safe incremental processing without another always-on service. Literal observations remain separate from approved canonical statements; existing deployed JavaScript only reads prepared data, while Go provides the equivalent candidate reader.",
+      "references": ["https://docs.python.org/3.13/library/decimal.html", "https://www.postgresql.org/docs/18/sql-select.html", "https://www.postgresql.org/docs/18/sql-insert.html"],
+      "classificationBasis": "No paid AI, speculative financial figures, browser-side secrets or new backend TypeScript"
+    },
+    {
+      "file": "backend/src/ingestion/pipelines/automaticDocumentPublication.js",
+      "category": "Post-publication research recovery",
+      "language": "JavaScript and SQL",
+      "runtime": "Maintenance of existing production reference; not native runtime cutover",
+      "reason": "Keep the deployed validator and canonical publication rules intact while atomically recording derived-research work in its existing audit transaction. Bounded SQL SKIP LOCKED claims recover failed computations without streaming R2 files through Render. The native Go/Python equivalent already has its own versioned outbox and remains subject to migration gates.",
+      "references": ["https://www.postgresql.org/docs/18/sql-select.html", "https://www.postgresql.org/docs/18/sql-insert.html"],
+      "classificationBasis": "Reliability repair, no new TypeScript runtime, paid service or production native cutover"
+    },
+    {
       "file": "scraper-python/continua_scraper/browser_controls.py",
       "category": "KenyanStocks dynamic content coverage",
       "language": "Python",

@@ -91,7 +91,7 @@ class EvidenceRepository:
     async def unextracted(self,limit=50,driver="r2",rollback_bucket="scraper-raw"):
         if type(limit) is not int or not 1<=limit<=100:
             raise ValueError("invalid extraction batch")
-        rows=await self.database.query("""SELECT a.id AS artifact_id,a.source_id,a.adapter,a.content_type,a.storage_path,a.document_url,a.sha256,a.size_bytes
+        rows=await self.database.query("""SELECT a.id AS artifact_id,a.source_id,a.adapter,a.content_type,a.storage_path,a.document_url,a.sha256,a.size_bytes,a.metadata
           FROM scraping.raw_artifacts a LEFT JOIN LATERAL (
             SELECT e.id,e.text FROM scraping.extractions e WHERE e.artifact_id=a.id ORDER BY e.extracted_at DESC,e.id DESC LIMIT 1) e ON true
           WHERE (e.id IS NULL OR (a.content_type ILIKE '%%pdf%%' AND length(trim(coalesce(e.text,'')))<50))
@@ -100,5 +100,5 @@ class EvidenceRepository:
             AND NOT EXISTS(SELECT 1 FROM scraping.dead_letters d WHERE d.source_id=a.source_id AND d.url=a.document_url
               AND d.stage='parse' AND d.last_failed>now()-interval '1 hour')
           ORDER BY (a.content_type ILIKE '%%pdf%%') DESC,a.discovered_at ASC LIMIT %s""",(driver=="supabase",rollback_bucket,limit))
-        fields={"artifact_id":"artifactId","source_id":"sourceId","adapter":"adapter","content_type":"contentType","storage_path":"storagePath","document_url":"documentUrl","sha256":"sha256","size_bytes":"sizeBytes"}
+        fields={"artifact_id":"artifactId","source_id":"sourceId","adapter":"adapter","content_type":"contentType","storage_path":"storagePath","document_url":"documentUrl","sha256":"sha256","size_bytes":"sizeBytes","metadata":"metadata"}
         return [mapped(row,fields) for row in rows]

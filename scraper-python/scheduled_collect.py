@@ -75,6 +75,17 @@ async def run(kind,source_id=None):
     run_id=os.environ.get('GITHUB_RUN_ID','local-'+uuid.uuid4().hex)+'-'+os.environ.get('GITHUB_RUN_ATTEMPT','1')
     started=time.monotonic()
     try:
+        process_research=os.environ.get('COLLECTOR_PROCESS_RESEARCH')=='true'
+        if process_research:
+            # Explicit Actions deployment path, not a public API/Render boot
+            # migration. The additive, RLS-protected receipt table is reviewed
+            # in source control and contains no raw document bodies.
+            migration=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261016170000 processed research.sql'
+            async with database.pool.connection() as connection:
+                await connection.execute(migration.read_text(encoding='utf-8'),prepare=False)
+            from continua_scraper.research_processing import ResearchProcessor
+            async with asyncio.timeout(60):
+                receipt['processingBefore']=await ResearchProcessor(database).run(25)
         async with scheduled_slot(database,run_id,kind,ceiling,daily) as skipped:
             if skipped:return dict(receipt,status=skipped)
             try:
@@ -126,6 +137,13 @@ async def run(kind,source_id=None):
                             receipt['status']='failed' if any(s.get('failed',0) for s in receipt['sources']) else 'completed'
                 except TimeoutError:receipt['status']='failed'
                 finally:
+                    if process_research:
+                        try:
+                            async with asyncio.timeout(60):
+                                receipt['processingAfter']=await ResearchProcessor(database).run(25)
+                        except Exception:
+                            receipt['processingAfter']={'status':'failed','retryable':True}
+                            receipt['status']='failed'
                     receipt.update(budget.snapshot(),durationSeconds=round(time.monotonic()-started,3))
                     await database.query('UPDATE scraping.scheduled_runs SET status=%s,completed_at=now(),receipt=%s::jsonb WHERE id=%s',(receipt['status'],encode(receipt),run_id))
             finally:transfer_budget.active=None
@@ -141,6 +159,14 @@ async def maintenance(operation):
     database=await Database.open(os.environ['DATABASE_URL'])
     storage=None
     try:
+        if operation=='process-research':
+            path=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261016170000 processed research.sql'
+            async with database.pool.connection() as connection:
+                await connection.execute(path.read_text(encoding='utf-8'),prepare=False)
+            from continua_scraper.research_processing import ResearchProcessor
+            async with asyncio.timeout(120):
+                summary=await ResearchProcessor(database).run(100)
+            return {'status':'completed','operation':operation,'processing':summary,'sourceDownloadBytes':0,'r2DownloadBytes':0}
         if operation=='prepare':
             path=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261015190000 scheduled collector budgets.sql'
             async with database.pool.connection() as connection:
@@ -170,7 +196,7 @@ def main():
     parser.add_argument('--kind',choices=('news','documents','drain'),default='documents')
     parser.add_argument('--source')
     parser.add_argument('--apply',action='store_true')
-    parser.add_argument('--maintenance',choices=('prepare','verify-storage'))
+    parser.add_argument('--maintenance',choices=('prepare','verify-storage','process-research'))
     args=parser.parse_args()
     if not args.apply:
         print(json.dumps({'mode':'offline-plan','kind':args.kind,'submitted':False}));return 0

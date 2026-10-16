@@ -38,10 +38,8 @@ async function run(limit, extractionIds) {
     AND NOT EXISTS(SELECT 1 FROM market.document_validations v WHERE v.extraction_id=e.id AND v.validator_version=$1)
     ORDER BY e.id ASC LIMIT $2`, [DOCUMENT_VALIDATOR_VERSION, limit, extractionIds ?? null]);
     const summary = { published: 0, review: 0, failed: 0 };
-    const changed = new Map();
     for (const row of pending.rows) {
         try {
-            let committedIssuer;
             await withTransaction(async (db) => {
                 const lock = await db.query("SELECT pg_try_advisory_xact_lock(hashtextextended('document-validation:' || $1::text,0)) AS locked", [row.id]);
                 if (!lock.rows[0]?.locked)
@@ -118,14 +116,14 @@ async function run(limit, extractionIds) {
                             await confirmHistoricalColumns(candidate.id, entry.confirmation, db);
                             ids.push(candidate.id);
                         }
-                        result = { candidateIds: ids };
-                        committedIssuer = { id: issuer.id, symbol: issuer.id.slice(4) };
+                        // Commit the refresh request with the canonical figures. A
+                        // process restart after COMMIT must not lose chart/research work.
+                        result = { candidateIds: ids, securityId: issuer.id, symbol: issuer.id.slice(4), researchRefreshPending: true };
                     }
                     outcome = 'published';
                     reason = 'Registered source template and accounting checks passed; canonical records published without restatement';
                 }
                 catch (error) {
-                    committedIssuer = undefined;
                     await db.query('ROLLBACK TO SAVEPOINT canonical_publication');
                     reason = error instanceof Error ? error.message.slice(0, 400) : 'Validation requires review';
                 }
@@ -133,18 +131,41 @@ async function run(limit, extractionIds) {
           VALUES($1,$2,$3,$4,$5,$6,$7)`, [row.id, DOCUMENT_VALIDATOR_VERSION, row.sha256, row.document_url, outcome, reason, JSON.stringify(result)]);
                 summary[outcome]++;
             });
-            if (committedIssuer)
-                changed.set(committedIssuer.id, committedIssuer.symbol);
         }
         catch (err) {
             summary.failed++;
             logger.warn({ extractionId: row.id, error: String(err) }, 'Document publication transaction failed; record remains retryable');
         }
     }
+    await drainDocumentResearchRefresh();
+    logger.info(summary, 'Automatic document validation completed');
+    return summary;
+}
+
+let refreshing;
+export function drainDocumentResearchRefresh() {
+    if (refreshing) return refreshing;
+    refreshing = refreshPendingDocuments().finally(() => { refreshing = undefined; });
+    return refreshing;
+}
+async function refreshPendingDocuments() {
+    // Audit rows double as a durable outbox; no R2 objects pass through Render.
+    // Claim and commit before research acquires its own database locks.
+    const pending = await query(`WITH due AS (
+      SELECT extraction_id,validator_version FROM market.document_validations
+      WHERE outcome='published' AND result->>'researchRefreshPending'='true'
+      AND (result->>'researchRefreshAfter' IS NULL OR (result->>'researchRefreshAfter')::timestamptz<=now())
+      ORDER BY extraction_id FOR UPDATE SKIP LOCKED LIMIT 5)
+      UPDATE market.document_validations v SET result=v.result || jsonb_build_object('researchRefreshAfter',now()+interval '10 minutes')
+      FROM due WHERE v.extraction_id=due.extraction_id AND v.validator_version=due.validator_version
+      RETURNING v.extraction_id,v.validator_version,v.result`);
     // A published filing must refresh the same research used by the app and
     // portfolio Engine, not wait for the unrelated daily quote worker.
-    for (const [id, symbol] of changed)
+    for (const row of pending.rows) {
+        const { securityId: id, symbol } = row.result ?? {};
         try {
+            if (!/^NSE:[A-Z0-9-]{1,20}$/.test(id) || id !== `NSE:${symbol}`)
+                throw new Error('Invalid refresh issuer');
             await Promise.all(['annual', 'quarterly'].flatMap(period => [
                 cache.del(`financial-read:latest:NSE:${symbol}:${period}`),
                 ...Array.from({ length: 50 }, (_, index) => cache.del(`financial-read:history:NSE:${symbol}:${period}:${index + 1}`)),
@@ -152,17 +173,18 @@ async function run(limit, extractionIds) {
             await cache.del(engineCacheKeys.bundle('NSE', symbol));
             await cache.del(engineCacheKeys.lastGood('NSE', symbol));
             const quote = await pricesRepository.getQuote(id);
-            if (quote)
-                await researchService.recomputeAndStore(id, quote.lastPrice);
+            if (!quote || !await researchService.recomputeAndStore(id, quote.lastPrice))
+                throw new Error('Research inputs unavailable; durable retry retained');
             await cache.del(CacheKeys.ratios('NSE', symbol));
             await cache.del(CacheKeys.afriScore('NSE', symbol));
             await cache.del(`engine:v3:NSE:${symbol}`);
             await cache.del(engineCacheKeys.bundle('NSE', symbol));
             await cache.del(engineCacheKeys.lastGood('NSE', symbol));
+            await query(`UPDATE market.document_validations SET result=result || '{"researchRefreshPending":false}'::jsonb
+              WHERE extraction_id=$1 AND validator_version=$2`, [row.extraction_id, row.validator_version]);
         }
         catch (error) {
             logger.warn({ securityId: id, error: String(error) }, 'Published financials retained; research refresh will retry');
         }
-    logger.info(summary, 'Automatic document validation completed');
-    return summary;
+    }
 }

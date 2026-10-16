@@ -80,6 +80,38 @@ def html_financial_tables(html):
         if len(rows)>=2:tables.append({'title':''.join(_text(c) for c in table.select('caption')).strip() or None,'headerLine':'\n'.join(headers) or None,'rows':rows,'method':'html_table_v1','confidence':.7})
     return tables
 
+def publisher_view(html,page_url):
+    """Keep visible non-table research and document manifests as observations."""
+    from .html import kenyan_file_links
+    doc=soup(html)
+    for node in doc.select('script,style,nav,header,footer,noscript'):node.decompose()
+    root=doc.select_one('main') or doc.body or doc
+    headings=list(dict.fromkeys(_normalized(_text(n)) for n in root.select('h1,h2,h3,h4')))
+    facts=[]
+    for term in root.select('dt'):
+        value=term.find_next_sibling('dd')
+        if value:facts.append({'label':_normalized(_text(term)),'raw':_normalized(_text(value))})
+    for label in root.select('.stat-label,.metric-label,.summary-label,.info-label,.stat-card > label,.metric-card > label'):
+        value=label.find_next_sibling()
+        if value:facts.append({'label':_normalized(_text(label)),'raw':_normalized(_text(value))})
+    # Cards/list content not representable as a numeric table still has an
+    # explicit processing path. Retain displayed text, not hidden scripts.
+    blocks=[]
+    for node in root.select('article,.action-card,.corporate-action,.stat-card,.metric-card,.summary-card'):
+        value=_normalized(_text(node))
+        if value and value not in blocks:blocks.append(value[:2000])
+    import json
+    charts=[]
+    for node in root.select('canvas[data-continua-observed-chart]')[:30]:
+        value=node.get('data-continua-observed-chart','')
+        if len(value)>1000000:continue
+        try:
+            parsed=json.loads(value)
+            if isinstance(parsed,dict):charts.append(parsed)
+        except (ValueError,TypeError):continue
+    return {'kind':'publisher_view','headings':headings[:200],'facts':facts[:1000],
+            'blocks':blocks[:300],'files':kenyan_file_links(html,page_url),'charts':charts}
+
 NUMERIC=re.compile(r'^\(?-?\d[\d,]*(\.\d+)?\)?%?$')
 def _text_row(line):
     if re.search(r'(\.\s*){3,}',line):return None
