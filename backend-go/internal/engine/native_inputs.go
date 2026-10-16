@@ -38,6 +38,11 @@ func (n *NativeInputs) Section(ctx context.Context, name, id, exchange, symbol s
 	var rows []json.RawMessage
 	var err error
 	switch name {
+	case "publisherResearch":
+		if exchange != "NSE" {
+			return json.RawMessage(`[]`), nil
+		}
+		rows, err = n.Store.CollectedResearch(ctx, symbol, 20, 0)
 	case "quote":
 		return n.quote(ctx, exchange, symbol)
 	case "history":

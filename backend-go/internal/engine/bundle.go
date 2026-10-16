@@ -191,6 +191,7 @@ func (s *BundleService) load(ctx context.Context, symbol, exchange string) (json
 		{"valuation", "Valuation", json.RawMessage(`null`)}, {"news", "News", json.RawMessage(`[]`)},
 		{"technicals", "Technicals", json.RawMessage(`[]`)}, {"actions", "Corporate actions", json.RawMessage(`[]`)},
 		{"quarterly", "Quarterly statements", json.RawMessage(`[]`)},
+		{"publisherResearch", "Collected research", json.RawMessage(`[]`)},
 	}
 	for _, section := range sections {
 		wg.Add(1)

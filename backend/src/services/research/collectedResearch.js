@@ -1,5 +1,7 @@
 import { query } from '../../storage/db.js';
 
+export const collectedResearchRepository = { get: (...args) => collectedResearch(...args) };
+
 /** Read already processed observations, never fetch/decode private R2 files.
  * Recheck rights on every read. Unknown/OCR documents stay review-labelled and
  * must not be fed to valuation or overwrite canonical statement periods.

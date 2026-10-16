@@ -171,7 +171,11 @@ async def maintenance(operation):
             async with asyncio.timeout(120):
                 summary=await ResearchProcessor(database).run(100)
                 inventory=await ResearchProcessor(database).inventory()
-            return {'status':'completed','operation':operation,'processing':summary,'kenyanstocksInventory':inventory,'sourceDownloadBytes':0,'r2DownloadBytes':0}
+            sources=await database.query("""SELECT id,adapter,enabled,redistribution_allowed,
+              length(trim(coalesce(config->>'permissionReference',''))) BETWEEN 1 AND 200 AS permission_recorded
+              FROM scraping.sources ORDER BY id""")
+            return {'status':'completed','operation':operation,'processing':summary,'kenyanstocksInventory':inventory,
+                    'sourceConfiguration':sources,'sourceDownloadBytes':0,'r2DownloadBytes':0}
         if operation=='prepare':
             path=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261015190000 scheduled collector budgets.sql'
             async with database.pool.connection() as connection:

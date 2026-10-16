@@ -52,6 +52,7 @@ def assemble_company_bundle(input, now):
     estimates = [e for e in earnings if e.get('epsEstimate') is not None or e.get('revenueEstimate') is not None]
     unique_unavailable = list(dict.fromkeys(unavailable))
     bundle = {
+        'publisherResearch': input.get('publisherResearch') or [],
         'refresh': {'state': 'partial' if unavailable else 'complete', 'failedSections': unique_unavailable, 'attemptedAt': now},
         'reliability': research_readiness({'quote': quote, 'history': history, 'unavailable': unavailable,
                                          'technicalObservations': min(len(t['timestamps']) for t in technicals) if technicals else 0,

@@ -5,6 +5,15 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "tools/audit-service-files.mjs",
+      "category": "Read-only service cleanup audit",
+      "language": "JavaScript",
+      "runtime": "Existing local Node/TypeScript development toolchain only",
+      "reason": "Use the existing compiler parser to follow literal module references across deployment entrypoints, operator scripts, tests and declaration contracts. Do not delete deployed JavaScript or necessary typing contracts merely because native Go/Python candidates exist. Empty generated declarations carry no API contract and can be removed without changing service behavior.",
+      "references": ["https://www.typescriptlang.org/docs/handbook/2/type-declarations.html"],
+      "classificationBasis": "Cleanup tooling only; no new backend TypeScript implementation or production runtime migration"
+    },
+    {
       "file": "engine-python/continua_engine/collected.py",
       "category": "All-tab observation processing and document layout triage",
       "language": "Python and SQL",

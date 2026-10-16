@@ -61,11 +61,13 @@ one tiny synthetic private object, checks retrieval/hash and writes one SQL audi
 receipt. These must succeed before setting repository variable
 `CONTINUA_SCHEDULED_NEWS_ENABLED=true` (news only) or
 `CONTINUA_SCHEDULED_DOCUMENTS_ENABLED=true` (documents separately).
-The user approved news-only scheduling; document schedules remain off.
+Both variables were verified **true** in the live repository on 16 October 2026.
+The earlier news-only rollout is historical, not the current configuration.
 
 Schedules are 00:17/08:17/16:17 UTC for news and 20:43 UTC for documents (03:17,
 11:17,19:17 and 23:43 Africa/Nairobi). Only enabled, permission-recorded sources
-are considered; at most five sources and two documents per source per run. Runs
+are considered; at most five sources, twelve KenyanStocks jobs and two jobs per
+other source per run. KenyanStocks is prioritized. Runs
 rotate sources rather than starting a historical rescrape. The manual `drain`
 mode processes durable queues and does not discover new URLs. Non-durable
 adapters cannot use drain and report failure rather than pretending to comply.
@@ -77,8 +79,10 @@ allow interrupted work to resume. Failed runs exit nonzero for Actions reporting
 
 ## Bandwidth accounting
 
-32 MiB is reserved durably per run against a shared UTC daily allowance of
-128 MiB. Reservations are deliberately not refunded after crashes or partial
+16 MiB per news run and 64 MiB per ordinary document run are reserved durably
+against a shared UTC daily allowance of 128 MiB (three news runs plus one
+document run reserve 112 MiB). Manual diagnostics also consume that allowance.
+Reservations are deliberately not refunded after crashes or partial
 failures. These are conservative logical transfer limits, NOT cloud spending caps.
 Download and request bytes, browser tunnel directions and R2 verification reads
 are counted. R2 uploads reserve four possible payload attempts up front. Database,
@@ -100,8 +104,8 @@ exist; conditional ETag fetching is not claimed as implemented by this change.
 Hosted checks on 15 October 2026 verified an actual private R2 upload/read-back
 and SQL receipt. A bounded Capital Business RSS run discovered ten items, stored
 and extracted two, and durably queued the remainder. A two-document NSE queue
-drain failed at source fetch; recurring document schedules remain disabled pending document
-source verification. No failed run is represented as a successful migration.
+drain failed at source fetch; document schedules were disabled during that initial
+rollout but are now enabled. No failed run is represented as a successful migration.
 A subsequent KenyanStocks drain stored and extracted one real document directly
 through private R2 and SQL; its second fetch failed with `SSLError`. Its logical
 receipt was approximately 11.8 MB download and 21.7 MB conservative upload
@@ -114,11 +118,11 @@ triggered requests to the suspended scraper while retaining SQL publication.
 The default remains `render` until this flag is explicitly configured.
 Production Render configuration was left unchanged: applying that flag was
 blocked during safety review while document collection remained incomplete.
-The old scraper remains suspended; only the separately approved Actions news
-schedule is enabled. This is not a completed full native backend cutover.
+The restored Render scraper is restricted to the render-light index role described
+above; both Actions schedules are enabled. This is not a completed full native
+backend cutover.
 
-Keep the old Render scraper suspended until the explicit checks above and a
-bounded production collection succeed. Do not resume both schedulers. The main
+Do not enable bulk collection on Render alongside Actions. The main
 backend still serves stored records and retains existing payment/access logic.
 Existing manual HTTP scrape controls are not yet adapted to Actions dispatch;
 do not delete their implementation or claim the dashboard migration is complete.

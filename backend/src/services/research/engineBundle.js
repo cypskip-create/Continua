@@ -20,7 +20,7 @@ import { reportedResearchRatios } from './reportedResearch.js';
 import { computeAfriScore } from './afriScore.js';
 import { yoyGrowth } from './ratiosEngine.js';
 import { engineCacheKeys } from './engineCacheKeys.js';
-import { collectedResearch } from './collectedResearch.js';
+import { collectedResearchRepository } from './collectedResearch.js';
 const pendingBundles = new Map();
 export async function getEngineBundle(symbol, exchange) {
     const key = `${exchange}:${symbol}`;
@@ -76,7 +76,7 @@ async function loadEngineBundle(symbol, exchange) {
                     clearTimeout(timer);
             }
         };
-        const [quote, history, earnings, ownership, valuation, news, technicals, actions, quarterly,] = await Promise.all([
+        const [quote, history, earnings, ownership, valuation, news, technicals, actions, quarterly, publisherResearch] = await Promise.all([
             optional("Quote", pricesRepository.getQuote(profile.id), null),
             optional("Financial statements", financialsRepository.getHistoricalPeriods(profile.id, "annual", 10), []),
             optional("Earnings", corporateActionsRepository.getEarningsBySecurity(profile.id), []),
@@ -94,6 +94,7 @@ async function loadEngineBundle(symbol, exchange) {
             }))), []),
             optional("Corporate actions", corporateActionsRepository.getBySecurity(profile.id), []),
             optional("Quarterly statements", financialsRepository.getHistoricalPeriods(profile.id, "quarterly", 12), []),
+            exchange === 'NSE' ? optional('Collected research', collectedResearchRepository.get(symbol), []) : [],
         ]);
         const digest = await Promise.all(news
             .filter((item) => !item.needsReview)
@@ -149,7 +150,7 @@ async function loadEngineBundle(symbol, exchange) {
         };
         const briefing = buildCompanyBriefing({ symbol, latest, prior, ratios });
         return {
-            publisherResearch: exchange === 'NSE' ? await optional('Collected research', collectedResearch(symbol), []) : [],
+            publisherResearch,
             refresh: { state: unavailable.length ? 'partial' : 'complete', failedSections: [...new Set(unavailable)], attemptedAt: new Date().toISOString() },
             reliability: researchReadiness({ quote, history: sorted, unavailable, technicalObservations: technicals.filter(t => t != null).length ? Math.min(...technicals.filter(t => t != null).map(t => t.timestamps.length)) : 0, estimateCount: earnings.filter(e => e.epsEstimate != null || e.revenueEstimate != null).length, ownershipCount: ownership.length }),
             diagnostics: companyDiagnostics(sorted),

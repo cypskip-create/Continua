@@ -18,18 +18,21 @@ const {valuationService}=await import('../../backend/src/services/technical/valu
 const {newsRepository}=await import('../../backend/src/storage/repositories/newsRepository.js');
 const {indicatorsService}=await import('../../backend/src/services/technical/indicatorsService.js');
 const {engineRepository}=await import('../../backend/src/storage/repositories/engineRepository.js');
+const {collectedResearchRepository}=await import('../../backend/src/services/research/collectedResearch.js');
 const {getEngineBundle}=await import('../../backend/src/services/research/engineBundle.js');
 const baseline={baseline:true,changes:[],fingerprint:'',comparedAsOf:null};
 const annual=year=>({fiscalYear:year,periodEnd:`${year}-12-31`,reportedAt:`${year+1}-03-01`,revenue:100+(year-2024)*20,netIncome:20,eps:6,sourceUrls:['https://issuer.example/a.pdf']});
 let count=0;
 try{
- for(const scenario of ['complete','missing','partial','sparse']){
+ for(const scenario of ['complete','missing','partial','sparse','publisherOutage']){
   const symbol='FIX'+scenario.toUpperCase();
   const input={symbol,exchange:'NSE',profile:{id:`NSE:${symbol}`,currency:'KES',company:{name:'Example Issuer PLC',sectorName:'Banking'}},
    quote:scenario==='missing'?null:{lastPrice:30,timestamp:'2026-10-12T12:00:00.000Z',source:'live'},
    history:scenario==='missing'?[]:scenario==='sparse'?[annual(2021),annual(2025)]:[annual(2024),annual(2025)],quarterly:[],earnings:[],ownership:[],valuation:null,
    news:[{id:'1',headline:'Company financial results',needsReview:false,excerpt:'The company did not increase earnings in the latest reporting period.',sourceName:'Fixture publisher',articleUrl:'https://issuer.example/news',publishedAt:'2026-10-12T12:00:00.000Z',impact:null}],
-   technicals:[],actions:[],articles:{'1':{content:'The company did not increase earnings in the latest reporting period.'}},unavailable:scenario==='partial'?['Ownership']:[]};
+   publisherResearch:scenario==='publisherOutage'?[]:[{destination:'financials',status:'publisher_observation',tables:[],sourceUrl:'https://kenyanstocks.com/stock/nse/'+symbol}],
+   technicals:[],actions:[],articles:{'1':{content:'The company did not increase earnings in the latest reporting period.'}},unavailable:scenario==='partial'?['Ownership']:scenario==='publisherOutage'?['Collected research']:[]};
+  collectedResearchRepository.get=async()=>{if(scenario==='publisherOutage')throw new Error('Fixture publisher outage');return input.publisherResearch;};
   securitiesRepository.getCompanyProfile=async()=>input.profile;
   pricesRepository.getQuote=async()=>input.quote;
   financialsRepository.getHistoricalPeriods=async(_id,type)=>type==='annual'?input.history:input.quarterly;
@@ -48,7 +51,7 @@ try{
   assert.equal(child.status,0,`Native bundle failed: ${scenario}`);
   const native=JSON.parse(child.stdout);
   assert.deepEqual(native.bundle,expected,`Native bundle shape/evidence mismatch: ${scenario}`);
-  assert.equal(native.observeEligible,scenario!=='partial');
+  assert.equal(native.observeEligible,!['partial','publisherOutage'].includes(scenario));
   if(expectedState)assert.deepEqual(native.state,expectedState,`Native source snapshot mismatch: ${scenario}`);
   count++;
  }
