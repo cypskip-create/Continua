@@ -11,8 +11,8 @@ test('checkout and Settings fall back to the real account route', () => {
     assert.match(source, /navigateBack\(navigate,\s*["']\/account["']/);
   }
   const checkout = readFileSync(new URL('../src/pages/Upgrade.tsx', import.meta.url), 'utf8');
-  assert.match(checkout, /reference \? navigate\("\/account",\{replace:true\}\)/,
-    'Leaving a provider return must not go back into checkout');
+  assert.match(checkout, /reference \|\| location\.state\?\.fromCheckout \? navigate\("\/account",\{replace:true\}\)/,
+    'Leaving a provider return or direct checkout fallback must not go back into checkout');
 });
 
 test('actual route declarations resolve legacy profile links, callbacks and Home', () => {
