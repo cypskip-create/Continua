@@ -82,6 +82,8 @@ export function useHistoricalCandles(symbol: string | undefined, timeframe: stri
     queryFn: () => historicalApi.getCandles(symbol as string, { interval: "1d", from }),
     enabled: isSupported,
     staleTime: 5 * 60_000,
+    refetchInterval: 5 * 60_000,
+    refetchOnWindowFocus: true,
     retry: 1,
   });
 
