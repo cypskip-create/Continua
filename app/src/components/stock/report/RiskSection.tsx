@@ -35,7 +35,7 @@ export function RiskSection({ symbol, currency="KES", basic=false }: Props) {
     queryFn: () => historicalApi.getCandles(symbol, { interval: "1d", from: new Date(Date.now() - 180 * 86_400_000).toISOString().slice(0, 10) }),
     staleTime: 15 * 60_000,
   });
-  const { research } = useResearch(symbol);
+  const { research,publisherRatios } = useResearch(symbol);
   const { valuation } = useValuation(symbol);
   const { averages: benchmark } = useMarketBenchmark();
 
@@ -44,7 +44,7 @@ export function RiskSection({ symbol, currency="KES", basic=false }: Props) {
   const volatility = returns.length >= 5 ? annualizedVolatility(returns) : null;
   const drawdown = closes.length >= 2 ? maxDrawdown(closes) : null;
 
-  const ratios = research?.ratios;
+  const ratios = {...research?.ratios,debtToEquity:publisherRatios?.debtToEquity??research?.ratios?.debtToEquity};
   const bestModel = valuation?.models.find((m) => m.upsidePercent != null);
 
   const factors: RiskFactor[] = [

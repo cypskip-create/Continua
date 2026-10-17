@@ -18,7 +18,7 @@ const clamp06 = (n: number) => Math.max(0, Math.min(6, n));
 
 interface AxisCheck { label: string; status: "pass" | "fail" | "unknown" }
 
-/** The same five-pillar model Simply Wall St's Snowflake uses (Value /
+/** Continua's five-pillar screen (Value /
  *  Future / Past / Health / Dividend, each out of 6) built from real
  *  Continua data — the same valuation models, research ratios, and
  *  dividend history already powering the portfolio-level Scorecard,
@@ -29,12 +29,12 @@ interface AxisCheck { label: string; status: "pass" | "fail" | "unknown" }
 export function StockSnowflake({ symbol, currency="KES", basic=false }: StockSnowflakeProps) {
   const [selected, setSelected] = useState<Axis>("Value");
   const { valuation, isLoading: valLoading } = useValuation(symbol);
-  const { research, isLoading: researchLoading } = useResearch(symbol);
+  const { research,publisherRatios, isLoading: researchLoading } = useResearch(symbol);
   const { history: dividendHistory, isLoading: divLoading } = useDividendHistory(symbol);
   const { averages: benchmark, isLoading: benchLoading } = useMarketBenchmark();
 
   const isLoading = valLoading || researchLoading || divLoading || benchLoading;
-  const ratios = research?.ratios;
+  const ratios = publisherRatios??research?.ratios;
   const bestModel = {upsidePercent:valueSignal(valuation).upside};
 
   const checksFor: Record<Axis, AxisCheck[]> = {
@@ -57,7 +57,7 @@ export function StockSnowflake({ symbol, currency="KES", basic=false }: StockSno
       { label: "Interest well covered by earnings", status: ratios?.interestCoverage == null ? "unknown" : ratios.interestCoverage > 3 ? "pass" : "fail" },
     ],
     Dividend: [
-      { label: "Pays a dividend", status: dividendHistory.length > 0 ? "pass" : "fail" },
+      { label: "Pays a dividend", status: dividendHistory.length > 0 ? "pass" : "unknown" },
       { label: "Yield above market sample", status: ratios?.dividendYield == null || benchmark.dividendYield == null ? "unknown" : ratios.dividendYield > benchmark.dividendYield ? "pass" : "fail" },
       { label: "Nonnegative payout ratio below 75%", status: ratios?.payoutRatio == null || ratios.payoutRatio < 0 ? "unknown" : ratios.payoutRatio < 0.75 ? "pass" : "fail" },
     ],
@@ -85,7 +85,7 @@ export function StockSnowflake({ symbol, currency="KES", basic=false }: StockSno
         </InfoTip>
       </div>
       <p className="text-[0.6875rem] text-muted-foreground mb-4">
-        {symbol} scored out of 6 on five measures at once — {totalScore.toFixed(0)}/30 total.
+        {symbol} · {Object.values(checksFor).flat().filter(c=>c.status!=='unknown').length} covered checks. {totalScore.toFixed(0)}/30 across available measures; unfilled axes are unknown, not failures.
       </p>
 
       {isLoading ? (
