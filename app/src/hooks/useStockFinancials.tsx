@@ -40,7 +40,9 @@ export function useStockFinancials(
   });
 
   const verified=(history.data??[]).filter(row=>isPublishedFinancialPeriod(row));
-  const supplements=opts.publisherObservations&&periodType==='annual'?publisherFinancialPeriods(publisher.data??[]).filter(p=>!verified.some(v=>v.fiscalYear===p.fiscalYear)):[];
+  const assembled=publisher.data?.find(r=>r.companyResearch?.version===1)?.companyResearch;
+  const observed=assembled?.history.map(r=>({...r,basis:'publisher_observation' as const}))??publisherFinancialPeriods(publisher.data??[]);
+  const supplements=opts.publisherObservations&&periodType==='annual'?observed.filter(p=>!verified.some(v=>v.fiscalYear===p.fiscalYear)):[];
   const combined=opts.publisherObservations&&periodType==='annual'?[...verified,...supplements].sort((a,b)=>a.fiscalYear-b.fiscalYear).slice(-limit):verified;
   return {
     history: combined,

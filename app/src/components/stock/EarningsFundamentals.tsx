@@ -39,7 +39,7 @@ export function EarningsFundamentals({ symbol, currency, mode = "all" }: { symbo
       <div className="flex items-center justify-between gap-2"><h3 className="text-lg font-semibold">Latest earnings</h3><EarningsDetailButton symbol={symbol} currency={currency} events={earnings}/></div>
       {latest ? <>
         <EarningsOverview event={latest} history={history} currency={currency}/>
-      </> : <p className="text-sm text-muted-foreground">No reported earnings event is on file yet.</p>}
+      </> : history.length ? <><p className="text-xs text-muted-foreground">Latest available annual observations · FY{history.at(-1)!.fiscalYear}. Release date and analyst estimates are not supplied; this is not a dated earnings event.</p><dl className="grid grid-cols-3 gap-3 text-sm py-3">{(['revenue','netIncome','eps'] as const).map(key=><div key={key}><dt>{key==='revenue'?'Revenue':key==='netIncome'?'Net income':'EPS'}</dt><dd className="font-semibold">{history.at(-1)![key]==null?'—':key==='eps'?Number(history.at(-1)![key]).toFixed(2):financialNumber(history.at(-1)![key],currency)}</dd></div>)}</dl></> : <p className="text-sm text-muted-foreground">No reported earnings event or annual observations are on file yet.</p>}
     </section>}
     {mode !== "reported" && <><section className="border-t border-border/70 py-6">
       <h3 className="text-lg font-semibold">Financial estimates</h3>

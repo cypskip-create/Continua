@@ -37,7 +37,7 @@ export function BasicPriceForecast({symbol,currency,expanded=false}: {symbol:str
 
 /** Mounted only after subscriber verification; basic stars remain outside this boundary. */
 export function RatingResearch({symbol,currency}: {symbol:string;currency:string}) {
-  const {valuation}=useValuation(symbol);const {history}=useStockFinancials(symbol,{periodType:"annual",limit:10});const s=valueSignal(valuation);
+  const {valuation}=useValuation(symbol);const {history}=useStockFinancials(symbol,{periodType:"annual",limit:10,publisherObservations:true});const s=valueSignal(valuation);
   const annual=[...history].sort((a,b)=>a.fiscalYear-b.fiscalYear);const latest=annual.at(-1);
   const ni=finiteFinancial(latest?.netIncome),cash=finiteFinancial(latest?.operatingCashFlow),equity=finiteFinancial(latest?.totalEquity),debt=finiteFinancial(latest?.totalDebt);
   const positiveYears=annual.filter(r=>(finiteFinancial(r.netIncome)??0)>0).length;

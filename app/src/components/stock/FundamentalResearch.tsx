@@ -31,7 +31,7 @@ function AverageBars({current,average,median,symbol}: {current:number|null;avera
 }
 function ValuationExplorer({symbol,sector,currency,price,preview=false}: {symbol:string;sector:string;currency:string;price:number;preview?:boolean}) {
   const [key,setKey]=useState<RatioKey>("pe"),[years,setYears]=useState(5);
-  const {history}=useStockFinancials(symbol,{periodType:"annual",limit:10});
+  const {history}=useStockFinancials(symbol,{periodType:"annual",limit:10,publisherObservations:true});
   const {data:market=[]}=useQuery({queryKey:["continua","screener","valuation-sample"],queryFn:()=>screenerApi.run({limit:200,sortBy:"marketCap",sortDirection:"desc"}),staleTime:15*60_000,retry:1});
   const {data:valuationHistory,isError:valuationError}=useQuery({queryKey:['continua','dated-valuation',symbol,key,years],queryFn:()=>continuaFetch<ValuationHistory>(`/valuation/${encodeURIComponent(symbol)}/history`,{params:{ratio:key,years}}),staleTime:5*60_000,retry:1});
   const current=valuationHistory?.current?.ratio??null;

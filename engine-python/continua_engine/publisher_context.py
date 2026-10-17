@@ -14,12 +14,12 @@ LABELS={
  'eps':'eps','earningspershare':'eps','basicearningspershare':'eps',
  'totalassets':'totalAssets','totalliabilities':'totalLiabilities',
  'totalequity':'totalEquity','totalshareholdersequity':'totalEquity',
- 'currentassets':'currentAssets','totalcurrentassets':'currentAssets',
- 'currentliabilities':'currentLiabilities','totalcurrentliabilities':'currentLiabilities',
+ 'currentassets':'currentAssets','totalcurrentassets':'currentAssets','currentassetstotal':'currentAssets',
+ 'currentliabilities':'currentLiabilities','totalcurrentliabilities':'currentLiabilities','currentliabilitiestotal':'currentLiabilities',
  'cashandcashequivalents':'cash','totaldebt':'totalDebt','sharesoutstanding':'sharesOutstanding',
  'operatingprofit':'operatingIncome','operatingincome':'operatingIncome','ebit':'operatingIncome',
- 'ebitda':'ebitda','grossprofit':'grossProfit',
- 'operatingexpensestotal':'operatingExpenses','costofrevenue':'costOfRevenue',
+ 'ebitda':'ebitda','grossprofit':'grossProfit','grossprofittotal':'grossProfit',
+ 'operatingexpensestotal':'operatingExpenses','costofrevenue':'costOfRevenue','costofsales':'costOfRevenue',
  'cashgeneratedfromoperatingactivitiestotal':'operatingCashFlow','netcashfromoperatingactivities':'operatingCashFlow',
  'cashusedininvestingactivitiestotal':'investingCashFlow','netcashusedininvestingactivities':'investingCashFlow',
  'cashusedinfinancingactivitiestotal':'financingCashFlow','netcashfromfinancingactivities':'financingCashFlow',
@@ -27,7 +27,7 @@ LABELS={
 }
 
 def annotate_publisher_context(result):
-    result['presentationVersion']=2
+    result['presentationVersion']=3
     fields=[]
     for series in result.get('charts',[]):
         metric=LABELS.get(key(series.get('label','')))

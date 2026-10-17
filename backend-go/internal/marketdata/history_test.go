@@ -37,6 +37,7 @@ func TestCandleReadRequiresSourceByDefaultAndPreservesDateAndNulls(t *testing.T)
 	from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := from.AddDate(0, 1, 0)
 	m.ExpectQuery(`SELECT row_to_json.*source_url IS NOT NULL.*ORDER BY bar_time ASC`).WithArgs("NSE:COOP", "1d", from, to, false).WillReturnRows(sqlmock.NewRows([]string{"result"}).AddRow([]byte(`{"securityId":"NSE:COOP","timestamp":"2026-01-01T12:00:00.000Z","close":20,"sourceUrl":null}`)))
+	m.ExpectQuery(`WITH latest AS.*redistribution_allowed=true.*r2://continua-financial-documents/.*unknown.*adjustment`).WithArgs("NSE:COOP", from, to).WillReturnRows(sqlmock.NewRows([]string{"result"}).AddRow([]byte(`{"timestamp":"2026-01-01T00:00:00.000Z","close":19}`)))
 	rows, e := s.Candles(context.Background(), "NSE:COOP", "1d", from, to)
 	if e != nil || len(rows) != 1 || !strings.Contains(string(rows[0]), `"sourceUrl":null`) {
 		t.Fatal(rows, e)

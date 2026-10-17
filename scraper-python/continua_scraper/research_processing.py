@@ -99,7 +99,7 @@ class ResearchProcessor:
                     WHERE p.extraction_id=e.id AND p.processor_version=%s AND NOT (
                       (p.status='blocked' AND p.gate_signature IS DISTINCT FROM
                         md5(jsonb_build_array(s.enabled,s.redistribution_allowed,s.config->>'permissionReference',a.storage_path,a.sha256,sec.id)::text))
-                      OR (p.status<>'blocked' AND p.payload->>'presentationVersion' IS DISTINCT FROM '2')))
+                      OR (p.status<>'blocked' AND p.payload->>'presentationVersion' IS DISTINCT FROM '3')))
                   AND NOT EXISTS(SELECT 1 FROM scraping.extractions n WHERE n.artifact_id=e.artifact_id
                     AND n.entity->>'ticker' IS NOT DISTINCT FROM e.entity->>'ticker' AND (n.extracted_at,n.id)>(e.extracted_at,e.id))
                   ORDER BY (s.enabled AND s.redistribution_allowed=true AND sec.id IS NOT NULL
@@ -139,16 +139,16 @@ class ResearchProcessor:
                             'observedAt':row['retrieved_at'].isoformat()})
                 except ValueError:
                     payload={'version':VERSION,'status':'review_required','destination':'review','issues':[{'code':'invalid_or_excessive_evidence'}]}
-                payload['presentationVersion']=2
+                payload['presentationVersion']=3
                 serialized=encode(payload)
                 if len(serialized.encode('utf-8'))>8*1024*1024:
-                    payload={'version':VERSION,'presentationVersion':2,'status':'review_required','destination':'review','issues':[{'code':'processed_payload_budget_exceeded'}]}
+                    payload={'version':VERSION,'presentationVersion':3,'status':'review_required','destination':'review','issues':[{'code':'processed_payload_budget_exceeded'}]}
                     serialized=encode(payload)
                 await tx.query("""INSERT INTO scraping.processed_research(extraction_id,processor_version,security_id,destination,status,gate_signature,payload)
                   VALUES(%s,%s,%s,%s,%s,%s,%s::jsonb) ON CONFLICT(extraction_id,processor_version)
                   DO UPDATE SET security_id=EXCLUDED.security_id,destination=EXCLUDED.destination,status=EXCLUDED.status,
                     gate_signature=EXCLUDED.gate_signature,payload=EXCLUDED.payload,processed_at=now()
-                    WHERE processed_research.status='blocked' OR processed_research.payload->>'presentationVersion' IS DISTINCT FROM '2'""",
+                    WHERE processed_research.status='blocked' OR processed_research.payload->>'presentationVersion' IS DISTINCT FROM '3'""",
                   (row['id'],VERSION,row.get('security_id'),payload['destination'],payload['status'],row.get('gate_signature'),serialized))
                 summary['processed']+=1
                 summary[{'publisher_observation':'observations','review_required':'review'}.get(payload['status'],payload['status'])]+=1
@@ -158,7 +158,37 @@ class ResearchProcessor:
                 summary['documentsIndexed']+=len(payload.get('documents') or [])
                 for issue in payload.get('issues') or []:
                     code=issue['code'];summary['issueCounts'][code]=summary['issueCounts'].get(code,0)+issue.get('count',1)
+        summary['companyContexts']=await self.refresh_company_contexts()
         return summary
+
+    async def refresh_company_contexts(self):
+        from continua_engine.company_context import company_context
+        rows=await self.database.query("""SELECT DISTINCT ON(p.security_id,p.destination,p.payload->>'category')
+          p.extraction_id,p.security_id,p.payload,e.extracted_at FROM scraping.processed_research p
+          JOIN scraping.extractions e ON e.id=p.extraction_id JOIN scraping.raw_artifacts a ON a.id=e.artifact_id
+          JOIN scraping.sources s ON s.id=a.source_id
+          WHERE a.source_id='kenyanstocks' AND p.processor_version='collected-research-v1'
+            AND p.destination IN ('financials','overview') AND p.status='publisher_observation'
+            AND s.enabled AND s.redistribution_allowed=true
+            AND length(trim(s.config->>'permissionReference')) BETWEEN 1 AND 200
+            AND a.storage_path LIKE 'r2://continua-financial-documents/%%' AND a.sha256 ~ '^[a-f0-9]{64}$'
+          ORDER BY p.security_id,p.destination,p.payload->>'category',e.extracted_at DESC,e.id DESC LIMIT 2000""")
+        groups={}
+        for row in rows:groups.setdefault(row['security_id'],[]).append(row)
+        count=0
+        for records in groups.values():
+            context=company_context([r['payload'] for r in records])
+            if not context['history']:continue
+            # Store the automatic Engine assembly alongside its existing evidence.
+            # All contributors share the same publisher rights gate on API reads.
+            anchor=max(records,key=lambda r:(r['extracted_at'],r['extraction_id']))
+            await self.database.query("""UPDATE scraping.processed_research SET
+              payload=jsonb_set(payload,'{companyResearch}',%s::jsonb),processed_at=now()
+              WHERE extraction_id=%s AND processor_version='collected-research-v1'
+                AND payload->'companyResearch' IS DISTINCT FROM %s::jsonb""",
+              (encode(context),anchor['extraction_id'],encode(context)))
+            count+=1
+        return count
 
     async def inventory(self):
         rows=await self.database.query("""SELECT count(*)::integer AS extractions,

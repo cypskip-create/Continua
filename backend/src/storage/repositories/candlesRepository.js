@@ -1,5 +1,6 @@
 import { pool, query } from "../db.js";
 import { env } from '../../config/index.js';
+import {publisherCandleQuery,mergeDailyObservations} from './publisherCandleQuery.js';
 export const candlesRepository = {
     /** Bulk upsert via a single multi-row statement — candle backfills can be
      *  thousands of rows and we don't want thousands of round-trips. */
@@ -40,7 +41,9 @@ export const candlesRepository = {
        WHERE security_id = $1 AND interval = $2 AND bar_time BETWEEN $3 AND $4
          AND ($5 OR source_url IS NOT NULL)
        ORDER BY bar_time ASC`, [securityId, interval, from, to, env.NODE_ENV !== 'production']);
-        return res.rows;
+        if(interval!=='1d')return res.rows;
+        const observed=await query(publisherCandleQuery,[securityId,interval,from,to]);
+        return mergeDailyObservations(res.rows,observed.rows);
     },
     /** price-at-date / range helpers used by the research engine for returns
      *  and momentum calculations. */

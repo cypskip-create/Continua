@@ -55,7 +55,11 @@ func (s *Store) SecurityID(ctx context.Context, exchange, symbol string) (*strin
 	return &id, nil
 }
 func (s *Store) Candles(ctx context.Context, id, interval string, from, to time.Time) ([]json.RawMessage, error) {
-	return s.JSONRows(ctx, `SELECT row_to_json(result) FROM (SELECT security_id AS "securityId",interval,to_char(bar_time AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "timestamp",open,high,low,close,volume,source_url AS "sourceUrl" FROM market.candles WHERE security_id=$1 AND interval=$2 AND bar_time BETWEEN $3 AND $4 AND ($5 OR source_url IS NOT NULL) ORDER BY bar_time ASC) result`, id, interval, from, to, s.AllowUnreviewed)
+	rows, err := s.JSONRows(ctx, `SELECT row_to_json(result) FROM (SELECT security_id AS "securityId",interval,to_char(bar_time AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "timestamp",open,high,low,close,volume,source_url AS "sourceUrl" FROM market.candles WHERE security_id=$1 AND interval=$2 AND bar_time BETWEEN $3 AND $4 AND ($5 OR source_url IS NOT NULL) ORDER BY bar_time ASC) result`, id, interval, from, to, s.AllowUnreviewed)
+	if err != nil || interval != "1d" {
+		return rows, err
+	}
+	return s.publisherDaily(ctx, id, from, to, rows)
 }
 func (s *Store) PriceAt(ctx context.Context, id string, at time.Time) (*float64, error) {
 	var close sql.NullFloat64

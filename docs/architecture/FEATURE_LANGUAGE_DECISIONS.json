@@ -5,6 +5,14 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "engine-python/continua_engine/company_context.py",
+      "category": "Automatic matching-year cross-statement research assembly and durable chart reads",
+      "language": "Python decimal and SQL; existing Go and compatibility JavaScript API readers",
+      "runtime": "Existing bounded post-collection Engine; no additional service",
+      "reason": "Calculate reproducible ratios only from matching-year labelled observations and persist the assembly in Supabase. Read Engine-validated daily history through provenance-gated SQL without replacing canonical candles, inventing intraday paths, or moving raw archives to Render. Existing React consumers only render prepared observations; missing analyst estimates, filing dates and fair-value model inputs remain unknown.",
+      "references": ["https://docs.python.org/3/library/decimal.html", "https://www.postgresql.org/docs/current/sql-insert.html"]
+    },
+    {
       "file": "engine-python/continua_engine/publisher_context.py",
       "category": "All-stock publisher research field and ownership projection",
       "language": "Python and SQL; existing React frontend consumers",
