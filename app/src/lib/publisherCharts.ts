@@ -3,6 +3,13 @@ export type PublisherPoint={year:number;value:number|null;raw?:string};
 export type PublisherSeries={label:string;unit:string;points:PublisherPoint[]};
 export type PublisherObservation={destination:string;status:string;category?:string;charts?:PublisherSeries[]};
 const fields=new Set(['revenue','netIncome','eps','totalAssets','totalLiabilities','totalEquity','currentAssets','currentLiabilities','cash','totalDebt','sharesOutstanding','operatingIncome','ebitda','grossProfit','operatingExpenses','costOfRevenue','operatingCashFlow','investingCashFlow','financingCashFlow','freeCashFlow']);
+/** Current observed multiple only; never inserted into dated valuation history. */
+export function publisherCurrentMultiple(row:FinancialHistoryEntry|undefined,price:number,ratio:'pe'|'pb'|'ps'){
+ if(row?.basis!=='publisher_observation'||!Number.isFinite(price)||price<=0)return null;
+ const shares=row.sharesOutstanding;
+ const denominator=ratio==='pe'?row.eps:shares!=null&&Number.isFinite(shares)&&shares>0?(ratio==='pb'?row.totalEquity:row.revenue)/shares:null;
+ return denominator!=null&&Number.isFinite(denominator)&&denominator>0?price/denominator:null;
+}
 export function publisherFinancialPeriods(observations:(PublisherObservation&{financialFields?:{metric:string;year:number;value:number}[]})[]):FinancialHistoryEntry[]{
  const years=new Map<number,FinancialHistoryEntry>();
  const seen=new Map<string,number>();const conflicts=new Set<string>();const priorities=new Map<string,number>();const categories=new Set<string>();

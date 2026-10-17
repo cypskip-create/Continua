@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {publisherChartGroups,publisherFinancialPeriods} from '../src/lib/publisherCharts.ts';
+import {publisherChartGroups,publisherFinancialPeriods,publisherCurrentMultiple} from '../src/lib/publisherCharts.ts';
+
+test('current observed multiples need literal positive per-share inputs, not invented shares or dates',()=>{
+ const row={fiscalYear:2024,basis:'publisher_observation' as const,revenue:100,netIncome:20,eps:2};
+ assert.equal(publisherCurrentMultiple(row,10,'pe'),5);
+ assert.equal(publisherCurrentMultiple(row,10,'pb'),null);
+ assert.equal(publisherCurrentMultiple({...row,eps:-1},10,'pe'),null);
+ assert.equal(publisherCurrentMultiple({...row,totalEquity:40,sharesOutstanding:10},10,'pb'),2.5);
+});
 test('mapped reported history retains unknowns and withholds conflicts instead of inventing forecasts or dates',()=>{
  const base={destination:'financials',status:'publisher_observation'};
  const rows=publisherFinancialPeriods([{...base,financialFields:[{metric:'netIncome',year:2024,value:25},{metric:'eps',year:2024,value:0}]},{...base,financialFields:[{metric:'netIncome',year:2024,value:26}]}]);
