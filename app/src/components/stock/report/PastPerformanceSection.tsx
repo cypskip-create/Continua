@@ -35,9 +35,9 @@ export function PastPerformanceSection({ symbol, currency }: Props) {
   // toggle — annual trims to the last 3 years, quarterly to the last 5
   // quarters (BarChartBlock's own defaults), never a synthetic split.
   const { history: quarterlyHistory } = useStockFinancials(symbol, { periodType: "quarterly", limit: 5 });
-  const { research } = useResearch(symbol);
+  const { research,publisherRatios } = useResearch(symbol);
   const { averages: benchmark } = useMarketBenchmark();
-  const ratios = latest?.basis ? undefined : research?.ratios;
+  const ratios = latest?.basis ? publisherRatios&&{...publisherRatios,roe:publisherRatios.roe==null?null:publisherRatios.roe*100,roa:publisherRatios.roa==null?null:publisherRatios.roa*100} : research?.ratios;
 
   const areaData = useMemo(() => [...history].sort((a, b) => a.fiscalYear - b.fiscalYear).map(toRow), [history]);
   const quarterlyAreaData = useMemo(

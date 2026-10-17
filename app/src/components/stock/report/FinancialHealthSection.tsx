@@ -16,8 +16,8 @@ function fmtB(v: number | undefined | null) {
 
 export function FinancialHealthSection({ symbol, currency }: Props) {
   const { latest, isLoading } = useStockFinancials(symbol,{publisherObservations:true});
-  const { research } = useResearch(symbol);
-  const ratios = latest?.basis ? undefined : research?.ratios;
+  const { research,publisherRatios } = useResearch(symbol);
+  const ratios = latest?.basis ? publisherRatios&&{...publisherRatios,debtToEquity:publisherRatios.debtToEquity==null?null:publisherRatios.debtToEquity*100} : research?.ratios;
 
   const longTermAssets = latest?.totalAssets!=null && latest.currentAssets != null ? latest.totalAssets - latest.currentAssets : null;
   const longTermLiabilities = latest?.totalLiabilities!=null && latest.currentLiabilities != null ? latest.totalLiabilities - latest.currentLiabilities : null;

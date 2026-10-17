@@ -35,6 +35,22 @@ def row(**changes):
 
 
 class ProcessingTests(unittest.IsolatedAsyncioTestCase):
+    async def test_company_assembly_is_persisted_automatically_with_current_rights_gates(self):
+        class AssemblyDB:
+            def __init__(self):self.calls=[]
+            async def query(self,sql,params=()):
+                self.calls.append((sql,params))
+                if sql.startswith('SELECT DISTINCT'):
+                    return [{'extraction_id':7,'security_id':'NSE:CGEN','extracted_at':datetime.now(timezone.utc),
+                      'payload':{'destination':'financials','category':'Profit/Loss','status':'publisher_observation',
+                        'financialFields':[{'metric':'revenue','year':2024,'value':100},{'metric':'netIncome','year':2024,'value':20}]}}]
+                return []
+        db=AssemblyDB()
+        self.assertEqual(await ResearchProcessor(db).refresh_company_contexts(),1)
+        self.assertIn('s.redistribution_allowed=true',db.calls[0][0])
+        self.assertIn("'{companyResearch}'",db.calls[1][0])
+        self.assertEqual(json.loads(db.calls[1][1][0])['latest']['ratios']['netMargin'],.2)
+
     async def test_archive_upgrade_requires_reserved_budget_and_uses_existing_extraction_checks(self):
         runtime=SimpleNamespace(database=SimpleNamespace(query=AsyncMock(return_value=[{'id':9}])),
             extraction=SimpleNamespace(reprocess=AsyncMock()))
