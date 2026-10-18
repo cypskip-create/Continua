@@ -107,7 +107,7 @@ class R2Archive:
           WHERE status='publisher_observation' AND destination='financials' GROUP BY security_id)
           SELECT a.*,e.id AS extraction_id FROM scraping.raw_artifacts a
           LEFT JOIN LATERAL (SELECT * FROM scraping.extractions WHERE artifact_id=a.id
-            AND id>COALESCE(NULLIF(a.metadata->>'r2ExtractionId','')::bigint,0)
+            AND NOT EXISTS(SELECT 1 FROM scraping.extraction_cloud_archive c WHERE c.extraction_id=scraping.extractions.id)
             ORDER BY id ASC LIMIT 1) e ON true
           LEFT JOIN coverage c ON c.security_id='NSE:'||coalesce(a.metadata->>'ticker',e.entity->>'ticker')
           WHERE (a.storage_path NOT LIKE 'r2://%%' OR e.id IS NOT NULL)
@@ -124,16 +124,20 @@ class R2Archive:
                 key=await asyncio.to_thread(self._copy_raw,row)
                 metadata={"r2ArchivedAt":datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00","Z"),"r2ArchiveRetryAt":"","r2ArchiveFailures":0,"r2ArchiveState":"verified"}
                 if not old.startswith('r2://'):metadata['r2LegacyStoragePath']=old
+                snapshot_uri=None
                 if row.get("extraction_id"):
                     snapshots=await self.database.query("SELECT * FROM scraping.extractions WHERE id=%s AND artifact_id=%s",(row["extraction_id"],row["id"]))
                     if not snapshots:raise ValueError("Extraction snapshot disappeared")
-                    metadata["r2ExtractionObject"]=await asyncio.to_thread(self._copy_snapshot,row,key,snapshots[0])
-                    metadata["r2ExtractionId"]=str(row["extraction_id"])
-                    metadata['r2ExtractionFormat']='gzip-json-v1'
+                    snapshot_uri=await asyncio.to_thread(self._copy_snapshot,row,key,snapshots[0])
+                    # Catalogue older retained versions without rolling the
+                    # compatibility latest-version pointer backwards.
+                    if row['extraction_id']>=int(prior_version or 0):
+                        metadata['r2ExtractionObject']=snapshot_uri
+                        metadata['r2ExtractionId']=str(row['extraction_id'])
+                        metadata['r2ExtractionFormat']='gzip-json-v1'
                 # The checkpoint and version receipt commit together. A losing
                 # CAS must not claim a snapshot for concurrently replaced input.
                 location=f"r2://{self.storage.bucket}/{key}"
-                snapshot_uri=metadata.get('r2ExtractionObject')
                 snapshot_hash=snapshot_uri.rsplit('/',1)[-1].split('.')[0] if snapshot_uri else None
                 updated=await self.database.query("""WITH updated AS (UPDATE scraping.raw_artifacts SET storage_path=%s,
                     metadata=COALESCE(metadata,'{}'::jsonb)||%s::jsonb WHERE id=%s AND storage_path=%s

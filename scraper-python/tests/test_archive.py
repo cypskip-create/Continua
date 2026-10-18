@@ -92,6 +92,21 @@ class ArchiveTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('r2ArchiveRetryAt',db.calls[-1][1][0])
         await archive.close()
 
+    async def test_cataloguing_older_version_preserves_latest_pointer(self):
+        client=MemoryClient();digest=hashlib.sha256(b'raw').hexdigest()
+        row={'id':1,'source_id':'source','document_url':'https://fixture.example/a.pdf',
+             'storage_path':f'r2://private-fixture/source/{digest}.pdf','extraction_id':7,
+             'metadata':{'r2ExtractionId':'9','r2ExtractionObject':'latest-retained-object'}}
+        db=DB(row);archive=R2Archive(db,R2Storage(client,'private-fixture'),None)
+        self.assertEqual((await archive.run(1))['copied'],1)
+        sql,args=db.calls[-1];metadata=json.loads(args[1])
+        self.assertNotIn('r2ExtractionId',metadata)
+        self.assertNotIn('r2ExtractionObject',metadata)
+        self.assertEqual(args[4],'9');self.assertEqual(args[5],7)
+        self.assertIn('/extractions/',args[6])
+        self.assertIn('NOT EXISTS(SELECT 1 FROM scraping.extraction_cloud_archive',db.calls[0][0])
+        await archive.close()
+
     async def test_singleflight_and_request_cancellation_keep_active_job(self):
         event=asyncio.Event();calls=[]
         archive=R2Archive(None,None,None)

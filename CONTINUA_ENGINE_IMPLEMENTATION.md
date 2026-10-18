@@ -244,7 +244,9 @@ The migration now records every newly verified extraction snapshot in private
 `scraping.extraction_cloud_archive`, indexed by extraction ID and immutable
 content hash. One SQL statement commits its receipt only when the raw-artifact
 compare-and-set succeeds. The legacy storage path is retained when first moved.
-Previously copied snapshots are not retrospectively claimed as catalogued.
+Previously copied snapshots are reverified before being catalogued. The sweep
+finds missing receipts across all retained extraction versions, including those
+older than the compatibility latest pointer, which never moves backwards.
 This enables later private reader migration without losing older version
 pointers; it does not authorize removal of originals or SQL extraction bodies.
 Disposable PostgreSQL passes **55 checks**, including the actual archive CAS,
