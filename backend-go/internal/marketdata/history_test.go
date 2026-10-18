@@ -43,17 +43,22 @@ func TestCandleReadRequiresSourceByDefaultAndPreservesDateAndNulls(t *testing.T)
 		t.Fatal(rows, e)
 	}
 }
-func TestFinancialReadsRejectFutureAndUnreviewedPeriodsAndReverseHistory(t *testing.T) {
+func TestFinancialReadsUseSharedCanonicalModelAndPreserveNulls(t *testing.T) {
 	s, m := mockStore(t)
-	m.ExpectQuery(`SELECT row_to_json.*period_end<=CURRENT_DATE.*reported_at<=CURRENT_DATE.*filing_history_reviews.*LIMIT 1`).WithArgs("NSE:COOP", "annual", false).WillReturnRows(sqlmock.NewRows([]string{"result"}).AddRow([]byte(`{"fiscalYear":2025,"eps":null,"periodEnd":"2025-12-31"}`)))
+	m.ExpectQuery(`SELECT payload FROM market.canonical_financial_history`).WithArgs("NSE:COOP", "annual", 1, false).WillReturnRows(sqlmock.NewRows([]string{"payload"}).AddRow([]byte(`{"fiscalYear":2025,"eps":null}`)))
 	raw, e := s.LatestFinancials(context.Background(), "NSE:COOP", "annual")
 	if e != nil || !strings.Contains(string(raw), `"eps":null`) {
 		t.Fatal(string(raw), e)
 	}
-	m.ExpectQuery(`SELECT row_to_json.*sourceUrls.*filing_history_reviews.*LIMIT \$4`).WithArgs("NSE:COOP", "annual", false, 5).WillReturnRows(sqlmock.NewRows([]string{"result"}).AddRow([]byte(`{"fiscalYear":2025}`)).AddRow([]byte(`{"fiscalYear":2024}`)))
+	m.ExpectQuery(`SELECT payload FROM market.canonical_financial_history`).WithArgs("NSE:COOP", "annual", 5, false).WillReturnRows(sqlmock.NewRows([]string{"payload"}).AddRow([]byte(`{"fiscalYear":2024}`)).AddRow([]byte(`{"fiscalYear":2025}`)))
 	rows, e := s.FinancialHistory(context.Background(), "NSE:COOP", "annual", 5)
 	if e != nil || string(rows[0]) != `{"fiscalYear":2024}` {
 		t.Fatal(rows, e)
+	}
+	for _, limit := range []int{0, 101} {
+		if _, e = s.FinancialHistory(context.Background(), "NSE:COOP", "annual", limit); e == nil {
+			t.Fatal("invalid limit accepted")
+		}
 	}
 }
 func TestSparklinesExcludeUnknownStocksRatherThanFabricateLines(t *testing.T) {

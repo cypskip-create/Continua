@@ -37,7 +37,7 @@ def afri_score(security_id, inputs):
     return result
 
 
-def company_diagnostics(history):
+def company_diagnostics(history, sector=""):
     rows = sorted(history, key=lambda r: r['fiscalYear'])
     last = rows[-1] if rows else {}
     prior = next((row for row in rows if row['fiscalYear'] == last.get('fiscalYear', 0) - 1), {})
@@ -61,13 +61,39 @@ def company_diagnostics(history):
     add('leverage', 'Debt/equity did not rise', ld <= pd if ld is not None and pd is not None else None, 'Generic debt/equity is not a bank regulatory-capital measure.')
     liquidity = ratio(last.get('currentAssets'), last.get('currentLiabilities'))
     add('liquidity', 'Current assets cover current liabilities', liquidity >= 1 if liquidity is not None else None, 'A simple reported liquidity check, not a sector-specific solvency judgment.')
+    specs = {
+        'profit': (['netIncome'], 'netIncome > 0'),
+        'cash': (['operatingCashFlow','netIncome'], 'operatingCashFlow >= netIncome, with positive netIncome'),
+        'margin': (['netIncome','revenue'], '(netIncome / revenue) >= prior annual (netIncome / revenue)'),
+        'dilution': (['sharesOutstanding'], 'sharesOutstanding <= prior annual sharesOutstanding'),
+        'leverage': (['totalDebt','totalEquity'], '(totalDebt / totalEquity) <= prior annual (totalDebt / totalEquity)'),
+        'liquidity': (['currentAssets','currentLiabilities'], 'currentAssets / currentLiabilities >= 1'),
+    }
+    financial = bool(re.search(r'bank|insurance|financial', sector, re.I))
+    for check in checks:
+        fields, formula = specs[check['id']]
+        comparison = check['id'] in ('margin','dilution','leverage')
+        inputs = {key:last.get(key) for key in fields}
+        if comparison:
+            inputs.update({'prior.'+key:prior.get(key) for key in fields})
+        check.update(inputs=inputs, formula=formula, fiscalYear=last.get('fiscalYear'),
+                     currency=last.get('currency'), sourceUrls=last.get('sourceUrls') or [],
+                     basis=last.get('basis') or 'reviewed_filing',
+                     methodVersion='financial-evidence-v2',
+                     missing=[key for key,value in inputs.items() if not finite(value)])
+        if comparison and last.get('currency') and prior.get('currency') and last['currency']!=prior['currency']:
+            check['result']='unknown'
+            check['reason']='Different reporting currencies require a sourced conversion before comparing annual values.'
+        if financial and check['id'] in ('cash','leverage','liquidity'):
+            check['result']='not_applicable'
+            check['reason']='Generic industrial cash-conversion, debt and current-ratio thresholds are not used for banks or insurers; regulatory capital, asset quality and sector disclosures are required.'
     evidence = []
     for r in rows:
         for field, value in r.items():
             if finite(value) and field not in ('fiscalYear', 'fiscalQuarter'):
                 evidence.append({'year': r['fiscalYear'], 'field': field, 'value': value, 'periodEnd': r.get('periodEnd'), 'availableAt': r.get('reportedAt'), 'sourceUrls': r.get('sourceUrls') or [],
-                                 'basis': 'Reviewed filing' if r.get('sourceUrls') else 'Stored figure without reviewed URL'})
-    return {'trends': trends, 'checks': checks, 'knownChecks': sum(c['result'] != 'unknown' for c in checks), 'totalChecks': len(checks), 'evidence': evidence,
+                                 'basis': 'Third-party mapped observation' if r.get('basis')=='publisher_observation' else 'Reviewed filing' if r.get('sourceUrls') else 'Stored figure without reviewed URL'})
+    return {'trends': trends, 'checks': checks, 'knownChecks': sum(c['result'] in ('pass','flag') for c in checks), 'totalChecks': len(checks), 'evidence': evidence,
             'methodology': 'Reported-period diagnostics, not a proprietary rating, trading recommendation or probability of success. Missing inputs remain unknown. Source availability dates can be later than period ends.'}
 
 

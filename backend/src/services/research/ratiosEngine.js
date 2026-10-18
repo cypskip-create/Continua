@@ -7,8 +7,8 @@ const round4 = (n) => (n == null || !Number.isFinite(n) ? undefined : Math.round
 export function computeRatios(i) {
     const eps = i.eps != null && Number.isFinite(i.eps) ? i.eps : safeDiv(i.netIncome, i.sharesOutstanding);
     const bookValuePerShare = safeDiv(i.totalEquity, i.sharesOutstanding);
-    const marketCap = i.sharesOutstanding ? i.price * i.sharesOutstanding : undefined;
-    const enterpriseValue = marketCap != null ? marketCap + (i.totalDebt ?? 0) - (i.cash ?? 0) : undefined;
+    const marketCap = Number.isFinite(i.price) && Number.isFinite(i.sharesOutstanding) && i.sharesOutstanding > 0 ? i.price * i.sharesOutstanding : undefined;
+    const enterpriseValue = marketCap != null && Number.isFinite(i.totalDebt) && Number.isFinite(i.cash) ? marketCap + i.totalDebt - i.cash : undefined;
     const priceMomentum3m = i.priceHistory90d && i.priceHistory90d.length >= 2
         ? round4((i.priceHistory90d[i.priceHistory90d.length - 1] - i.priceHistory90d[0]) / i.priceHistory90d[0])
         : undefined;
@@ -46,7 +46,7 @@ function computeAnnualizedVolatility(prices) {
     return dailyStdDev * Math.sqrt(252); // annualized
 }
 export function yoyGrowth(current, prior) {
-    if (prior == null || prior === 0)
+    if (!Number.isFinite(current) || !Number.isFinite(prior) || prior === 0)
         return undefined;
     return (current - prior) / Math.abs(prior);
 }

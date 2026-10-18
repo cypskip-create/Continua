@@ -100,12 +100,17 @@ class ResearchProcessor:
                       (p.status='blocked' AND p.gate_signature IS DISTINCT FROM
                         md5(jsonb_build_array(s.enabled,s.redistribution_allowed,s.config->>'permissionReference',a.storage_path,a.sha256,sec.id)::text))
                       OR (p.status<>'blocked' AND p.payload->>'presentationVersion' IS DISTINCT FROM '3')))
+                  AND NOT EXISTS(SELECT 1 FROM scraping.dead_letters d
+                    WHERE d.source_id=a.source_id AND d.url=a.document_url
+                      AND d.stage='research-'||%s||':'||e.id::text
+                      AND (d.attempts>=5 OR d.last_failed +
+                        make_interval(secs=>least(3600,30*power(2,least(d.attempts,7)))::integer)>now()))
                   AND NOT EXISTS(SELECT 1 FROM scraping.extractions n WHERE n.artifact_id=e.artifact_id
                     AND n.entity->>'ticker' IS NOT DISTINCT FROM e.entity->>'ticker' AND (n.extracted_at,n.id)>(e.extracted_at,e.id))
                   ORDER BY (s.enabled AND s.redistribution_allowed=true AND sec.id IS NOT NULL
                     AND length(trim(s.config->>'permissionReference')) BETWEEN 1 AND 200
                     AND a.sha256 ~ '^[a-f0-9]{64}$' AND a.storage_path LIKE 'r2://continua-financial-documents/%%') DESC NULLS LAST,
-                    e.id FOR UPDATE OF e SKIP LOCKED LIMIT 1""",(VERSION,))
+                    e.id FOR UPDATE OF e SKIP LOCKED LIMIT 1""",(VERSION,VERSION))
                 if not rows:break
                 row=rows[0]
                 reference=(row.get('config') or {}).get('permissionReference')
@@ -139,6 +144,17 @@ class ResearchProcessor:
                             'observedAt':row['retrieved_at'].isoformat()})
                 except ValueError:
                     payload={'version':VERSION,'status':'review_required','destination':'review','issues':[{'code':'invalid_or_excessive_evidence'}]}
+                except Exception:
+                    # A parser bug for one issuer must not poison the entire batch.
+                    # Retain a sanitized durable retry receipt; no raw exception,
+                    # source body, provider credential or personal data is logged.
+                    await tx.query("""INSERT INTO scraping.dead_letters(source_id,url,stage,reason)
+                      VALUES(%s,%s,%s,'Engine processing failed; bounded retry scheduled')
+                      ON CONFLICT(source_id,url,stage) DO UPDATE SET
+                        attempts=dead_letters.attempts+1,last_failed=now(),reason=EXCLUDED.reason""",
+                      (row['source_id'],row['document_url'],'research-'+VERSION+':'+str(row['id'])))
+                    summary['failed']+=1
+                    continue
                 payload['presentationVersion']=3
                 serialized=encode(payload)
                 if len(serialized.encode('utf-8'))>8*1024*1024:

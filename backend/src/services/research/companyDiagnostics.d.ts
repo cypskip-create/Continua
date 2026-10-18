@@ -1,5 +1,5 @@
 import type { FinancialRow } from './engineAnalytics.js';
-export declare function companyDiagnostics(history: FinancialRow[]): {
+export declare function companyDiagnostics(history: FinancialRow[], sector?: string): {
     trends: {
         year: number;
         netMargin: number | null;
@@ -12,7 +12,14 @@ export declare function companyDiagnostics(history: FinancialRow[]): {
     checks: {
         id: string;
         label: string;
-        result: "pass" | "flag" | "unknown";
+        result: "pass" | "flag" | "unknown" | "not_applicable";
+        inputs?: Record<string, number | null>;
+        formula?: string;
+        fiscalYear?: number | null;
+        currency?: string | null;
+        sourceUrls?: string[];
+        methodVersion?: string;
+        missing?: string[];
         reason: string;
     }[];
     knownChecks: number;

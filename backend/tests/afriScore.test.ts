@@ -1,8 +1,15 @@
 import { describe, it, expect } from "vitest";
 import { computeAfriScore } from "../src/services/research/afriScore.js";
-import { computeRatios } from "../src/services/research/ratiosEngine.js";
+import { computeRatios, yoyGrowth } from "../src/services/research/ratiosEngine.js";
 
 describe("ratiosEngine", () => {
+  it('does not infer zero debt, cash, or earnings when values are missing',()=>{
+    const basis={price:20,sharesOutstanding:100,ebitda:10,cash:5};
+    expect(computeRatios(basis as any).evEbitda).toBeUndefined();
+    expect(computeRatios({...basis,totalDebt:0} as any).evEbitda).toBe(199.5);
+    expect(yoyGrowth(null as any,100)).toBeUndefined();
+  });
+
   it("computes PE, ROE, margins from raw fundamentals", () => {
     const ratios = computeRatios({
       price: 100, sharesOutstanding: 1_000_000, netIncome: 10_000_000, revenue: 50_000_000,

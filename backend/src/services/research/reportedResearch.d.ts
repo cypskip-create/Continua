@@ -24,3 +24,5 @@ export declare function reportedResearchRatios(securityId: string, quote: {
     priceMomentum3m?: number | undefined;
     volatility90d?: number | undefined;
 } | null;
+
+export declare function reportedResearchRows(quote: {timestamp: string; currency?: string} | null, history: FinancialRow[]): FinancialRow[];

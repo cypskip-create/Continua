@@ -3,7 +3,7 @@ from .analytics import analyze_financials, data_quality, scenarios
 from .briefing import company_briefing, research_synthesis
 from .research_components import afri_score, company_diagnostics, summarize_news
 from .readiness import research_readiness
-from .reported import reported_research_ratios
+from .reported import reported_research_ratios, reported_research_rows
 from .dividends import trailing_dividend_per_share
 from .ratios import yoy_growth
 from .numbers import finite, compatible_currency
@@ -26,11 +26,14 @@ def assemble_company_bundle(input, now):
     prior = history[-2] if len(history) > 1 else None
     dps_at_quote = trailing_dividend_per_share(actions, quote['timestamp']) if quote else None
     ratios = reported_research_ratios(profile['id'], quote, history, dps_at_quote, now)
-    adjacent = latest is not None and prior is not None and latest['fiscalYear'] == prior['fiscalYear'] + 1 and compatible_currency(latest.get('currency'),prior.get('currency')) and compatible_currency(latest.get('currency'),quote.get('currency') if quote else None)
+    scoring_history=sorted(reported_research_rows(quote,history),key=lambda r:r['fiscalYear'])
+    latest_score=scoring_history[-1] if scoring_history else None
+    prior_score=scoring_history[-2] if len(scoring_history)>1 else None
+    adjacent=bool(latest_score and prior_score and latest_score['fiscalYear']==prior_score['fiscalYear']+1 and compatible_currency(latest_score.get('currency'),prior_score.get('currency')))
     score = None
     if ratios is not None:
-        score = afri_score(profile['id'], {'ratios': ratios, 'revenueGrowthYoy': yoy_growth(latest.get('revenue'), prior.get('revenue')) if adjacent else None,
-                                         'epsGrowthYoy': yoy_growth(latest.get('eps'), prior.get('eps')) if adjacent else None})
+        score = afri_score(profile['id'], {'ratios': ratios, 'revenueGrowthYoy': yoy_growth(latest_score.get('revenue'), prior_score.get('revenue')) if adjacent else None,
+                                         'epsGrowthYoy': yoy_growth(latest_score.get('eps'), prior_score.get('eps')) if adjacent else None})
         score['asOf'] = quote['timestamp']
     company = profile['company']
     financial_analysis = analyze_financials(history, company.get('sectorName') or '')
@@ -57,7 +60,7 @@ def assemble_company_bundle(input, now):
         'reliability': research_readiness({'quote': quote, 'history': history, 'unavailable': unavailable,
                                          'technicalObservations': min(len(t['timestamps']) for t in technicals) if technicals else 0,
                                          'estimateCount': len(estimates), 'ownershipCount': len(ownership)}, now),
-        'diagnostics': company_diagnostics(history), 'quality': data_quality(quote, history, now), 'financialAnalysis': financial_analysis,
+        'diagnostics': company_diagnostics(history, company.get('sectorName') or ''), 'quality': data_quality(quote, history, now), 'financialAnalysis': financial_analysis,
         'changes': {'baseline': True, 'changes': [], 'fingerprint': '', 'comparedAsOf': None}, 'scenarios': scenarios(latest),
         'dividendAnalysis': dividend_analysis, 'quarterly': input.get('quarterly') or [], 'actions': actions, 'sector': company.get('sectorName'),
         'synthesis': research_synthesis(quote.get('lastPrice') if quote else None, technicals, briefing['risks'], unique_unavailable),

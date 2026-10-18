@@ -9,6 +9,9 @@ func ProtectionChecks(version string) ([]string, error) {
 		return "SELECT c.relrowsecurity AND NOT has_table_privilege('anon','" + table + "','SELECT,INSERT,UPDATE,DELETE') AND NOT has_table_privilege('authenticated','" + table + "','SELECT,INSERT,UPDATE,DELETE') FROM pg_class c WHERE c.oid='" + table + "'::regclass"
 	}
 	switch version {
+	case "20261018100000":
+		return []string{"SELECT NOT has_function_privilege('anon','market.canonical_financial_history(text,text,integer,boolean)','EXECUTE') AND NOT has_function_privilege('authenticated','market.canonical_financial_history(text,text,integer,boolean)','EXECUTE')", "SELECT NOT has_function_privilege('anon','market.publisher_financial_history(text)','EXECUTE') AND NOT has_function_privilege('authenticated','market.publisher_financial_history(text)','EXECUTE')"}, nil
+
 	case "20261011160000":
 		return []string{"SELECT count(*)=1 FROM market.securities s JOIN market.companies c ON c.id=s.company_id WHERE s.id='NSE:KUKZ' AND s.symbol='KUKZ' AND s.exchange='NSE' AND s.currency='KES' AND s.status='active' AND lower(c.name)='kakuzi plc'"}, nil
 	case "20261010210000":

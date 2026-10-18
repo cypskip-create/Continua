@@ -1,5 +1,5 @@
 import type { FinancialRow } from './engineAnalytics.js';
-export declare const RESEARCH_METHOD_VERSION = "nse-research-2026-10-v1";
+export declare const RESEARCH_METHOD_VERSION = "nse-research-2026-10-v2";
 type QuoteInput = {
     lastPrice: number;
     timestamp: string;

@@ -6,7 +6,7 @@ from .dates import parse
 from .numbers import finite, compatible_currency
 from .evidence_json import stringify
 
-METHOD_VERSION = 'nse-research-2026-10-v1'
+METHOD_VERSION = 'nse-research-2026-10-v2'
 
 
 def research_readiness(input, now=None):
@@ -29,14 +29,18 @@ def research_readiness(input, now=None):
         urls = row.get('sourceUrls') or []
         matrix.append({'year': row['fiscalYear'], 'periodEnd': end, 'availableAt': filed,
                        'sourceCount': sum(source(u) for u in urls),
+                       'observationAvailable': bool(any(finite(row.get(k)) for k in ('revenue','netIncome','eps','totalAssets','operatingCashFlow')) and any(source(u) for u in urls) and (not end or dated(end) and end[:10]<=today) and (not filed or dated(filed) and filed[:10]<=today)),
+                       'basis': row.get('basis') or 'reviewed_filing',
                        'fields': {name: finite(row.get(field)) for name, field in [('revenue', 'revenue'), ('earnings', 'netIncome'), ('eps', 'eps'), ('assets', 'totalAssets'), ('cashFlow', 'operatingCashFlow')]},
                        'usable': bool(dated(end) and dated(filed) and end[:10] <= today and filed[:10] <= today and any(source(u) for u in urls))})
     years = list(dict.fromkeys(r['year'] for r in matrix))
     gaps = [year for year in range(int(years[0]), int(years[-1])) if year not in years] if years else []
     if not rows:
         add('financials-missing', 'blocked', 'No validated annual statements are available. Downloaded files alone do not establish financial coverage.', 'Earnings & Reports')
-    if any(not row['usable'] for row in matrix):
-        add('provenance', 'blocked', 'Some stored periods lack a dated HTTPS source or have future dates. Do not use them as validated evidence.')
+    if any(not row['observationAvailable'] for row in matrix):
+        add('provenance', 'blocked', 'Some stored periods lack usable source-backed amounts or contain future dates.')
+    if any(row['observationAvailable'] and not row['usable'] for row in matrix):
+        add('filing-date-unavailable', 'warning', 'Financial observations are available. Unknown period ends or publication dates exclude them from point-in-time valuation and historical backtests; the amounts remain visible.')
     if len({(row['fiscalYear'], row.get('fiscalQuarter') or 'FY') for row in rows}) != len(rows):
         add('duplicate-period', 'blocked', 'Duplicate periods need reconciliation before comparing growth.')
     if gaps:
@@ -59,7 +63,8 @@ def research_readiness(input, now=None):
     usable_years = [row['year'] for row in matrix if row['usable']]
     adjacent = sum(year - 1 in usable_years for year in usable_years)
     capabilities = [
-        eligibility('statements', 'Reported financials', len(usable_years), 1, 'Needs source-backed statements with real period and publication dates.'),
+        eligibility('statements', 'Financial observations', sum(r['observationAvailable'] for r in matrix), 1, 'Source-backed amounts remain visible when publication dates are unknown.'),
+        eligibility('dated-statements', 'Point-in-time financial evidence', len(usable_years), 1, 'Requires source URLs, fiscal period end and publication date; excludes undated publisher observations.'),
         eligibility('growth', 'Annual growth', adjacent, 1, 'Requires consecutive fiscal years; sparse endpoints are not annual growth.'),
         eligibility('technicals', 'Price-indicator inputs', input['technicalObservations'], 35, 'A minimum-history screening check, not proof every indicator is computable. Uses dated provider bars; corporate-action adjustment requires separate verification.'),
         eligibility('estimates', 'Analyst estimates', input['estimateCount'], 1, 'Sourced estimates only; user scenarios do not count as analyst coverage.'),

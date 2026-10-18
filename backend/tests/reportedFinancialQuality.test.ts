@@ -6,7 +6,7 @@ import {computeRatios} from '../src/services/research/ratiosEngine.js';
 it('latest and historical reads exclude unpublished future periods and support partial statements',async()=>{
  await financialsRepository.getLatestPeriodBundle('NSE:SCOM');
  await financialsRepository.getHistoricalPeriods('NSE:SCOM','annual',20);
- for(const [sql] of query.mock.calls){expect(sql).toContain('p.period_end <= CURRENT_DATE');expect(sql).toContain('p.reported_at <= CURRENT_DATE');expect(sql).toContain('LEFT JOIN market.balance_sheets');}
+ for(const [sql,params] of query.mock.calls){expect(sql).toContain('market.canonical_financial_history');expect(params[0]).toBe('NSE:SCOM');expect(params[1]).toBe('annual');}
 });
 it('uses reported EPS without guessing shares; incomplete statements do not become zero-valued ratios',()=>{
  const ratios=computeRatios({price:35.75,eps:2.39,netIncome:73676000000,revenue:427559100000,totalEquity:null});

@@ -1,4 +1,5 @@
 export interface FinancialRow {
+    basis?: 'publisher_observation';
     sourceUrls?: string[] | null;
     fiscalYear: number;
     fiscalQuarter?: number | null;

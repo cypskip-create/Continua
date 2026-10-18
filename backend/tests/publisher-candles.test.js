@@ -1,4 +1,4 @@
-import {test} from 'node:test';
+import {test} from 'vitest';
 import assert from 'node:assert/strict';
 import {publisherCandleQuery,mergeDailyObservations} from '../src/storage/repositories/publisherCandleQuery.js';
 test('durable daily observations fill missing dates without replacing canonical prices',()=>{

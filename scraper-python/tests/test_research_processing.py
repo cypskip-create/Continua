@@ -35,6 +35,22 @@ def row(**changes):
 
 
 class ProcessingTests(unittest.IsolatedAsyncioTestCase):
+    async def test_parser_failure_is_retried_without_blocking_the_next_issuer(self):
+        from unittest.mock import patch
+        db=DB([row(id=1),row(id=2,entity={'ticker':'CGEN'},security_id='NSE:CGEN')])
+        with patch('continua_engine.collected.process_evidence',side_effect=[RuntimeError('private implementation detail'),
+            {'destination':'overview','status':'empty','issues':[]}]):
+            summary=await ResearchProcessor(db).run(2)
+        self.assertEqual(summary['failed'],1)
+        self.assertEqual(summary['processed'],1)
+        retry=[c for c in db.calls if 'INSERT INTO scraping.dead_letters' in c[0]]
+        self.assertEqual(len(retry),1)
+        self.assertEqual(retry[0][1][2],'research-collected-research-v1:1')
+        self.assertNotIn('private implementation detail',str(db.calls))
+        selection=next(sql for sql,_ in db.calls if 'SELECT e.id' in sql)
+        self.assertIn('d.attempts>=5',selection)
+        self.assertIn('SKIP LOCKED',selection)
+
     async def test_company_assembly_is_persisted_automatically_with_current_rights_gates(self):
         class AssemblyDB:
             def __init__(self):self.calls=[]

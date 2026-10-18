@@ -26,6 +26,6 @@ export function apiRateLimit() {
         },
         standardHeaders: true,
         legacyHeaders: false,
-        message: { error: "Rate limit exceeded — slow down." },
+        message: { error: "Rate limit exceeded — slow down.", code:"RATE_LIMITED" },
     });
 }

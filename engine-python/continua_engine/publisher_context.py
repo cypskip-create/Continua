@@ -35,7 +35,8 @@ def annotate_publisher_context(result):
             for point in series.get('points',[]):
                 if type(point.get('year')) is int and point.get('value') is not None:
                     fields.append({'metric':metric,'year':point['year'],'value':point['value'],
-                        'raw':point.get('raw'),'sourceLabel':series['label'],'basis':'publisher_observation'})
+                        'raw':point.get('raw'),'sourceLabel':series['label'],'basis':'publisher_observation',
+                        'unit':series['unit'],'currency':'KES' if series['unit']=='KES' else None})
     result['financialFields']=fields
     ownership=[]
     if result.get('destination')=='ownership':

@@ -9,5 +9,5 @@ it('filters untraceable production candles in history, range, sparklines and vol
  await candlesRepository.getHighLow('NSE:KCB','2026-01-01','2026-10-09');
  await candlesRepository.getRecentClosesBatch(['NSE:KCB'],20);
  await candlesRepository.getAverageVolume('NSE:KCB','2026-01-01','2026-10-09');
- for(const [sql,params] of vi.mocked(query).mock.calls){expect(sql).toContain('source_url IS NOT NULL');expect(params?.at(-1)).toBe(false);}
+ for(const [sql,params] of vi.mocked(query).mock.calls){if(sql.includes('scraping.processed_research')){expect(sql).toContain('redistribution_allowed=true');expect(sql).toContain('permissionReference');expect(sql).toContain('a.sha256');}else{expect(sql).toContain('source_url IS NOT NULL');expect(params?.at(-1)).toBe(false);}}
 });

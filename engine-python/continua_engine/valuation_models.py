@@ -28,7 +28,7 @@ def reported_eps(financials, positive_shares=False):
     eps, shares, income = financials.get('eps'), financials.get('sharesOutstanding'), financials.get('netIncome')
     if eps is not None: return eps
     if finite(shares) and shares != 0 and (not positive_shares or shares > 0):
-        return income / shares if finite(income) else 0 if income is None else None
+        return income / shares if finite(income) else None
     return None
 
 
@@ -52,7 +52,7 @@ def graham_number(price, financials):
     if not financials:
         return unavailable(name, price, GRAHAM_METHOD, 'No fundamentals on file for this security yet.')
     eps, shares, equity = reported_eps(financials), financials.get('sharesOutstanding'), financials.get('totalEquity')
-    book = equity / shares if finite(equity) and finite(shares) and shares != 0 else 0 if equity is None and finite(shares) and shares != 0 else None
+    book = equity / shares if finite(equity) and finite(shares) and shares > 0 else None
     if not finite(eps) or not finite(book) or eps <= 0 or book <= 0:
         return unavailable(name, price, GRAHAM_METHOD, 'Requires positive EPS, positive book value per share, and shares outstanding on file — at least one is missing or non-positive.')
     fair_value = rounded(math.sqrt(22.5 * eps * book))

@@ -24,7 +24,7 @@ const baseline={baseline:true,changes:[],fingerprint:'',comparedAsOf:null};
 const annual=year=>({fiscalYear:year,periodEnd:`${year}-12-31`,reportedAt:`${year+1}-03-01`,revenue:100+(year-2024)*20,netIncome:20,eps:6,sourceUrls:['https://issuer.example/a.pdf']});
 let count=0;
 try{
- for(const scenario of ['complete','missing','partial','sparse','publisherOutage']){
+ for(const scenario of ['complete','missing','partial','sparse','publisherOutage','undated']){
   const symbol='FIX'+scenario.toUpperCase();
   const input={symbol,exchange:'NSE',profile:{id:`NSE:${symbol}`,currency:'KES',company:{name:'Example Issuer PLC',sectorName:'Banking'}},
    quote:scenario==='missing'?null:{lastPrice:30,timestamp:'2026-10-12T12:00:00.000Z',source:'live'},
@@ -35,6 +35,7 @@ try{
   collectedResearchRepository.get=async()=>{if(scenario==='publisherOutage')throw new Error('Fixture publisher outage');return input.publisherResearch;};
   securitiesRepository.getCompanyProfile=async()=>input.profile;
   pricesRepository.getQuote=async()=>input.quote;
+  if(scenario==='undated')input.history[1]={...input.history[1],periodEnd:null,reportedAt:null,basis:'publisher_observation',revenue:1000,eps:99};
   financialsRepository.getHistoricalPeriods=async(_id,type)=>type==='annual'?input.history:input.quarterly;
   corporateActionsRepository.getEarningsBySecurity=async()=>input.earnings;
   corporateActionsRepository.getOwnership=async()=>{if(scenario==='partial')throw new Error('Fixture section outage');return input.ownership;};
@@ -50,6 +51,11 @@ try{
    env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,PYTHONUTF8:'1'}});
   assert.equal(child.status,0,`Native bundle failed: ${scenario}`);
   const native=JSON.parse(child.stdout);
+  if(scenario==='undated'){
+   assert.equal(expected.coverage.annualPeriods,2);
+   assert.equal(expected.score.inputs.revenueGrowthYoy,null,'Undated observations contaminated dated rating growth');
+   assert.equal(expected.history.at(-1).revenue,1000,'Available source amount disappeared');
+  }
   assert.deepEqual(native.bundle,expected,`Native bundle shape/evidence mismatch: ${scenario}`);
   assert.equal(native.observeEligible,!['partial','publisherOutage'].includes(scenario));
   if(expectedState)assert.deepEqual(native.state,expectedState,`Native source snapshot mismatch: ${scenario}`);

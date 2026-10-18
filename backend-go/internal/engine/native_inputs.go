@@ -139,7 +139,7 @@ func (n *NativeInputs) Valuation(ctx context.Context, exchange, symbol string) (
 		if json.Unmarshal(financials, &latest) != nil {
 			return nil, errors.New("invalid financial response")
 		}
-		if latest.ReportedAt <= quote.Timestamp[:min(10, len(quote.Timestamp))] && latest.PeriodEnd <= quote.Timestamp[:min(10, len(quote.Timestamp))] {
+		if latest.ReportedAt != "" && latest.PeriodEnd != "" && latest.ReportedAt <= quote.Timestamp[:min(10, len(quote.Timestamp))] && latest.PeriodEnd <= quote.Timestamp[:min(10, len(quote.Timestamp))] {
 			year = &latest.FiscalYear
 		}
 	}

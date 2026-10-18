@@ -32,9 +32,9 @@ export const researchService = {
             candlesRepository.getCandles(securityId, "1d", from.toISOString(), to.toISOString()),
             corporateActionsRepository.getDividendsBySecurity(securityId),
         ]);
-        if (!latest)
+        if (!latest || latest.basis==='publisher_observation')
             return null;
-        const prior = history.find(period => period.fiscalYear === latest.fiscalYear - 1) ?? null;
+        const prior = history.find(period => period.basis!=='publisher_observation' && period.fiscalYear === latest.fiscalYear - 1) ?? null;
         const priceHistory90d = candles.map(c => c.close);
         const ttmDividend = trailingDividendPerShare(dividends, to);
         const ratioInputs = {

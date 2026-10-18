@@ -121,8 +121,8 @@ func TestFinancialsKeepNullsAndMissingHistoryAndWakeCollection(t *testing.T) {
 	s, h := historyServer()
 	wakes := 0
 	s.RequestDocuments = func() { wakes++ }
-	if w := request(s, "/api/v1/financials/COOP", "fixture-dev"); w.Code != 404 || wakes != 1 {
-		t.Fatal("missing filings did not wake collection", w.Code, wakes)
+	if w := request(s, "/api/v1/financials/COOP", "fixture-dev"); w.Code != 404 || wakes != 0 {
+		t.Fatal("financial read triggered source collection", w.Code, wakes)
 	}
 	if w := request(s, "/api/v1/financials/COOP/history", "fixture-dev"); w.Code != 200 || strings.TrimSpace(w.Body.String()) != `{"data":[]}` {
 		t.Fatal(w.Code, w.Body.String())

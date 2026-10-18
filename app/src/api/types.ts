@@ -130,6 +130,10 @@ export interface FinancialPeriodBundle {
 
 export interface FinancialHistoryEntry {
   basis?: 'publisher_observation';
+  ratios?: Partial<ComputedRatios>;
+  processingVersion?: string;
+  qualityStatus?: string;
+  calculationEligibility?: {historicalObservation:boolean;pointInTime:boolean;reason:string};
   sourceUrls?: string[] | null;
   costOfRevenue?: number | null;
   operatingExpenses?: number | null;

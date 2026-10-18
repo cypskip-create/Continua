@@ -19,6 +19,8 @@ func verifyFinancialPostgresFixture(t *testing.T, store *Store, ctx context.Cont
 		"supabase/migrations/20261010140000_filing_history_reviews.sql",
 		"supabase/migrations/20261011123000_partial_reported_statements.sql",
 		"supabase/migrations/20261012011000_financial_version_audit.sql",
+		"scraper/migrations/20261016170000 processed research.sql",
+		"supabase/migrations/20261018100000_canonical_financial_observations.sql",
 	} {
 		body, err := os.ReadFile(filepath.Join("..", "..", "..", filepath.FromSlash(relative)))
 		if err != nil {

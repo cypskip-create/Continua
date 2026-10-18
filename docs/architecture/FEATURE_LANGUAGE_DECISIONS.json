@@ -1,9 +1,30 @@
 {
-  "reviewDate": "2026-10-13",
+  "reviewDate": "2026-10-18",
   "scope": "Every backend/Engine/scraper runtime module, operator script, Edge entrypoint and existing SQL migration",
   "method": "Workload-specific rationale, supported tooling and feature-preserving tests; not a universal fastest-language claim.",
   "runtimeImplementationsUseTypeScript": false,
   "features": [
+    {
+      "file": "backend-go/internal/cache/rate.go",
+      "category": "Distributed request protection and private coverage operations",
+      "language": "Go, Redis Lua and existing Python operational CLI",
+      "runtime": "Existing bounded Redis/Upstash connections and native API; compatibility public-request limiter repair",
+      "reason": "Use atomic server-side counters and expiry through the existing remote cache connections. Keep request deadlines, verified identities, IPv6 normalization and bounded in-memory single-process operation in Go. A configured remote protection outage fails closed rather than resetting counters through cache fallback. The Python coverage CLI queries the authoritative NSE registry without source downloads or new services.",
+      "references": ["https://redis.io/docs/latest/commands/incr/", "https://upstash.com/docs/redis/features/restapi", "https://go.dev/doc/database/execute-transactions"]
+    },
+    {
+      "file": "supabase/migrations/20261018100000_canonical_financial_observations.sql",
+      "category": "Shared financial observation read model and evidence eligibility",
+      "language": "SQL with existing Python processing and Go API readers; compatibility JavaScript reader repair",
+      "runtime": "Existing Supabase and API processes; no new production runtime",
+      "reason": "Reconcile processed observations and exact reviewed components once inside the database. Preserve current source permissions and all source amounts without inferring disclosure dates. SQL avoids a browser-only or per-runtime reconciliation algorithm. Existing Python decimal calculations remain the numerical runtime and Go remains responsible for request cancellation and API access. Embedded PostgreSQL is a local test dependency only.",
+      "references": [
+        "https://www.postgresql.org/docs/current/sql-createfunction.html",
+        "https://docs.python.org/3/library/decimal.html",
+        "https://go.dev/doc/database/execute-transactions",
+        "https://pglite.dev/docs/api"
+      ]
+    },
     {
       "file": "engine-python/continua_engine/company_context.py",
       "category": "Automatic matching-year cross-statement research assembly and durable chart reads",

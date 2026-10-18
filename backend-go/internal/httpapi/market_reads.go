@@ -164,10 +164,7 @@ func (s *Server) marketReads(ctx context.Context, w http.ResponseWriter, r *http
 			failure(w, 404, "Unknown symbol "+original)
 			return true
 		}
-		if s.RequestDocuments != nil {
-			s.RequestDocuments()
-		}
-		key := "financial-read:" + exchange + ":" + symbol + ":" + periodType + ":" + variant + ":" + strconv.Itoa(limit)
+		key := "financial-read:canonical-v1:" + exchange + ":" + symbol + ":" + periodType + ":" + variant + ":" + strconv.Itoa(limit)
 		raw, err := load(key, 60*time.Second, func(ctx context.Context) (json.RawMessage, error) {
 			if variant == "history" {
 				rows, e := store.FinancialHistory(ctx, *id, periodType, limit)
@@ -188,9 +185,6 @@ func (s *Server) marketReads(ctx context.Context, w http.ResponseWriter, r *http
 		if len(raw) == 0 || string(raw) == "null" {
 			failure(w, 404, "No financials available yet")
 			return true
-		}
-		if s.RequestDocuments != nil {
-			s.RequestDocuments()
 		}
 		send(raw, nil)
 		return true

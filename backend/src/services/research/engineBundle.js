@@ -16,7 +16,7 @@ import { engineRepository } from "../../storage/repositories/engineRepository.js
 import { trailingDividendPerShare } from "./dividendMetrics.js";
 import { companyDiagnostics } from './companyDiagnostics.js';
 import { researchReadiness } from './researchReadiness.js';
-import { reportedResearchRatios } from './reportedResearch.js';
+import { reportedResearchRatios, reportedResearchRows } from './reportedResearch.js';
 import { computeAfriScore } from './afriScore.js';
 import { yoyGrowth } from './ratiosEngine.js';
 import { engineCacheKeys } from './engineCacheKeys.js';
@@ -116,8 +116,10 @@ async function loadEngineBundle(symbol, exchange) {
         // Derive headline metrics from this bundle's dated, reviewed inputs,
         // never a previously cached ratio whose filing/quote basis is unknown.
         const ratios = reportedResearchRatios(profile.id, quote, sorted, quote ? trailingDividendPerShare(actions, new Date(quote.timestamp)) ?? null : null);
-        const adjacent = latest && prior && latest.fiscalYear === prior.fiscalYear + 1;
-        const score = ratios ? { ...computeAfriScore(profile.id, { ratios, revenueGrowthYoy: adjacent ? yoyGrowth(latest.revenue, prior.revenue) : undefined, epsGrowthYoy: adjacent ? yoyGrowth(latest.eps, prior.eps) : undefined }), asOf: quote.timestamp } : null;
+        const scoringHistory=reportedResearchRows(quote,sorted);
+        const latestScore=scoringHistory.at(-1),priorScore=scoringHistory.at(-2);
+        const adjacent = latestScore && priorScore && latestScore.fiscalYear === priorScore.fiscalYear + 1 && (!latestScore.currency || !priorScore.currency || latestScore.currency===priorScore.currency);
+        const score = ratios ? { ...computeAfriScore(profile.id, { ratios, revenueGrowthYoy: adjacent ? yoyGrowth(latestScore.revenue, priorScore.revenue) : undefined, epsGrowthYoy: adjacent ? yoyGrowth(latestScore.eps, priorScore.eps) : undefined }), asOf: quote.timestamp } : null;
         const financialAnalysis = analyzeFinancials(sorted, profile.company.sectorName ?? "");
         const quality = dataQuality(quote, sorted);
         const state = {
@@ -153,7 +155,7 @@ async function loadEngineBundle(symbol, exchange) {
             publisherResearch,
             refresh: { state: unavailable.length ? 'partial' : 'complete', failedSections: [...new Set(unavailable)], attemptedAt: new Date().toISOString() },
             reliability: researchReadiness({ quote, history: sorted, unavailable, technicalObservations: technicals.filter(t => t != null).length ? Math.min(...technicals.filter(t => t != null).map(t => t.timestamps.length)) : 0, estimateCount: earnings.filter(e => e.epsEstimate != null || e.revenueEstimate != null).length, ownershipCount: ownership.length }),
-            diagnostics: companyDiagnostics(sorted),
+            diagnostics: companyDiagnostics(sorted, profile.company.sectorName ?? ''),
             quality,
             financialAnalysis,
             changes,

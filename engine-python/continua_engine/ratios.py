@@ -12,8 +12,8 @@ def annualized_volatility(prices):
 def compute_ratios(i):
     eps = i.get("eps") if finite(i.get("eps")) else divide(i.get("netIncome"),i.get("sharesOutstanding"))
     book = divide(i.get("totalEquity"),i.get("sharesOutstanding"))
-    market_cap = i.get("price") * i.get("sharesOutstanding") if finite(i.get("price")) and finite(i.get("sharesOutstanding")) and i.get("sharesOutstanding") != 0 else None
-    enterprise = market_cap+(i.get("totalDebt") or 0)-(i.get("cash") or 0) if market_cap is not None else None
+    market_cap = i.get("price") * i.get("sharesOutstanding") if finite(i.get("price")) and finite(i.get("sharesOutstanding")) and i.get("sharesOutstanding") > 0 else None
+    enterprise = market_cap+i["totalDebt"]-i["cash"] if market_cap is not None and finite(i.get("totalDebt")) and finite(i.get("cash")) else None
     capital = i["totalEquity"]+i["totalDebt"] if finite(i.get("totalEquity")) and finite(i.get("totalDebt")) else None
     history = i.get("priceHistory90d") or []
     momentum = divide(history[-1]-history[0],history[0]) if len(history)>=2 and all(finite(v) for v in history) else None

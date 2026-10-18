@@ -81,7 +81,11 @@ func respond(w http.ResponseWriter, status int, body any) {
 	_ = json.NewEncoder(w).Encode(body)
 }
 func failure(w http.ResponseWriter, status int, message string) {
-	respond(w, status, map[string]string{"error": message})
+	body := map[string]string{"error": message}
+	if status == 429 {
+		body["code"] = "RATE_LIMITED"
+	}
+	respond(w, status, body)
 }
 func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
@@ -125,7 +129,7 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	host := s.clientIdentity(r)
-	accountPrefix := strings.HasPrefix(r.URL.Path, "/api/v1/engine/") || strings.HasPrefix(r.URL.Path, "/api/v1/billing/") || strings.HasPrefix(r.URL.Path, "/api/v1/admin/")
+	accountPrefix := strings.HasPrefix(r.URL.Path, "/api/v1/")
 	if accountPrefix && r.URL.Path != "/api/v1/billing/paystack/webhook" && !s.preLimiter.Allow("ip:"+canonicalIP(host), 120, time.Now()) {
 		w.Header().Set("Retry-After", "60")
 		failure(w, 429, "Too many requests. Please retry shortly.")
@@ -200,11 +204,19 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	if key != nil {
 		limit = key.RateLimitPerMin
 	}
-	if !s.limiter.Allow(limitIdentity, limit, time.Now()) {
-		w.Header().Set("Retry-After", s.limiter.RetryAfter())
-		failure(w, 429, "Too many requests. Please retry shortly.")
+	duration := s.limiter.duration
+	if duration <= 0 {
+		duration = time.Minute
+	}
+	if !s.admit(ctx, w, limitIdentity, limit, duration) {
 		return
 	}
+	if policy, maximum := workloadPolicy(r); maximum > 0 {
+		if !s.admit(ctx, w, "work:"+limitIdentity+":"+policy, maximum, time.Minute) {
+			return
+		}
+	}
+
 	if s.Billing != nil && s.Billing.AccountHTTP(ctx, w, r, identity) {
 		return
 	}
@@ -398,6 +410,9 @@ type Limiter struct {
 
 func NewLimiter() *Limiter { return &Limiter{windows: map[string]window{}, duration: time.Minute} }
 func (l *Limiter) Allow(key string, limit int, now time.Time) bool {
+	return l.allowWindow(key, limit, now, l.duration)
+}
+func (l *Limiter) allowWindow(key string, limit int, now time.Time, duration time.Duration) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if limit <= 0 {
@@ -415,7 +430,6 @@ func (l *Limiter) Allow(key string, limit int, now time.Time) bool {
 				return false
 			}
 		}
-		duration := l.duration
 		if duration <= 0 {
 			duration = time.Minute
 		}
