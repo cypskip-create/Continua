@@ -106,7 +106,7 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
   // Company bundles can wait for profile + optional feeds + snapshot storage.
   // A 12-second client timeout used to abort valid Engine responses mid-flight.
   // A free Render instance can take over 50s to wake, before auth/DB reads.
-  const timeoutMs=path==='/engine/portfolio/overview'?90_000:path.startsWith("/engine/") || path.startsWith("/market-research/") || path.startsWith("/billing/") || path.startsWith("/financials/") ? 60_000 : 12_000;
+  const timeoutMs=path==='/engine/portfolio/overview'?90_000:/^\/(?:engine|market-research|billing|financials|research|statistics|historical|price-history)\//.test(path) ? 60_000 : 12_000;
   const timeout = window.setTimeout(() => controller.abort(new DOMException("Request timed out", "TimeoutError")), timeoutMs);
   const forwardAbort = () => controller.abort(options.signal?.reason);
   if (options.signal?.aborted) forwardAbort();

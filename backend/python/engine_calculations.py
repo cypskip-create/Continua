@@ -8,8 +8,74 @@ import json
 import math
 import sys
 
+def c_score(security_id, inputs):
+    """Continua's observed factor score, never a return forecast or analyst rating."""
+    r = inputs.get('ratios') or {}
+    finite = lambda n: isinstance(n, (int, float)) and not isinstance(n, bool) and math.isfinite(n)
+    raw_sector = str(inputs.get('sector') or '').lower()
+    sector = 'bank' if 'bank' in raw_sector else 'insurance' if 'insur' in raw_sector else 'investment' if any(s in raw_sector for s in ('investment', 'reit')) else 'general'
+    specs = {
+        'value': [('pe', 30, 5, .4), ('pb', 6, .5, .3), ('evEbitda', 20, 4, .3)],
+        'growth': [('revenueGrowthYoy', -.1, .3, .4), ('epsGrowthYoy', -.2, .4, .4), ('fiveYearRevenueCagr', -.05, .2, .2)],
+        'health': [('currentRatio', .5, 2.5, .35), ('debtToEquity', 2, 0, .4), ('interestCoverage', 1, 10, .25)],
+        'income': [('dividendYield', 0, .08, .4), ('payoutRatio', 1.1, .4, .6)],
+        'risk': [('volatility90d', .6, .15, .6), ('debtToEquity', 2.5, 0, .4)],
+        'quality': [('roe', 0, .3, .35), ('roa', 0, .15, .25), ('netMargin', 0, .3, .4)],
+        'momentum': [('priceMomentum3m', -.2, .3, 1)],
+    }
+    weights = dict(value=.2, growth=.15, health=.2, income=.1, risk=.15, quality=.15, momentum=.05)
+    if r.get('dividendYield') == 0:
+        specs['income'] = [('dividendYield', 0, .08, 1)]
+    if sector in ('bank', 'insurance'):
+        specs['value'] = [('pe', 25, 5, .5), ('pb', 3, .5, .5)]
+        specs['risk'] = [('volatility90d', .6, .15, 1)]
+        specs['health'] = [('nplRatio', .2, .02, .4), ('totalCapitalRatio', .1, .2, .4), ('coreCapitalRatio', .08, .16, .2)] if sector == 'bank' else [('solvencyCoverage', 1, 2, .6), ('combinedRatio', 1.2, .85, .4)]
+        specs['quality'] = [('roe', 0, .25, .7), ('roa', 0, .03, .3)] if sector == 'bank' else [('roe', 0, .25, .5), ('roa', 0, .05, .2), ('underwritingMargin', -.1, .15, .3)]
+        weights.update(value=.25, risk=.1)
+    elif sector == 'investment':
+        specs['value'] = [('pb', 2.5, .5, 1)]
+        specs['quality'] = [('roe', 0, .2, 1)]
+        weights = dict(value=.3, growth=.05, health=.1, income=.2, risk=.2, quality=.1, momentum=.05)
+    scores, pillars, seen = {}, {}, {}
+    for name, spec in specs.items():
+        parts, missing, observations, coverage = [], [], [], 0
+        data = inputs if name == 'growth' else r
+        for field, worst, best, weight in spec:
+            value = data.get(field)
+            valid = finite(value) and (field not in ('pe', 'pb', 'evEbitda') or value > 0)
+            valid = valid and (field not in ('currentRatio', 'debtToEquity', 'dividendYield', 'payoutRatio', 'volatility90d', 'nplRatio', 'totalCapitalRatio', 'coreCapitalRatio', 'solvencyCoverage', 'combinedRatio') or value >= 0)
+            seen[field] = value if finite(value) else None
+            if not valid:
+                missing.append(field)
+                continue
+            bounded = min(max(value, min(worst, best)), max(worst, best))
+            normalized = (bounded - worst) / (best - worst) * 100
+            parts.append((normalized, weight)); coverage += weight
+            observations.append(dict(metric=field, value=value, score=round(normalized, 2), weight=weight, worst=worst, best=best))
+        score = math.floor(sum(s*w for s, w in parts)/coverage*10+.5)/10 if coverage else None
+        scores[name] = score
+        pillars[name] = dict(score=score, coverage=round(coverage, 4), missing=missing, observations=observations, weight=weights[name])
+    coverage = sum(weights[k]*pillars[k]['coverage'] for k in weights)
+    observed_weight = sum(weights[k] for k in weights if scores[k] is not None)
+    eligible = coverage >= .6 and sum(v is not None for v in scores.values()) >= 4 and all(scores[k] is not None for k in ('value', 'health', 'quality'))
+    overall = math.floor(sum(scores[k]*weights[k] for k in weights if scores[k] is not None)/observed_weight+.5) if eligible else None
+    limited = inputs.get('basis') == 'publisher_observation' or inputs.get('filingDateKnown') is False
+    confidence = 'insufficient' if not eligible else 'limited' if limited or coverage < .8 else 'supported'
+    metadata = dict(methodologyVersion='continua-c-score-v2', displayName='C score', sectorProfile=sector,
+        coveragePercent=round(coverage*100, 1), confidence=confidence, pillars=pillars,
+        status='observed' if eligible else 'insufficient_evidence',
+        reason=None if eligible else 'Requires at least 60% applicable metric coverage, four observed pillars and observed valuation, financial strength and quality. Missing inputs are not neutral scores.',
+        basis=inputs.get('basis'), sourceUrls=inputs.get('sourceUrls') or [], fiscalYear=inputs.get('fiscalYear'),
+        filingDateKnown=inputs.get('filingDateKnown'), calculatedAt=inputs.get('calculatedAt'),
+        interpretation='Custom bounded factor assessment of observed inputs, not a probability, return forecast, fair-value star rating or Morningstar methodology. Coverage measures evidence, not investment quality. Thresholds are disclosed research assumptions, not validated predictive accuracy.')
+    return dict(securityId=security_id, afriScore=overall,
+        **{'afri'+k.capitalize():v for k,v in scores.items()},
+        inputs={**seen, **metadata})
+
 
 def calculate(operation, a):
+    if operation == 'cscore':
+        return c_score(*a)
     if operation == "stress":
         positions, market, sectors = a
         total = sum(p["value"] for p in positions)

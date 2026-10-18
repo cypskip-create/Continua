@@ -32,7 +32,10 @@ def assemble_company_bundle(input, now):
     adjacent=bool(latest_score and prior_score and latest_score['fiscalYear']==prior_score['fiscalYear']+1 and compatible_currency(latest_score.get('currency'),prior_score.get('currency')))
     score = None
     if ratios is not None:
-        score = afri_score(profile['id'], {'ratios': ratios, 'revenueGrowthYoy': yoy_growth(latest_score.get('revenue'), prior_score.get('revenue')) if adjacent else None,
+        score = afri_score(profile['id'], {'ratios': ratios, 'sector': profile.get('company', {}).get('sectorName'),
+                                         'basis': latest_score.get('basis') or 'reviewed_filing', 'fiscalYear': latest_score.get('fiscalYear'),
+                                         'filingDateKnown': bool(latest_score.get('reportedAt')), 'sourceUrls': latest_score.get('sourceUrls') or [], 'calculatedAt': now,
+                                         'revenueGrowthYoy': yoy_growth(latest_score.get('revenue'), prior_score.get('revenue')) if adjacent else None,
                                          'epsGrowthYoy': yoy_growth(latest_score.get('eps'), prior_score.get('eps')) if adjacent else None})
         score['asOf'] = quote['timestamp']
     company = profile['company']

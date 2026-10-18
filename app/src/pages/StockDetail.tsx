@@ -41,6 +41,9 @@ import { useCorporateActions } from "@/hooks/useCorporateActions";
 import { useExchange } from "@/hooks/useExchange";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { ContinuaScores } from "@/components/stock/ContinuaScore";
+import {CHART_TIMEFRAMES, loadChartPreferences, saveChartPreferences, type ChartTimeframe} from '@/lib/chartPreferences';
+import {chartCoverage} from '@/lib/priceHistory';
+import {useMarketStatistics} from '@/hooks/useMarketStatistics';
 
 
 // Static metadata identifies the issuer; quotes and financial statistics come
@@ -64,7 +67,6 @@ const SUB_NAV: { id: SubSection; label: string }[] = [
 ];
 
 
-const CHART_TIMEFRAMES = ["1D", "1W", "1M", "3M", "YTD", "1Y", "ALL"];
 const TIMEFRAME_LABELS: Record<string, string> = {
   "1D": "Today", "1W": "Past week", "1M": "Past month", "3M": "Past 3 months",
   "YTD": "Year to date", "1Y": "Past year", "ALL": "All time",
@@ -77,8 +79,13 @@ export default function StockDetail() {
   const goBack = useCallback(() => navigateBack(navigate, "/markets"), [navigate]);
   const backTap = useTouchClick<HTMLButtonElement>();
   const { symbol } = useParams();
-  const [selectedTimeframe, setSelectedTimeframe] = useState("1D");
-  const [chartType, setChartType] = useState<ChartType>("line");
+  const [selectedTimeframe, setTimeframeState] = useState<ChartTimeframe>(() => loadChartPreferences().timeframe);
+  const [chartType, setChartTypeState] = useState<ChartType>(() => loadChartPreferences().chartType);
+  const setSelectedTimeframe = useCallback((value: string) => {
+    if (!CHART_TIMEFRAMES.includes(value as ChartTimeframe)) return;
+    setTimeframeState(value as ChartTimeframe); saveChartPreferences({timeframe: value as ChartTimeframe});
+  }, []);
+  const setChartType = useCallback((value: ChartType) => {setChartTypeState(value); saveChartPreferences({chartType: value});}, []);
   const [fullscreen, setFullscreen] = useState(false);
   // Fullscreen chart toolbar (Moomoo/TradingView-style) — period picker plus
   // crosshair-pin, draw, gridline, and immersive toggles. Kept separate from
@@ -109,6 +116,7 @@ export default function StockDetail() {
   const myHolding = portfolio.find(p => p.symbol.toUpperCase() === (symbol || "").toUpperCase());
 
   const upperSymbol = (symbol || "").toUpperCase();
+  useEffect(() => {setHoverPrice(null); setHoverDate(null); setHoverChangePercent(null); setHoverIsUp(null);}, [upperSymbol, selectedTimeframe, chartType]);
   const { metadata } = useStockDirectory();
 
   // Live Continua Data Layer quote for this symbol, when it's in the
@@ -119,6 +127,7 @@ export default function StockDetail() {
   const { profile: liveProfile } = useCompanyProfile(upperSymbol || undefined);
   const stockMeta = metadata[upperSymbol] ?? STOCK_META[upperSymbol] ?? (liveProfile ? {name:liveProfile.company.name,sector:liveProfile.company.sectorName ?? 'Other'} : liveQuote ? {name:upperSymbol,sector:'Other'} : undefined);
   const { research: liveResearch } = useResearch(upperSymbol || undefined);
+  const {data: statistics, isLoading: statisticsLoading} = useMarketStatistics(upperSymbol);
   const { latest: reportedFinancials } = useStockFinancials(upperSymbol || undefined);
   const { actions: corporateActions, isLoading: actionsLoading } = useCorporateActions(upperSymbol || undefined);
   const [infoSheet, setInfoSheet] = useState<{ title: string; body: React.ReactNode } | null>(null);
@@ -142,17 +151,17 @@ export default function StockDetail() {
     const pct = liveQuote?.changePercent ?? 0;
     // Financial statistics share the reviewed Engine inputs. Never reverse-
     // engineer EPS or a 52-week range from static demonstration multiples.
-    const eps = reportedFinancials?.eps;
-    const pe = eps != null && eps > 0 && price > 0 ? price / eps : null;
+    const eps = statistics?.eps ?? reportedFinancials?.eps;
+    const pe = statistics?.pe ?? liveResearch?.ratios.pe;
     const dividend = liveResearch?.ratios.dividendYield != null && price > 0
       ? price * liveResearch.ratios.dividendYield : null;
     return {
       name: stockMeta.name, price, change, changePercent: pct.toFixed(2), isUp: change >= 0,
-      marketCap: liveQuote?.marketCap ? String(liveQuote.marketCap) : null,
+      marketCap: (liveQuote?.marketCap ?? statistics?.marketCap) != null ? new Intl.NumberFormat('en', {notation: 'compact', maximumFractionDigits: 2}).format((liveQuote?.marketCap ?? statistics?.marketCap)!) : null,
       pe: pe?.toFixed(2) ?? "—", eps: eps?.toFixed(2) ?? "—", dividend: dividend?.toFixed(2) ?? "—",
-      high52: "—", low52: "—",
+      high52: statistics?.high52?.toFixed(2) ?? '—', low52: statistics?.low52?.toFixed(2) ?? '—',
       exchange: "NSE", sector: stockMeta.sector,
-      volume: liveQuote?.volume ?? null, beta: "—", avgVolume: "—",
+      volume: liveQuote?.volume ?? statistics?.volume ?? null, beta: "—", avgVolume: "—",
       isLive: !!liveQuote,
     };
   })() : {
@@ -236,25 +245,9 @@ export default function StockDetail() {
   // price path when the provider has no history; synthetic lines can be mistaken
   // for market data and produce false returns or technical signals.
   const { points: liveCandlePoints } = useHistoricalCandles(upperSymbol || undefined, selectedTimeframe);
-  const oneDayQuotePoints = useMemo(() => {
-    if (!liveQuote || selectedTimeframe !== "1D") return [];
-    const now = new Date(liveQuote.timestamp).getTime() || Date.now();
-    const openTime = new Date(now); openTime.setHours(9, 0, 0, 0);
-    const values = [
-      { label: "Open", timestamp: openTime.getTime(), price: liveQuote.open || liveQuote.previousClose },
-      { label: "Now", timestamp: now, price: liveQuote.lastPrice },
-    ];
-    return values.map((point, index) => ({
-      date: point.label, price: point.price, open: index === 0 ? point.price : values[index - 1].price,
-      close: point.price, high: index === 0 ? point.price : Math.max(values[index - 1].price, point.price),
-      low: index === 0 ? point.price : Math.min(values[index - 1].price, point.price),
-      body: [index === 0 ? point.price : Math.min(values[index - 1].price, point.price), index === 0 ? point.price : Math.max(values[index - 1].price, point.price)] as [number, number],
-      wickRange: [index === 0 ? point.price : Math.min(values[index - 1].price, point.price), index === 0 ? point.price : Math.max(values[index - 1].price, point.price)] as [number, number],
-      up: index === 0 || point.price >= values[index - 1].price, timestamp: point.timestamp, volume: liveQuote.volume,
-    }));
-  }, [liveQuote, selectedTimeframe]);
-  const periodData = selectedTimeframe === "1D" ? oneDayQuotePoints : liveCandlePoints;
-  const hasHistoricalData = periodData.length > 1;
+  const periodData = liveCandlePoints;
+  const priceCoverage = chartCoverage(periodData, selectedTimeframe, chartType);
+  const hasHistoricalData = priceCoverage.available;
   const periodFirstPrice = periodData[0]?.price || stock.price;
   const periodLastPrice = periodData[periodData.length - 1]?.price || stock.price;
   // "1D" uses the verified session open and latest quote rather than inventing
@@ -265,7 +258,7 @@ export default function StockDetail() {
   // change from that timeframe's own (real) first/last price.
   const periodChangePercent = selectedTimeframe === "1D"
     ? Number(stock.changePercent)
-    : (periodFirstPrice ? ((periodLastPrice - periodFirstPrice) / periodFirstPrice) * 100 : 0);
+    : (hasHistoricalData && periodFirstPrice ? ((periodLastPrice - periodFirstPrice) / periodFirstPrice) * 100 : null);
   const periodIsUp = selectedTimeframe === "1D" ? stock.isUp : periodLastPrice >= periodFirstPrice;
 
   const exportHistoricalCsv = useCallback(() => {
@@ -273,7 +266,7 @@ export default function StockDetail() {
       toast({ title: "No history to export", description: `Historical OHLCV data is not available for ${upperSymbol} in ${TIMEFRAME_LABELS[selectedTimeframe]}.` });
       return;
     }
-    const escape = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
+    const escape = (value: string | number | undefined) => `"${String(value ?? '').replace(/"/g, '""')}"`;
     const rows = [
       ["timestamp", "open", "high", "low", "close", "volume"],
       ...periodData.map((point) => [new Date(point.timestamp).toISOString(), point.open, point.high, point.low, point.close, point.volume]),
@@ -297,8 +290,8 @@ export default function StockDetail() {
   const isScrubbing = hoverPrice !== null && hoverChangePercent !== null;
   const activeChangePercent = isScrubbing ? hoverChangePercent! : periodChangePercent;
   const activeIsUp = isScrubbing && hoverIsUp !== null ? hoverIsUp : periodIsUp;
-  const priceChange = stock.price * (activeChangePercent / 100);
-  const priceChangePercent = activeChangePercent.toFixed(2);
+  const priceChange = isScrubbing ? hoverPrice! - periodFirstPrice : selectedTimeframe === '1D' ? stock.change : hasHistoricalData ? periodLastPrice - periodFirstPrice : null;
+  const priceChangePercent = activeChangePercent?.toFixed(2) ?? '—';
   const displayIsUp = activeIsUp;
   // The big hero number is always the CURRENT market price — switching the timeframe
   // pill (1D/1W/1M/...) only changes the period's KES/% move shown underneath it, never
@@ -306,7 +299,7 @@ export default function StockDetail() {
   // while the person is dragging a finger/cursor along the chart (scrubbing), where it
   // reflects the price at that specific point in history. Release the drag (or just tap
   // a different timeframe pill) and it snaps straight back to the live quote.
-  const displayPrice = isScrubbing ? stock.price + priceChange : stock.price;
+  const displayPrice = isScrubbing ? hoverPrice! : stock.price;
 
   // stock.changePercent is stored as a pre-formatted string (see the `stock` object
   // above, built with `.toFixed(2)`), not a number — so it needs to be coerced to a
@@ -319,7 +312,7 @@ export default function StockDetail() {
   // Prefer the Data Layer's own AfriScore calculation
   // (backend/src/services/research/afriScoreService.ts) when this symbol is
   // covered. A missing Engine response does not become a heuristic score.
-  const scores: ContinuaScores | null = liveResearch
+  const scores: ContinuaScores | null = liveResearch?.score?.inputs?.methodologyVersion === 'continua-c-score-v2'
     ? {
         value: liveResearch.score.afriValue,
         growth: liveResearch.score.afriGrowth,
@@ -328,6 +321,8 @@ export default function StockDetail() {
         risk: liveResearch.score.afriRisk,
         position: liveResearch.score.afriMomentum,
         overall: liveResearch.score.afriScore,
+        quality: liveResearch.score.afriQuality,
+        evidence: liveResearch.score.inputs,
       }
     : null;
   // "Recent News" preview + NewsEventsTab both use real scraped news for
@@ -497,11 +492,11 @@ export default function StockDetail() {
             Compare
           </Button>
         </div>
-        <div className={`text-sm font-semibold flex items-center gap-1 mt-1 tabular ${displayIsUp ? 'text-bull' : 'text-bear'}`}>
+        <div className={`text-sm font-semibold flex items-center gap-1 mt-1 tabular ${priceChange == null ? 'text-muted-foreground' : displayIsUp ? 'text-bull' : 'text-bear'}`}>
           {stock.isLive ? (
             <>
-              {displayIsUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-              <span>{priceChange >= 0 ? '+' : ''}KES {Math.abs(priceChange).toFixed(2)} · {priceChange >= 0 ? '+' : ''}{priceChangePercent}%</span>
+              {priceChange != null && (displayIsUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />)}
+              <span>{priceChange == null ? 'Period return unavailable' : `${priceChange >= 0 ? '+' : ''}KES ${Math.abs(priceChange).toFixed(2)} · ${priceChange >= 0 ? '+' : ''}${priceChangePercent}%`}</span>
               <span className="text-muted-foreground font-normal text-xs ml-1">{hoverDate || TIMEFRAME_LABELS[selectedTimeframe] || selectedTimeframe}</span>
             </>
           ) : (
@@ -553,7 +548,7 @@ export default function StockDetail() {
             <div className="h-[280px] flex flex-col items-center justify-center px-8 text-center">
               <LineChartIcon className="h-7 w-7 text-muted-foreground/35 mb-2" />
               <p className="text-xs font-semibold">Historical chart unavailable</p>
-              <p className="text-[0.625rem] text-muted-foreground mt-1">No verified {TIMEFRAME_LABELS[selectedTimeframe].toLowerCase()} OHLCV series is available yet. The live quote above is still current.</p>
+              <p className="text-[0.625rem] text-muted-foreground mt-1">{priceCoverage.reason}</p>
             </div>
           )}
         </div>
@@ -561,6 +556,7 @@ export default function StockDetail() {
       </div>
 
       {/* Timeframe pills */}
+      {hasHistoricalData && <p className="text-[0.625rem] text-muted-foreground px-3 py-1">{priceCoverage.reason} Corporate-action adjustment may be unknown.</p>}
       <div className="flex items-center justify-between px-4 py-2 border-b border-border/50">
         {CHART_TIMEFRAMES.map(tf => (
           <button
@@ -587,7 +583,7 @@ export default function StockDetail() {
                 <div className="flex items-baseline gap-2">
                   <span className="text-xl font-bold tabular"><RollingNumber value={`KES ${displayPrice.toFixed(2)}`} /></span>
                   <span className={`text-xs font-semibold tabular ${displayIsUp ? 'text-bull' : 'text-bear'}`}>
-                    {priceChange >= 0 ? '+' : ''}{priceChangePercent}%
+                    {priceChange == null ? 'Return unavailable' : `${priceChange >= 0 ? '+' : ''}${priceChangePercent}%`}
                   </span>
                 </div>
               </div>
@@ -651,7 +647,7 @@ export default function StockDetail() {
               <div className="h-full flex flex-col items-center justify-center px-8 text-center">
                 <LineChartIcon className="h-8 w-8 text-muted-foreground/35 mb-2" />
                 <p className="text-sm font-semibold">No verified history available</p>
-                <p className="text-xs text-muted-foreground mt-1">Choose another range or return after the next data sync.</p>
+                <p className="text-xs text-muted-foreground mt-1">{priceCoverage.reason}</p>
               </div>
             )}
           </div>
@@ -776,8 +772,8 @@ export default function StockDetail() {
                 ["P/E Ratio", stock.pe],
                 ["EPS", stock.eps !== "—" && stock.eps !== "N/A" ? `KES ${stock.eps}` : "—"],
                 ["Dividend Yield", divYield != null ? `${divYield}%` : "—"],
-                ["52W High", "—"],
-                ["52W Low", "—"],
+                [statistics?.rangeBasis === 'observed_closing_prices' ? '52W Observed Closing High' : '52W Observed High', stock.high52],
+                [statistics?.rangeBasis === 'observed_closing_prices' ? '52W Observed Closing Low' : '52W Observed Low', stock.low52],
                 ["Volume", stock.volume != null ? stock.volume.toLocaleString() : null],
                 ["Beta", stock.beta || "—"],
               ] as [string, string | number | null][]).map(([k, v]) => (
@@ -786,15 +782,20 @@ export default function StockDetail() {
                   {v != null ? (
                     <span className="text-xs font-semibold tabular">{v}</span>
                   ) : (
-                    <Skeleton className="h-3.5 w-14" />
+                    statisticsLoading ? <Skeleton className="h-3.5 w-14" /> : <span className="text-xs text-muted-foreground">—</span>
                   )}
                 </div>
               ))}
             </div>
+            {statistics && <div className="text-[0.625rem] text-muted-foreground mt-2 space-y-1">
+              <p>Financial basis: {statistics.financialYear ? `FY${statistics.financialYear}` : 'unavailable'} · {statistics.financialBasis === 'publisher_observation' ? 'publisher observation' : 'reported evidence'}. Filing date: {statistics.filingDate ?? 'unknown'}.</p>
+              {statistics.marketCapBasis === 'price_times_reported_shares' && <p>Market cap is derived from the quoted price and shares last reported at {statistics.sharesAsOf ?? 'an unknown date'}.</p>}
+              <p>52-week source coverage: {statistics.rangeCoverage.observations} dated observations{statistics.rangeCoverage.from ? `, ${statistics.rangeCoverage.from} to ${statistics.rangeCoverage.to}` : ''}. Observed extrema are not a guarantee of a complete exchange record.</p>
+            </div>}
           </div>
 
           <div>
-            <Eyebrow>Investment Health Score</Eyebrow>
+            <Eyebrow>C score</Eyebrow>
             {scores ? <ContinuaScoreCard scores={scores} /> : <p className="text-sm text-muted-foreground">Engine research is not available yet. No placeholder score is shown.</p>}
           </div>
 

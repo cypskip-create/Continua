@@ -34,35 +34,41 @@ describe("ratiosEngine", () => {
 });
 
 describe("afriScore", () => {
-  it("scores a strong, cheap, healthy company highly", () => {
+  it("scores observed inputs using the Python Engine", async () => {
     const ratios = computeRatios({
       price: 50, sharesOutstanding: 1_000_000, netIncome: 15_000_000, revenue: 60_000_000,
       totalEquity: 50_000_000, totalAssets: 80_000_000, totalDebt: 5_000_000,
       currentAssets: 40_000_000, currentLiabilities: 10_000_000, grossProfit: 35_000_000,
       operatingIncome: 20_000_000, dividendPerShareTtm: 2, priceHistory90d: [40, 42, 45, 48, 50],
     });
-    const result = computeAfriScore("NSE:TEST", { ratios, revenueGrowthYoy: 0.15, epsGrowthYoy: 0.2 });
+    const result = await computeAfriScore("NSE:TEST", { ratios, revenueGrowthYoy: 0.15, epsGrowthYoy: 0.2 });
     expect(result.afriScore).toBeGreaterThan(50);
     expect(result.afriHealth).toBeGreaterThan(50);
   });
 
-  it("falls back to neutral 50 when no signal is available at all", () => {
+  it("leaves missing signals unavailable instead of neutral 50", async () => {
     const ratios = computeRatios({ price: 10, netIncome: 1, revenue: 1, totalEquity: 1, totalAssets: 1 });
-    const result = computeAfriScore("NSE:EMPTY", { ratios: {} as any });
-    expect(result.afriScore).toBeGreaterThanOrEqual(0);
-    expect(result.afriScore).toBeLessThanOrEqual(100);
+    const result = await computeAfriScore("NSE:EMPTY", { ratios: {} as any });
+    expect(result.afriScore).toBeNull();expect(result.afriHealth).toBeNull();
+    expect(result.inputs.methodologyVersion).toBe('continua-c-score-v2');
   });
 
-  it("keeps every sub-score within the documented 0-100 range", () => {
+  it("keeps observed factors bounded and missing ones null", async () => {
     const ratios = computeRatios({
       price: 500, sharesOutstanding: 100_000, netIncome: -5_000_000, revenue: 10_000_000,
       totalEquity: 1_000_000, totalAssets: 50_000_000, totalDebt: 45_000_000,
       currentAssets: 2_000_000, currentLiabilities: 20_000_000,
     });
-    const result = computeAfriScore("NSE:RISKY", { ratios, revenueGrowthYoy: -0.3, epsGrowthYoy: -0.5 });
+    const result = await computeAfriScore("NSE:RISKY", { ratios, revenueGrowthYoy: -0.3, epsGrowthYoy: -0.5 });
     for (const key of ["afriValue", "afriGrowth", "afriHealth", "afriIncome", "afriRisk", "afriQuality", "afriMomentum"] as const) {
-      expect(result[key]).toBeGreaterThanOrEqual(0);
-      expect(result[key]).toBeLessThanOrEqual(100);
+      if (result[key] != null) {expect(result[key]).toBeGreaterThanOrEqual(0);expect(result[key]).toBeLessThanOrEqual(100);}
     }
+  });
+  it('does not substitute generic debt or liquidity for bank regulatory evidence', async()=>{
+    const result=await computeAfriScore('NSE:BANK',{sector:'Banking',ratios:{pe:8,pb:1,roe:.2,roa:.02,currentRatio:10,debtToEquity:0}});
+    expect(result.afriHealth).toBeNull();expect(result.afriScore).toBeNull();expect(result.inputs.sectorProfile).toBe('bank');
+  });
+  it('does not treat a loss-making negative earnings multiple as cheap',async()=>{
+    const result=await computeAfriScore('NSE:LOSS',{ratios:{pe:-10}});expect(result.afriValue).toBeNull();expect(result.afriScore).toBeNull();
   });
 });

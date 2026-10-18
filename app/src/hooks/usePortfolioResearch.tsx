@@ -11,7 +11,7 @@ export function usePortfolioResearch(symbols: string[]) {
 
   const results = useQueries({
     queries: uniqueSymbols.map((symbol) => ({
-      queryKey: ["continua", "research", symbol],
+      queryKey: ["continua", "research-c-score-v2", symbol],
       queryFn: () => researchApi.get(symbol),
       staleTime: 10 * 60_000,
       retry: 1,

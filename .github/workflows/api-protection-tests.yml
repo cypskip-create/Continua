@@ -21,6 +21,9 @@ jobs:
           --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -28,6 +31,8 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - run: npm ci --prefix backend
       - run: npm --prefix backend test -- --run
+        env:
+          ENGINE_PYTHON_BIN: python
       - run: npm --prefix backend run build
       - run: node backend/node_modules/typescript/bin/tsc --noEmit -p backend/tsconfig.json
       - run: node infra/migration/compatibility-rate-fixture.mjs

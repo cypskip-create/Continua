@@ -1,15 +1,171 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-10-15",
+  "asOf": "2026-10-18",
   "scope": "Full native-runtime rewrite; not the already-deployed TS-to-JS migration.",
   "productionCutoverAllowed": false,
   "nativeCandidate": "backend-go/cmd/continua (loopback only; readiness deliberately 503)",
   "features": [
     {
       "legacyFile": "backend/python/engine_calculations.py",
-      "legacySha256": "142ddf7cb56422353c6daebd8bcbeda32fbce516438ba05a315fd7e74a3c3b57",
+      "legacySha256": "ed0d6f24f87824a47397f28d0a4bb57e3829f8606029a92f28a3f04fdb5e6400",
       "targetLanguage": "Python",
       "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/services/marketData/marketStatistics.js",
+      "legacySha256": "35ea58afd55cea0d637f4888239b32129cb6f08984335ddc3f576523d95322dd",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/streaming/websocketServer.js",
+      "legacySha256": "3546f24f48f43d5e2e4aac74768e2b603d70dc48e431cfa4b505228686d7b4ac",
+      "targetLanguage": "Go",
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native candidate calculation/API/streaming exists with isolated fixtures and 29 historical-research/draft oracle comparisons. Missing OHLCV remains unavailable; no real trading or synthetic volume added. WebSockets require authenticated nonempty matching subscriptions, reject credential URLs, bound fanout/slow clients and suppress exact duplicate payloads. Collector-to-event integration, owned/hosted comparisons and resource/restart gates remain pending."
+    },
+    {
+      "legacyFile": "backend/src/api/middleware/edgeClientIdentity.js",
+      "legacySha256": "75d289bbae18decf62de5c57e980b7ebc79792c50b55ee165e5d350d9cd73250",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/middleware/sharedRateStore.js",
+      "legacySha256": "335a91c69ba7b01846fb2a8bcec23c2934632d7360f2343aa2e8177b656266f3",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/api/middleware/workloadRateLimit.js",
+      "legacySha256": "ed7299e395da6431fd2174a76fff92251c66e9760f2696518cca65096f06c1af",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261018160000_cloudflare_only_file_writes.sql",
+      "legacySha256": "78c46c64def08853dac84d90b1e382ea85f08f9330b6521043ad19490808a55a",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "infra/cloudflare/media.mjs",
+      "legacySha256": "c9cb4f17fad312f8bd21fea5980c40723e6d2e4c4c478b9f1eacbd2cab3ab0f0",
+      "targetLanguage": "JavaScript (provider-native)",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "scraper-python/migrate_media.py",
+      "legacySha256": "f0179a4ece5732f3747156e3eb2e0e5de2aa1547cb72fef2c35e4e44c99e2bed",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper-python/continua_scraper/archive.py",
+      "legacySha256": "b00cc61314c5f54943234500ca753855f1f3b11997ae0ebc8e25377e8063dbc3",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper-python/continua_scraper/processed_archive.py",
+      "legacySha256": "398fe4a9d3af340e5c48279ea6322db3d79d0a177bad588b4ce78fa932486966",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/storage/researchObjects.js",
+      "legacySha256": "47872237b98eb438f740dd28340b355b5c73aa16165bf5f3b0978e708568b785",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "scraper-python/reconcile_cloud.py",
+      "legacySha256": "89a13a4e05031a45f59e2e9a8510c8c18b60f4f0d058f25fdcfc8f7a90dae832",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend-go/internal/cache/rate.go",
+      "legacySha256": "a7050107f0436b7f23ad8110cab7a181b523bd8fa692067d44c6ac3f39e65e83",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261018100000_canonical_financial_observations.sql",
+      "legacySha256": "0c99cf30868ee19d7bfdecb35e8fe11bb5f664694fc3022503a084810f7ae1c6",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "engine-python/continua_engine/company_context.py",
+      "legacySha256": "8ff6702878120817928706824614e05c5c65f9eef6bab4622eb43b0854f2a562",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "engine-python/continua_engine/publisher_context.py",
+      "legacySha256": "c7244fa97b6b2851e3775f1ee143c2b867c7271155a1d945dbc4875f3ea2b365",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper-python/scheduled_collect.py",
+      "legacySha256": "ee8903c5f6e166d0fc0a5e5d9d32ef5c611e814c0fd0dce181988c0a42960030",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "tools/audit-service-files.mjs",
+      "legacySha256": "57a1463b2e6dd3338596d17e666fd804bd4aa216ea0da6bf0df62d56dbaf02b4",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "engine-python/continua_engine/collected.py",
+      "legacySha256": "559c25a6c4bb6a3283fd1e1b4d59a0d1b07c594bdc3cf5e19f45fc9a16dd2f3d",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/ingestion/pipelines/automaticDocumentPublication.js",
+      "legacySha256": "669c0ab1e802fef686bbe26e62d5f64e2dafdea06fa1ae44705440e952ee4989",
+      "targetLanguage": "Go",
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go extraction leases, single-body reads, savepoints and immutable audit, Python registered-template plans, candidate scheduler, cache-invalidation/recompute callback and transactional versioned research-refresh outbox are implemented. Outbox claims release row locks before issuer computation, use lease/version CAS and retain failed retries. Fixtures pass. Apply/verify the new SQL migration, full admin-route, real concurrent/restart/resource and hosted checks before cutover."
+    },
+    {
+      "legacyFile": "scraper-python/continua_scraper/browser_controls.py",
+      "legacySha256": "41f0c6c7375c9d8d2a8cffea27b509bf709b2a4ad29ac10159e3be241249228f",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/scheduler/renderLight.js",
+      "legacySha256": "9ed96861689152a158cc754a2d380de6a9526729d03e3c6d30a95a04e8e75985",
+      "targetLanguage": "Python",
+      "status": "pending",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
     },
     {
@@ -120,7 +276,7 @@
     },
     {
       "legacyFile": "backend/scripts/build.mjs",
-      "legacySha256": "56f73a4166129679414316aa4d9cefe2856a5875812bccdc7e10dcff70bb6721",
+      "legacySha256": "7551b708dded6cfd63b398645688f9cf5459d20cad5e113ffb99357ec711021a",
       "targetLanguage": "Go",
       "status": "retained",
       "rationale": "Legacy development-only build/inventory/oracle/sandbox or one-off evidence verification reference. Not included or executed in either native container. Native Go/Python commands and tests replace production execution; retaining a comparison fixture is not a Node production dependency."
@@ -177,7 +333,7 @@
     },
     {
       "legacyFile": "backend/scripts/draftBondReport.js",
-      "legacySha256": "5bcea2071ccb93cdfa88b863c0502eb7c6d13b9597dd05527131cbd280632300",
+      "legacySha256": "0880694043bb629646f0901791652fa82e7a1aad06a9a30618a2e2eb4f98ca15",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -195,7 +351,7 @@
     },
     {
       "legacyFile": "backend/scripts/enableLicensedNse.js",
-      "legacySha256": "3d0f311df923543706fabbb82c004143cbe80f159e8e8e8a2cf35b87326866ac",
+      "legacySha256": "5550d69f0f75fb2bc4b379fed059e578feb3a7fbc75f683e221c80918ac3d583",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -204,7 +360,7 @@
     },
     {
       "legacyFile": "backend/scripts/exportMigrationInventory.js",
-      "legacySha256": "9a5541bb3dda1e7c27c2cde4aa76740099184cac2f6b0ac1b492966dc00d687f",
+      "legacySha256": "ded01f95e2166747099e46a17628f0dc14a950c70f48c8e195da428095f59479",
       "targetLanguage": "Go",
       "status": "retained",
       "rationale": "Legacy development-only build/inventory/oracle/sandbox or one-off evidence verification reference. Not included or executed in either native container. Native Go/Python commands and tests replace production execution; retaining a comparison fixture is not a Node production dependency."
@@ -272,7 +428,7 @@
     },
     {
       "legacyFile": "backend/scripts/publishReviewedFiling.js",
-      "legacySha256": "53ac57953693629775e5c54006669ed7400eb39e821dd008449765d8218496fd",
+      "legacySha256": "43c401e2e68f530e4423d139c3695848a9db7db6a9a6cedf84b40b3d0608b8b3",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -528,7 +684,7 @@
     },
     {
       "legacyFile": "backend/src/api/controllers/financials.controller.js",
-      "legacySha256": "4b5aca806cf11b4fc2025448f75100e5f3c40755167f4318530bf22a73fb0118",
+      "legacySha256": "74ff160064ddad32383f6e1fdf26e8da25887017af937b92d57f1d5c81feb5ca",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -600,7 +756,7 @@
     },
     {
       "legacyFile": "backend/src/api/controllers/research.controller.js",
-      "legacySha256": "9390d1eac79c9459ce1cbd6c805820985a777aca70685329a9a8e8fc581e2965",
+      "legacySha256": "c0da2615f61e4c35e77169c69114a8d4dfaa3e6ef2faa693732389c63998e5d2",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -669,7 +825,7 @@
     },
     {
       "legacyFile": "backend/src/api/middleware/preAuthenticationRateLimit.js",
-      "legacySha256": "ea9aad796b78f0e9bbfc38cce839acd1073bb13bf57d1504d19ece2b73030755",
+      "legacySha256": "0c12894c19289f6c692b6faaff8f7522dd75026130f16716d1e8746a3c61fc04",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -678,7 +834,7 @@
     },
     {
       "legacyFile": "backend/src/api/middleware/rateLimit.js",
-      "legacySha256": "22aee012f20e231dca4394647d673b7191a8eb9b1fd5473d1a079e8a9983afd9",
+      "legacySha256": "0e0c37749b470e3423b1988a4eaa3b089a83415d09135f9664d37718007d3d7a",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -696,7 +852,7 @@
     },
     {
       "legacyFile": "backend/src/api/middleware/requireAdminKey.js",
-      "legacySha256": "5c6f49eec35afc0fcc2a6813fd64a331b9f4de35815be9a50844ea7de41de1e6",
+      "legacySha256": "03d4b52eb7188480f05b66b086452ae6bae055c811abf1001053f526296b45ff",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -802,7 +958,7 @@
     },
     {
       "legacyFile": "backend/src/api/routes/financials.routes.js",
-      "legacySha256": "fb5fceb92f9c4dfe7e27c1602ca954f59eeb0726c49509a9bc00d1e134809eee",
+      "legacySha256": "3bc0ce6e793f1bca155c01698397a53c03ef7bb55e2e9992cf5f3e9644fa410b",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -829,7 +985,7 @@
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
-      "legacySha256": "c7e410e77361131e753b77b1c1dd085aab79f33f86519901aa5d9b0c6111a466",
+      "legacySha256": "5f9776c51e54350b2a62b779d9d89a4cfc459308f7d8756e754fd60523f17167",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -946,7 +1102,7 @@
     },
     {
       "legacyFile": "backend/src/api/server.js",
-      "legacySha256": "ebdc3e9620025d912006a5a310cef64a243bbacb0df49e6c51825d6c3e75cb06",
+      "legacySha256": "4fd838276e2b7a04d41ac7408eb6701397606a94ad1585208f4262e6fbcb6e4c",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -964,7 +1120,7 @@
     },
     {
       "legacyFile": "backend/src/config/env.js",
-      "legacySha256": "83c13a1bda71a3b7a8138bfb208d29a08621ae0264ebc6b93e95b78c918f6fe9",
+      "legacySha256": "286f045822f5748ce0d0d585f91f609285e1a6311cff38efecc17d8562bce5ae",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -1186,14 +1342,6 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native candidate admin/announcement implementation and security/atomic-review fixtures exist. Single-column confirmation deliberately requires the same explicit units/page/column review as history; unsafe unbalanced legacy publication is not retained. Owned DB, caller integration, restart and hosted validation remain pending."
-    },
-    {
-      "legacyFile": "backend/src/ingestion/pipelines/automaticDocumentPublication.js",
-      "legacySha256": "e3477df961573695ac017cf8468628b783962bac8623c36806db0b7864fc940e",
-      "targetLanguage": "Go",
-      "status": "partial",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native Go extraction leases, single-body reads, savepoints and immutable audit, Python registered-template plans, candidate scheduler, cache-invalidation/recompute callback and transactional versioned research-refresh outbox are implemented. Outbox claims release row locks before issuer computation, use lease/version CAS and retain failed retries. Fixtures pass. Apply/verify the new SQL migration, full admin-route, real concurrent/restart/resource and hosted checks before cutover."
     },
     {
       "legacyFile": "backend/src/ingestion/pipelines/candlesIngestionPipeline.js",
@@ -1439,10 +1587,10 @@
     },
     {
       "legacyFile": "backend/src/services/portfolio/corporateActionAdjustments.js",
-      "legacyReferenceRetired": "Unused runtime module removed after import audit; historical feature and native release gates preserved",
       "legacySha256": "2e6a0ca6d932ce0ae8314ae675ee66be02989352d517e32ef437968d682459ea",
       "targetLanguage": "Python",
       "status": "partial",
+      "legacyReferenceRetired": "Unused runtime module removed after import audit; historical feature and native release gates preserved",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native AdjustmentsSince and ShareAdjustmentFactor preserve split/bonus/dividend selection and reject invalid source ratios. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
       "replacement": "backend-go/internal/marketdata/actions.go"
@@ -1457,7 +1605,7 @@
     },
     {
       "legacyFile": "backend/src/services/research/afriScore.js",
-      "legacySha256": "01406f4d7d3cad3bb26c8989e7d9e92298ed35c2de96229276b6587a4602792b",
+      "legacySha256": "92515c658db4dfbe676e261cb7bf2698843fd69075bce286dce044700a4b3f5d",
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -1484,7 +1632,7 @@
     },
     {
       "legacyFile": "backend/src/services/research/companyDiagnostics.js",
-      "legacySha256": "6210518629f3567e77ca881e37f0d90e879ca494c67e91253df2b3b3e1e07bc1",
+      "legacySha256": "e9cb76c6e6b2bd3d4ee422e5f9c4e5257b771c1feab12489ebb2af70716588dd",
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -1537,15 +1685,15 @@
     },
     {
       "legacyFile": "backend/src/services/research/engineBundle.js",
-      "legacySha256": "8bb8236ec8a79e8ed4c43c3e00a98e30b110121f3d1b6316b55a3d77f63851d3",
+      "legacySha256": "ddc12f597a4e50518f5fcb9cbe674381d62b98b4ae875ec40bd18b2f0dc56ce2",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "remaining": "Native Python whole company assembly passes five fixture-only executions of the original bundle, including nonempty collected publisher research and its outage. Native Go source concurrency/deadlines, snapshot transactions, last-good preservation and invalidation-race checks pass. All company input providers, including collected research, are wired in the loopback candidate, with native paged news evidence sessions and valuation/technical calculation. Full news/read/schema comparisons, ICU ownership collation, real restart/resource and hosted release checks remain pending."
+      "remaining": "Native Python whole company assembly passes four fixture-only executions of the original bundle. Native Go source concurrency/deadlines, snapshot transactions, last-good preservation and invalidation-race checks pass. All company input providers are wired in the loopback candidate, with native paged news evidence sessions and valuation/technical calculation. Full news/read/schema comparisons, ICU ownership collation, real restart/resource and hosted release checks remain pending."
     },
     {
       "legacyFile": "backend/src/services/research/engineCacheKeys.js",
-      "legacySha256": "a961d649db7eddb06f99a2811ae6348a2f8b0bf2514e8e49291d3d7fd0a22a81",
+      "legacySha256": "43704fb9b1ae0e4f9945c8d6e3824666c30d821c2e3eeaa1853d04845909a9e0",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -1691,7 +1839,7 @@
     },
     {
       "legacyFile": "backend/src/services/research/pythonCalculations.js",
-      "legacySha256": "713298778db805a8d14a5b7d4a74b406fb7be076bffc331ecb1296e293738858",
+      "legacySha256": "7c913a6761b807e8bea69eff951baed076cd5b17b6002fc18a6937a9d798173e",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -1700,7 +1848,7 @@
     },
     {
       "legacyFile": "backend/src/services/research/ratiosEngine.js",
-      "legacySha256": "28381f11d441400a6a633b513b40c921ff2e0b26b319014f9e954874e9fd8714",
+      "legacySha256": "b2b1ee4905c43436370f86a3b7b43ce6ee6e840cf94bce25c220b2cb7ea32842",
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -1709,7 +1857,7 @@
     },
     {
       "legacyFile": "backend/src/services/research/reportedResearch.js",
-      "legacySha256": "867274a48eee8f27e6df7bb2df543b8fda16a0712988993db83490518641a1a0",
+      "legacySha256": "a81df8d50b73b5485960d86e9620ac2a7f377f0734981a1fad4b9487d351984e",
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -1718,7 +1866,7 @@
     },
     {
       "legacyFile": "backend/src/services/research/researchReadiness.js",
-      "legacySha256": "f1c7523662f2504f5356a53a2fb565a3f152b8d62f9e642f0695164e020b6578",
+      "legacySha256": "89cfa79ba117f5c6e87d2c4b71b5e01afb19ff742615dd3ab7294710da0c4cb9",
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -1727,7 +1875,7 @@
     },
     {
       "legacyFile": "backend/src/services/research/researchService.js",
-      "legacySha256": "8097863d5e0a1e8b133f2d70f46b9e4b15b53c51fea22abdb91634d0acfeedd8",
+      "legacySha256": "2fc51e8a0a6bb3ac3325c187117253723359552086479e245b5cdefd38ecef83",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -1735,7 +1883,7 @@
     },
     {
       "legacyFile": "backend/src/services/screening/screeningService.js",
-      "legacySha256": "a07f0003a57d162b8c99b75c9cecd2991a2937671180a005750440fac087569a",
+      "legacySha256": "78f1773a94cb68e3f03e52e04ab30722511f1464ba0348fca2916d13ce279fa4",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -1810,7 +1958,7 @@
     },
     {
       "legacyFile": "backend/src/storage/cache.js",
-      "legacySha256": "73d2f6b6d0c9e9171e720b729aee2c5c19b9bd9198ea82f5f012781f0e5a626e",
+      "legacySha256": "45fd50cec1890a2c124bd2a67494720854a0c41380a095a621defca75ce31fca",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -1845,7 +1993,7 @@
     },
     {
       "legacyFile": "backend/src/storage/repositories/candlesRepository.js",
-      "legacySha256": "6d7d7971e6fe7c10ba573d4f019635df4696e41c6d894e9824f46d8e42a3c3c0",
+      "legacySha256": "14ee701d7cdbc0bbc3e5423999c0609485bb59673f761f4d98cb9269d0af4e42",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -1885,7 +2033,7 @@
     },
     {
       "legacyFile": "backend/src/storage/repositories/financialsRepository.js",
-      "legacySha256": "30f77b2462f071a4e12bd9fcd6caac05306e925b4fa19396a5e2ef29c8f2157d",
+      "legacySha256": "fd5c2516694f1a6fe8559a15de7005a26ca19a7c75d9f9563993e7b544bfceba",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -1934,7 +2082,7 @@
     },
     {
       "legacyFile": "backend/src/storage/repositories/scoresRepository.js",
-      "legacySha256": "e9f378d0eeb493c4bb1d956717f1fd23516076a38c278eb0eef2a5a7cd3a0492",
+      "legacySha256": "c6ed95f06a392b0a5f7386ac55406538a2deffb8c7b67c7da54b5eabcaad9097",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -1942,7 +2090,7 @@
     },
     {
       "legacyFile": "backend/src/storage/repositories/securitiesRepository.js",
-      "legacySha256": "99fc453934a743db71a6a00cb7502348c750c3fc713b0143ecd905f6654f133d",
+      "legacySha256": "118c7fab82746bfee0ecd2ddbe60014e46935fb5ff3e5af0c4db84703d842f49",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -1950,7 +2098,7 @@
     },
     {
       "legacyFile": "backend/src/storage/upstashCache.js",
-      "legacySha256": "a9a4a793e7597e0581ad4be4b6f971f3104825cb6ba59bb663b3c07d51652a0f",
+      "legacySha256": "f19db419472e1b8314855a005f88ba608cf740db670df7824ed30e75788f30be",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -1959,14 +2107,6 @@
     {
       "legacyFile": "backend/src/streaming/pubsub.js",
       "legacySha256": "e85f86701e2d02d3379a367973d6a18393e447ab63ee82ba2765c8e273cc0790",
-      "targetLanguage": "Go",
-      "status": "partial",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native candidate calculation/API/streaming exists with isolated fixtures and 29 historical-research/draft oracle comparisons. Missing OHLCV remains unavailable; no real trading or synthetic volume added. WebSockets require authenticated nonempty matching subscriptions, reject credential URLs, bound fanout/slow clients and suppress exact duplicate payloads. Collector-to-event integration, owned/hosted comparisons and resource/restart gates remain pending."
-    },
-    {
-      "legacyFile": "backend/src/streaming/websocketServer.js",
-      "legacySha256": "69fcfdeaadd42e2047a52591ccd86e550532870349e10835b1ebc37ba95806df",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -2013,7 +2153,7 @@
     },
     {
       "legacyFile": "backend/src/workers/documentCollectionRequest.js",
-      "legacySha256": "a63a0b4b4643020d262080c8c25208cdf9ae58044de8cd1ae25c3249d5f50502",
+      "legacySha256": "3e147465142ec773452dffc962154a3a3fe7c2bfb78cdc4b8d6c55e3c293c4b7",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -2053,7 +2193,7 @@
     },
     {
       "legacyFile": "backend/src/workers/indexReaderRefresh.js",
-      "legacySha256": "77a1afeb3d1b856f30a483eecf1ede78476fd36828d2f985d19fd41a0c9f4821",
+      "legacySha256": "f573eabd48f8640e39eaa2199c59e5bceacea0454e40453fa4f8fb4ef44e2642",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -2070,7 +2210,7 @@
     },
     {
       "legacyFile": "backend/src/workers/newsWorker.js",
-      "legacySha256": "cb74a314360c26405213e934e5d8a5bd53775347280b02a7edf2eb802dbc2e1c",
+      "legacySha256": "9bd49753f5cd287fd004dcd5bf2c4a330bbf6bf135b10ad67cb15e9955c4830b",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -2087,7 +2227,7 @@
     },
     {
       "legacyFile": "backend/src/workers/scheduler.js",
-      "legacySha256": "fbd02184540137986a6fd1f235761ac0ab0914a23bd95eb67369a2ed7a0cb1c7",
+      "legacySha256": "1c129bf8edef824333ab7052bb00f57822fc66be8cbdf4470e04581700f7df5a",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -2130,7 +2270,7 @@
     },
     {
       "legacyFile": "scraper/scripts/build.mjs",
-      "legacySha256": "dd4fda553936036495361efece8622142147b33e9b98327066569f033a2d67fe",
+      "legacySha256": "cdb80c23ac067743e42d5306e263cbdea45e2c30b8b13882eb6f9575b011a0c3",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Legacy development-only build/inventory/oracle/sandbox or one-off evidence verification reference. Not included or executed in either native container. Native Go/Python commands and tests replace production execution; retaining a comparison fixture is not a Node production dependency."
@@ -2146,7 +2286,7 @@
     },
     {
       "legacyFile": "scraper/scripts/seedSource.js",
-      "legacySha256": "86f8d768867996dc3897bb583dee14df8b5c335b4742f54d5b5a0edf15fac2a4",
+      "legacySha256": "03bd5d39e4207ee12127a3d83a74aa28f0a9d6e6020a0d611f743d6084beb307",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -2260,7 +2400,7 @@
     },
     {
       "legacyFile": "scraper/src/api/server.js",
-      "legacySha256": "a0fd6a88b6ac4622bc14cdb9ef5478b2d6793b934d51d7470cc8a300c4c65fe0",
+      "legacySha256": "a028376faa3cf18d64aec52f05fa8f77dda735a95f797b8097294b381b6432e9",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -2278,7 +2418,7 @@
     },
     {
       "legacyFile": "scraper/src/config/env.js",
-      "legacySha256": "1777b6fef502117780f97cf6843380974df327ce647770178238bd0a0c07ca81",
+      "legacySha256": "6eac32129a303c28dfd3d088198f5d05b763ac190123c6b67ba74aedc4ff5a92",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -2296,7 +2436,7 @@
     },
     {
       "legacyFile": "scraper/src/crawler/crawlSource.js",
-      "legacySha256": "50b00a1c2d4c705f9a7aef67eeafa47ddf0777dd382608a19b8a26e341082240",
+      "legacySha256": "cb7f0b996e565a5955f89849032753726920b107540ba004d1a6b738d3cefea6",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -2332,7 +2472,7 @@
     },
     {
       "legacyFile": "scraper/src/crawler/httpClient.js",
-      "legacySha256": "e0a7804752111939e545b98fabc9f334308d5fefe13ff822c87410961afccd7b",
+      "legacySha256": "3ec6c33ab40a09c3811809e3e0f579f27c1194f1512228ac96a3b30c495d856f",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -2537,7 +2677,7 @@
     },
     {
       "legacyFile": "scraper/src/scheduler/scheduler.js",
-      "legacySha256": "ba3d827a10e19a9a82cc8559aa142f82846aca02ba91b649c4f6b2ebd3f9eb81",
+      "legacySha256": "137e7e2106aa8fa0954c3f3a753741ac132e7d60cce0f453c2271c0ffdbdc9bf",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -2588,7 +2728,7 @@
     },
     {
       "legacyFile": "scraper/src/storage/extractionsRepository.js",
-      "legacySha256": "e9b5bd66d616388cc342f798bea299ab939c79b31d1716fa34c14bc4e8a25f10",
+      "legacySha256": "bde897524082b4d5190966100aac79ba3cf1f523715f477dd9a3db759fbf0a7e",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -2620,7 +2760,7 @@
     },
     {
       "legacyFile": "scraper/src/storage/rawStorage.js",
-      "legacySha256": "bff4814d4582a7d968e8da22eec4e68baf0fffe2a33721befb006a09c98822ec",
+      "legacySha256": "a1cf3e76f1e71088c5e676bbf565a222a2368f3a161fa37958778e72b29170b5",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -2645,49 +2785,49 @@
     {
       "legacyFile": "supabase/functions/ai-stock-analysis/index.js",
       "legacySha256": "c4586150354a3c72720a868b5a062905d7a10c3610ab23af02128af47cc3a61d",
-      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "targetLanguage": "JavaScript (provider-native)",
       "status": "retained",
       "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
     },
     {
       "legacyFile": "supabase/functions/check-indicator-alerts/index.js",
       "legacySha256": "358816bea0389f98d212b87e69a3b5c0b0749388ec4117b27dfff9abc531d8be",
-      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "targetLanguage": "JavaScript (provider-native)",
       "status": "retained",
       "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
     },
     {
       "legacyFile": "supabase/functions/check-price-alerts/index.js",
       "legacySha256": "58c96a9999d54c7c9a8baeb5a66fa11a925b6da0a47bee0931761b7de916b6a1",
-      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "targetLanguage": "JavaScript (provider-native)",
       "status": "retained",
       "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
     },
     {
       "legacyFile": "supabase/functions/delete-account/index.js",
       "legacySha256": "498f4050195757cd2c5a1569f8d9553c977c708499ba7946022e5e9b6bc358a9",
-      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "targetLanguage": "JavaScript (provider-native)",
       "status": "retained",
       "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
     },
     {
       "legacyFile": "supabase/functions/run-price-alerts/index.js",
       "legacySha256": "a7eaef2a3590049916217e87545514c3f20a75f09cccf50001d8c98d1f3b5306",
-      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "targetLanguage": "JavaScript (provider-native)",
       "status": "retained",
       "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
     },
     {
       "legacyFile": "supabase/functions/stock-thesis/index.js",
       "legacySha256": "eeb5fdc3c2a638b5dca165b1dacf92612eaa9a40fbfc45e69d4afdb23236de9f",
-      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "targetLanguage": "JavaScript (provider-native)",
       "status": "retained",
       "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
     },
     {
       "legacyFile": "supabase/functions/upgrade-subscription/index.js",
       "legacySha256": "276f4abf0470009dffd37e61dd0b6aacefe1bb49126c4bf647bc3931dc46c6be",
-      "targetLanguage": "JavaScript/Deno (provider-native)",
+      "targetLanguage": "JavaScript (provider-native)",
       "status": "retained",
       "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
     },
@@ -3187,6 +3327,71 @@
       "targetLanguage": "SQL",
       "status": "retained",
       "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/priceHistory.routes.js",
+      "legacySha256": "2535ae1bd88f62e1b6138c97e5fc85e042d1655e0db1b8f407edc17dbccf4376",
+      "targetLanguage": "Go",
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
+      "replacement": "backend-go/internal/httpapi/server.go"
+    },
+    {
+      "legacyFile": "backend/src/api/routes/statistics.routes.js",
+      "legacySha256": "48783f48d94992ed69923dafebdc351045c0b180cda616e0ce57f51db378bbb0",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/services/research/collectedResearch.js",
+      "legacySha256": "52a16401d397af1d585a584640b4c615d05e05fdf757e89e66f60dd3da00e526",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "backend/src/storage/repositories/publisherCandleQuery.js",
+      "legacySha256": "0daae029b06f5c84637d710b1c43def7514632c92a6a7c9864a5026e6fb7f0a5",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "backend/src/workers/researchRefreshWorker.js",
+      "legacySha256": "756422a22bcef0af4272f5963d5cd495f201654e508db35ef5667b929ca5b18e",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "scraper/src/extraction/nseIndexSummary.test.js",
+      "legacySha256": "65a5686043e8056ecd4fd20d11a47fe9b338d34f4366f39c2c221c37184d272e",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "scraper/src/storage/storagePolicy.js",
+      "legacySha256": "7d7ef526be4225fdd80331735984506517fd00d6d9d45c98a8d17408ea9fcfa8",
+      "targetLanguage": "Python",
+      "status": "pending",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "supabase/migrations/20261018200000_c_score_evidence.sql",
+      "legacySha256": "f7fe25da6520a80ceb5fe434ac2336f62bceb08da17a1e5d285304bdd9f57fa4",
+      "targetLanguage": "SQL",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
+      "legacyFile": "infra/security/browser-secret-audit.mjs",
+      "legacySha256": "f5a6076b786a5f8ffd52935e3e18f16b8bc7119a2c2f19798fc0b42281e13e90",
+      "targetLanguage": "Go",
+      "status": "retained",
+      "rationale": "Legacy development-only build/inventory/oracle/sandbox or one-off evidence verification reference. Not included or executed in either native container. Native Go/Python commands and tests replace production execution; retaining a comparison fixture is not a Node production dependency."
     }
   ],
   "routes": [
@@ -3194,6 +3399,10 @@
       "legacyFile": "backend/src/api/routes/admin.routes.js",
       "method": "GET",
       "path": "/financials/candidates",
+      "arguments": [
+        "\"/financials/candidates\"",
+        "asyncHandler(adminFinancialsController.listPending)"
+      ],
       "line": 5,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3202,6 +3411,10 @@
       "legacyFile": "backend/src/api/routes/admin.routes.js",
       "method": "GET",
       "path": "/financials/candidates/:id",
+      "arguments": [
+        "\"/financials/candidates/:id\"",
+        "asyncHandler(adminFinancialsController.getOne)"
+      ],
       "line": 6,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3210,6 +3423,10 @@
       "legacyFile": "backend/src/api/routes/admin.routes.js",
       "method": "POST",
       "path": "/financials/candidates/:id/confirm",
+      "arguments": [
+        "\"/financials/candidates/:id/confirm\"",
+        "asyncHandler(adminFinancialsController.confirm)"
+      ],
       "line": 7,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3218,6 +3435,10 @@
       "legacyFile": "backend/src/api/routes/admin.routes.js",
       "method": "POST",
       "path": "/financials/candidates/:id/confirm-history",
+      "arguments": [
+        "\"/financials/candidates/:id/confirm-history\"",
+        "asyncHandler(adminFinancialsController.confirmHistory)"
+      ],
       "line": 8,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3226,6 +3447,10 @@
       "legacyFile": "backend/src/api/routes/admin.routes.js",
       "method": "POST",
       "path": "/financials/candidates/:id/reject",
+      "arguments": [
+        "\"/financials/candidates/:id/reject\"",
+        "asyncHandler(adminFinancialsController.reject)"
+      ],
       "line": 9,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3234,6 +3459,10 @@
       "legacyFile": "backend/src/api/routes/admin.routes.js",
       "method": "GET",
       "path": "/securities",
+      "arguments": [
+        "\"/securities\"",
+        "asyncHandler(adminFinancialsController.listSecurities)"
+      ],
       "line": 10,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3242,6 +3471,11 @@
       "legacyFile": "backend/src/api/routes/announcements.routes.js",
       "method": "GET",
       "path": "/announcements/:symbol",
+      "arguments": [
+        "\"/announcements/:symbol\"",
+        "validateQuery(AnnouncementsQuerySchema)",
+        "asyncHandler(announcementsController.getForSymbol)"
+      ],
       "line": 7,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3250,6 +3484,11 @@
       "legacyFile": "backend/src/api/routes/backtest.routes.js",
       "method": "POST",
       "path": "/backtest",
+      "arguments": [
+        "\"/backtest\"",
+        "requireSubscriber",
+        "asyncHandler(backtestController.run)"
+      ],
       "line": 9,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3258,6 +3497,10 @@
       "legacyFile": "backend/src/api/routes/billing.routes.js",
       "method": "GET",
       "path": "/billing/status",
+      "arguments": [
+        "\"/billing/status\"",
+        "(_req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json({ data: { enabled: liveCheckoutEnabled(), nativeCheckout: nativeCheckoutForUser(res.locals.engineUserId), inlineCheckout: true, nativeMode: env.PAYSTACK_NATIVE_MODE, mode: \"live\", automaticRenewal: cardRenewalEnabled() } }); }"
+      ],
       "line": 10,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
@@ -3266,6 +3509,11 @@
       "legacyFile": "backend/src/api/routes/billing.routes.js",
       "method": "GET",
       "path": "/billing/renewal",
+      "arguments": [
+        "'/billing/renewal'",
+        "requireEngineUser",
+        "asyncHandler(async (_req, res) => {\n    res.setHeader('Cache-Control', 'no-store');\n    res.json({ data: (await query('SELECT enabled,plan,next_charge_at AS \"nextChargeAt\",active_reference IS NOT NULL AS processing FROM public.paystack_card_renewals WHERE user_id=$1 AND mode=$2', [res.locals.engineUserId, env.PAYSTACK_NATIVE_MODE])).rows[0] ?? null });\n})"
+      ],
       "line": 11,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
@@ -3274,6 +3522,11 @@
       "legacyFile": "backend/src/api/routes/billing.routes.js",
       "method": "DELETE",
       "path": "/billing/renewal",
+      "arguments": [
+        "'/billing/renewal'",
+        "requireEngineUser",
+        "asyncHandler(async (_req, res) => {\n    res.setHeader('Cache-Control', 'no-store');\n    await query('UPDATE public.paystack_card_renewals SET enabled=false WHERE user_id=$1 AND mode=$2', [res.locals.engineUserId, env.PAYSTACK_NATIVE_MODE]);\n    res.json({ data: { enabled: false } });\n})"
+      ],
       "line": 15,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
@@ -3282,6 +3535,11 @@
       "legacyFile": "backend/src/api/routes/billing.routes.js",
       "method": "POST",
       "path": "/billing/native-checkout",
+      "arguments": [
+        "'/billing/native-checkout'",
+        "requireEngineUser",
+        "asyncHandler(async (req, res) => {\n    res.setHeader('Cache-Control', 'no-store');\n    const input = nativeCheckoutInput.safeParse(req.body);\n    if (!input.success)\n        throw new ApiError(400, 'Check the payment method, phone number and billing agreement.');\n    res.json({ data: await initializeNativeCheckout(res.locals.engineUserId, res.locals.engineUserEmail, input.data) });\n})"
+      ],
       "line": 20,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
@@ -3290,6 +3548,11 @@
       "legacyFile": "backend/src/api/routes/billing.routes.js",
       "method": "GET",
       "path": "/billing/native-verify/:reference",
+      "arguments": [
+        "'/billing/native-verify/:reference'",
+        "requireEngineUser",
+        "asyncHandler(async (req, res) => {\n    res.setHeader('Cache-Control', 'no-store');\n    const reference = String(req.params.reference);\n    try {\n        res.json({ data: await verifyNativeCheckout(reference, res.locals.engineUserId) });\n    }\n    catch (error) {\n        // Preserve payment recovery for orders created before native checkout.\n        if (error instanceof ApiError && error.status === 404 && liveReferencePattern.test(reference))\n            res.json({ data: await verifyLiveCheckout(reference, res.locals.engineUserId) });\n        else\n            throw error;\n    }\n})"
+      ],
       "line": 27,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
@@ -3298,6 +3561,11 @@
       "legacyFile": "backend/src/api/routes/billing.routes.js",
       "method": "POST",
       "path": "/billing/checkout",
+      "arguments": [
+        "\"/billing/checkout\"",
+        "requireEngineUser",
+        "asyncHandler(async (req, res) => {\n    const input = checkoutAgreementInput.safeParse(req.body);\n    if (!input.success)\n        throw new ApiError(400, \"Choose a valid plan and billing cycle, then acknowledge the current billing terms. Refresh checkout if needed.\");\n    res.setHeader('Cache-Control', 'no-store');\n    res.json({ data: await initializeLiveCheckout(res.locals.engineUserId, res.locals.engineUserEmail, { plan: input.data.plan, cycle: input.data.cycle }, CHECKOUT_POLICY_VERSION, input.data.paymentMethod) });\n})"
+      ],
       "line": 41,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
@@ -3306,6 +3574,11 @@
       "legacyFile": "backend/src/api/routes/billing.routes.js",
       "method": "GET",
       "path": "/billing/verify/:reference",
+      "arguments": [
+        "\"/billing/verify/:reference\"",
+        "requireEngineUser",
+        "asyncHandler(async (req, res) => {\n    const reference = String(req.params.reference);\n    res.setHeader('Cache-Control', 'no-store');\n    res.json({ data: await verifyLiveCheckout(reference, res.locals.engineUserId) });\n})"
+      ],
       "line": 48,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
@@ -3314,6 +3587,11 @@
       "legacyFile": "backend/src/api/routes/companies.routes.js",
       "method": "GET",
       "path": "/companies/:symbol",
+      "arguments": [
+        "\"/companies/:symbol\"",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(companiesController.getProfile)"
+      ],
       "line": 7,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3322,6 +3600,11 @@
       "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
       "method": "GET",
       "path": "/corporate-actions/:symbol",
+      "arguments": [
+        "\"/corporate-actions/:symbol\"",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(corporateActionsController.getForSymbol)"
+      ],
       "line": 7,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3330,6 +3613,10 @@
       "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
       "method": "GET",
       "path": "/dividends/upcoming",
+      "arguments": [
+        "\"/dividends/upcoming\"",
+        "asyncHandler(corporateActionsController.getUpcomingDividends)"
+      ],
       "line": 11,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3338,6 +3625,10 @@
       "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
       "method": "GET",
       "path": "/earnings/recent",
+      "arguments": [
+        "\"/earnings/recent\"",
+        "asyncHandler(corporateActionsController.getRecentEarnings)"
+      ],
       "line": 12,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3346,6 +3637,11 @@
       "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
       "method": "GET",
       "path": "/earnings/:symbol",
+      "arguments": [
+        "\"/earnings/:symbol\"",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(corporateActionsController.getEarningsForSymbol)"
+      ],
       "line": 13,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3354,6 +3650,11 @@
       "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
       "method": "GET",
       "path": "/dividends/:symbol",
+      "arguments": [
+        "\"/dividends/:symbol\"",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(corporateActionsController.getDividends)"
+      ],
       "line": 14,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3362,6 +3663,11 @@
       "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
       "method": "GET",
       "path": "/ownership/:symbol",
+      "arguments": [
+        "\"/ownership/:symbol\"",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(corporateActionsController.getOwnership)"
+      ],
       "line": 15,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3370,6 +3676,12 @@
       "legacyFile": "backend/src/api/routes/engine.routes.js",
       "method": "GET",
       "path": "/engine/research-access/:symbol",
+      "arguments": [
+        "\"/engine/research-access/:symbol\"",
+        "requireSubscriber",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(async (_req, res) => {\n    res.json({ data: { allowed: true } });\n})"
+      ],
       "line": 8,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
@@ -3378,6 +3690,12 @@
       "legacyFile": "backend/src/api/routes/engine.routes.js",
       "method": "GET",
       "path": "/engine/basic/:symbol",
+      "arguments": [
+        "\"/engine/basic/:symbol\"",
+        "requireSubscriber",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(async (req, res) => {\n    const { exchange } = getQuery(req);\n    const symbol = String(req.params.symbol).toUpperCase();\n    if (!/^[A-Z0-9.\\-]{1,20}$/.test(symbol))\n        throw new ApiError(400, \"Invalid stock symbol\");\n    const b = await getEngineBundle(symbol, exchange);\n    res.json({ data: { symbol: b.symbol, companyName: b.companyName, currency: b.currency, quote: b.quote, generatedAt: b.generatedAt, briefing: b.briefing, estimates: b.estimates.map(e => ({ fiscalYear: e.fiscalYear, fiscalQuarter: e.fiscalQuarter, epsEstimate: e.epsEstimate, revenueEstimate: e.revenueEstimate })), coverage: b.coverage, unavailable: b.unavailable } });\n})"
+      ],
       "line": 11,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3386,6 +3704,12 @@
       "legacyFile": "backend/src/api/routes/engine.routes.js",
       "method": "GET",
       "path": "/engine/:symbol",
+      "arguments": [
+        "\"/engine/:symbol\"",
+        "requireSubscriber",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(async (req, res) => {\n    const { exchange } = getQuery(req);\n    const symbol = String(req.params.symbol).toUpperCase();\n    if (!/^[A-Z0-9.\\-]{1,20}$/.test(symbol))\n        throw new ApiError(400, \"Invalid stock symbol\");\n    res.json({ data: await getEngineBundle(symbol, exchange) });\n})"
+      ],
       "line": 21,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3394,7 +3718,21 @@
       "legacyFile": "backend/src/api/routes/engineNotebook.routes.js",
       "method": "USE",
       "path": "/engine/notebook",
+      "arguments": [
+        "\"/engine/notebook\"",
+        "requirePremiumPlus"
+      ],
       "line": 15,
+      "mountResolution": [
+        {
+          "expression": "\"/engine/notebook\"",
+          "importedFrom": null
+        },
+        {
+          "expression": "requirePremiumPlus",
+          "importedFrom": "../middleware/requireSubscriber.js"
+        }
+      ],
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -3402,6 +3740,10 @@
       "legacyFile": "backend/src/api/routes/engineNotebook.routes.js",
       "method": "GET",
       "path": "/engine/notebook",
+      "arguments": [
+        "\"/engine/notebook\"",
+        "asyncHandler(async (_req, res) => {\n    const rows = (await query(\"SELECT * FROM market.engine_forecast_notebook WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100\", [res.locals.engineUserId])).rows;\n    res.json({\n        data: { forecasts: rows, calibration: privateCalibration(rows) },\n    });\n})"
+      ],
       "line": 16,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3410,6 +3752,10 @@
       "legacyFile": "backend/src/api/routes/engineNotebook.routes.js",
       "method": "POST",
       "path": "/engine/notebook",
+      "arguments": [
+        "\"/engine/notebook\"",
+        "asyncHandler(async (req, res) => {\n    const b = parse(ForecastCreateSchema, req.body), owner = String(res.locals.engineUserId);\n    const saved = await withTransaction(async (client) => {\n        await client.query(\"SELECT pg_advisory_xact_lock(hashtext($1))\", [\n            \"forecast-notebook:\" + owner,\n        ]);\n        const count = await client.query(\"SELECT count(*)::int AS count FROM market.engine_forecast_notebook WHERE user_id=$1\", [owner]);\n        if (count.rows[0].count >= 100)\n            throw new ApiError(400, \"Maximum 100 private research questions per account.\");\n        const security = await client.query(\"SELECT id FROM market.securities WHERE id=$1 AND status='active'\", [\"NSE:\" + b.symbol]);\n        if (!security.rows.length)\n            throw new ApiError(400, \"Select an active NSE company.\");\n        const revision = {\n            at: new Date().toISOString(),\n            probability: b.probability,\n            rationale: b.rationale,\n        };\n        return (await client.query(\"INSERT INTO market.engine_forecast_notebook(user_id,security_id,symbol,question,rules,deadline,probability,revisions) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb) RETURNING *\", [\n            owner,\n            \"NSE:\" + b.symbol,\n            b.symbol,\n            b.question,\n            b.rules,\n            b.deadline,\n            b.probability,\n            JSON.stringify([revision]),\n        ])).rows[0];\n    });\n    res.status(201).json({ data: saved });\n})"
+      ],
       "line": 22,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3418,6 +3764,10 @@
       "legacyFile": "backend/src/api/routes/engineNotebook.routes.js",
       "method": "POST",
       "path": "/engine/notebook/:id/:action",
+      "arguments": [
+        "\"/engine/notebook/:id/:action\"",
+        "asyncHandler(async (req, res) => {\n    const id = parse(z.string().uuid(), req.params.id), action = parse(z.enum([\"revise\", \"resolve\"]), req.params.action);\n    const body = action === \"revise\"\n        ? parse(ForecastRevisionSchema, req.body)\n        : parse(ForecastResolutionSchema, req.body);\n    const saved = await withTransaction(async (client) => {\n        const row = (await client.query(\"SELECT * FROM market.engine_forecast_notebook WHERE id=$1 AND user_id=$2 FOR UPDATE\", [id, res.locals.engineUserId])).rows[0];\n        if (!row)\n            throw new ApiError(404, \"Research question not found.\");\n        if (action === \"revise\" && \"probability\" in body) {\n            if (!canReviseForecast(row))\n                throw new ApiError(409, \"Probability revisions close at the deadline; resolved questions cannot change.\");\n            if (row.revisions.length >= 100)\n                throw new ApiError(400, \"Maximum 100 revisions per question.\");\n            const revisions = [\n                ...row.revisions,\n                { at: new Date().toISOString(), ...body },\n            ];\n            return (await client.query(\"UPDATE market.engine_forecast_notebook SET probability=$1,revisions=$2::jsonb WHERE id=$3 RETURNING *\", [body.probability, JSON.stringify(revisions), id])).rows[0];\n        }\n        if (!(\"outcome\" in body))\n            throw new ApiError(400, \"Resolution outcome required.\");\n        if (row.status !== \"open\" || Date.parse(row.deadline) > Date.now())\n            throw new ApiError(409, \"Resolve only after the deadline. Resolution cannot be edited.\");\n        return (await client.query(\"UPDATE market.engine_forecast_notebook SET status=$1,outcome=$2,resolution_source=$3,resolution_note=$4,resolved_at=now() WHERE id=$5 RETURNING *\", [\n            body.outcome === \"void\" ? \"void\" : \"resolved\",\n            body.outcome === \"void\" ? null : body.outcome === \"yes\",\n            body.sourceUrl,\n            body.note,\n            id,\n        ])).rows[0];\n    });\n    res.json({ data: saved });\n})"
+      ],
       "line": 52,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3426,6 +3776,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/labs/advanced",
+      "arguments": [
+        "'/engine/labs/advanced'",
+        "requirePremiumPlus",
+        "handle(async (req, res) => {\n    const input = parse(AdvancedResearchSchema, req.body);\n    try {\n        res.json({ data: advancedResearch(input) });\n    }\n    catch (e) {\n        throw new ApiError(422, e instanceof Error ? e.message : 'Research inputs require review.');\n    }\n})"
+      ],
       "line": 35,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3434,6 +3789,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "GET",
       "path": "/engine/labs/history-inputs",
+      "arguments": [
+        "'/engine/labs/history-inputs'",
+        "requirePremiumPlus",
+        "handle(async (req, res) => {\n    const b = parse(z.object({ symbol: symbolSchema, start: CalendarDate, end: CalendarDate }).refine(v => v.start < v.end && v.end <= new Date().toISOString().slice(0, 10) && Date.parse(v.end) - Date.parse(v.start) <= 6 * 366 * 86400000, 'Use an ordered past window of at most six years'), req.query);\n    const rows = await query(`SELECT DISTINCT ON(bar_time::date) bar_time::date::text AS date,close,source_url AS \"sourceUrl\" FROM market.candles WHERE security_id=$1 AND interval='1d' AND bar_time>=$2::date AND bar_time<$3::date+interval '1 day' AND close>0 AND source_url LIKE 'https://%' ORDER BY bar_time::date,bar_time DESC LIMIT 1501`, ['NSE:' + b.symbol, b.start, b.end]);\n    if (rows.rows.length > 1500)\n        throw new ApiError(400, 'Reduce the window to at most 1500 observed sessions.');\n    if (rows.rows.length < 2)\n        throw new ApiError(422, 'Fewer than two source-backed price observations are stored for this window. Missing sessions are not invented.');\n    res.json({ data: { symbol: b.symbol, points: rows.rows.map(({ date, close }) => ({ date, close })), sourceUrls: [...new Set(rows.rows.map(r => r.sourceUrl))], basis: 'Stored source-linked raw price closes; corporate-action completeness and benchmark compatibility require separate verification.' } });\n})"
+      ],
       "line": 44,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3442,6 +3802,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "GET",
       "path": "/engine/recommendations",
+      "arguments": [
+        "'/engine/recommendations'",
+        "requirePremiumPlus",
+        "handle(async (_req, res) => { res.json({ data: researchRecommendations(await engineRepository.preferences(user(res))) }); })"
+      ],
       "line": 53,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3450,6 +3815,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "GET",
       "path": "/engine/financial-versions",
+      "arguments": [
+        "'/engine/financial-versions'",
+        "requireSubscriber",
+        "handle(async (req, res) => {\n    const symbol = parse(symbolSchema, req.query.symbol);\n    const rows = await query('SELECT id,table_name,period_id,operation,before_payload,after_payload,recorded_at,transaction_id FROM market.financial_version_audit WHERE security_id=$1 ORDER BY recorded_at DESC,id DESC LIMIT 100', ['NSE:' + symbol]);\n    res.json({ data: { versions: rows.rows, methodology: 'Canonical changes recorded from deployment onward. Recorded time is not the original filing/publication date. This audit preserves prior values but does not identify or approve issuer restatements; conflicting documents still require review.' } });\n})"
+      ],
       "line": 54,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3458,6 +3828,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "GET",
       "path": "/engine/pipeline-health",
+      "arguments": [
+        "'/engine/pipeline-health'",
+        "requirePremiumPlus",
+        "handle(async (_req, res) => {\n    const health = await runHealthCheck();\n    const validations = await query(`SELECT outcome,count(*)::int AS count,max(validated_at) AS latest FROM\n  (SELECT DISTINCT ON(extraction_id) outcome,validated_at FROM market.document_validations ORDER BY extraction_id,validated_at DESC,validator_version DESC) latest GROUP BY outcome`);\n    res.json({ data: { checkedAt: health.timestamp, status: health.status, checks: Object.entries(health.checks).map(([name, v]) => ({ name, ok: v.ok })), validations: validations.rows, limits: ['Counts describe recorded validation outcomes, not complete issuer/year coverage.', 'Unsupported OCR and conflicts remain in review; confidence alone cannot approve publication.', 'Always-on hosting and paid AI are disabled by user choice; free-instance sleep remains possible.'], methodology: 'Operational health is separate from financial evidence quality. No private errors, credentials or user activity are returned.' } });\n})"
+      ],
       "line": 59,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3466,6 +3841,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/labs/earnings-sensitivity",
+      "arguments": [
+        "'/engine/labs/earnings-sensitivity'",
+        "requirePremiumPlus",
+        "handle(async (req, res) => {\n    const b = parse(EarningsSensitivitySchema, req.body), bundle = await getEngineBundle(b.symbol, 'NSE'), q = bundle.quote;\n    if (!q || String(q.source) === 'mock' || !Number.isFinite(Date.parse(q.timestamp)) || Date.parse(q.timestamp) > Date.now())\n        throw new ApiError(422, 'A dated non-mock quote is required.');\n    const dated = annualRatioAt(bundle.history.filter(r => r.sourceUrls?.length), q.lastPrice, q.timestamp, 'pe');\n    if (!dated.ratio || !dated.denominator)\n        throw new ApiError(422, 'Positive EPS from a source-backed annual filing available on the quote date is required.');\n    const eps = dated.denominator;\n    const calculation = await calculateWithRuntime('earnings', [eps, q.lastPrice, b.years, b.growthPercent, b.exitPe], () => earningsSensitivity(eps, q.lastPrice, b.years, b.growthPercent, b.exitPe));\n    res.json({ data: { ...calculation, symbol: b.symbol, currency: bundle.currency, quoteAsOf: q.timestamp, fiscalYear: dated.fiscalYear, sourceUrls: dated.sourceUrls, snapshotId: bundle.reliability.snapshotId, generatedAt: new Date().toISOString() } });\n})"
+      ],
       "line": 65,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3474,6 +3854,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/labs/stress",
+      "arguments": [
+        "'/engine/labs/stress'",
+        "requirePremiumPlus",
+        "handle(async (req, res) => {\n    const body = parse(StressSchema, req.body), portfolio = await getPortfolioOverview(user(res), 'NSE');\n    const positions = portfolio.positions.filter(p => p.asOf && Number.isFinite(Date.parse(p.asOf)) && Date.parse(p.asOf) <= Date.now());\n    if (!portfolio.available || !positions.length)\n        throw new ApiError(422, 'Dated priced holdings are required for portfolio stress');\n    const sectors = new Set(positions.map(p => p.sector));\n    if (Object.keys(body.sectorShocks).some(s => !sectors.has(s)))\n        throw new ApiError(400, 'Select a sector present in your portfolio');\n    const calculation = await calculateWithRuntime('stress', [positions, body.marketShock, body.sectorShocks], () => stressPortfolio(positions, body.marketShock, body.sectorShocks));\n    res.json({ data: { ...calculation, coverage: portfolio.coverage, datedQuoteCoverage: `${positions.length}/${portfolio.positions.length}`, warnings: [...portfolio.warnings, ...(positions.length !== portfolio.positions.length ? ['Undated or future-dated holdings were excluded from this scenario.'] : [])], generatedAt: new Date().toISOString() } });\n})"
+      ],
       "line": 76,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3482,6 +3867,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/labs/bond",
+      "arguments": [
+        "'/engine/labs/bond'",
+        "requirePremiumPlus",
+        "handle(async (req, res) => { const assumptions = parse(BondLabSchema, req.body); const calculation = await calculateWithRuntime('bond', [assumptions], () => bondRisk(assumptions)); res.json({ data: { ...calculation, assumptions, generatedAt: new Date().toISOString() } }); })"
+      ],
       "line": 87,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3490,6 +3880,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/labs/futures",
+      "arguments": [
+        "'/engine/labs/futures'",
+        "requirePremiumPlus",
+        "handle(async (req, res) => { const assumptions = parse(FuturesLabSchema, req.body); const calculation = await calculateWithRuntime('futures', [assumptions], () => futuresRisk(assumptions)); res.json({ data: { ...calculation, assumptions, generatedAt: new Date().toISOString() } }); })"
+      ],
       "line": 88,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3498,6 +3893,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "GET",
       "path": "/engine/preferences",
+      "arguments": [
+        "\"/engine/preferences\"",
+        "requirePremiumPlus",
+        "handle(async (_req, res) => { res.json({ data: await engineRepository.preferences(user(res)) }); })"
+      ],
       "line": 89,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3506,6 +3906,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/preferences",
+      "arguments": [
+        "\"/engine/preferences\"",
+        "requirePremiumPlus",
+        "handle(async (req, res) => { const settings = parse(EnginePreferencesSchema, req.body); res.json({ data: await engineRepository.savePreferences(user(res), settings) }); })"
+      ],
       "line": 90,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3514,6 +3919,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/interests",
+      "arguments": [
+        "\"/engine/interests\"",
+        "requirePremiumPlus",
+        "handle(async (req, res) => {\n    const body = parse(z.object({ symbol: symbolSchema, exchange: exchangeSchema, reset: z.boolean().optional() }), req.body);\n    res.json({ data: await engineRepository.recordInterest(user(res), body.symbol, body.exchange, body.reset) });\n})"
+      ],
       "line": 91,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3522,6 +3932,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "GET",
       "path": "/engine/portfolio",
+      "arguments": [
+        "\"/engine/portfolio\"",
+        "requirePremiumPlus",
+        "handle(async (req, res) => { res.json({ data: await getPortfolioResearch(user(res), parse(exchangeSchema, req.query.exchange)) }); })"
+      ],
       "line": 95,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3530,6 +3945,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "GET",
       "path": "/engine/portfolio/overview",
+      "arguments": [
+        "\"/engine/portfolio/overview\"",
+        "requireEngineUser",
+        "handle(async (req, res) => { res.json({ data: await getPortfolioOverview(user(res), parse(exchangeSchema, req.query.exchange)) }); })"
+      ],
       "line": 96,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3538,6 +3958,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/cash-flows",
+      "arguments": [
+        "\"/engine/cash-flows\"",
+        "requirePremiumPlus",
+        "handle(async (req, res) => {\n    const b = parse(z.object({ exchange: exchangeSchema, date: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).refine(v => Number.isFinite(Date.parse(v)) && new Date(v).toISOString().slice(0, 10) === v && v <= new Date().toISOString().slice(0, 10)), amount: z.number().finite().min(-1e12).max(1e12).refine(n => n !== 0), note: z.string().max(160).default(\"\") }), req.body);\n    const id = (await query(\"INSERT INTO public.engine_cash_flows(user_id,exchange,session_date,amount,note) VALUES($1,$2,$3,$4,$5) RETURNING id\", [user(res), b.exchange, b.date, b.amount, b.note])).rows[0];\n    res.json({ data: id });\n})"
+      ],
       "line": 97,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3546,6 +3971,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "DELETE",
       "path": "/engine/cash-flows/:id",
+      "arguments": [
+        "\"/engine/cash-flows/:id\"",
+        "requirePremiumPlus",
+        "handle(async (req, res) => { const id = parse(z.string().uuid(), req.params.id); await query(\"DELETE FROM public.engine_cash_flows WHERE id=$1 AND user_id=$2\", [id, user(res)]); res.json({ data: { deleted: true } }); })"
+      ],
       "line": 102,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3554,6 +3984,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "GET",
       "path": "/engine/peers",
+      "arguments": [
+        "\"/engine/peers\"",
+        "requirePremiumPlus",
+        "handle(async (req, res) => { res.json({ data: await getPeers(parse(symbolSchema, req.query.symbol), parse(exchangeSchema, req.query.exchange)) }); })"
+      ],
       "line": 103,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3562,6 +3997,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "GET",
       "path": "/engine/monitoring",
+      "arguments": [
+        "\"/engine/monitoring\"",
+        "requirePremiumPlus",
+        "handle(async (_req, res) => { res.json({ data: await engineRepository.rules(user(res)) }); })"
+      ],
       "line": 104,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3570,6 +4010,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/monitoring",
+      "arguments": [
+        "\"/engine/monitoring\"",
+        "requirePremiumPlus",
+        "handle(async (req, res) => {\n    const rule = parse(z.object({ exchange: exchangeSchema, symbol: symbolSchema, kind: z.enum(monitoringKinds), threshold: z.number().finite().min(-1e9).max(1e9).optional(), enabled: z.boolean().default(true) }).refine(v => v.kind === \"material_change\" || v.threshold != null, \"A numeric threshold is required\"), req.body);\n    const count = await engineRepository.rules(user(res));\n    if (count.length >= 50 && !count.some(r => r.symbol === rule.symbol && r.kind === rule.kind && r.exchange === rule.exchange))\n        throw new ApiError(400, \"Maximum 50 Engine monitoring rules per account.\");\n    res.json({ data: await engineRepository.saveRule(user(res), rule) });\n})"
+      ],
       "line": 105,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3578,6 +4023,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "DELETE",
       "path": "/engine/monitoring/:id",
+      "arguments": [
+        "\"/engine/monitoring/:id\"",
+        "requirePremiumPlus",
+        "handle(async (req, res) => { await engineRepository.deleteRule(user(res), parse(z.string().uuid(), req.params.id)); res.json({ data: { deleted: true } }); })"
+      ],
       "line": 112,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3586,6 +4036,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/monitoring/check",
+      "arguments": [
+        "\"/engine/monitoring/check\"",
+        "requirePremiumPlus",
+        "handle(async (req, res) => { const body = parse(z.object({ symbol: symbolSchema, exchange: exchangeSchema }), req.body); await runEngineMonitoringOnce(user(res), body.symbol, body.exchange); res.json({ data: await engineRepository.rules(user(res)) }); })"
+      ],
       "line": 113,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3594,6 +4049,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "GET",
       "path": "/engine/monitoring/activity",
+      "arguments": [
+        "\"/engine/monitoring/activity\"",
+        "requirePremiumPlus",
+        "handle(async (_req, res) => { res.json({ data: (await query(\"SELECT id,title,message,created_at FROM public.notifications WHERE user_id=$1 AND type='engine' ORDER BY created_at DESC LIMIT 20\", [user(res)])).rows }); })"
+      ],
       "line": 114,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3602,6 +4062,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "GET",
       "path": "/engine/usage",
+      "arguments": [
+        "\"/engine/usage\"",
+        "requirePremiumPlus",
+        "handle(async (_req, res) => { res.json({ data: { ...await engineRepository.aiUsage(user(res)), monthlyApplicationCap: env.ENGINE_AI_MONTHLY_BUDGET_USD, dailyUserLimit: env.ENGINE_AI_USER_DAILY_LIMIT, model: \"gpt-5.4-mini\", configured: !!env.OPENAI_API_KEY } }); })"
+      ],
       "line": 115,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3610,6 +4075,11 @@
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
       "method": "POST",
       "path": "/engine/assistant",
+      "arguments": [
+        "\"/engine/assistant\"",
+        "requirePremiumPlus",
+        "handle(async (req, res) => {\n    const body = parse(z.object({ question: z.string().trim().min(3).max(2000), symbols: z.array(symbolSchema).min(1).max(3), exchange: exchangeSchema, scope: z.enum([\"company\", \"portfolio\"]).default(\"company\") }), req.body);\n    const preferences = await engineRepository.preferences(user(res));\n    const evidence = [];\n    if (body.scope === \"portfolio\") {\n        const portfolio = await getPortfolioResearch(user(res), body.exchange);\n        evidence.push({ id: \"portfolio\", title: \"Your portfolio research\", asOf: new Date().toISOString(), url: null, facts: { positions: portfolio.positions, sectors: portfolio.sectors, warnings: portfolio.warnings, performance: portfolio.performance, correlations: portfolio.correlations, risk: portfolio.risk, dividends: portfolio.dividends, researchBriefing: portfolio.researchBriefing, coverage: portfolio.coverage, methodology: portfolio.methodology } });\n    }\n    else\n        for (const symbol of [...new Set(body.symbols)]) {\n            const data = await getEngineBundle(symbol, body.exchange);\n            const filingUrl = data.diagnostics.trends.at(-1)?.sourceUrls.find(url => /^https:\\/\\//i.test(url)) ?? null;\n            evidence.push({ id: symbol + \":company\", title: data.companyName + \" financial analysis\", asOf: data.quality.filedAt, url: filingUrl, facts: { briefing: data.briefing, quality: data.quality, financial: data.financialAnalysis, diagnostics: data.diagnostics, valuation: data.valuation?.models, scenarios: data.scenarios, missing: data.unavailable } });\n            evidence.push({ id: symbol + \":technical\", title: symbol + \" dated technical observations\", asOf: data.quote?.timestamp ?? null, url: null, facts: data.synthesis });\n            for (const n of data.news.slice(0, 4))\n                evidence.push({ id: symbol + \":news:\" + n.id, title: n.headline, asOf: n.publishedAt, url: /^https?:\\/\\//i.test(n.url) ? n.url : null, facts: { summary: n.summary, methodology: n.methodology } });\n        }\n    res.json({ data: await askEngine(user(res), body.question, evidence, preferences) });\n})"
+      ],
       "line": 116,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3617,8 +4087,24 @@
     {
       "legacyFile": "backend/src/api/routes/financials.routes.js",
       "method": "GET",
+      "path": "/financials/:symbol/collected-research",
+      "arguments": [
+        "'/financials/:symbol/collected-research'",
+        "asyncHandler(async (req, res) => {\n    const symbol = String(req.params.symbol).toUpperCase();\n    if (!await securitiesRepository.getBySymbol('NSE', symbol)) throw new ApiError(404, 'Unknown NSE symbol');\n    const limit = req.query.limit === undefined ? 20 : Number(req.query.limit);\n    const offset = req.query.offset === undefined ? 0 : Number(req.query.offset);\n    if (!Number.isInteger(limit) || limit < 1 || limit > 100 || !Number.isInteger(offset) || offset < 0 || offset > 100000)\n        throw new ApiError(400, 'Invalid research page');\n    res.setHeader('Cache-Control', 'no-store');\n    const destinations=req.query.destinations===undefined?[]:typeof req.query.destinations==='string'?req.query.destinations.split(','):['invalid'];\n    if(destinations.length>9||destinations.some(d=>!researchDestinations.has(d)))throw new ApiError(400,'Invalid research destinations');\n    let data;\n    try { data = await collectedResearch(symbol, limit, offset, destinations); }\n    catch { res.setHeader('Retry-After','30');throw new ApiError(503,'Collected research temporarily unavailable'); }\n    res.json({ data, pagination: { limit, offset, nextOffset: data.length === limit ? offset + limit : null } });\n})"
+      ],
+      "line": 11,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/financials.routes.js",
+      "method": "GET",
       "path": "/financials/:symbol/publisher-tables",
-      "line": 10,
+      "arguments": [
+        "'/financials/:symbol/publisher-tables'",
+        "asyncHandler(async (req, res) => {\n    const symbol = String(req.params.symbol).toUpperCase();\n    if (!await securitiesRepository.getBySymbol('NSE', symbol))\n        throw new ApiError(404, 'Unknown NSE symbol');\n    res.setHeader('Cache-Control', 'no-store');\n    res.json({ data: await publisherFinancialTables(symbol) });\n})"
+      ],
+      "line": 26,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
@@ -3626,7 +4112,12 @@
       "legacyFile": "backend/src/api/routes/financials.routes.js",
       "method": "GET",
       "path": "/financials/:symbol",
-      "line": 17,
+      "arguments": [
+        "\"/financials/:symbol\"",
+        "validateQuery(FinancialsQuerySchema)",
+        "asyncHandler(financialsController.getLatest)"
+      ],
+      "line": 33,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
@@ -3634,7 +4125,12 @@
       "legacyFile": "backend/src/api/routes/financials.routes.js",
       "method": "GET",
       "path": "/financials/:symbol/history",
-      "line": 18,
+      "arguments": [
+        "\"/financials/:symbol/history\"",
+        "validateQuery(FinancialsHistoryQuerySchema)",
+        "asyncHandler(financialsController.getHistory)"
+      ],
+      "line": 34,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
@@ -3642,6 +4138,10 @@
       "legacyFile": "backend/src/api/routes/health.routes.js",
       "method": "GET",
       "path": "/health/live",
+      "arguments": [
+        "'/health/live'",
+        "asyncHandler(healthController.live)"
+      ],
       "line": 5,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
@@ -3650,6 +4150,10 @@
       "legacyFile": "backend/src/api/routes/health.routes.js",
       "method": "GET",
       "path": "/health",
+      "arguments": [
+        "\"/health\"",
+        "asyncHandler(healthController.check)"
+      ],
       "line": 6,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
@@ -3658,6 +4162,11 @@
       "legacyFile": "backend/src/api/routes/historical.routes.js",
       "method": "GET",
       "path": "/historical/sparklines",
+      "arguments": [
+        "\"/historical/sparklines\"",
+        "validateQuery(SparklinesQuerySchema)",
+        "asyncHandler(historicalController.getSparklines)"
+      ],
       "line": 8,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3666,6 +4175,11 @@
       "legacyFile": "backend/src/api/routes/historical.routes.js",
       "method": "GET",
       "path": "/historical/:symbol",
+      "arguments": [
+        "\"/historical/:symbol\"",
+        "validateQuery(HistoricalQuerySchema)",
+        "asyncHandler(historicalController.getCandles)"
+      ],
       "line": 9,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3674,6 +4188,11 @@
       "legacyFile": "backend/src/api/routes/historical.routes.js",
       "method": "GET",
       "path": "/historical/:symbol/performance",
+      "arguments": [
+        "\"/historical/:symbol/performance\"",
+        "validateQuery(PerformanceQuerySchema)",
+        "asyncHandler(historicalController.getPerformance)"
+      ],
       "line": 10,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3682,182 +4201,419 @@
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
-      "line": 33,
-      "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
-    },
-    {
-      "legacyFile": "backend/src/api/routes/index.js",
-      "method": "USE",
-      "path": null,
-      "line": 34,
-      "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
-    },
-    {
-      "legacyFile": "backend/src/api/routes/index.js",
-      "method": "USE",
-      "path": null,
+      "arguments": [
+        "billingRoutes"
+      ],
       "line": 35,
+      "mountResolution": [
+        {
+          "expression": "billingRoutes",
+          "importedFrom": "./billing.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "quotesRoutes"
+      ],
       "line": 36,
+      "mountResolution": [
+        {
+          "expression": "quotesRoutes",
+          "importedFrom": "./quotes.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "historicalRoutes"
+      ],
       "line": 37,
+      "mountResolution": [
+        {
+          "expression": "historicalRoutes",
+          "importedFrom": "./historical.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "priceHistoryRoutes"
+      ],
       "line": 38,
+      "mountResolution": [
+        {
+          "expression": "priceHistoryRoutes",
+          "importedFrom": "./priceHistory.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "statisticsRoutes"
+      ],
       "line": 39,
+      "mountResolution": [
+        {
+          "expression": "statisticsRoutes",
+          "importedFrom": "./statistics.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "companiesRoutes"
+      ],
       "line": 40,
+      "mountResolution": [
+        {
+          "expression": "companiesRoutes",
+          "importedFrom": "./companies.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "financialsRoutes"
+      ],
       "line": 41,
+      "mountResolution": [
+        {
+          "expression": "financialsRoutes",
+          "importedFrom": "./financials.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "corporateActionsRoutes"
+      ],
       "line": 42,
+      "mountResolution": [
+        {
+          "expression": "corporateActionsRoutes",
+          "importedFrom": "./corporateActions.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "announcementsRoutes"
+      ],
       "line": 43,
+      "mountResolution": [
+        {
+          "expression": "announcementsRoutes",
+          "importedFrom": "./announcements.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "newsRoutes"
+      ],
       "line": 44,
+      "mountResolution": [
+        {
+          "expression": "newsRoutes",
+          "importedFrom": "./news.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "moversRoutes"
+      ],
       "line": 45,
+      "mountResolution": [
+        {
+          "expression": "moversRoutes",
+          "importedFrom": "./movers.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "sectorsRoutes"
+      ],
       "line": 46,
+      "mountResolution": [
+        {
+          "expression": "sectorsRoutes",
+          "importedFrom": "./sectors.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "researchRoutes"
+      ],
       "line": 47,
+      "mountResolution": [
+        {
+          "expression": "researchRoutes",
+          "importedFrom": "./research.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "screenerRoutes"
+      ],
       "line": 48,
+      "mountResolution": [
+        {
+          "expression": "screenerRoutes",
+          "importedFrom": "./screener.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "instrumentsRoutes"
+      ],
       "line": 49,
+      "mountResolution": [
+        {
+          "expression": "instrumentsRoutes",
+          "importedFrom": "./instruments.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "indicesRoutes"
+      ],
       "line": 50,
+      "mountResolution": [
+        {
+          "expression": "indicesRoutes",
+          "importedFrom": "./indices.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "indicatorsRoutes"
+      ],
       "line": 51,
+      "mountResolution": [
+        {
+          "expression": "indicatorsRoutes",
+          "importedFrom": "./indicators.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "backtestRoutes"
+      ],
       "line": 52,
+      "mountResolution": [
+        {
+          "expression": "backtestRoutes",
+          "importedFrom": "./backtest.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "volumeProfileRoutes"
+      ],
       "line": 53,
+      "mountResolution": [
+        {
+          "expression": "volumeProfileRoutes",
+          "importedFrom": "./volumeProfile.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
       "method": "USE",
       "path": null,
+      "arguments": [
+        "valuationRoutes"
+      ],
       "line": 54,
+      "mountResolution": [
+        {
+          "expression": "valuationRoutes",
+          "importedFrom": "./valuation.routes.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "arguments": [
+        "engineWorkbenchRoutes"
+      ],
+      "line": 55,
+      "mountResolution": [
+        {
+          "expression": "engineWorkbenchRoutes",
+          "importedFrom": "./engineWorkbench.routes.js"
+        }
+      ],
+      "status": "pending",
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "arguments": [
+        "engineNotebookRoutes"
+      ],
+      "line": 56,
+      "mountResolution": [
+        {
+          "expression": "engineNotebookRoutes",
+          "importedFrom": "./engineNotebook.routes.js"
+        }
+      ],
+      "status": "pending",
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "arguments": [
+        "engineRoutes"
+      ],
+      "line": 57,
+      "mountResolution": [
+        {
+          "expression": "engineRoutes",
+          "importedFrom": "./engine.routes.js"
+        }
+      ],
+      "status": "pending",
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
+    },
+    {
+      "legacyFile": "backend/src/api/routes/index.js",
+      "method": "USE",
+      "path": null,
+      "arguments": [
+        "marketResearchRoutes"
+      ],
+      "line": 58,
+      "mountResolution": [
+        {
+          "expression": "marketResearchRoutes",
+          "importedFrom": "./marketResearch.routes.js"
+        }
+      ],
+      "status": "pending",
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/routes/indicators.routes.js",
       "method": "GET",
       "path": "/indicators/:symbol",
+      "arguments": [
+        "\"/indicators/:symbol\"",
+        "validateQuery(IndicatorQuerySchema)",
+        "asyncHandler(indicatorsController.get)"
+      ],
       "line": 7,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3866,6 +4622,11 @@
       "legacyFile": "backend/src/api/routes/indices.routes.js",
       "method": "GET",
       "path": "/indices",
+      "arguments": [
+        "\"/indices\"",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(indicesController.list)"
+      ],
       "line": 15,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3874,6 +4635,11 @@
       "legacyFile": "backend/src/api/routes/instruments.routes.js",
       "method": "GET",
       "path": "/instruments",
+      "arguments": [
+        "\"/instruments\"",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(instrumentsController.list)"
+      ],
       "line": 7,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3882,6 +4648,10 @@
       "legacyFile": "backend/src/api/routes/marketResearch.routes.js",
       "method": "GET",
       "path": "/market-research/intelligence",
+      "arguments": [
+        "\"/market-research/intelligence\"",
+        "asyncHandler(async (_req, res) => {\n    const result = await query(`SELECT s.symbol, c.name AS sector, q.change_percent AS \"changePercent\", q.volume, q.event_timestamp AS timestamp\n    FROM market.live_quotes q JOIN market.securities s ON s.id=q.security_id\n    JOIN market.companies co ON co.id=s.company_id LEFT JOIN market.sectors c ON c.id=co.sector_id\n    WHERE s.exchange='NSE' AND s.status='active' AND q.last_price > 0`);\n    res.json({ data: analyseMarket(result.rows) });\n})"
+      ],
       "line": 6,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3890,6 +4660,10 @@
       "legacyFile": "backend/src/api/routes/marketResearch.routes.js",
       "method": "GET",
       "path": "/market-research/records",
+      "arguments": [
+        "\"/market-research/records\"",
+        "asyncHandler(async (_req, res) => {\n    // A pending migration is a coverage state, not a broken Markets page. Other DB errors still propagate.\n    try {\n        const result = await query(`SELECT id, kind, title, symbol, observed_at AS \"observedAt\", source_url AS \"sourceUrl\", payload\n      FROM market.research_records WHERE verified_at IS NOT NULL ORDER BY observed_at DESC LIMIT 2000`);\n        res.json({ data: { records: result.rows, available: true } });\n    }\n    catch (error) {\n        if (error.code !== \"42P01\")\n            throw error;\n        res.json({ data: { records: [], available: false } });\n    }\n})"
+      ],
       "line": 13,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3898,6 +4672,10 @@
       "legacyFile": "backend/src/api/routes/marketResearch.routes.js",
       "method": "GET",
       "path": "/market-research/earnings",
+      "arguments": [
+        "\"/market-research/earnings\"",
+        "asyncHandler(async (_req, res) => {\n    const result = await query(`SELECT e.id, s.symbol, c.name AS \"companyName\", e.fiscal_year AS \"fiscalYear\",\n    e.fiscal_quarter AS \"fiscalQuarter\", e.expected_date AS \"expectedDate\", e.reported_date AS \"reportedDate\",\n    e.eps_actual AS \"epsActual\", e.eps_estimate AS \"epsEstimate\", e.revenue_actual AS \"revenueActual\", e.revenue_estimate AS \"revenueEstimate\"\n    FROM market.earnings_events e JOIN market.securities s ON s.id=e.security_id JOIN market.companies c ON c.id=s.company_id\n    WHERE s.exchange='NSE' AND s.status <> 'delisted' ORDER BY COALESCE(e.reported_date,e.expected_date) DESC NULLS LAST LIMIT 300`);\n    res.json({ data: result.rows });\n})"
+      ],
       "line": 26,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3906,6 +4684,11 @@
       "legacyFile": "backend/src/api/routes/movers.routes.js",
       "method": "GET",
       "path": "/movers",
+      "arguments": [
+        "\"/movers\"",
+        "validateQuery(MoversQuerySchema)",
+        "asyncHandler(moversController.getMovers)"
+      ],
       "line": 7,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3914,6 +4697,11 @@
       "legacyFile": "backend/src/api/routes/news.routes.js",
       "method": "GET",
       "path": "/news",
+      "arguments": [
+        "\"/news\"",
+        "validateQuery(NewsQuerySchema)",
+        "asyncHandler(newsController.listRecent)"
+      ],
       "line": 7,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3922,6 +4710,10 @@
       "legacyFile": "backend/src/api/routes/news.routes.js",
       "method": "GET",
       "path": "/news/item/:id",
+      "arguments": [
+        "\"/news/item/:id\"",
+        "asyncHandler(newsController.getById)"
+      ],
       "line": 8,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3930,14 +4722,37 @@
       "legacyFile": "backend/src/api/routes/news.routes.js",
       "method": "GET",
       "path": "/news/:symbol",
+      "arguments": [
+        "\"/news/:symbol\"",
+        "validateQuery(SecurityNewsQuerySchema)",
+        "asyncHandler(newsController.getForSymbol)"
+      ],
       "line": 9,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
+      "legacyFile": "backend/src/api/routes/priceHistory.routes.js",
+      "method": "GET",
+      "path": "/price-history/:symbol",
+      "arguments": [
+        "'/price-history/:symbol'",
+        "validateQuery(schema)",
+        "asyncHandler(async (req, res) => {\n    const symbol = String(req.params.symbol).toUpperCase();\n    if (!/^[A-Z0-9.-]{1,20}$/.test(symbol)) throw new ApiError(400, 'Invalid stock symbol');\n    const input = getQuery(req), now = new Date(), to = input.to ?? now.toISOString().slice(0, 10);\n    const from = input.from ?? new Date(now.getTime() - 3652 * 86400000).toISOString().slice(0, 10);\n    if (from > to || to > now.toISOString().slice(0, 10) || Date.parse(to) - Date.parse(from) > 36525 * 86400000) throw new ApiError(400, 'Invalid history date range');\n    const security = await securitiesRepository.getBySymbol('NSE', symbol);\n    if (!security) throw new ApiError(404, 'Unknown stock symbol');\n    const rows = await dailyCloseHistory(security.id, from, to);\n    res.json({data: rows, basis: 'daily_close_only', ohlcAvailable: false, missingVolumeIsZero: false});\n})"
+      ],
+      "line": 14,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
       "legacyFile": "backend/src/api/routes/quotes.routes.js",
       "method": "GET",
       "path": "/quotes",
+      "arguments": [
+        "\"/quotes\"",
+        "validateQuery(QuotesBatchQuerySchema)",
+        "asyncHandler(quotesController.getBatch)"
+      ],
       "line": 7,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3946,6 +4761,11 @@
       "legacyFile": "backend/src/api/routes/quotes.routes.js",
       "method": "GET",
       "path": "/quotes/:symbol",
+      "arguments": [
+        "\"/quotes/:symbol\"",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(quotesController.getOne)"
+      ],
       "line": 8,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3954,6 +4774,11 @@
       "legacyFile": "backend/src/api/routes/research.routes.js",
       "method": "GET",
       "path": "/research/:symbol",
+      "arguments": [
+        "\"/research/:symbol\"",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(researchController.getResearch)"
+      ],
       "line": 7,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3962,6 +4787,11 @@
       "legacyFile": "backend/src/api/routes/screener.routes.js",
       "method": "GET",
       "path": "/screener",
+      "arguments": [
+        "\"/screener\"",
+        "validateQuery(ScreenerQuerySchema)",
+        "asyncHandler(screenerController.run)"
+      ],
       "line": 7,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3970,14 +4800,36 @@
       "legacyFile": "backend/src/api/routes/sectors.routes.js",
       "method": "GET",
       "path": "/sectors",
+      "arguments": [
+        "\"/sectors\"",
+        "asyncHandler(sectorsController.list)"
+      ],
       "line": 5,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
     },
     {
+      "legacyFile": "backend/src/api/routes/statistics.routes.js",
+      "method": "GET",
+      "path": "/statistics/:symbol",
+      "arguments": [
+        "'/statistics/:symbol'",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(async (req, res) => {\n    const symbol = String(req.params.symbol).toUpperCase(), {exchange} = getQuery(req);\n    if (!/^[A-Z0-9.-]{1,20}$/.test(symbol)) throw new ApiError(400, 'Invalid stock symbol');\n    const data = await cache.getOrSet(`statistics-v1:${exchange}:${symbol}`, 60000, async () => {\n        const security = await securitiesRepository.getBySymbol(exchange, symbol);\n        if (!security) throw new ApiError(404, 'Unknown stock symbol');\n        const now = new Date(), from = new Date(now.getTime() - 366 * 86400000).toISOString().slice(0, 10), to = now.toISOString().slice(0, 10);\n        const [quote, history, candles, closes] = await Promise.all([\n            pricesRepository.getQuote(security.id), financialsRepository.getHistoricalPeriods(security.id, 'annual', 10),\n            candlesRepository.getCandles(security.id, '1d', from, now.toISOString()),\n            exchange === 'NSE' ? dailyCloseHistory(security.id, from, to) : [],\n        ]);\n        return marketStatistics(quote, history, candles, closes, now);\n    });\n    res.json({data});\n})"
+      ],
+      "line": 13,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
       "legacyFile": "backend/src/api/routes/valuation.routes.js",
       "method": "GET",
       "path": "/valuation/:symbol/history",
+      "arguments": [
+        "'/valuation/:symbol/history'",
+        "validateQuery(ExchangeQuery.extend({ ratio: z.enum(['pe', 'pb', 'ps']).default('pe'), years: z.coerce.number().int().min(1).max(10).default(5) }))",
+        "asyncHandler(valuationController.history)"
+      ],
       "line": 8,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3986,6 +4838,11 @@
       "legacyFile": "backend/src/api/routes/valuation.routes.js",
       "method": "GET",
       "path": "/valuation/:symbol",
+      "arguments": [
+        "\"/valuation/:symbol\"",
+        "validateQuery(ExchangeQuery)",
+        "asyncHandler(valuationController.get)"
+      ],
       "line": 9,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -3994,6 +4851,12 @@
       "legacyFile": "backend/src/api/routes/volumeProfile.routes.js",
       "method": "GET",
       "path": "/volume-profile/:symbol",
+      "arguments": [
+        "\"/volume-profile/:symbol\"",
+        "requireSubscriber",
+        "validateQuery(HistoricalQuerySchema)",
+        "asyncHandler(volumeProfileController.get)"
+      ],
       "line": 8,
       "status": "partial",
       "note": "Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required."
@@ -4002,23 +4865,72 @@
       "legacyFile": "backend/src/api/server.js",
       "method": "USE",
       "path": null,
-      "line": 50,
+      "arguments": [
+        "helmet()"
+      ],
+      "line": 53,
+      "mountResolution": [
+        {
+          "expression": "helmet()",
+          "importedFrom": null
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/server.js",
       "method": "USE",
       "path": null,
-      "line": 51,
+      "arguments": [
+        "cors(corsOptions)"
+      ],
+      "line": 54,
+      "mountResolution": [
+        {
+          "expression": "cors(corsOptions)",
+          "importedFrom": null
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
+    },
+    {
+      "legacyFile": "backend/src/api/server.js",
+      "method": "USE",
+      "path": null,
+      "arguments": [
+        "edgeClientIdentity()"
+      ],
+      "line": 55,
+      "mountResolution": [
+        {
+          "expression": "edgeClientIdentity()",
+          "importedFrom": null
+        }
+      ],
+      "status": "pending",
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/server.js",
       "method": "USE",
       "path": "/api/v1",
-      "line": 52,
+      "arguments": [
+        "'/api/v1'",
+        "preAuthenticationRateLimit()"
+      ],
+      "line": 56,
+      "mountResolution": [
+        {
+          "expression": "'/api/v1'",
+          "importedFrom": null
+        },
+        {
+          "expression": "preAuthenticationRateLimit()",
+          "importedFrom": null
+        }
+      ],
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4026,7 +4938,13 @@
       "legacyFile": "backend/src/api/server.js",
       "method": "POST",
       "path": "/api/v1/billing/paystack/webhook",
-      "line": 53,
+      "arguments": [
+        "\"/api/v1/billing/paystack/webhook\"",
+        "protectedRateLimit({ windowMs: 60_000, limit: 120,\n        keyGenerator: (req, res) => ipKeyGenerator(rateLimitClientIP(req, res)),\n        standardHeaders: true, legacyHeaders: false,\n    }, 'webhook')",
+        "express.raw({ type: \"application/json\", limit: \"64kb\" })",
+        "paystackWebhook"
+      ],
+      "line": 57,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4034,23 +4952,55 @@
       "legacyFile": "backend/src/api/server.js",
       "method": "USE",
       "path": null,
-      "line": 54,
+      "arguments": [
+        "express.json({ limit: '512kb' })"
+      ],
+      "line": 61,
+      "mountResolution": [
+        {
+          "expression": "express.json({ limit: '512kb' })",
+          "importedFrom": null
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/server.js",
       "method": "USE",
       "path": null,
-      "line": 55,
+      "arguments": [
+        "requestLogger"
+      ],
+      "line": 62,
+      "mountResolution": [
+        {
+          "expression": "requestLogger",
+          "importedFrom": "./middleware/requestLogger.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/server.js",
       "method": "USE",
       "path": "/api/v1",
-      "line": 58,
+      "arguments": [
+        "\"/api/v1\"",
+        "healthRoutes"
+      ],
+      "line": 65,
+      "mountResolution": [
+        {
+          "expression": "\"/api/v1\"",
+          "importedFrom": null
+        },
+        {
+          "expression": "healthRoutes",
+          "importedFrom": "./routes/health.routes.js"
+        }
+      ],
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4058,7 +5008,31 @@
       "legacyFile": "backend/src/api/server.js",
       "method": "USE",
       "path": "/api/v1/admin",
-      "line": 63,
+      "arguments": [
+        "\"/api/v1/admin\"",
+        "adminRateLimit()",
+        "requireAdminKey()",
+        "adminFinancialsRoutes"
+      ],
+      "line": 68,
+      "mountResolution": [
+        {
+          "expression": "\"/api/v1/admin\"",
+          "importedFrom": null
+        },
+        {
+          "expression": "adminRateLimit()",
+          "importedFrom": null
+        },
+        {
+          "expression": "requireAdminKey()",
+          "importedFrom": null
+        },
+        {
+          "expression": "adminFinancialsRoutes",
+          "importedFrom": "./routes/admin.routes.js"
+        }
+      ],
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4066,7 +5040,41 @@
       "legacyFile": "backend/src/api/server.js",
       "method": "USE",
       "path": "/api/v1",
-      "line": 64,
+      "arguments": [
+        "\"/api/v1\"",
+        "apiKeyAuth()",
+        "verifyEngineRateLimitIdentity",
+        "apiRateLimit()",
+        "workloadRateLimit()",
+        "apiRouter"
+      ],
+      "line": 69,
+      "mountResolution": [
+        {
+          "expression": "\"/api/v1\"",
+          "importedFrom": null
+        },
+        {
+          "expression": "apiKeyAuth()",
+          "importedFrom": null
+        },
+        {
+          "expression": "verifyEngineRateLimitIdentity",
+          "importedFrom": "./middleware/requireSubscriber.js"
+        },
+        {
+          "expression": "apiRateLimit()",
+          "importedFrom": null
+        },
+        {
+          "expression": "workloadRateLimit()",
+          "importedFrom": null
+        },
+        {
+          "expression": "apiRouter",
+          "importedFrom": "./routes/index.js"
+        }
+      ],
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4074,39 +5082,96 @@
       "legacyFile": "backend/src/api/server.js",
       "method": "USE",
       "path": null,
-      "line": 65,
+      "arguments": [
+        "(_req, res) => res.status(404).json({ error: \"Not found\" })"
+      ],
+      "line": 70,
+      "mountResolution": [
+        {
+          "expression": "(_req, res) => res.status(404).json({ error: \"Not found\" })",
+          "importedFrom": null
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "backend/src/api/server.js",
       "method": "USE",
       "path": null,
-      "line": 66,
+      "arguments": [
+        "errorHandler"
+      ],
+      "line": 71,
+      "mountResolution": [
+        {
+          "expression": "errorHandler",
+          "importedFrom": "./middleware/errorHandler.js"
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "scraper/src/api/server.js",
       "method": "USE",
       "path": null,
-      "line": 22,
+      "arguments": [
+        "(req, res, next) => {\n        res.setHeader('Cache-Control', 'no-store');\n        res.setHeader('X-Content-Type-Options', 'nosniff');\n        if (!publicCollectorRoute(req.method, req.path) && !validOperatorKey(req.header('X-Scraper-Admin-Key'), env.SCRAPER_ADMIN_API_KEY)) {\n            res.status(401).json({ error: 'operator_authentication_required' });\n            return;\n        }\n        next();\n    }"
+      ],
+      "line": 23,
+      "mountResolution": [
+        {
+          "expression": "(req, res, next) => {\n        res.setHeader('Cache-Control', 'no-store');\n        res.setHeader('X-Content-Type-Options', 'nosniff');\n        if (!publicCollectorRoute(req.method, req.path) && !validOperatorKey(req.header('X-Scraper-Admin-Key'), env.SCRAPER_ADMIN_API_KEY)) {\n            res.status(401).json({ error: 'operator_authentication_required' });\n            return;\n        }\n        next();\n    }",
+          "importedFrom": null
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "scraper/src/api/server.js",
       "method": "USE",
       "path": null,
-      "line": 31,
+      "arguments": [
+        "(req, res, next) => {\n        if (env.SCRAPER_WORKLOAD_ROLE === 'render-light' && !lightRouteAllowed(req.method, req.path)) {\n            res.status(409).json({error:'bulk_collection_runs_in_github_actions',manualWorkflow:'scheduled-collector.yml'});\n            return;\n        }\n        next();\n    }"
+      ],
+      "line": 32,
+      "mountResolution": [
+        {
+          "expression": "(req, res, next) => {\n        if (env.SCRAPER_WORKLOAD_ROLE === 'render-light' && !lightRouteAllowed(req.method, req.path)) {\n            res.status(409).json({error:'bulk_collection_runs_in_github_actions',manualWorkflow:'scheduled-collector.yml'});\n            return;\n        }\n        next();\n    }",
+          "importedFrom": null
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "USE",
+      "path": null,
+      "arguments": [
+        "express.json({ limit: '64kb' })"
+      ],
+      "line": 39,
+      "mountResolution": [
+        {
+          "expression": "express.json({ limit: '64kb' })",
+          "importedFrom": null
+        }
+      ],
+      "status": "pending",
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     },
     {
       "legacyFile": "scraper/src/api/server.js",
       "method": "GET",
       "path": "/health/live",
-      "line": 32,
+      "arguments": [
+        "'/health/live'",
+        "(_req,res)=>res.json({status:'alive',revision:process.env.RENDER_GIT_COMMIT??null,runtime:process.version,implementation:'javascript',workloadRole:env.SCRAPER_WORKLOAD_ROLE,schedulerEnabled:env.SCHEDULER_ENABLED,timestamp:new Date().toISOString()})"
+      ],
+      "line": 40,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4114,7 +5179,11 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "POST",
       "path": "/documents/refresh",
-      "line": 33,
+      "arguments": [
+        "'/documents/refresh'",
+        "(_req, res) => {\n        void refreshFinancialDocuments().catch(() => logger.warn('Reader-triggered financial document collection failed; queued jobs retained'));\n        res.status(202).json({ status: 'accepted' });\n    }"
+      ],
+      "line": 41,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4122,7 +5191,11 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "POST",
       "path": "/indices/refresh",
-      "line": 37,
+      "arguments": [
+        "'/indices/refresh'",
+        "async (_req, res) => {\n        try {\n            await refreshIndexSource();\n            res.json({ status: 'checked' });\n        }\n        catch {\n            res.status(503).json({ error: 'index_collection_unavailable' });\n        }\n    }"
+      ],
+      "line": 45,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4130,22 +5203,10 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "POST",
       "path": "/news/refresh",
-      "line": 46,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
-    },
-    {
-      "legacyFile": "scraper/src/api/server.js",
-      "method": "GET",
-      "path": "/health",
-      "line": 50,
-      "status": "pending",
-      "note": "Full auth/validation/behavior port required."
-    },
-    {
-      "legacyFile": "scraper/src/api/server.js",
-      "method": "GET",
-      "path": "/news/status",
+      "arguments": [
+        "\"/news/refresh\"",
+        "(_req, res) => {\n        void refreshNewsSources().catch(err => logger.error({ err }, \"Reader news refresh failed\"));\n        res.status(202).json({ status: \"accepted\", ...newsScheduleStatus() });\n    }"
+      ],
       "line": 54,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
@@ -4153,8 +5214,36 @@
     {
       "legacyFile": "scraper/src/api/server.js",
       "method": "GET",
-      "path": "/sources",
+      "path": "/health",
+      "arguments": [
+        "\"/health\"",
+        "async (_req, res) => {\n        const health = await checkHealth();\n        res.status(health.status === \"ok\" ? 200 : 503).json(health);\n    }"
+      ],
       "line": 58,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "GET",
+      "path": "/news/status",
+      "arguments": [
+        "\"/news/status\"",
+        "(_req, res) => res.json(newsScheduleStatus())"
+      ],
+      "line": 62,
+      "status": "pending",
+      "note": "Full auth/validation/behavior port required."
+    },
+    {
+      "legacyFile": "scraper/src/api/server.js",
+      "method": "GET",
+      "path": "/sources",
+      "arguments": [
+        "\"/sources\"",
+        "async (_req, res) => {\n        const sources = await listEnabledSources();\n        res.json(sources);\n    }"
+      ],
+      "line": 66,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4162,7 +5251,11 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "POST",
       "path": "/sources/:id/crawl",
-      "line": 66,
+      "arguments": [
+        "\"/sources/:id/crawl\"",
+        "async (req, res) => {\n        const source = await getSource(req.params.id);\n        if (!source) {\n            res.status(404).json({ error: \"source_not_found\", id: req.params.id });\n            return;\n        }\n        try {\n            const batchSize = req.body?.batchSize ?? 20;\n            const summary = await crawlSource(source.id, batchSize);\n            res.json(summary);\n        }\n        catch (err) {\n            logger.error({ err, sourceId: source.id }, \"Crawl trigger failed\");\n            res.status(500).json({ error: \"crawl_failed\", message: err.message });\n        }\n    }"
+      ],
+      "line": 74,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4170,7 +5263,11 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "GET",
       "path": "/adapters/nse/announcements/preview",
-      "line": 87,
+      "arguments": [
+        "\"/adapters/nse/announcements/preview\"",
+        "async (_req, res) => {\n        try {\n            const docs = await nseAnnouncementsAdapter.discover();\n            res.json({ count: docs.length, documents: docs });\n        }\n        catch (err) {\n            logger.error({ err }, \"NSE announcements discover() failed\");\n            res.status(500).json({ error: \"discover_failed\", message: err.message });\n        }\n    }"
+      ],
+      "line": 95,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4178,7 +5275,11 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "POST",
       "path": "/adapters/nse/announcements",
-      "line": 101,
+      "arguments": [
+        "\"/adapters/nse/announcements\"",
+        "async (_req, res) => {\n        try {\n            const summary = await runAdapter(nseAnnouncementsAdapter);\n            res.json(summary);\n        }\n        catch (err) {\n            logger.error({ err }, \"NSE announcements adapter run failed\");\n            res.status(500).json({ error: \"adapter_run_failed\", message: err.message });\n        }\n    }"
+      ],
+      "line": 109,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4186,7 +5287,11 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "GET",
       "path": "/dead-letters",
-      "line": 114,
+      "arguments": [
+        "\"/dead-letters\"",
+        "async (req, res) => {\n        const sourceId = typeof req.query.source === \"string\" ? req.query.source : undefined;\n        const deadLetters = await listDeadLetters(sourceId);\n        res.json(deadLetters);\n    }"
+      ],
+      "line": 122,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4194,7 +5299,11 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "GET",
       "path": "/adapters/rss/:sourceId/preview",
-      "line": 124,
+      "arguments": [
+        "\"/adapters/rss/:sourceId/preview\"",
+        "async (req, res) => {\n        const source = await getSource(req.params.sourceId);\n        if (!source) {\n            res.status(404).json({ error: \"source_not_found\", id: req.params.sourceId });\n            return;\n        }\n        try {\n            const adapter = createRssFeedAdapter(source);\n            const docs = await adapter.discover();\n            res.json({ count: docs.length, documents: docs });\n        }\n        catch (err) {\n            logger.error({ err, sourceId: source.id }, \"RSS discover() failed\");\n            res.status(500).json({ error: \"discover_failed\", message: err.message });\n        }\n    }"
+      ],
+      "line": 132,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4202,7 +5311,11 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "POST",
       "path": "/adapters/rss/:sourceId",
-      "line": 140,
+      "arguments": [
+        "\"/adapters/rss/:sourceId\"",
+        "async (req, res) => {\n        const source = await getSource(req.params.sourceId);\n        if (!source) {\n            res.status(404).json({ error: \"source_not_found\", id: req.params.sourceId });\n            return;\n        }\n        try {\n            const adapter = createRssFeedAdapter(source);\n            const summary = await runAdapter(adapter);\n            res.json(summary);\n        }\n        catch (err) {\n            logger.error({ err, sourceId: source.id }, \"RSS adapter run failed\");\n            res.status(500).json({ error: \"adapter_run_failed\", message: err.message });\n        }\n    }"
+      ],
+      "line": 148,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4210,7 +5323,11 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "GET",
       "path": "/extractions/needs-review",
-      "line": 158,
+      "arguments": [
+        "\"/extractions/needs-review\"",
+        "async (req, res) => {\n        const limit = req.query.limit ? Number(req.query.limit) : 100;\n        const items = await listNeedsReview(limit);\n        res.json(items);\n    }"
+      ],
+      "line": 166,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4218,7 +5335,11 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "POST",
       "path": "/artifacts/:id/reprocess",
-      "line": 167,
+      "arguments": [
+        "\"/artifacts/:id/reprocess\"",
+        "async (req, res) => {\n        const artifactId = Number(req.params.id);\n        if (!Number.isInteger(artifactId)) {\n            res.status(400).json({ error: \"invalid_artifact_id\" });\n            return;\n        }\n        try {\n            const extraction = await reprocessArtifact(artifactId);\n            res.json(extraction);\n        }\n        catch (err) {\n            logger.error({ err, artifactId }, \"Reprocessing failed\");\n            res.status(500).json({ error: \"reprocess_failed\", message: err.message });\n        }\n    }"
+      ],
+      "line": 175,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4226,7 +5347,11 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "POST",
       "path": "/extractions/sweep",
-      "line": 187,
+      "arguments": [
+        "\"/extractions/sweep\"",
+        "async (req, res) => {\n        try {\n            const limit = req.body?.limit ?? 50;\n            const summary = await sweepUnextractedArtifacts(limit);\n            res.json(summary);\n        }\n        catch (err) {\n            logger.error({ err }, \"Extraction sweep failed\");\n            res.status(500).json({ error: \"sweep_failed\", message: err.message });\n        }\n    }"
+      ],
+      "line": 195,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4234,7 +5359,11 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "GET",
       "path": "/crawl-status",
-      "line": 201,
+      "arguments": [
+        "\"/crawl-status\"",
+        "async (_req, res) => {\n        const report = await getCrawlStatus();\n        res.json(report);\n    }"
+      ],
+      "line": 209,
       "status": "pending",
       "note": "Full auth/validation/behavior port required."
     },
@@ -4242,9 +5371,18 @@
       "legacyFile": "scraper/src/api/server.js",
       "method": "USE",
       "path": null,
-      "line": 205,
+      "arguments": [
+        "(req, res) => {\n        res.status(404).json({ error: \"not_found\", path: req.path });\n    }"
+      ],
+      "line": 213,
+      "mountResolution": [
+        {
+          "expression": "(req, res) => {\n        res.status(404).json({ error: \"not_found\", path: req.path });\n    }",
+          "importedFrom": null
+        }
+      ],
       "status": "pending",
-      "note": "Dynamic mount: manual resolution required."
+      "note": "Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement."
     }
   ],
   "requiredReleaseGates": [

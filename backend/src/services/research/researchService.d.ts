@@ -23,6 +23,8 @@ export declare const researchService: {
     recomputeAllForExchange(exchange: string): Promise<{
         computed: number;
         skipped: number;
+        failed: number;
+        pending: number;
     }>;
 };
 export {};

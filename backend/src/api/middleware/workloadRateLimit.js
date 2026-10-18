@@ -8,6 +8,7 @@ export function workloadPolicy(req) {
     if (path.startsWith('/billing/')) return ['billing', 20];
     if (path.startsWith('/engine/')) return req.method === 'GET' || req.method === 'HEAD'
         ? ['research', 30] : ['calculation-write', 20];
+    if (/^\/(?:research|statistics|price-history|valuation)\//.test(path)) return ['research', 30];
     if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') return ['mutation', 30];
     return null;
 }

@@ -1,9 +1,10 @@
-import { query } from "../db.js";
+import { query, pool } from "../db.js";
 import { env } from '../../config/index.js';
 export const scoresRepository = {
-    async upsertRatios(r) {
+    async upsertRatios(r, execute = query) {
+        if (execute !== query) await execute('SAVEPOINT compatible_ratios');
         try {
-            await query(`INSERT INTO market.computed_ratios
+            await execute(`INSERT INTO market.computed_ratios
          (security_id, as_of, pe, ps, pb, ev_ebitda, roe, roa, roic, gross_margin, operating_margin, net_margin,
           dividend_yield, payout_ratio, current_ratio, debt_to_equity, interest_coverage, price_momentum_3m, volatility_90d)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
@@ -22,7 +23,8 @@ export const scoresRepository = {
             const pgError = error;
             if (pgError.code !== "42703" || !/\bps\b/.test(pgError.message ?? ""))
                 throw error;
-            await query(`INSERT INTO market.computed_ratios
+            if (execute !== query) await execute('ROLLBACK TO SAVEPOINT compatible_ratios');
+            await execute(`INSERT INTO market.computed_ratios
           (security_id, as_of, pe, pb, ev_ebitda, roe, roa, roic, gross_margin, operating_margin, net_margin,
            dividend_yield, payout_ratio, current_ratio, debt_to_equity, interest_coverage, price_momentum_3m, volatility_90d)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
@@ -49,8 +51,8 @@ export const scoresRepository = {
        FROM market.computed_ratios WHERE security_id = $1`, [securityId]);
         return res.rows[0] ?? null;
     },
-    async upsertAfriScore(s) {
-        await query(`INSERT INTO market.afri_scores
+    async upsertAfriScore(s, execute = query) {
+        await execute(`INSERT INTO market.afri_scores
          (security_id, as_of, afri_score, afri_value, afri_growth, afri_health, afri_income, afri_risk, afri_quality, afri_momentum, inputs)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
        ON CONFLICT (security_id) DO UPDATE SET
@@ -58,6 +60,26 @@ export const scoresRepository = {
          afri_health=EXCLUDED.afri_health, afri_income=EXCLUDED.afri_income, afri_risk=EXCLUDED.afri_risk,
          afri_quality=EXCLUDED.afri_quality, afri_momentum=EXCLUDED.afri_momentum, inputs=EXCLUDED.inputs`, [s.securityId, s.asOf, s.afriScore, s.afriValue, s.afriGrowth, s.afriHealth, s.afriIncome, s.afriRisk,
             s.afriQuality, s.afriMomentum, JSON.stringify(s.inputs)]);
+    },
+    async upsertResearchSnapshot(ratios, score) {
+        if (ratios.securityId !== score.securityId || ratios.asOf !== score.asOf || !Number.isFinite(Date.parse(ratios.asOf))) throw new Error('Inconsistent research snapshot identity');
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            await client.query("SELECT pg_advisory_xact_lock(hashtextextended('c-score:' || $1::text,0))", [ratios.securityId]);
+            const retained = (await client.query('SELECT as_of,inputs FROM market.afri_scores WHERE security_id=$1 FOR UPDATE', [ratios.securityId])).rows[0];
+            const sameMethod = retained?.inputs?.methodologyVersion === 'continua-c-score-v2';
+            const olderQuote = sameMethod && new Date(retained.as_of).getTime() > Date.parse(ratios.asOf);
+            const olderCalculation = sameMethod && new Date(retained.as_of).getTime() === Date.parse(ratios.asOf)
+                && Date.parse(String(retained.inputs?.calculatedAt ?? '')) > Date.parse(String(score.inputs?.calculatedAt ?? ''));
+            if (olderQuote || olderCalculation) {await client.query('ROLLBACK'); return false;}
+            await scoresRepository.upsertRatios(ratios, client.query.bind(client));
+            await scoresRepository.upsertAfriScore(score, client.query.bind(client));
+            await client.query('COMMIT');
+            return true;
+        } catch (error) {
+            await client.query('ROLLBACK'); throw error;
+        } finally {client.release();}
     },
     async getAfriScore(securityId) {
         const res = await query(`SELECT security_id as "securityId", as_of as "asOf", afri_score as "afriScore", afri_value as "afriValue",

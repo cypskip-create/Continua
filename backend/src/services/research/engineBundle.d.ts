@@ -1,4 +1,5 @@
 import type { ExchangeCode } from "../../config/index.js";
+import type {AfriScoreResult} from '../../types/market.js';
 export declare function getEngineBundle(symbol: string, exchange: ExchangeCode): Promise<{
     refresh: {
         state: string;
@@ -170,19 +171,7 @@ export declare function getEngineBundle(symbol: string, exchange: ExchangeCode):
         priceMomentum3m?: number | undefined;
         volatility90d?: number | undefined;
     } | null;
-    score: {
-        asOf: string;
-        afriScore: number;
-        securityId: string;
-        afriValue: number;
-        afriGrowth: number;
-        afriHealth: number;
-        afriIncome: number;
-        afriRisk: number;
-        afriQuality: number;
-        afriMomentum: number;
-        inputs: Record<string, number | null>;
-    } | null;
+    score: AfriScoreResult | null;
     news: {
         source: string;
         url: string;

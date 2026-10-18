@@ -6,9 +6,9 @@ import { useLiveQuotes } from "./useLiveQuotes";
 export interface AfriScreenerRow {
   symbol: string;
   marketCap: string; // magnitude-suffixed string ("237.5B"), matching stockPrices.ts's convention
-  pe: number;
-  dividendYield: number; // whole-number percent, e.g. 4.9 (backend gives a raw fraction — converted here)
-  afriScore: number;
+  pe: number | null;
+  dividendYield: number | null;
+  afriScore: number | null;
   price?: number;
   changePercent?: number;
 }
@@ -41,13 +41,12 @@ export function useAfriScreener(symbols: string[]) {
   const bySymbol = useMemo(() => {
     const map: Record<string, AfriScreenerRow> = {};
     (screenerQuery.data ?? []).forEach((row) => {
-      if (row.marketCap == null || row.pe == null) return; // skip rows the Data Layer can't compute yet
       map[row.symbol] = {
         symbol: row.symbol,
-        marketCap: formatMagnitude(row.marketCap),
+        marketCap: row.marketCap == null ? '—' : formatMagnitude(row.marketCap),
         pe: row.pe,
-        dividendYield: (row.dividendYield ?? 0) * 100,
-        afriScore: row.afriScore ?? 0,
+        dividendYield: row.dividendYield == null ? null : row.dividendYield * 100,
+        afriScore: row.afriScore ?? null,
       };
     });
     Object.values(quotes).forEach((q) => {

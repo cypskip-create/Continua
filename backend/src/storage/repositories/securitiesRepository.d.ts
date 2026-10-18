@@ -1,5 +1,7 @@
 import type { Security, Company, Sector } from "../../types/market.js";
 export declare const securitiesRepository: {
+    getSectorName(securityId: string): Promise<string | null>;
+    listForResearchRefresh(exchange: string): Promise<{id: string; symbol: string}[]>;
     upsertSector(sector: Sector): Promise<void>;
     /** Sector names are meant to be a shared taxonomy across every exchange
      *  (e.g. "Banking" should be the same row whether it came from NSE or

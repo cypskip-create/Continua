@@ -145,7 +145,7 @@ export function StockScreener() {
       : value.toLocaleString(undefined, { maximumFractionDigits: 2 });
   const exportCsv = () => {
     const csv = [
-      "Symbol,Company,Price KES,Change %,Volume,Market cap KES,PE,Dividend yield %,Engine score",
+      "Symbol,Company,Price KES,Change %,Volume,Market cap KES,PE,Dividend yield %,C score",
       ...result.map((r) =>
         [
           r.symbol,
@@ -390,7 +390,7 @@ export function StockScreener() {
                   ["cap", "Market cap"],
                   ["pe", "P/E"],
                   ["yield", "Yield %"],
-                  ["score", "Engine score"],
+                  ["score", "C score"],
                 ].map(([key, label]) => (
                   <th key={key}>
                     <button

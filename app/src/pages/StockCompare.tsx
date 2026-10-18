@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { SparklineChart } from "@/components/shared/SparklineChart";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { CANONICAL_SYMBOLS, STOCK_META } from "@/lib/stockPrices";
+import {useStockDirectory} from '@/hooks/useStockDirectory';
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { useSparklines } from "@/hooks/useSparklines";
 import { useQuery } from "@tanstack/react-query";
@@ -101,7 +101,7 @@ const comparisonMetrics = [
   },
   {
     key: "afriScore",
-    label: "AfriScore",
+    label: "C score",
     icon: Gauge,
     format: (v: number) => `${v.toFixed(0)}/100`,
   },
@@ -139,6 +139,7 @@ const comparisonMetrics = [
 ];
 
 export default function StockCompare() {
+  const {symbols: directorySymbols, metadata} = useStockDirectory();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedSymbols, setSelectedSymbols] = useState<string[]>(() => {
@@ -149,7 +150,7 @@ export default function StockCompare() {
           .split(","),
       ),
     ]
-      .filter((s) => CANONICAL_SYMBOLS.includes(s))
+      .filter((s) => /^[A-Z0-9.-]{1,20}$/.test(s))
       .slice(0, 4);
   });
   const [searchQuery, setSearchQuery] = useState("");
@@ -159,7 +160,7 @@ export default function StockCompare() {
   // marketCap/volume. A symbol with no live quote yet is excluded from
   // stocksDatabase entirely (so it can't be searched/added while unpriced,
   // and the comparison table never has to show a fabricated cell).
-  const { quotes } = useLiveQuotes(CANONICAL_SYMBOLS);
+  const { quotes } = useLiveQuotes(directorySymbols);
   const screenerQuery = useQuery({
     queryKey: ["continua", "compare", "screener"],
     queryFn: () => screenerApi.run({ limit: 100 }),
@@ -176,14 +177,14 @@ export default function StockCompare() {
     [screenerQuery.data],
   );
   const stocksDatabase = useMemo(() => {
-    return CANONICAL_SYMBOLS.map((symbol) => {
+    return directorySymbols.map((symbol) => {
       const q = quotes[symbol];
       const research = researchBySymbol.get(symbol);
       const price = q?.lastPrice ?? research?.lastPrice ?? null;
       return {
         symbol,
-        name: STOCK_META[symbol].name,
-        sector: STOCK_META[symbol].sector,
+        name: metadata[symbol].name,
+        sector: metadata[symbol].sector,
         price,
         change: q?.changePercent ?? research?.changePercent ?? null,
         marketCap:
@@ -205,7 +206,7 @@ export default function StockCompare() {
         ratiosAsOf: research?.ratiosAsOf ?? null,
       } satisfies Stock;
     }).filter((s): s is Stock => s !== null);
-  }, [quotes, researchBySymbol]);
+  }, [quotes, researchBySymbol, directorySymbols, metadata]);
 
   const selectedStocks = useMemo(
     () =>

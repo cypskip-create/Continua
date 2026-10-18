@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { quotesRoutes } from "./quotes.routes.js";
 import { historicalRoutes } from "./historical.routes.js";
+import {priceHistoryRoutes} from './priceHistory.routes.js';
+import {statisticsRoutes} from './statistics.routes.js';
 import { companiesRoutes } from "./companies.routes.js";
 import { financialsRoutes } from "./financials.routes.js";
 import { corporateActionsRoutes } from "./corporateActions.routes.js";
@@ -33,6 +35,8 @@ export const apiRouter = Router();
 apiRouter.use(billingRoutes);
 apiRouter.use(quotesRoutes);
 apiRouter.use(historicalRoutes);
+apiRouter.use(priceHistoryRoutes);
+apiRouter.use(statisticsRoutes);
 apiRouter.use(companiesRoutes);
 apiRouter.use(financialsRoutes);
 apiRouter.use(corporateActionsRoutes);

@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "dev": "npm --workspace app run dev",
-    "build": "npm --workspace app run build",
+    "build": "npm --workspace app run build && node infra/security/browser-secret-audit.mjs app/dist",
     "build:dev": "npm --workspace app run build:dev",
     "lint": "npm --workspace app run lint",
     "preview": "npm --workspace app run preview"

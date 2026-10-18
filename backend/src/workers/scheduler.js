@@ -1,6 +1,7 @@
 import { startEngineMonitorWorker } from "./engineMonitorWorker.js";
 import { startDocumentPublicationWorker } from './documentPublicationWorker.js';
 import { serialBootstrap } from './serialBootstrap.js';
+import {startResearchRefreshWorker, runResearchRefreshOnce} from './researchRefreshWorker.js';
 /**
  * Live prices are the latency-critical path. Start their recurring workers
  * and first ingestion immediately; do not hold them behind slow candle,
@@ -16,10 +17,9 @@ import { runIndexIngestionOnce, startIndexWorker } from "./indexWorker.js";
 import { runAnnouncementsBridgeOnce, startAnnouncementsWorker } from "./announcementsWorker.js";
 import { runFinancialCandidatesBridgeOnce, startFinancialCandidatesWorker } from "./financialStatementCandidatesWorker.js";
 import { runNewsBridgeOnce, startNewsWorker } from "./newsWorker.js";
-import { researchService } from "../services/research/researchService.js";
-import { ACTIVE_EXCHANGES } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 export async function startAllWorkers() {
+    const researchRefreshTask = startResearchRefreshWorker();
     const engineMonitorTask = startEngineMonitorWorker();
     const stopPriceWorker = startPriceWorker();
     const stopIndexWorker = startIndexWorker();
@@ -62,18 +62,12 @@ export async function startAllWorkers() {
             runPriceIngestionOnce({ respectTradingCalendar: false }),
             runIndexIngestionOnce({ respectTradingCalendar: false }),
         ]);
-        for (const exchange of ACTIVE_EXCHANGES) {
-            try {
-                await researchService.recomputeAllForExchange(exchange);
-            }
-            catch (err) {
-                logger.error({ err, exchange }, "Research recompute failed");
-            }
-        }
+        await runResearchRefreshOnce();
         logger.info("Background bootstrap complete");
     })().catch((err) => logger.error({ err }, "Background bootstrap failed"));
     logger.info("All recurring workers started; enrichment continuing in background");
     return () => {
+        researchRefreshTask.stop();
         engineMonitorTask.stop();
         stopPriceWorker();
         stopIndexWorker();

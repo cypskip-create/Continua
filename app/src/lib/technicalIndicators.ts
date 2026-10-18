@@ -43,6 +43,9 @@ export function anyIndicatorsOn(settings: IndicatorSettings): boolean {
  *  other charting app keep MA/RSI/etc. switched on as you move between symbols until
  *  you turn them off yourself. Persisted to localStorage so it also survives a reload. */
 const INDICATOR_STORAGE_KEY = "continua:chart-indicators";
+const copySettings = (s: IndicatorSettings): IndicatorSettings => ({overlays: {...s.overlays}, volume: s.volume, subPanel: s.subPanel});
+let retainedSettings: IndicatorSettings = copySettings(DEFAULT_INDICATOR_SETTINGS);
+let memoryOnly = false;
 
 function isValidIndicatorSettings(value: unknown): value is IndicatorSettings {
   if (!value || typeof value !== "object") return false;
@@ -52,34 +55,40 @@ function isValidIndicatorSettings(value: unknown): value is IndicatorSettings {
     typeof v.overlays.ma === "boolean" &&
     typeof v.overlays.ema === "boolean" &&
     typeof v.overlays.boll === "boolean" &&
-    typeof v.subPanel === "string"
+    typeof v.subPanel === "string" && ['none', 'macd', 'rsi', 'kdj', 'wr', 'cci'].includes(v.subPanel)
   );
 }
 
 export function loadIndicatorSettings(): IndicatorSettings {
-  if (typeof window === "undefined") return DEFAULT_INDICATOR_SETTINGS;
+  if (memoryOnly) return copySettings(retainedSettings);
+  if (typeof window === "undefined") return copySettings(retainedSettings);
   try {
     const raw = window.localStorage.getItem(INDICATOR_STORAGE_KEY);
-    if (!raw) return DEFAULT_INDICATOR_SETTINGS;
+    if (!raw) return copySettings(retainedSettings);
     const parsed = JSON.parse(raw);
-    if (!isValidIndicatorSettings(parsed)) return DEFAULT_INDICATOR_SETTINGS;
+    if (!isValidIndicatorSettings(parsed)) return copySettings(retainedSettings);
     // Merge over the default so older saved settings missing newer keys (e.g. `sar`,
     // `volume`, added later) still come back with well-defined values instead of undefined.
-    return {
+    retainedSettings = {
       overlays: { ...DEFAULT_INDICATOR_SETTINGS.overlays, ...parsed.overlays },
       volume: typeof (parsed as any).volume === "boolean" ? (parsed as any).volume : false,
       subPanel: parsed.subPanel ?? "none",
     };
+    return copySettings(retainedSettings);
   } catch {
-    return DEFAULT_INDICATOR_SETTINGS;
+    return copySettings(retainedSettings);
   }
 }
 
 export function saveIndicatorSettings(settings: IndicatorSettings) {
+  if (!isValidIndicatorSettings(settings)) return;
+  retainedSettings = copySettings(settings);
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(INDICATOR_STORAGE_KEY, JSON.stringify(settings));
+    memoryOnly = false;
   } catch {
+    memoryOnly = true;
     // Storage can fail (private browsing, quota) — indicator persistence is a nice-to-have, not critical.
   }
 }

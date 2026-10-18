@@ -8,7 +8,7 @@ from .research_components import afri_score
 from . import indicators
 
 
-def research_snapshot(security_id, quote, history, candles, dividends, now):
+def research_snapshot(security_id, quote, history, candles, dividends, now, sector=''):
     instant, stamp = parse(now), parse(quote.get('timestamp')) if quote else None
     if instant is None or stamp is None or stamp > instant or quote.get('source') == 'mock' or not positive(quote.get('lastPrice')):
         return None
@@ -29,7 +29,9 @@ def research_snapshot(security_id, quote, history, candles, dividends, now):
         if key in dated: ratios[key] = dated[key]
         else: ratios.pop(key, None)
     record = {'securityId': security_id, 'asOf': quote['timestamp'], **ratios}
-    score = afri_score(security_id, {'ratios': ratios, 'revenueGrowthYoy': yoy_growth(latest.get('revenue'), prior.get('revenue')) if prior else None,
+    score = afri_score(security_id, {'ratios': ratios, 'sector': sector, 'basis': latest.get('basis') or 'reviewed_filing',
+                                   'fiscalYear': latest.get('fiscalYear'), 'filingDateKnown': bool(latest.get('reportedAt')), 'sourceUrls': latest.get('sourceUrls') or [], 'calculatedAt': now,
+                                   'revenueGrowthYoy': yoy_growth(latest.get('revenue'), prior.get('revenue')) if prior else None,
                                    'epsGrowthYoy': yoy_growth(latest.get('eps'), prior.get('eps')) if prior else None})
     score['asOf'] = quote['timestamp']
     return {'ratios': record, 'score': score}

@@ -26,6 +26,7 @@ try {
   'scraper/migrations/20261016170000 processed research.sql',
   'scraper/migrations/20261018120000 processed cloud archive.sql',
   'supabase/migrations/20261018100000_canonical_financial_observations.sql',
+  'supabase/migrations/20261018200000_c_score_evidence.sql',
  ]) await db.exec(await readFile(new URL(path,root),'utf8'));
  // Reapplying the additive migration must not damage or duplicate data.
  await db.exec(await readFile(new URL('supabase/migrations/20261018100000_canonical_financial_observations.sql',root),'utf8'));
@@ -77,6 +78,44 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  async function history(symbol,kind='annual',limit=20,bypass=false){
   return (await db.query('SELECT payload FROM market.canonical_financial_history($1,$2,$3,$4) payload',['NSE:'+symbol,kind,limit,bypass])).rows.map(r=>r.payload);
  }
+ const daily=await observe('CGEN','History',[],'history');
+ await db.query(`UPDATE scraping.processed_research SET payload=jsonb_set(payload,'{history}',$2::jsonb) WHERE extraction_id=$1`,
+  [daily.extraction,JSON.stringify([{date:'2025-10-15',close:20,volume:null},{date:'2025-10-16',close:21,volume:0}])]);
+ const {publisherCloseQuery,publisherCandleQuery}=await import('../../backend/src/storage/repositories/publisherCandleQuery.js');
+ const dailyArgs=['NSE:CGEN','1d','2025-10-01','2025-10-31'];
+ const literalCloses=(await db.query(publisherCloseQuery,dailyArgs)).rows;
+ check(literalCloses.map(r=>[r.date,r.close,r.open,r.high,r.low,r.volume]),[['2025-10-15','20',null,null,null,null],['2025-10-16','21',null,null,null,'0']]);
+ check((await db.query(publisherCandleQuery,dailyArgs)).rows,[]);
+ await db.exec("UPDATE scraping.sources SET redistribution_allowed=false");
+ check((await db.query(publisherCloseQuery,dailyArgs)).rows,[]);
+ await db.exec("UPDATE scraping.sources SET redistribution_allowed=true");
+ await db.query(`INSERT INTO market.afri_scores(security_id,as_of,afri_score,afri_value,afri_growth,afri_health,afri_income,afri_risk,afri_quality,afri_momentum,inputs)
+  VALUES('NSE:CGEN',now(),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'{"methodologyVersion":"continua-c-score-v2"}')`);
+ check((await db.query("SELECT afri_score FROM market.afri_scores WHERE security_id='NSE:CGEN'")).rows,[{afri_score:null}]);
+ // Run the actual repository transaction against this embedded database.
+ // The pg pool is constructed with an unused loopback URL and never connects.
+ process.env.NODE_ENV='test';process.env.LOG_LEVEL='fatal';process.env.CACHE_DRIVER='memory';
+ process.env.DATABASE_URL='postgresql://fixture:fixture@127.0.0.1:1/continua_native_fixture';
+ const {pool}=await import('../../backend/src/storage/db.js');
+ const {scoresRepository}=await import('../../backend/src/storage/repositories/scoresRepository.js');
+ const originalConnect=pool.connect;
+ pool.connect=async()=>({query:db.query.bind(db),release(){}});
+ try {
+  const asOf='2026-10-16T12:00:00.000Z';
+  const ratio={securityId:'NSE:COOP',asOf,pe:10};
+  const score={securityId:'NSE:COOP',asOf,afriScore:null,afriValue:70,afriGrowth:null,afriHealth:null,afriIncome:null,afriRisk:null,afriQuality:60,afriMomentum:null,
+   inputs:{methodologyVersion:'continua-c-score-v2',calculatedAt:'2026-10-18T12:00:00.000Z',syntheticFixture:true}};
+  await db.query(`INSERT INTO market.afri_scores(security_id,as_of,afri_score,afri_value,afri_growth,afri_health,afri_income,afri_risk,afri_quality,afri_momentum,inputs)
+   VALUES('NSE:COOP','2027-01-01',50,50,50,50,50,50,50,50,'{"legacyFixture":true}')`);
+  check(await scoresRepository.upsertResearchSnapshot(ratio,score),true);
+  let rolledBack=false;try{await scoresRepository.upsertResearchSnapshot({...ratio,pe:999},{...score,afriValue:'invalid-numeric-fixture'});}catch{rolledBack=true;}
+  check(rolledBack,true);
+  check((await db.query("SELECT pe FROM market.computed_ratios WHERE security_id='NSE:COOP'")).rows[0].pe,'10');
+  const older='2026-10-15T12:00:00.000Z';
+  check(await scoresRepository.upsertResearchSnapshot({...ratio,asOf:older,pe:999},{...score,asOf:older}),false);
+  check(await scoresRepository.upsertResearchSnapshot({...ratio,pe:999},{...score,inputs:{...score.inputs,calculatedAt:'2026-10-17T12:00:00.000Z'}}),false);
+  check((await db.query("SELECT pe FROM market.computed_ratios WHERE security_id='NSE:COOP'")).rows[0].pe,'10');
+ } finally {pool.connect=originalConnect;await pool.end();}
  const cgen=await observe('CGEN','Profit/Loss',[
   [2021,'revenue',10e9],[2022,'revenue',12e9],[2023,'revenue',18e9],
   [2024,'revenue',20.94e9],[2024,'netIncome',526.05e6],[2024,'eps',6.56]]);

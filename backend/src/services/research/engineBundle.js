@@ -119,7 +119,10 @@ async function loadEngineBundle(symbol, exchange) {
         const scoringHistory=reportedResearchRows(quote,sorted);
         const latestScore=scoringHistory.at(-1),priorScore=scoringHistory.at(-2);
         const adjacent = latestScore && priorScore && latestScore.fiscalYear === priorScore.fiscalYear + 1 && (!latestScore.currency || !priorScore.currency || latestScore.currency===priorScore.currency);
-        const score = ratios ? { ...computeAfriScore(profile.id, { ratios, revenueGrowthYoy: adjacent ? yoyGrowth(latestScore.revenue, priorScore.revenue) : undefined, epsGrowthYoy: adjacent ? yoyGrowth(latestScore.eps, priorScore.eps) : undefined }), asOf: quote.timestamp } : null;
+        const score = ratios ? { ...await computeAfriScore(profile.id, { ratios,
+            sector: profile.company.sectorName, basis: latestScore?.basis ?? 'reviewed_filing', fiscalYear: latestScore?.fiscalYear,
+            filingDateKnown: Boolean(latestScore?.reportedAt), sourceUrls: latestScore?.sourceUrls ?? [], calculatedAt: new Date().toISOString(),
+            revenueGrowthYoy: adjacent ? yoyGrowth(latestScore.revenue, priorScore.revenue) : undefined, epsGrowthYoy: adjacent ? yoyGrowth(latestScore.eps, priorScore.eps) : undefined }), asOf: quote.timestamp } : null;
         const financialAnalysis = analyzeFinancials(sorted, profile.company.sectorName ?? "");
         const quality = dataQuality(quote, sorted);
         const state = {

@@ -16,6 +16,7 @@ RUN python -m pip check \
 COPY scraper-python/main.py scraper-python/browser_worker.py scraper-python/scraper_cli.py scraper-python/
 COPY scraper-python/continua_scraper/ scraper-python/continua_scraper/
 COPY engine-python/continua_engine/ engine-python/continua_engine/
+COPY backend/python/engine_calculations.py backend/python/engine_calculations.py
 COPY scraper/python/pdf_extract.py scraper/python/pdf_extract.py
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/engine-python \

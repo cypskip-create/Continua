@@ -1,5 +1,16 @@
 import { query } from "../db.js";
 export const securitiesRepository = {
+    async getSectorName(securityId) {
+        const result = await query(`SELECT sec.name FROM market.securities s
+            JOIN market.companies c ON c.id=s.company_id LEFT JOIN market.sectors sec ON sec.id=c.sector_id WHERE s.id=$1`, [securityId]);
+        return result.rows[0]?.name ?? null;
+    },
+    async listForResearchRefresh(exchange) {
+        return (await query(`SELECT s.id,s.symbol FROM market.securities s
+            LEFT JOIN market.afri_scores sc ON sc.security_id=s.id
+            WHERE s.exchange=$1 AND s.status<>'delisted'
+            ORDER BY COALESCE(sc.inputs->>'calculatedAt',''),s.symbol`, [exchange])).rows;
+    },
     async upsertSector(sector) {
         await query(`INSERT INTO market.sectors (id, name) VALUES ($1, $2)
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`, [sector.id, sector.name]);

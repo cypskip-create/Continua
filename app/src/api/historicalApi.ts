@@ -1,7 +1,11 @@
 import { continuaFetch } from "./client";
 import type { Candle, CandleInterval, RangePerformance } from "./types";
+import type {PriceObservation} from '@/lib/priceHistory';
 
 export const historicalApi = {
+  getCloses(symbol: string, range: {from: string; to: string}) {
+    return continuaFetch<PriceObservation[]>(`/price-history/${encodeURIComponent(symbol)}`, {params: {exchange: 'NSE', ...range}});
+  },
   getCandles(
     symbol: string,
     opts: { interval?: CandleInterval; from?: string; to?: string; exchange?: string } = {}

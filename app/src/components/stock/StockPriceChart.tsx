@@ -94,7 +94,8 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
   const lastPrice = data[data.length - 1]?.price || 0;
   const isPositive = lastPrice >= firstPrice;
   const lineColor = isPositive ? "hsl(var(--bull))" : "hsl(var(--bear))";
-  const gradientId = `gs-${symbol}-${timeframe}`;
+  const gradientId = `gs-${instanceId}-${symbol}-${timeframe}`;
+  const hasOHLC = data.every(d => d.open != null && d.high != null && d.low != null);
 
   // Overlay indicators (drawn on the price chart itself) + sub-panel indicator
   // (Volume / MACD / RSI, drawn in their own panel below since they need a
@@ -105,10 +106,11 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
     const boll = bollingerBands(data, 20, 2);
     const rsiVals = rsi(data, 14);
     const { macdLine, signal, histogram } = macd(data, 12, 26, 9);
-    const sar = parabolicSAR(data);
-    const { k: kdjK, d: kdjD, j: kdjJ } = kdj(data);
-    const wr = williamsR(data);
-    const cciVals = cci(data);
+    const absent = data.map(() => null);
+    const sar = hasOHLC ? parabolicSAR(data) : absent;
+    const { k: kdjK, d: kdjD, j: kdjJ } = hasOHLC ? kdj(data) : {k: absent, d: absent, j: absent};
+    const wr = hasOHLC ? williamsR(data) : absent;
+    const cciVals = hasOHLC ? cci(data) : absent;
     return data.map((d, i) => ({
       ...d,
       ma5: ma5[i], ma20: ma20[i], ma50: ma50[i],
@@ -120,9 +122,9 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
       kdjK: kdjK[i], kdjD: kdjD[i], kdjJ: kdjJ[i],
       wr: wr[i],
       cci: cciVals[i],
-      volume: d.volume ?? 0,
+      volume: d.volume,
     }));
-  }, [data]);
+  }, [data, hasOHLC]);
 
   const minPrice = Math.min(
     ...data.map(d => d.low ?? d.price),
@@ -132,7 +134,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
     ...data.map(d => d.high ?? d.price),
     ...(indicators.overlays.boll ? chartData.map(d => d.bollUpper ?? -Infinity).filter(Number.isFinite) : []),
   );
-  const padding = (maxPrice - minPrice) * 0.15;
+  const padding = Math.max((maxPrice - minPrice) * 0.15, Math.abs(lastPrice) * .005, .0001);
 
   // Price-axis zoom (TradingView/Moomoo style): dragging the right-hand price
   // scale stretches or compresses the visible price range around its own
@@ -692,27 +694,27 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
     <>
       {indicators.overlays.ma && (
         <>
-          <Line type="monotone" dataKey="ma5" stroke={OVERLAY_COLORS.ma5} strokeWidth={1.1} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
-          <Line type="monotone" dataKey="ma20" stroke={OVERLAY_COLORS.ma20} strokeWidth={1.1} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
-          <Line type="monotone" dataKey="ma50" stroke={OVERLAY_COLORS.ma50} strokeWidth={1.1} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+          <Line type="linear" dataKey="ma5" stroke={OVERLAY_COLORS.ma5} strokeWidth={1.1} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+          <Line type="linear" dataKey="ma20" stroke={OVERLAY_COLORS.ma20} strokeWidth={1.1} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+          <Line type="linear" dataKey="ma50" stroke={OVERLAY_COLORS.ma50} strokeWidth={1.1} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
         </>
       )}
       {indicators.overlays.ema && (
         <>
-          <Line type="monotone" dataKey="ema12" stroke={OVERLAY_COLORS.ema12} strokeWidth={1.1} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
-          <Line type="monotone" dataKey="ema26" stroke={OVERLAY_COLORS.ema26} strokeWidth={1.1} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+          <Line type="linear" dataKey="ema12" stroke={OVERLAY_COLORS.ema12} strokeWidth={1.1} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+          <Line type="linear" dataKey="ema26" stroke={OVERLAY_COLORS.ema26} strokeWidth={1.1} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
         </>
       )}
       {indicators.overlays.boll && (
         <>
-          <Line type="monotone" dataKey="bollUpper" stroke={OVERLAY_COLORS.boll} strokeWidth={1} strokeDasharray="3 3" dot={false} activeDot={false} isAnimationActive={false} connectNulls />
-          <Line type="monotone" dataKey="bollMid" stroke={OVERLAY_COLORS.boll} strokeWidth={1} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
-          <Line type="monotone" dataKey="bollLower" stroke={OVERLAY_COLORS.boll} strokeWidth={1} strokeDasharray="3 3" dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+          <Line type="linear" dataKey="bollUpper" stroke={OVERLAY_COLORS.boll} strokeWidth={1} strokeDasharray="3 3" dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+          <Line type="linear" dataKey="bollMid" stroke={OVERLAY_COLORS.boll} strokeWidth={1} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+          <Line type="linear" dataKey="bollLower" stroke={OVERLAY_COLORS.boll} strokeWidth={1} strokeDasharray="3 3" dot={false} activeDot={false} isAnimationActive={false} connectNulls />
         </>
       )}
-      {indicators.overlays.sar && (
+      {indicators.overlays.sar && hasOHLC && (
         <Line
-          type="monotone"
+          type="linear"
           dataKey="sar"
           stroke={OVERLAY_COLORS.sar}
           strokeWidth={0}
@@ -730,12 +732,12 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
       return (
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }} syncId={syncId}>
-            <XAxis dataKey="date" hide />
+            <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} hide />
             <YAxis hide domain={[0, 100]} width={showPriceAxis ? PRICE_AXIS_WIDTH : 0} />
             <Tooltip content={() => null} cursor={false} />
             <ReferenceLine y={70} stroke="hsl(var(--bear))" strokeOpacity={0.35} strokeDasharray="2 3" />
             <ReferenceLine y={30} stroke="hsl(var(--bull))" strokeOpacity={0.35} strokeDasharray="2 3" />
-            <Line type="monotone" dataKey="rsi" stroke="#a855f7" strokeWidth={1.3} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+            <Line type="linear" dataKey="rsi" stroke="#a855f7" strokeWidth={1.3} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
           </ComposedChart>
         </ResponsiveContainer>
       );
@@ -744,7 +746,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
       return (
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }} syncId={syncId}>
-            <XAxis dataKey="date" hide />
+            <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} hide />
             <YAxis hide width={showPriceAxis ? PRICE_AXIS_WIDTH : 0} />
             <Tooltip content={() => null} cursor={false} />
             <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeOpacity={0.35} />
@@ -753,8 +755,8 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
                 <Cell key={i} fill={(d.macdHist ?? 0) >= 0 ? "hsl(var(--bull))" : "hsl(var(--bear))"} />
               ))}
             </Bar>
-            <Line type="monotone" dataKey="macdLine" stroke="#3b82f6" strokeWidth={1.2} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
-            <Line type="monotone" dataKey="macdSignal" stroke="#f59e0b" strokeWidth={1.2} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+            <Line type="linear" dataKey="macdLine" stroke="#3b82f6" strokeWidth={1.2} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+            <Line type="linear" dataKey="macdSignal" stroke="#f59e0b" strokeWidth={1.2} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
           </ComposedChart>
         </ResponsiveContainer>
       );
@@ -763,14 +765,14 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
       return (
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }} syncId={syncId}>
-            <XAxis dataKey="date" hide />
+            <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} hide />
             <YAxis hide domain={[-20, 120]} width={showPriceAxis ? PRICE_AXIS_WIDTH : 0} />
             <Tooltip content={() => null} cursor={false} />
             <ReferenceLine y={80} stroke="hsl(var(--bear))" strokeOpacity={0.35} strokeDasharray="2 3" />
             <ReferenceLine y={20} stroke="hsl(var(--bull))" strokeOpacity={0.35} strokeDasharray="2 3" />
-            <Line type="monotone" dataKey="kdjK" stroke="#3b82f6" strokeWidth={1.2} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
-            <Line type="monotone" dataKey="kdjD" stroke="#f59e0b" strokeWidth={1.2} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
-            <Line type="monotone" dataKey="kdjJ" stroke="#a855f7" strokeWidth={1.2} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+            <Line type="linear" dataKey="kdjK" stroke="#3b82f6" strokeWidth={1.2} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+            <Line type="linear" dataKey="kdjD" stroke="#f59e0b" strokeWidth={1.2} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+            <Line type="linear" dataKey="kdjJ" stroke="#a855f7" strokeWidth={1.2} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
           </ComposedChart>
         </ResponsiveContainer>
       );
@@ -779,12 +781,12 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
       return (
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }} syncId={syncId}>
-            <XAxis dataKey="date" hide />
+            <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} hide />
             <YAxis hide domain={[-100, 0]} width={showPriceAxis ? PRICE_AXIS_WIDTH : 0} />
             <Tooltip content={() => null} cursor={false} />
             <ReferenceLine y={-20} stroke="hsl(var(--bear))" strokeOpacity={0.35} strokeDasharray="2 3" />
             <ReferenceLine y={-80} stroke="hsl(var(--bull))" strokeOpacity={0.35} strokeDasharray="2 3" />
-            <Line type="monotone" dataKey="wr" stroke="#ec4899" strokeWidth={1.3} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+            <Line type="linear" dataKey="wr" stroke="#ec4899" strokeWidth={1.3} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
           </ComposedChart>
         </ResponsiveContainer>
       );
@@ -793,13 +795,13 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
       return (
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }} syncId={syncId}>
-            <XAxis dataKey="date" hide />
+            <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} hide />
             <YAxis hide width={showPriceAxis ? PRICE_AXIS_WIDTH : 0} />
             <Tooltip content={() => null} cursor={false} />
             <ReferenceLine y={100} stroke="hsl(var(--bear))" strokeOpacity={0.35} strokeDasharray="2 3" />
             <ReferenceLine y={-100} stroke="hsl(var(--bull))" strokeOpacity={0.35} strokeDasharray="2 3" />
             <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeOpacity={0.3} />
-            <Line type="monotone" dataKey="cci" stroke="#0ea5e9" strokeWidth={1.3} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
+            <Line type="linear" dataKey="cci" stroke="#0ea5e9" strokeWidth={1.3} dot={false} activeDot={false} isAnimationActive={false} connectNulls />
           </ComposedChart>
         </ResponsiveContainer>
       );
@@ -807,8 +809,13 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
     return null;
   };
 
-  const hasSubPanel = indicators.subPanel !== "none";
-  const hasVolume = indicators.volume;
+  const unavailableRangeIndicator = !hasOHLC && (indicators.overlays.sar || ['kdj', 'wr', 'cci'].includes(indicators.subPanel));
+  const hasSubPanel = indicators.subPanel !== 'none' && (hasOHLC || !['kdj', 'wr', 'cci'].includes(indicators.subPanel));
+  const hasVolume = indicators.volume && data.some(d => d.volume != null);
+  const evidenceNotice = <div className="text-[0.625rem] text-muted-foreground px-2 py-1">
+    {unavailableRangeIndicator && <p>Selected range indicators need reported high/low prices and are unavailable for close-only history. Your selections are retained.</p>}
+    {indicators.volume && !hasVolume && <p>Reported trading volume is unavailable; missing volume is not zero.</p>}
+  </div>;
   // Bar width shared by the candle body/wick bars and the volume bars so the
   // two stay visually aligned bar-for-bar (same syncId keeps their x-position
   // locked together too).
@@ -817,10 +824,10 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
   const renderVolumePanel = () => (
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart data={chartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }} syncId={syncId}>
-        <XAxis dataKey="date" hide />
+        <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} hide />
         <YAxis hide domain={[0, (max: number) => max * 1.15]} width={showPriceAxis ? PRICE_AXIS_WIDTH : 0} />
         <Tooltip content={() => null} cursor={false} />
-        <Bar dataKey="volume" barSize={barSize} isAnimationActive={false} minPointSize={1}>
+        <Bar dataKey="volume" barSize={barSize} isAnimationActive={false}>
           {chartData.map((d, i) => (
             <Cell key={i} fill={d.up ? "hsl(var(--bull))" : "hsl(var(--bear))"} fillOpacity={0.55} />
           ))}
@@ -859,7 +866,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
               syncId={syncId}
             >
               {showGrid && <CartesianGrid horizontal vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.4} strokeDasharray="3 3" />}
-              <XAxis dataKey="date" hide />
+              <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} hide />
               <YAxis
                 hide={!showPriceAxis}
                 orientation="right"
@@ -892,6 +899,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
           {showPriceAxis && renderPriceAxisDragHandle()}
           {renderDrawLayer()}
         </div>
+        {evidenceNotice}
         {hasVolume && <VolumePanel />}
         {hasSubPanel && <div className="shrink-0 border-t border-border/30 pt-1" style={{ height: SUB_PANEL_HEIGHT }}>{renderSubPanel()}</div>}
       </div>
@@ -924,7 +932,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
               </linearGradient>
             </defs>
             {showGrid && <CartesianGrid horizontal vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.7} strokeDasharray="3 5" />}
-            <XAxis dataKey="date" hide />
+            <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} hide />
             <YAxis
               hide={!showPriceAxis}
               orientation="right"
@@ -958,6 +966,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
         {showPriceAxis && renderPriceAxisDragHandle()}
         {renderDrawLayer()}
       </div>
+      {evidenceNotice}
       {hasVolume && <VolumePanel />}
       {hasSubPanel && <div className="shrink-0 border-t border-border/30 pt-1" style={{ height: SUB_PANEL_HEIGHT }}>{renderSubPanel()}</div>}
     </div>

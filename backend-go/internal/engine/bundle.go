@@ -50,9 +50,9 @@ func NewBundleService(inputs BundleInputs, worker CalculationWorker, observer Sn
 	ctx, cancel := context.WithCancel(context.Background())
 	return &BundleService{Inputs: inputs, Worker: worker, Observer: observer, Cache: c, Now: time.Now, pending: map[string]*bundleFlight{}, generations: map[string]uint64{}, lifetime: ctx, cancel: cancel}
 }
-func BundleKey(exchange, symbol string) string { return "engine:v6:" + exchange + ":" + symbol }
+func BundleKey(exchange, symbol string) string { return "engine:v7:" + exchange + ":" + symbol }
 func LastGoodKey(exchange, symbol string) string {
-	return "engine:last-good:v3:" + exchange + ":" + symbol
+	return "engine:last-good:v4:" + exchange + ":" + symbol
 }
 
 func bundleAge(raw json.RawMessage, now time.Time) time.Duration {

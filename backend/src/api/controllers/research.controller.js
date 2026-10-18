@@ -16,8 +16,11 @@ export const researchController = {
             cache.getOrSet(CacheKeys.ratios(exchange, upperSymbol), 60_000, () => researchService.getRatios(security.id)),
             cache.getOrSet(CacheKeys.afriScore(exchange, upperSymbol), 60_000, () => researchService.getAfriScore(security.id)),
         ]);
-        if (!ratios || !score) {
-            const quote = await pricesRepository.getQuote(security.id);
+        if (score?.inputs?.methodologyVersion !== 'continua-c-score-v2') score = null;
+        const quote = await pricesRepository.getQuote(security.id);
+        const computedAt = Date.parse(String(score?.inputs?.calculatedAt ?? ''));
+        if (!quote) score = null;
+        if (!ratios || !score || !Number.isFinite(computedAt) || Date.now() - computedAt > 60000 || score.asOf !== quote?.timestamp) {
             if (quote) {
                 const recomputed = await researchService.recomputeAndStore(security.id, quote.lastPrice);
                 if (recomputed) {
@@ -27,11 +30,11 @@ export const researchController = {
                         cache.set(CacheKeys.ratios(exchange, upperSymbol), ratios, 60_000),
                         cache.set(CacheKeys.afriScore(exchange, upperSymbol), score, 60_000),
                     ]);
-                }
+                } else {ratios = null; score = null;}
             }
         }
         if (!ratios || !score)
-            throw new ApiError(404, "Research data not available yet for this symbol");
+            return res.json({data: {ratios: ratios ?? {securityId: security.id, asOf: null}, score: null, status: 'insufficient_evidence', reason: 'Comparable financial evidence is not available yet. No score is fabricated.'}});
         res.json({ data: { ratios, score } });
     },
 };

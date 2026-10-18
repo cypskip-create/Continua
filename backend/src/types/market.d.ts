@@ -237,15 +237,15 @@ export interface ComputedRatios {
 export interface AfriScoreResult {
     securityId: string;
     asOf: string;
-    afriScore: number;
-    afriValue: number;
-    afriGrowth: number;
-    afriHealth: number;
-    afriIncome: number;
-    afriRisk: number;
-    afriQuality: number;
-    afriMomentum: number;
-    inputs: Record<string, number | null>;
+    afriScore: number | null;
+    afriValue: number | null;
+    afriGrowth: number | null;
+    afriHealth: number | null;
+    afriIncome: number | null;
+    afriRisk: number | null;
+    afriQuality: number | null;
+    afriMomentum: number | null;
+    inputs: Record<string, unknown> & {methodologyVersion?: string; coveragePercent?: number; confidence?: string; reason?: string | null; sectorProfile?: string};
 }
 /** ── Company announcements (scraper bridge) ──────────────────────────── */
 export interface CompanyAnnouncement {

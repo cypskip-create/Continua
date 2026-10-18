@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const nativeResearchMethod = "continua-reviewed-components-v1"
+const nativeResearchMethod = "continua-reviewed-components-c-score-v2"
 
 type nativeResearchBasis struct {
 	Method        string  `json:"method"`

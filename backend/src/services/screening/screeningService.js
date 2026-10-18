@@ -50,7 +50,8 @@ export const screeningService = {
        LEFT JOIN market.sectors c ON c.id = co.sector_id
        LEFT JOIN market.live_quotes q ON q.security_id = s.id
        LEFT JOIN market.computed_ratios r ON r.security_id = s.id
-       LEFT JOIN market.afri_scores sc ON sc.security_id = s.id
+       LEFT JOIN market.afri_scores sc ON sc.security_id = s.id AND sc.inputs->>'methodologyVersion'='continua-c-score-v2'
+         AND sc.as_of=q.event_timestamp AND q.event_timestamp<=now() AND q.event_timestamp>=now()-interval '7 days' AND q.source<>'mock'
        WHERE ${conditions.join(" AND ")}
        ORDER BY ${sortColumn} ${direction} NULLS LAST
        LIMIT $${p}`, [...params, limit]);

@@ -4,33 +4,34 @@ const safeDiv = (a, b) => {
     return a / b;
 };
 const round4 = (n) => (n == null || !Number.isFinite(n) ? undefined : Math.round(n * 10000) / 10000);
+const positiveDiv = (a,b) => Number.isFinite(b) && b > 0 ? safeDiv(a,b) : undefined;
 export function computeRatios(i) {
-    const eps = i.eps != null && Number.isFinite(i.eps) ? i.eps : safeDiv(i.netIncome, i.sharesOutstanding);
-    const bookValuePerShare = safeDiv(i.totalEquity, i.sharesOutstanding);
+    const eps = i.eps != null && Number.isFinite(i.eps) ? i.eps : positiveDiv(i.netIncome, i.sharesOutstanding);
+    const bookValuePerShare = positiveDiv(i.totalEquity, i.sharesOutstanding);
     const marketCap = Number.isFinite(i.price) && Number.isFinite(i.sharesOutstanding) && i.sharesOutstanding > 0 ? i.price * i.sharesOutstanding : undefined;
     const enterpriseValue = marketCap != null && Number.isFinite(i.totalDebt) && Number.isFinite(i.cash) ? marketCap + i.totalDebt - i.cash : undefined;
-    const priceMomentum3m = i.priceHistory90d && i.priceHistory90d.length >= 2
+    const priceMomentum3m = i.priceHistory90d && i.priceHistory90d.length >= 40 && i.priceHistory90d.every(p => Number.isFinite(p) && p>0)
         ? round4((i.priceHistory90d[i.priceHistory90d.length - 1] - i.priceHistory90d[0]) / i.priceHistory90d[0])
         : undefined;
-    const volatility90d = i.priceHistory90d && i.priceHistory90d.length >= 3
+    const volatility90d = i.priceHistory90d && i.priceHistory90d.length >= 40 && i.priceHistory90d.every(p => Number.isFinite(p) && p>0)
         ? round4(computeAnnualizedVolatility(i.priceHistory90d))
         : undefined;
     return {
-        pe: round4(safeDiv(i.price, eps)),
-        ps: round4(safeDiv(marketCap, i.revenue)),
-        pb: round4(safeDiv(i.price, bookValuePerShare)),
-        evEbitda: round4(safeDiv(enterpriseValue, i.ebitda ?? undefined)),
-        roe: round4(safeDiv(i.netIncome, i.totalEquity)),
-        roa: round4(safeDiv(i.netIncome, i.totalAssets)),
-        roic: round4(safeDiv(i.operatingIncome ?? undefined, i.totalEquity == null || i.totalDebt == null ? undefined : i.totalEquity + i.totalDebt)),
-        grossMargin: round4(safeDiv(i.grossProfit ?? undefined, i.revenue)),
-        operatingMargin: round4(safeDiv(i.operatingIncome ?? undefined, i.revenue)),
-        netMargin: round4(safeDiv(i.netIncome, i.revenue)),
+        pe: round4(positiveDiv(i.price, eps)),
+        ps: round4(positiveDiv(marketCap, i.revenue)),
+        pb: round4(positiveDiv(i.price, bookValuePerShare)),
+        evEbitda: round4(positiveDiv(enterpriseValue, i.ebitda ?? undefined)),
+        roe: round4(positiveDiv(i.netIncome, i.totalEquity)),
+        roa: round4(positiveDiv(i.netIncome, i.totalAssets)),
+        roic: round4(positiveDiv(i.operatingIncome ?? undefined, i.totalEquity == null || i.totalDebt == null ? undefined : i.totalEquity + i.totalDebt)),
+        grossMargin: round4(positiveDiv(i.grossProfit ?? undefined, i.revenue)),
+        operatingMargin: round4(positiveDiv(i.operatingIncome ?? undefined, i.revenue)),
+        netMargin: round4(positiveDiv(i.netIncome, i.revenue)),
         dividendYield: round4(safeDiv(i.dividendPerShareTtm ?? undefined, i.price)),
-        payoutRatio: round4(safeDiv(i.dividendPerShareTtm ?? undefined, eps)),
-        currentRatio: round4(safeDiv(i.currentAssets ?? undefined, i.currentLiabilities ?? undefined)),
-        debtToEquity: round4(safeDiv(i.totalDebt ?? undefined, i.totalEquity)),
-        interestCoverage: round4(safeDiv(i.operatingIncome ?? undefined, i.interestExpense ?? undefined)),
+        payoutRatio: round4(positiveDiv(i.dividendPerShareTtm ?? undefined, eps)),
+        currentRatio: round4(positiveDiv(i.currentAssets ?? undefined, i.currentLiabilities ?? undefined)),
+        debtToEquity: round4(positiveDiv(i.totalDebt ?? undefined, i.totalEquity)),
+        interestCoverage: round4(positiveDiv(i.operatingIncome ?? undefined, i.interestExpense ?? undefined)),
         priceMomentum3m,
         volatility90d,
     };

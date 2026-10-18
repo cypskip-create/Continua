@@ -295,3 +295,7 @@ backend tests pass (17 existing skips); build and declaration checks pass.
 A temporary real Redis fixture passed ten concurrency/expiry/failure checks and
 was removed. See `docs/deployment/API_REQUEST_PROTECTION.md` for limits and the
 remaining memory-mode, hosted-auth and production-activation boundaries.
+
+## 2026-10-18: observed charts and C score release
+
+Persistent chart preferences, evidence-gated price history and backend market statistics are implemented. C score v2 uses one bounded Python calculator with sector-specific evidence requirements, nullable missing scores and atomic snapshot persistence. The additive production migration preserved all 19 existing score rows and verified eight nullable score columns. Registry refresh isolates issuer failures. Browser build auditing rejects server credential patterns while retaining expected public identifiers. Validation: 458 backend tests passed (six optional skipped), 120 frontend tests passed, 74 disposable PostgreSQL checks passed; build/type checks, Python and native parity checks are recorded in docs/deployment/OBSERVED_CHARTS_AND_C_SCORE.md. Financial archive backfill and the guarded native rewrite remain incomplete. Render scraper Supabase file credentials were removed and revision 3a2e4a5 was verified live; encrypted matching edge-origin secrets were configured on Worker and backend.

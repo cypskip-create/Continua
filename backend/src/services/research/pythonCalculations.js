@@ -17,22 +17,23 @@ export function pythonCalculation(operation, args) {
             env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, WINDIR: process.env.WINDIR, PYTHONUTF8: '1' },
         });
         const chunks = [];
-        let size = 0, settled = false;
+        let size = 0, settled = false, failure;
         const finish = (error, result) => { if (settled)
             return; settled = true; clearTimeout(timer); active--; if (error)
             reject(error);
         else
             resolve(result); };
-        const timer = setTimeout(() => { child.kill(); finish(new ApiError(503, 'Calculation deadline exceeded.')); }, 5000);
+        const stop = error => {failure ??= error; child.kill('SIGKILL');};
+        const timer = setTimeout(() => stop(new ApiError(503, 'Calculation deadline exceeded.')), 5000);
         child.on('error', () => finish(new ApiError(503, 'Calculation worker is unavailable.')));
-        child.stdin.on('error', () => finish(new ApiError(503, 'Calculation worker could not accept inputs.')));
+        child.stdin.on('error', () => stop(new ApiError(503, 'Calculation worker could not accept inputs.')));
         child.stdout.on('data', (chunk) => { size += chunk.length; if (size > 1048576) {
-            child.kill();
-            finish(new ApiError(503, 'Calculation output limit exceeded.'));
+            stop(new ApiError(503, 'Calculation output limit exceeded.'));
         }
-        else
+        else if (!failure)
             chunks.push(chunk); });
-        child.on('close', code => { if (code !== 0)
+        child.on('close', code => { if (failure) return finish(failure);
+        if (code !== 0)
             return finish(new ApiError(503, 'Calculation worker could not complete this request.')); try {
             finish(undefined, JSON.parse(Buffer.concat(chunks).toString('utf8')));
         }

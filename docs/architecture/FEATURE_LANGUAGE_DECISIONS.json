@@ -5,20 +5,82 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
-      "file": "backend/src/streaming/websocketServer.js; app/src/api/websocketClient.ts",
+      "file": "backend/python/engine_calculations.py",
+      "category": "Observed C score and sourced chart/statistics coverage",
+      "language": "Python numerical Engine, JavaScript compatibility API and existing frontend TypeScript",
+      "runtime": "Existing isolated secret-free Python calculator and current API",
+      "reason": "Centralize numerical C score in the already deployed Python worker, shared with the native candidate. Use nullable evidence, sector applicability and disclosed bounded thresholds. Reuse canonical SQL and private-source permission gates for price observations and statistics. Browser display validation and persisted preferences never manufacture prices or scores. No new service or native cutover is needed.",
+      "references": [
+        "https://docs.python.org/3/library/json.html",
+        "https://www.postgresql.org/docs/current/ddl-alter.html",
+        "https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage",
+        "https://www.morningstar.com/investing-terms/morningstar-rating-for-stocks",
+        "https://www.morningstar.com/investing-terms/uncertainty-rating"
+      ]
+    },
+    {
+      "file": "backend/src/services/marketData/marketStatistics.js",
+      "category": "Observed C score and sourced chart/statistics coverage",
+      "language": "Python numerical Engine, JavaScript compatibility API and existing frontend TypeScript",
+      "runtime": "Existing isolated secret-free Python calculator and current API",
+      "reason": "Centralize numerical C score in the already deployed Python worker, shared with the native candidate. Use nullable evidence, sector applicability and disclosed bounded thresholds. Reuse canonical SQL and private-source permission gates for price observations and statistics. Browser display validation and persisted preferences never manufacture prices or scores. No new service or native cutover is needed.",
+      "references": [
+        "https://docs.python.org/3/library/json.html",
+        "https://www.postgresql.org/docs/current/ddl-alter.html",
+        "https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage",
+        "https://www.morningstar.com/investing-terms/morningstar-rating-for-stocks",
+        "https://www.morningstar.com/investing-terms/uncertainty-rating"
+      ]
+    },
+    {
+      "file": "backend/src/streaming/websocketServer.js",
       "category": "Authenticate broadcasts and stop placeholder-key reconnect storms",
       "language": "Existing JavaScript backend compatibility repair and existing frontend TypeScript",
       "runtime": "Existing API socket server and browser polling",
       "reason": "Fix the deployed authorization boundary immediately without native cutover or a frontend redesign. Gate every broadcast, require quote symbol subscriptions, bound frames and auth concurrency, and retain existing HTTP quote polling on hosted pages until a server-minted browser socket credential is available. Never ship the backend gateway key to repair socket authentication.",
-      "references": ["https://github.com/websockets/ws/blob/master/doc/ws.md", "https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close_event"]
+      "references": [
+        "https://github.com/websockets/ws/blob/master/doc/ws.md",
+        "https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close_event"
+      ]
     },
     {
-      "file": "backend/src/api/middleware/edgeClientIdentity.js; backend/src/api/middleware/sharedRateStore.js; backend/src/api/middleware/workloadRateLimit.js",
+      "file": "backend/src/api/middleware/edgeClientIdentity.js",
       "category": "Production proxy identity and shared request protection",
       "language": "Go native implementation retained; JavaScript compatibility repair",
       "runtime": "Existing production API and configured cache connections",
       "reason": "Repair the deployed compatibility API without switching runtimes. Authenticate the dedicated edge secret before accepting visitor identity, retain verified-user buckets, and use atomic expiring counters with bounded provider calls and fail-closed errors when a remote limiter is configured. Keep single-process memory mode available without provisioning services.",
-      "references": ["https://expressjs.com/en/guide/behind-proxies/", "https://nodejs.org/api/crypto.html", "https://express-rate-limit.mintlify.app/reference/configuration", "https://redis.io/docs/latest/commands/eval/"]
+      "references": [
+        "https://expressjs.com/en/guide/behind-proxies/",
+        "https://nodejs.org/api/crypto.html",
+        "https://express-rate-limit.mintlify.app/reference/configuration",
+        "https://redis.io/docs/latest/commands/eval/"
+      ]
+    },
+    {
+      "file": "backend/src/api/middleware/sharedRateStore.js",
+      "category": "Production proxy identity and shared request protection",
+      "language": "Go native implementation retained; JavaScript compatibility repair",
+      "runtime": "Existing production API and configured cache connections",
+      "reason": "Repair the deployed compatibility API without switching runtimes. Authenticate the dedicated edge secret before accepting visitor identity, retain verified-user buckets, and use atomic expiring counters with bounded provider calls and fail-closed errors when a remote limiter is configured. Keep single-process memory mode available without provisioning services.",
+      "references": [
+        "https://expressjs.com/en/guide/behind-proxies/",
+        "https://nodejs.org/api/crypto.html",
+        "https://express-rate-limit.mintlify.app/reference/configuration",
+        "https://redis.io/docs/latest/commands/eval/"
+      ]
+    },
+    {
+      "file": "backend/src/api/middleware/workloadRateLimit.js",
+      "category": "Production proxy identity and shared request protection",
+      "language": "Go native implementation retained; JavaScript compatibility repair",
+      "runtime": "Existing production API and configured cache connections",
+      "reason": "Repair the deployed compatibility API without switching runtimes. Authenticate the dedicated edge secret before accepting visitor identity, retain verified-user buckets, and use atomic expiring counters with bounded provider calls and fail-closed errors when a remote limiter is configured. Keep single-process memory mode available without provisioning services.",
+      "references": [
+        "https://expressjs.com/en/guide/behind-proxies/",
+        "https://nodejs.org/api/crypto.html",
+        "https://express-rate-limit.mintlify.app/reference/configuration",
+        "https://redis.io/docs/latest/commands/eval/"
+      ]
     },
     {
       "file": "supabase/migrations/20261018160000_cloudflare_only_file_writes.sql",
@@ -26,10 +88,25 @@
       "language": "PostgreSQL",
       "runtime": "Existing row-level security policies",
       "reason": "A restrictive WITH CHECK policy blocks object inserts and updates even when old permissive upload policies still exist. Keep existing read and owner-removal rules authoritative and leave accounts and application database records unaffected. Verify denial, upsert behavior and owner boundaries in disposable PostgreSQL before deployment.",
-      "references": ["https://www.postgresql.org/docs/current/ddl-rowsecurity.html", "https://www.postgresql.org/docs/current/sql-createpolicy.html"]
+      "references": [
+        "https://www.postgresql.org/docs/current/ddl-rowsecurity.html",
+        "https://www.postgresql.org/docs/current/sql-createpolicy.html"
+      ]
     },
     {
-      "file": "infra/cloudflare/media.mjs; scraper-python/migrate_media.py",
+      "file": "infra/cloudflare/media.mjs",
+      "category": "Cloudflare profile and community media storage",
+      "language": "JavaScript at the existing Cloudflare platform entrypoint; Python for bounded migration",
+      "runtime": "Existing Worker with an isolated media R2 binding",
+      "reason": "Use the platform-native R2 binding to keep images outside Render and Supabase file storage. Validate account tokens against the fixed owned Supabase project, bound bytes and rates, validate raster signatures and scope writes to the verified owner. Public application media stays separate from private financial evidence. No additional service or backend TypeScript implementation is needed.",
+      "references": [
+        "https://developers.cloudflare.com/r2/get-started/workers-api/",
+        "https://developers.cloudflare.com/r2/api/workers/workers-api-reference/",
+        "https://supabase.com/docs/reference/javascript/auth-getuser"
+      ]
+    },
+    {
+      "file": "scraper-python/migrate_media.py",
       "category": "Cloudflare profile and community media storage",
       "language": "JavaScript at the existing Cloudflare platform entrypoint; Python for bounded migration",
       "runtime": "Existing Worker with an isolated media R2 binding",
@@ -65,7 +142,7 @@
       ]
     },
     {
-      "file": "backend/src/storage/researchObjects.js; backend-go/internal/objectstore",
+      "file": "backend/src/storage/researchObjects.js",
       "category": "Private Cloudflare prepared-object readers",
       "language": "Go for native readers; JavaScript compatibility adapter during existing production cutover gates",
       "runtime": "Existing API processes with bounded immutable-object caches and provider SDK clients",
@@ -132,17 +209,6 @@
       "references": [
         "https://docs.python.org/3.13/library/decimal.html",
         "https://www.postgresql.org/docs/current/explicit-locking.html"
-      ]
-    },
-    {
-      "file": "app/src/components/stock/PublisherFinancialTables.tsx",
-      "category": "Automatic processed financial chart presentation",
-      "language": "Existing React/TypeScript frontend; Python Engine series retained",
-      "runtime": "Existing browser chart library, no new backend runtime",
-      "reason": "Use the existing Recharts renderer for interactive bars/lines and the existing Python Engine's persisted decimal-derived series for values. The browser does not parse source financial cells, fabricate missing years, merge observations into verified statements or require per-stock chart code. Every available processed metric stays selectable in its source financial category.",
-      "references": [
-        "https://github.com/recharts/recharts",
-        "https://docs.python.org/3.13/library/decimal.html"
       ]
     },
     {
@@ -215,31 +281,6 @@
         "https://render.com/docs/outbound-bandwidth"
       ],
       "classificationBasis": "Small maintenance guard in existing runtime; no new TypeScript or additional service"
-    },
-    {
-      "file": "scraper-python/scheduled_collect.py",
-      "category": "scheduled collection",
-      "language": "Python",
-      "runtime": "Finite GitHub Actions process; SQL durable quotas and private R2",
-      "reason": "Reuse native asynchronous adapters, Selenium, Poppler and OCR without another runtime or Render bulk transport. Actions suits bounded filings/news jobs, not continuous quotes or synchronous HTTP admin controls. SQL reservations and session locks survive runner replacement; logical limits are not invoice caps.",
-      "references": [
-        "https://docs.python.org/3/library/asyncio-task.html",
-        "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows",
-        "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax"
-      ],
-      "classificationBasis": "Existing native library integration and scheduled-workload review; hosted activation requires storage and source checks"
-    },
-    {
-      "file": "backend/python/engine_calculations.py",
-      "category": "python",
-      "language": "Python",
-      "runtime": "Isolated subprocess",
-      "reason": "Implemented optional document/numerical worker, no database/provider secrets inherited; bounded process and output contracts. Installation and numerical parity alone do not prove faster production performance.",
-      "references": [
-        "https://docs.python.org/3/library/subprocess.html",
-        "https://github.com/jsvine/pdfplumber"
-      ],
-      "classificationBasis": "workload and integration review; not an individual benchmark"
     },
     {
       "file": "backend/scripts/applyCandleProvenanceMigration.js",
@@ -1829,18 +1870,6 @@
       "classificationBasis": "workload and integration review; not an individual benchmark"
     },
     {
-      "file": "backend/src/ingestion/pipelines/automaticDocumentPublication.js",
-      "category": "jobs",
-      "language": "JavaScript + SQL",
-      "runtime": "Node.js + PostgreSQL",
-      "reason": "Bounded asynchronous source I/O and durable SQL claims; preserve single-flight work, retries and scheduled ordering. Serial cold-start enrichment reduces shared-pool contention.",
-      "references": [
-        "https://nodejs.org/learn/asynchronous-work/dont-block-the-event-loop",
-        "https://www.postgresql.org/docs/current/sql-select.html"
-      ],
-      "classificationBasis": "workload and integration review; not an individual benchmark"
-    },
-    {
       "file": "backend/src/ingestion/pipelines/candlesIngestionPipeline.js",
       "category": "jobs",
       "language": "JavaScript + SQL",
@@ -2917,18 +2946,6 @@
     },
     {
       "file": "backend/src/streaming/pubsub.js",
-      "category": "storage",
-      "language": "JavaScript + SQL",
-      "runtime": "Node.js + PostgreSQL",
-      "reason": "Node manages async connection I/O; SQL owns transactions, queue claims, database constraints and row-level privacy. A language change must not move integrity into client-side checks.",
-      "references": [
-        "https://node-postgres.com/features/transactions",
-        "https://www.postgresql.org/docs/current/ddl-rowsecurity.html"
-      ],
-      "classificationBasis": "workload and integration review; not an individual benchmark"
-    },
-    {
-      "file": "backend/src/streaming/websocketServer.js",
       "category": "storage",
       "language": "JavaScript + SQL",
       "runtime": "Node.js + PostgreSQL",
@@ -4806,6 +4823,105 @@
         "https://www.postgresql.org/docs/current/tutorial-transactions.html"
       ],
       "classificationBasis": "workload and integration review; not an individual benchmark"
+    },
+    {
+      "file": "backend/src/api/routes/priceHistory.routes.js",
+      "category": "Current production compatibility implementation",
+      "language": "Go/Python native target; JavaScript compatibility reference",
+      "runtime": "Existing service, production cutover remains gated",
+      "reason": "Retain deployed behavior while the exhaustive native ledger tracks unported handlers, middleware and jobs; new C score calculations use the existing isolated Python worker.",
+      "references": [
+        "https://go.dev/doc/",
+        "https://docs.python.org/3/"
+      ]
+    },
+    {
+      "file": "backend/src/api/routes/statistics.routes.js",
+      "category": "Current production compatibility implementation",
+      "language": "Go/Python native target; JavaScript compatibility reference",
+      "runtime": "Existing service, production cutover remains gated",
+      "reason": "Retain deployed behavior while the exhaustive native ledger tracks unported handlers, middleware and jobs; new C score calculations use the existing isolated Python worker.",
+      "references": [
+        "https://go.dev/doc/",
+        "https://docs.python.org/3/"
+      ]
+    },
+    {
+      "file": "backend/src/services/research/collectedResearch.js",
+      "category": "Current production compatibility implementation",
+      "language": "Go/Python native target; JavaScript compatibility reference",
+      "runtime": "Existing service, production cutover remains gated",
+      "reason": "Retain deployed behavior while the exhaustive native ledger tracks unported handlers, middleware and jobs; new C score calculations use the existing isolated Python worker.",
+      "references": [
+        "https://go.dev/doc/",
+        "https://docs.python.org/3/"
+      ]
+    },
+    {
+      "file": "backend/src/storage/repositories/publisherCandleQuery.js",
+      "category": "Current production compatibility implementation",
+      "language": "Go/Python native target; JavaScript compatibility reference",
+      "runtime": "Existing service, production cutover remains gated",
+      "reason": "Retain deployed behavior while the exhaustive native ledger tracks unported handlers, middleware and jobs; new C score calculations use the existing isolated Python worker.",
+      "references": [
+        "https://go.dev/doc/",
+        "https://docs.python.org/3/"
+      ]
+    },
+    {
+      "file": "backend/src/workers/researchRefreshWorker.js",
+      "category": "Current production compatibility implementation",
+      "language": "Go/Python native target; JavaScript compatibility reference",
+      "runtime": "Existing service, production cutover remains gated",
+      "reason": "Retain deployed behavior while the exhaustive native ledger tracks unported handlers, middleware and jobs; new C score calculations use the existing isolated Python worker.",
+      "references": [
+        "https://go.dev/doc/",
+        "https://docs.python.org/3/"
+      ]
+    },
+    {
+      "file": "scraper/src/extraction/nseIndexSummary.test.js",
+      "category": "Current production compatibility implementation",
+      "language": "Go/Python native target; JavaScript compatibility reference",
+      "runtime": "Existing service, production cutover remains gated",
+      "reason": "Retain deployed behavior while the exhaustive native ledger tracks unported handlers, middleware and jobs; new C score calculations use the existing isolated Python worker.",
+      "references": [
+        "https://go.dev/doc/",
+        "https://docs.python.org/3/"
+      ]
+    },
+    {
+      "file": "scraper/src/storage/storagePolicy.js",
+      "category": "Current production compatibility implementation",
+      "language": "Go/Python native target; JavaScript compatibility reference",
+      "runtime": "Existing service, production cutover remains gated",
+      "reason": "Retain deployed behavior while the exhaustive native ledger tracks unported handlers, middleware and jobs; new C score calculations use the existing isolated Python worker.",
+      "references": [
+        "https://go.dev/doc/",
+        "https://docs.python.org/3/"
+      ]
+    },
+    {
+      "file": "supabase/migrations/20261018200000_c_score_evidence.sql",
+      "category": "Evidence and deployment guarantee",
+      "language": "PostgreSQL",
+      "runtime": "Existing database",
+      "reason": "Represent missing evidence honestly and prevent privileged browser credentials without another production service.",
+      "references": [
+        "https://www.postgresql.org/docs/current/ddl-alter.html",
+        "https://supabase.com/docs/guides/getting-started/api-keys"
+      ]
+    },
+    {
+      "file": "infra/security/browser-secret-audit.mjs",
+      "category": "Evidence and deployment guarantee",
+      "language": "JavaScript development-only audit",
+      "runtime": "Build-time artifact verification",
+      "reason": "Represent missing evidence honestly and prevent privileged browser credentials without another production service.",
+      "references": [
+        "https://www.postgresql.org/docs/current/ddl-alter.html",
+        "https://supabase.com/docs/guides/getting-started/api-keys"
+      ]
     }
   ],
   "nativeRewrite": {
@@ -5140,5 +5256,56 @@
         ]
       }
     ]
-  }
+  },
+  "frontendIntegrationDecisions": [
+    {
+      "file": "app/src/lib/priceHistory.ts",
+      "category": "Observed C score and sourced chart/statistics coverage",
+      "language": "Python numerical Engine, JavaScript compatibility API and existing frontend TypeScript",
+      "runtime": "Existing isolated secret-free Python calculator and current API",
+      "reason": "Centralize numerical C score in the already deployed Python worker, shared with the native candidate. Use nullable evidence, sector applicability and disclosed bounded thresholds. Reuse canonical SQL and private-source permission gates for price observations and statistics. Browser display validation and persisted preferences never manufacture prices or scores. No new service or native cutover is needed.",
+      "references": [
+        "https://docs.python.org/3/library/json.html",
+        "https://www.postgresql.org/docs/current/ddl-alter.html",
+        "https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage",
+        "https://www.morningstar.com/investing-terms/morningstar-rating-for-stocks",
+        "https://www.morningstar.com/investing-terms/uncertainty-rating"
+      ]
+    },
+    {
+      "file": "app/src/api/websocketClient.ts",
+      "category": "Authenticate broadcasts and stop placeholder-key reconnect storms",
+      "language": "Existing JavaScript backend compatibility repair and existing frontend TypeScript",
+      "runtime": "Existing API socket server and browser polling",
+      "reason": "Fix the deployed authorization boundary immediately without native cutover or a frontend redesign. Gate every broadcast, require quote symbol subscriptions, bound frames and auth concurrency, and retain existing HTTP quote polling on hosted pages until a server-minted browser socket credential is available. Never ship the backend gateway key to repair socket authentication.",
+      "references": [
+        "https://github.com/websockets/ws/blob/master/doc/ws.md",
+        "https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close_event"
+      ]
+    },
+    {
+      "file": "app/src/components/stock/PublisherFinancialTables.tsx",
+      "category": "Automatic processed financial chart presentation",
+      "language": "Existing React/TypeScript frontend; Python Engine series retained",
+      "runtime": "Existing browser chart library, no new backend runtime",
+      "reason": "Use the existing Recharts renderer for interactive bars/lines and the existing Python Engine's persisted decimal-derived series for values. The browser does not parse source financial cells, fabricate missing years, merge observations into verified statements or require per-stock chart code. Every available processed metric stays selectable in its source financial category.",
+      "references": [
+        "https://github.com/recharts/recharts",
+        "https://docs.python.org/3.13/library/decimal.html"
+      ]
+    }
+  ],
+  "nativeComponentDecisions": [
+    {
+      "file": "backend-go/internal/objectstore",
+      "category": "Private Cloudflare prepared-object readers",
+      "language": "Go for native readers; JavaScript compatibility adapter during existing production cutover gates",
+      "runtime": "Existing API processes with bounded immutable-object caches and provider SDK clients",
+      "reason": "Cloudflare supports AWS S3 SDK clients in both runtimes. Use maintained SDK signing, fixed owned endpoints, byte/hash/issuer verification, decoded gzip limits and current SQL source-permission checks. Keep migration-only database projections until every consumer and failure path is verified. Do not expose raw objects or storage credentials to the browser, and do not switch native production ahead of its route ledger.",
+      "references": [
+        "https://developers.cloudflare.com/r2/examples/aws/aws-sdk-js-v3/",
+        "https://developers.cloudflare.com/r2/examples/aws/aws-sdk-go/"
+      ]
+    }
+  ]
 }

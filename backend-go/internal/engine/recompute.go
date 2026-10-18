@@ -100,7 +100,19 @@ func (s *RecomputeService) compute(ctx context.Context, id string) (json.RawMess
 	if err != nil {
 		return nil, err
 	}
-	raw, err := s.Worker.Calculate(ctx, Request{Operation: "research_snapshot", Args: []any{id, quotes[0], history, candles, dividends, now.UTC().Format("2006-01-02T15:04:05.000Z")}})
+	profileRaw, err := s.Store.CompanyProfile(ctx, exchange, symbol)
+	if err != nil {
+		return nil, err
+	}
+	var profile struct {
+		Company struct {
+			SectorName string `json:"sectorName"`
+		} `json:"company"`
+	}
+	if json.Unmarshal(profileRaw, &profile) != nil {
+		return nil, errors.New("invalid research sector profile")
+	}
+	raw, err := s.Worker.Calculate(ctx, Request{Operation: "research_snapshot", Args: []any{id, quotes[0], history, candles, dividends, now.UTC().Format("2006-01-02T15:04:05.000Z"), profile.Company.SectorName}})
 	if err != nil {
 		return nil, err
 	}

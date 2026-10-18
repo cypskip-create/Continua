@@ -161,7 +161,7 @@ function compare(a,b,where='root'){
  for(const k of ak)compare(a[k],b[k],`${where}.${k}`);
 }
 for(const c of cases){
- const expected=JSON.parse(JSON.stringify(operations[c.operation](...c.args)??null));
+ const expected=JSON.parse(JSON.stringify((await operations[c.operation](...c.args))??null));
  const execution=spawnSync(python,[worker],{input:JSON.stringify(c),encoding:'utf8',timeout:5000,maxBuffer:4194304,
   env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,PYTHONUTF8:'1'}});
  if(execution.status!==0)throw new Error(`Python calculation failed: ${c.operation}`);

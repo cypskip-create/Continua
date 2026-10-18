@@ -3,39 +3,13 @@ import math
 import re
 from .numbers import finite
 
-WEIGHTS = {'value': .20, 'growth': .15, 'health': .20, 'income': .10, 'risk': .15, 'quality': .15, 'momentum': .05}
-
-
 def afri_score(security_id, inputs):
-    ratios = inputs['ratios']
-    def normalized(value, worst, best):
-        if not finite(value): return None
-        clamped = min(max(value, min(worst, best)), max(worst, best))
-        return (clamped - worst) / (best - worst) * 100
-    def weighted(parts):
-        usable = [(score, weight) for score, weight in parts if score is not None]
-        # Preserve the API's documented neutral rule, not a fabricated metric.
-        # All absent raw inputs below stay null and readiness remains separate.
-        if not usable: return 50
-        value = sum(score * weight for score, weight in usable) / sum(weight for _, weight in usable)
-        return math.floor(value * 10 + .5) / 10
-    def parts(spec, data):
-        return weighted([(normalized(data.get(field), worst, best), weight) for field, worst, best, weight in spec])
-    scores = {
-        'value': parts([('pe', 30, 5, .4), ('pb', 6, .5, .3), ('evEbitda', 20, 4, .3)], ratios),
-        'growth': parts([('revenueGrowthYoy', -.1, .3, .4), ('epsGrowthYoy', -.2, .4, .4), ('fiveYearRevenueCagr', -.05, .2, .2)], inputs),
-        'health': parts([('currentRatio', .5, 2.5, .35), ('debtToEquity', 2, 0, .4), ('interestCoverage', 1, 10, .25)], ratios),
-        'income': parts([('dividendYield', 0, .1, .6), ('payoutRatio', 1.1, .4, .4)], ratios),
-        'risk': parts([('volatility90d', .6, .15, .6), ('debtToEquity', 2.5, 0, .4)], ratios),
-        'quality': parts([('roe', 0, .3, .35), ('roa', 0, .15, .25), ('netMargin', 0, .3, .4)], ratios),
-        'momentum': parts([('priceMomentum3m', -.2, .3, 1)], ratios),
-    }
-    result = {'securityId': security_id, 'afriScore': math.floor(sum(scores[key] * WEIGHTS[key] for key in WEIGHTS) + .5)}
-    result.update({'afri' + key.capitalize(): value for key, value in scores.items()})
-    result['inputs'] = {key: ratios.get(key) for key in ['pe', 'pb', 'roe', 'debtToEquity', 'dividendYield', 'volatility90d']}
-    result['inputs'].update({key: inputs.get(key) for key in ['revenueGrowthYoy', 'epsGrowthYoy']})
-    return result
-
+    # One canonical implementation is shared with the deployed bounded worker.
+    import pathlib
+    import sys
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / 'backend' / 'python'))
+    from engine_calculations import c_score
+    return c_score(security_id, inputs)
 
 def company_diagnostics(history, sector=""):
     rows = sorted(history, key=lambda r: r['fiscalYear'])

@@ -289,10 +289,12 @@ for(const [file,[replacement,reason]] of Object.entries(remainingImplementations
  runtimeReplacements[file]=replacement;
 }
 for(const file of inventory.features.map(x=>x.file).filter(file=>/^backend\/src\/api\/routes\//.test(file))){
+ if(file==='backend/src/api/routes/statistics.routes.js')continue;
  runtimeReplacements[file]??='backend-go/internal/httpapi/server.go';
  partial[file]??='Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.';
 }
 const developmentReferences=new Set([
+ 'infra/security/browser-secret-audit.mjs',
  'backend/scripts/build.mjs','scraper/scripts/build.mjs',
  'backend/scripts/exportMigrationInventory.js','backend/scripts/serveNativeCheckoutSandbox.js',
  'backend/scripts/testNativePaymentLedger.js','backend/scripts/testNativePaystackProvider.js',
@@ -304,8 +306,9 @@ for(const item of inventory.features){
  const source=retiredUnused.has(item.file)?'':await readFile(new URL('../../'+item.file,import.meta.url),'utf8');
  const contract=declarationOnly.has(item.file);
  if(contract&&!/^export\s*\{\s*\}\s*;?$/.test(source.replace(/\/\*[\s\S]*?\*\//g,'').trim()))throw new Error('Declaration-only file gained runtime behavior: '+item.file);
- const retained=contract||developmentReferences.has(item.file)||item.file.endsWith('.sql')||item.file.endsWith('.py')||item.file.startsWith('supabase/functions/');
- const targetLanguage=contract?'Non-runtime declaration':item.file.endsWith('.sql')?'SQL':item.file.startsWith('supabase/functions/')?'JavaScript/Deno (provider-native)':nativePorts[item.file]?.[0].startsWith('engine-python/')||item.file.startsWith('scraper/')||item.file.endsWith('.py')||/backend\/src\/services\/(research|technical|analytics|portfolio|screening)\//.test(item.file)?'Python':'Go';
+ const providerNative=item.file.startsWith('supabase/functions/')||item.file.startsWith('infra/cloudflare/');
+ const retained=contract||developmentReferences.has(item.file)||item.file.endsWith('.sql')||item.file.endsWith('.py')||providerNative;
+ const targetLanguage=contract?'Non-runtime declaration':item.file.endsWith('.sql')?'SQL':providerNative?'JavaScript (provider-native)':nativePorts[item.file]?.[0].startsWith('engine-python/')||item.file.startsWith('scraper/')||item.file.endsWith('.py')||/backend\/src\/services\/(research|technical|analytics|portfolio|screening)\//.test(item.file)?'Python':'Go';
  const status=nativePorts[item.file]?'ported':retained?'retained':partial[item.file]?'partial':'pending';
  features.push({legacyFile:item.file,legacySha256:retiredUnused.get(item.file)??createHash('sha256').update(source).digest('hex'),targetLanguage,status,
   ...(retiredUnused.has(item.file)?{legacyReferenceRetired:'Unused runtime module removed after import audit; historical feature and native release gates preserved'}:{}),
@@ -335,7 +338,7 @@ const routes=modules.flatMap(m=>m.routes.map(r=>({legacyFile:m.file,...r,
  ...(r.method==='USE'?{mountResolution:(r.arguments??[]).map(argument=>({expression:argument,importedFrom:m.imports?.[argument]??null}))}:{}),
  status:partialRoutes.has(`${r.method} ${r.path}`)?'partial':'pending',
  note:partialRoutes.has(`${r.method} ${r.path}`)?'Native candidate handlers/SQL/Python exist; fixtures and read-only comparisons cover applicable paths. Full middleware/query/error, collector integration and hosted/load validation remain required.':r.path===null?'Static middleware/router expressions and named imports are now explicit; native behavioral mapping remains a separately validated release requirement.':'Full auth/validation/behavior port required.'})));
-const ledger={schemaVersion:1,asOf:'2026-10-15',scope:'Full native-runtime rewrite; not the already-deployed TS-to-JS migration.',productionCutoverAllowed:false,
+const ledger={schemaVersion:1,asOf:'2026-10-18',scope:'Full native-runtime rewrite; not the already-deployed TS-to-JS migration.',productionCutoverAllowed:false,
  nativeCandidate:'backend-go/cmd/continua (loopback only; readiness deliberately 503)',features,routes,
  requiredReleaseGates:['All source features ported or deliberately retained with rationale','Every route/mount resolved and tested','Native auth/ownership/entitlements parity','Signed payment/idempotency/recovery/test-mode parity','Every worker/adapter/publication/mapping ported','Financial numerical/missing-data/provenance parity','Restart/retry/queue/R2 recovery parity','Render-equivalent memory/concurrency/recovery load tests','Rollback and hosted smoke checks']};
 await writeFile(new URL('../../docs/architecture/NATIVE_REWRITE_LEDGER.json',import.meta.url),JSON.stringify(ledger,null,2)+'\n');
