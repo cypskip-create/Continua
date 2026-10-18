@@ -54,6 +54,9 @@ async def reconcile(*,migrate_raw=False):
             transfer_budget.active=budget
             storage=RawStorage.from_environment()
             archive=R2Archive(database,storage.r2,storage.materialize)
+            if migrate_raw:
+                from continua_scraper.documents import DocumentJobs
+                receipt['recollectionJobsRequeued']=await DocumentJobs(database).recover_unarchived('kenyanstocks')
             processor=ResearchProcessor(database,processed_storage=storage.r2)
             payload_mode=os.environ.get('PROCESSED_PAYLOAD_MODE','database')
             if payload_mode not in ('database','r2'):raise ValueError('Invalid processed payload mode')
@@ -83,6 +86,9 @@ async def reconcile(*,migrate_raw=False):
             except transfer_budget.TransferLimitReached:receipt['status']='budget-paused'
             finally:
                 receipt.update(budget.snapshot(),durationSeconds=round(time.monotonic()-started,3))
+                if migrate_raw:
+                    receipt['rawArchive']=await archive.inventory()
+                    if receipt['status']=='completed' and any(receipt['rawArchive'].values()):receipt['status']='checkpointed'
                 receipt['stockCoverage']=await processor.stock_coverage()
                 await database.query("UPDATE scraping.scheduled_runs SET status=%s,completed_at=now(),receipt=%s::jsonb WHERE id=%s",
                     ('completed' if receipt['status'] in ('completed','checkpointed') else receipt['status'],encode(receipt),run_id))

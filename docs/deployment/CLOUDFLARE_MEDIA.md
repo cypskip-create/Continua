@@ -44,3 +44,23 @@ frontend build and Wrangler dry-run. Migration tests cover exact owned URL
 matching, deterministic immutable copies, corruption rejection before database
 writes and idempotent publication. Authenticated live-user uploads require an
 actual signed-in application session; fixtures are not proof of such a session.
+
+## Verified production result — 18 October 2026
+
+Commit `51643b4` reached Cloudflare's Ready state. All 18 image hashes and sizes
+matched through the live Worker; three profiles and two posts switched URLs.
+The current profile/post references contain no Supabase Storage URLs. Live
+anonymous uploads return 401, unrelated origins return 403, the established
+Vercel preflight returns 204 and a private-financial prefix returns 404.
+
+The restrictive `continua_cloudflare_only_file_writes` policy is applied to
+`storage.objects` for `anon` and `authenticated`, blocking new inserts/upserts
+and updates without granting additional reads or removals. Its owner boundaries
+and denial behavior pass the disposable PostgreSQL fixture (62 total checks).
+Application account and business-data tables are unaffected.
+
+After separate explicit approval, all 18 original images were rechecked against
+their live Cloudflare copies and removed through the Storage API: three avatars,
+one banner and 14 post images (10,376,470 source bytes). No financial object was
+deleted. The financial legacy archive remains a separately bounded migration;
+this image cleanup does not establish overall Supabase quota compliance.

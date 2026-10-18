@@ -5,6 +5,14 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "supabase/migrations/20261018160000_cloudflare_only_file_writes.sql",
+      "category": "Prevent legacy clients refilling Supabase file storage",
+      "language": "PostgreSQL",
+      "runtime": "Existing row-level security policies",
+      "reason": "A restrictive WITH CHECK policy blocks object inserts and updates even when old permissive upload policies still exist. Keep existing read and owner-removal rules authoritative and leave accounts and application database records unaffected. Verify denial, upsert behavior and owner boundaries in disposable PostgreSQL before deployment.",
+      "references": ["https://www.postgresql.org/docs/current/ddl-rowsecurity.html", "https://www.postgresql.org/docs/current/sql-createpolicy.html"]
+    },
+    {
       "file": "infra/cloudflare/media.mjs; scraper-python/migrate_media.py",
       "category": "Cloudflare profile and community media storage",
       "language": "JavaScript at the existing Cloudflare platform entrypoint; Python for bounded migration",

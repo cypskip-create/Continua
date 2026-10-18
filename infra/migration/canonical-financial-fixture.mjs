@@ -13,7 +13,7 @@ let checks=0;
 const check=(a,b)=>{assert.deepEqual(a,b);checks++};
 try {
  await db.exec('CREATE ROLE anon; CREATE ROLE authenticated;');
- await db.exec('CREATE SCHEMA storage; CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean);');
+ await db.exec('CREATE SCHEMA storage; CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean); CREATE TABLE storage.objects(id integer PRIMARY KEY,bucket_id text,name text);');
  for(const path of [
   'supabase/migrations/030_market_schema.sql',
   'supabase/migrations/031_production_readiness.sql',
@@ -175,11 +175,34 @@ print(json.dumps([read_projection(row['payload']) for row in json.load(sys.stdin
  // An older large PDF must not monopolize migration ahead of collected issuer
  // views. The issuer with fewer completed financial categories advances first.
  const archiveSelection=archiveSource.match(/pending=await self.database.query\("""([\s\S]*?)"""/)[1].replaceAll('%%','%').replace('%s','$1');
- for(const [index,ticker]of ['PDF','CGEN','COOP'].entries())await db.query(`INSERT INTO scraping.raw_artifacts
+ for(const [index,ticker]of ['PDF','CGEN','COOP','MISSING'].entries())await db.query(`INSERT INTO scraping.raw_artifacts
   (source_id,adapter,sha256,document_url,storage_path,crawler_version,content_type,metadata)
   VALUES('kenyanstocks','fixture',$1,$2,$3,'fixture',$4,$5::jsonb)`,[(9000+index).toString(16).padStart(64,'0'),
    'https://fixture.invalid/archive-'+ticker,'legacy/'+ticker,index===0?'application/pdf':'text/html',JSON.stringify(index===0?{}:{ticker})]);
+ for(const [index,ticker]of ['PDF','CGEN','COOP'].entries())await db.query("INSERT INTO storage.objects(id,bucket_id,name) VALUES($1,'scraper-raw',$2)",[9000+index,'legacy/'+ticker]);
  const ordered=(await db.query(archiveSelection,[20])).rows.filter(row=>row.document_url.includes('/archive-'));
  check(ordered.map(row=>row.metadata.ticker??'PDF'),['COOP','CGEN','PDF']);
+ // A restrictive storage policy blocks old-client uploads/upserts without
+ // granting reads or deletions that the existing owner policies disallow.
+ const inventorySQL=archiveSource.match(/async def inventory\(self\):[\s\S]*?query\("""([\s\S]*?)"""/)[1].replaceAll('%%','%');
+ const archiveInventory=(await db.query(inventorySQL)).rows[0];
+ check(archiveInventory.legacy_missing_records,1);check(archiveInventory.legacy_retained_records,3);
+ await db.exec(`ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+  GRANT USAGE ON SCHEMA storage TO anon,authenticated;
+  GRANT SELECT,INSERT,UPDATE,DELETE ON storage.objects TO anon,authenticated;
+  CREATE POLICY fixture_storage_owner ON storage.objects FOR ALL TO authenticated
+   USING(id=1) WITH CHECK(id=1);
+  INSERT INTO storage.objects VALUES(1,'avatars'),(2,'private-fixture');`);
+ const cloudPolicy=await readFile(new URL('supabase/migrations/20261018160000_cloudflare_only_file_writes.sql',root),'utf8');
+ await db.exec(cloudPolicy);await db.exec(cloudPolicy);
+ await db.exec('SET ROLE authenticated');
+ check((await db.query('SELECT id FROM storage.objects')).rows,[{id:1}]);
+ for(const sql of ["INSERT INTO storage.objects VALUES(1,'avatars') ON CONFLICT(id) DO UPDATE SET bucket_id=EXCLUDED.bucket_id",
+   "UPDATE storage.objects SET bucket_id='avatars' WHERE id=1"]){
+  let blocked=false;try{await db.exec(sql);}catch(error){blocked=error.code==='42501';}check(blocked,true);
+ }
+ check((await db.query('DELETE FROM storage.objects WHERE id=2 RETURNING id')).rows,[]);
+ check((await db.query('DELETE FROM storage.objects WHERE id=1 RETURNING id')).rows,[{id:1}]);
+ await db.exec('RESET ROLE; SET ROLE anon');check((await db.query('SELECT id FROM storage.objects')).rows,[]);await db.exec('RESET ROLE');
  console.log(JSON.stringify({checks,fixtureCompanies:symbols.length,productionCompaniesProcessed:0,status:'passed'}));
 } catch(error) { console.error(error.message); process.exitCode=1; } finally {await db.close()}

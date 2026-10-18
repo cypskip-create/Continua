@@ -53,6 +53,7 @@ async def prepare(database,directory):
     rows=await database.query("SELECT bucket_id,name FROM storage.objects WHERE bucket_id=ANY(%s::text[]) ORDER BY bucket_id,name",(list(KINDS),))
     if len(rows)>100:raise ValueError('Legacy media batch exceeds reviewed inventory')
     directory=directory.resolve();directory.mkdir(parents=True,exist_ok=True)
+    if (directory/'manifest.json').exists():raise ValueError('Preserve the existing migration manifest; use a new directory for a new batch')
     readers={kind:PrivateSupabaseStorage(PROJECT,kind,os.environ['SUPABASE_SERVICE_ROLE_KEY'],max_bytes=MAX_BYTES) for kind in KINDS}
     entries=[]
     try:

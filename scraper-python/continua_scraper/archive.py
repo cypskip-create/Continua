@@ -64,6 +64,18 @@ class R2Archive:
         if self._task is not None:
             await asyncio.shield(self._task)
 
+    async def inventory(self):
+        rows=await self.database.query("""SELECT
+          count(*) FILTER(WHERE a.storage_path NOT LIKE 'r2://%%' AND EXISTS(
+            SELECT 1 FROM storage.objects o WHERE o.bucket_id='scraper-raw' AND o.name=replace(a.storage_path,chr(92),'/')))::integer AS legacy_retained_records,
+          count(*) FILTER(WHERE a.storage_path NOT LIKE 'r2://%%' AND NOT EXISTS(
+            SELECT 1 FROM storage.objects o WHERE o.bucket_id='scraper-raw' AND o.name=replace(a.storage_path,chr(92),'/')))::integer AS legacy_missing_records,
+          count(*) FILTER(WHERE a.metadata->>'r2ArchiveState'='quarantined')::integer AS quarantined_records,
+          (SELECT count(*)::integer FROM scraping.extractions e WHERE NOT EXISTS(
+            SELECT 1 FROM scraping.extraction_cloud_archive c WHERE c.extraction_id=e.id)) AS extraction_versions_pending
+          FROM scraping.raw_artifacts a""")
+        return rows[0]
+
     def _copy_raw(self,row):
         old=row["storage_path"]
         if old.startswith("r2://"):
@@ -111,6 +123,8 @@ class R2Archive:
             ORDER BY id ASC LIMIT 1) e ON true
           LEFT JOIN coverage c ON c.security_id='NSE:'||coalesce(a.metadata->>'ticker',e.entity->>'ticker')
           WHERE (a.storage_path NOT LIKE 'r2://%%' OR e.id IS NOT NULL)
+            AND (a.storage_path LIKE 'r2://%%' OR EXISTS(SELECT 1 FROM storage.objects o
+              WHERE o.bucket_id='scraper-raw' AND o.name=replace(a.storage_path,chr(92),'/')))
             AND COALESCE((a.metadata->>'r2ArchiveFailures')::integer,0)<5
             AND COALESCE(NULLIF(a.metadata->>'r2ArchiveRetryAt','')::timestamptz,'epoch'::timestamptz)<now()
           ORDER BY (a.source_id='kenyanstocks' AND a.content_type LIKE 'text/html%%'

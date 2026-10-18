@@ -4,10 +4,16 @@
 
 Permitted sources → existing bounded Python collector → immutable private R2
 originals → versioned Python extraction/processing → Supabase
-`scraping.processed_research` and reviewed `market` statements → shared SQL
+compact `scraping.processed_research` numerical projections and reviewed `market` statements → shared SQL
 `market.canonical_financial_history` → existing Go and compatibility API readers
 → stock details, expanded fundamentals and Engine. Frontend financial-history
 hooks no longer assemble a separate financial dataset.
+
+Full processed presentations are served from verified private R2 objects;
+Supabase retains queryable facts, account/application records and small archive
+receipts. Extraction bodies and remaining legacy originals are still moving
+through the separately measured migration. Application images use their own
+`continua-public-media` bucket and scoped Worker routes.
 
 SQL owns read reconciliation and current permission checks; Python remains the
 financial processing/calculation runtime; Go remains the native API runtime.
@@ -256,3 +262,26 @@ Archive scheduling also prioritizes already collected primary-source issuer HTML
 over the legacy PDF backlog, then issuers with fewer completed financial views.
 This removes the PDF-first migration bottleneck without a ticker allowlist or
 manual financial entry. Other archive sources remain in the same durable queue.
+
+## Media cutover and missing-source recovery
+
+The approved image migration is live in `51643b4`: all 18 images were verified
+through Cloudflare, three profile rows and two post rows switched URLs, and the
+18 Supabase image originals were removed after separate explicit approval.
+Their source-to-cloud mappings remain in the private migration audit receipt.
+No financial original was deleted. Old-client object inserts/updates are now
+blocked by a restrictive Storage RLS policy; account and application database
+records retain their existing access policies. See `docs/deployment/CLOUDFLARE_MEDIA.md`.
+
+Latest measured processed retirement: **175 rows**, no stale/missing current
+R2 receipts, and no bulk presentation fields in those projected rows. The raw
+inventory reports **8,687 retained legacy records**, **4,435 records without a
+retained Supabase source object**, and **11,857 extraction versions still needing
+catalogued snapshots**. These are database-record counts, not unique file counts.
+Do not claim archive completion or overall quota compliance from these results.
+
+Migration now skips known-missing legacy source objects using the storage
+inventory, reports that gap explicitly, and requeues known completed primary
+source jobs through existing automatic recollection. It never marks a missing
+source as copied. Remaining archive/recollection counts keep a sweep checkpointed
+rather than claiming full completion. Disposable PostgreSQL now passes 64 checks.
