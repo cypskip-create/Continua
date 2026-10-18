@@ -6,10 +6,12 @@
  * when available, so a higher-tier customer can be issued a higher limit
  * without a code change — just a different value in `market.api_keys`.
  */
-import rateLimit, { ipKeyGenerator } from "express-rate-limit";
+import { ipKeyGenerator } from "express-rate-limit";
 import { env } from "../../config/index.js";
+import {rateLimitClientIP} from './edgeClientIdentity.js';
+import {protectedRateLimit} from './sharedRateStore.js';
 export function apiRateLimit() {
-    return rateLimit({
+    return protectedRateLimit({
         windowMs: env.RATE_LIMIT_WINDOW_MS,
         limit: (req) => req.apiKey?.rateLimitPerMin ?? env.RATE_LIMIT_MAX_DEFAULT,
         // express-rate-limit requires IPv6 addresses to go through its own
@@ -22,10 +24,10 @@ export function apiRateLimit() {
                 return `engine:${req.apiKey?.id ?? "authenticated"}:${res.locals.engineUserId}`;
             // The website uses a first-party public key. A key-only bucket made
             // unrelated visitors throttle each other and broke periodic Markets reads.
-            return `${req.apiKey?.id ?? "public"}:${ipKeyGenerator(req.ip ?? "unknown")}`;
+            return `${req.apiKey?.id ?? "public"}:${ipKeyGenerator(rateLimitClientIP(req,res))}`;
         },
         standardHeaders: true,
         legacyHeaders: false,
         message: { error: "Rate limit exceeded — slow down.", code:"RATE_LIMITED" },
-    });
+    },'api');
 }

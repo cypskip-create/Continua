@@ -1,5 +1,6 @@
 import { env } from "../../config/index.js";
 import { ApiError } from "./errorHandler.js";
+import {createHash, timingSafeEqual} from 'node:crypto';
 function extractAdminKey(req) {
     const header = req.header("x-admin-key");
     if (header)
@@ -15,7 +16,9 @@ export function requireAdminKey() {
             return next(new ApiError(503, "Admin routes are not configured — set ADMIN_API_KEY."));
         }
         const presented = extractAdminKey(req);
-        if (!presented || presented !== env.ADMIN_API_KEY) {
+        if (!presented || presented.length > 512 || !timingSafeEqual(
+            createHash('sha256').update(presented).digest(),
+            createHash('sha256').update(env.ADMIN_API_KEY).digest())) {
             return next(new ApiError(401, "Missing or invalid admin key — supply 'X-Admin-Key: <key>'"));
         }
         next();

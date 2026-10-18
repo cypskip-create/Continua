@@ -273,10 +273,10 @@ No financial original was deleted. Old-client object inserts/updates are now
 blocked by a restrictive Storage RLS policy; account and application database
 records retain their existing access policies. See `docs/deployment/CLOUDFLARE_MEDIA.md`.
 
-Latest measured processed retirement: **175 rows**, no stale/missing current
+Latest measured processed retirement: **225 rows**, no stale/missing current
 R2 receipts, and no bulk presentation fields in those projected rows. The raw
-inventory reports **8,687 retained legacy records**, **4,435 records without a
-retained Supabase source object**, and **11,857 extraction versions still needing
+inventory reports **8,677 retained legacy records**, **4,435 records without a
+retained Supabase source object**, and **11,851 extraction versions still needing
 catalogued snapshots**. These are database-record counts, not unique file counts.
 Do not claim archive completion or overall quota compliance from these results.
 
@@ -285,3 +285,13 @@ inventory, reports that gap explicitly, and requeues known completed primary
 source jobs through existing automatic recollection. It never marks a missing
 source as copied. Remaining archive/recollection counts keep a sweep checkpointed
 rather than claiming full completion. Disposable PostgreSQL now passes 64 checks.
+
+## Production request protection
+
+The compatibility API now has bounded fail-closed counters, optional shared
+Redis/Upstash storage, separately authenticated edge visitor identity, and
+pre-verification admin plus billing/transfer/Engine workload limits. All 438
+backend tests pass (17 existing skips); build and declaration checks pass.
+A temporary real Redis fixture passed ten concurrency/expiry/failure checks and
+was removed. See `docs/deployment/API_REQUEST_PROTECTION.md` for limits and the
+remaining memory-mode, hosted-auth and production-activation boundaries.

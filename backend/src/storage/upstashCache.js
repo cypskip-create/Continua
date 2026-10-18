@@ -23,6 +23,10 @@ export class UpstashCache {
             throw new Error('Cache command failed');
         return data.result;
     }
+    async rateLimitCommand(parts) {
+        // Unlike ordinary cache misses, limiter failures must propagate.
+        return this.command(parts);
+    }
     async get(key) {
         try {
             const raw = await this.command(['GET', `${this.namespace}:${key}`]);

@@ -38,6 +38,7 @@ const EnvSchema = z.object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     PORT: z.coerce.number().default(4000),
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
+    CONTINUA_EDGE_ORIGIN_SECRET: z.string().min(32).max(512).optional(),
     WS_PORT: z.coerce.number().default(4001),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),

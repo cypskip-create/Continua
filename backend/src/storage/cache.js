@@ -59,6 +59,7 @@ class RedisCache {
         this.client = new Redis(env.REDIS_URL, {
             maxRetriesPerRequest: 3,
             lazyConnect: false,
+            commandTimeout: 1500,
         });
         this.client.on("error", (err) => logger.error({ err }, "Redis cache connection error"));
         this.client.on("connect", () => logger.info("Redis cache connected"));
@@ -74,6 +75,11 @@ class RedisCache {
             logger.warn({ err, key }, "Failed to parse cached value — treating as a miss");
             return null;
         }
+    }
+    async rateLimitCommand(parts) {
+        // Do not queue unverified requests while Redis is disconnected.
+        if(this.client.status!=='ready')throw new Error('Rate counter unavailable');
+        return this.client.call(...parts);
     }
     async set(key, value, ttlMs = 60_000) {
         await this.client.set(key, JSON.stringify(value), "PX", Math.max(1, ttlMs));

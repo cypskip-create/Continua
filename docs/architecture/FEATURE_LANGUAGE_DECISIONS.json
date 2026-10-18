@@ -5,6 +5,14 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "backend/src/api/middleware/edgeClientIdentity.js; backend/src/api/middleware/sharedRateStore.js; backend/src/api/middleware/workloadRateLimit.js",
+      "category": "Production proxy identity and shared request protection",
+      "language": "Go native implementation retained; JavaScript compatibility repair",
+      "runtime": "Existing production API and configured cache connections",
+      "reason": "Repair the deployed compatibility API without switching runtimes. Authenticate the dedicated edge secret before accepting visitor identity, retain verified-user buckets, and use atomic expiring counters with bounded provider calls and fail-closed errors when a remote limiter is configured. Keep single-process memory mode available without provisioning services.",
+      "references": ["https://expressjs.com/en/guide/behind-proxies/", "https://nodejs.org/api/crypto.html", "https://express-rate-limit.mintlify.app/reference/configuration", "https://redis.io/docs/latest/commands/eval/"]
+    },
+    {
       "file": "supabase/migrations/20261018160000_cloudflare_only_file_writes.sql",
       "category": "Prevent legacy clients refilling Supabase file storage",
       "language": "PostgreSQL",

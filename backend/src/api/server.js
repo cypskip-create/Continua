@@ -1,7 +1,9 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import { rateLimit } from "express-rate-limit";
+import {ipKeyGenerator} from 'express-rate-limit';
+import {protectedRateLimit} from './middleware/sharedRateStore.js';
+import {adminRateLimit, workloadRateLimit} from './middleware/workloadRateLimit.js';
 import { apiRouter } from "./routes/index.js";
 import { healthRoutes } from "./routes/health.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -17,6 +19,7 @@ import { ApiError } from "./middleware/errorHandler.js";
 import { verifyEngineRateLimitIdentity } from "./middleware/requireSubscriber.js";
 import { paystackWebhook } from "./routes/billing.routes.js";
 import { preAuthenticationRateLimit } from './middleware/preAuthenticationRateLimit.js';
+import {edgeClientIdentity, rateLimitClientIP} from './middleware/edgeClientIdentity.js';
 // Requests are already gated behind an API key (see apiKeyAuth below), so an
 // open CORS policy was never a data-access hole — but leaving `cors()` with
 // no origin option means ANY website can drive this API straight from a
@@ -49,19 +52,21 @@ export function createServer() {
     app.set("trust proxy", env.NODE_ENV === "production" ? env.TRUST_PROXY_HOPS : 0);
     app.use(helmet());
     app.use(cors(corsOptions));
+    app.use(edgeClientIdentity());
     app.use('/api/v1', preAuthenticationRateLimit());
-    app.post("/api/v1/billing/paystack/webhook", rateLimit({ windowMs: 60_000, limit: 120 }), express.raw({ type: "application/json", limit: "64kb" }), paystackWebhook);
+    app.post("/api/v1/billing/paystack/webhook", protectedRateLimit({ windowMs: 60_000, limit: 120,
+        keyGenerator: (req, res) => ipKeyGenerator(rateLimitClientIP(req, res)),
+        standardHeaders: true, legacyHeaders: false,
+    }, 'webhook'), express.raw({ type: "application/json", limit: "64kb" }), paystackWebhook);
     app.use(express.json({ limit: '512kb' }));
     app.use(requestLogger);
     // Health stays open and unmetered — infra probes shouldn't need a key or
     // count against anyone's rate limit.
     app.use("/api/v1", healthRoutes);
-    // Own auth (a single shared admin secret, not a public API key) and no
-    // rate limit — this is you reviewing financial statements, not a public
-    // consumer. Registered before the general apiKeyAuth+apiRouter mount so
+    // Own auth and pre-verification admission. Registered before the general apiKeyAuth+apiRouter mount so
     // a matched admin route never falls through to public-key auth.
-    app.use("/api/v1/admin", requireAdminKey(), adminFinancialsRoutes);
-    app.use("/api/v1", apiKeyAuth(), verifyEngineRateLimitIdentity, apiRateLimit(), apiRouter);
+    app.use("/api/v1/admin", adminRateLimit(), requireAdminKey(), adminFinancialsRoutes);
+    app.use("/api/v1", apiKeyAuth(), verifyEngineRateLimitIdentity, apiRateLimit(), workloadRateLimit(), apiRouter);
     app.use((_req, res) => res.status(404).json({ error: "Not found" }));
     app.use(errorHandler);
     return app;

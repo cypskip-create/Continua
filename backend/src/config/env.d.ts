@@ -30,6 +30,7 @@ declare const EnvSchema: z.ZodObject<{
     NODE_ENV: z.ZodDefault<z.ZodEnum<["development", "test", "production"]>>;
     PORT: z.ZodDefault<z.ZodNumber>;
     TRUST_PROXY_HOPS: z.ZodDefault<z.ZodNumber>;
+    CONTINUA_EDGE_ORIGIN_SECRET: z.ZodOptional<z.ZodString>;
     WS_PORT: z.ZodDefault<z.ZodNumber>;
     LOG_LEVEL: z.ZodDefault<z.ZodEnum<["fatal", "error", "warn", "info", "debug", "trace"]>>;
     DATABASE_URL: z.ZodString;
@@ -83,6 +84,7 @@ declare const EnvSchema: z.ZodObject<{
     NODE_ENV: "test" | "development" | "production";
     PORT: number;
     TRUST_PROXY_HOPS: number;
+    CONTINUA_EDGE_ORIGIN_SECRET?: string | undefined;
     WS_PORT: number;
     LOG_LEVEL: "fatal" | "error" | "warn" | "info" | "debug" | "trace";
     DATABASE_URL: string;
@@ -141,6 +143,7 @@ declare const EnvSchema: z.ZodObject<{
     NODE_ENV?: "test" | "development" | "production" | undefined;
     PORT?: number | undefined;
     TRUST_PROXY_HOPS?: number | undefined;
+    CONTINUA_EDGE_ORIGIN_SECRET?: string | undefined;
     WS_PORT?: number | undefined;
     LOG_LEVEL?: "fatal" | "error" | "warn" | "info" | "debug" | "trace" | undefined;
     SUPABASE_URL?: string | undefined;
@@ -189,6 +192,7 @@ export declare const env: {
     NODE_ENV: "test" | "development" | "production";
     PORT: number;
     TRUST_PROXY_HOPS: number;
+    CONTINUA_EDGE_ORIGIN_SECRET?: string | undefined;
     WS_PORT: number;
     LOG_LEVEL: "fatal" | "error" | "warn" | "info" | "debug" | "trace";
     DATABASE_URL: string;

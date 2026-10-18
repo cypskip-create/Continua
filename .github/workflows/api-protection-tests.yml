@@ -1,0 +1,35 @@
+name: API request protection
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**', 'infra/migration/compatibility-rate-fixture.mjs', '.github/workflows/api-protection-tests.yml']
+  pull_request:
+    paths: ['backend/**', 'infra/migration/compatibility-rate-fixture.mjs', '.github/workflows/api-protection-tests.yml']
+permissions:
+  contents: read
+jobs:
+  protection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      redis-fixture:
+        image: redis@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+        ports: ['127.0.0.1:6379:6379']
+        options: >-
+          --user redis --read-only --cap-drop ALL --security-opt no-new-privileges
+          --memory 32m --memory-swap 32m --cpus 0.5 --pids-limit 32
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci --prefix backend
+      - run: npm --prefix backend test -- --run
+      - run: npm --prefix backend run build
+      - run: node backend/node_modules/typescript/bin/tsc --noEmit -p backend/tsconfig.json
+      - run: node infra/migration/compatibility-rate-fixture.mjs
+        env:
+          RATE_LIMIT_REDIS_FIXTURE_URL: redis://127.0.0.1:6379/14
