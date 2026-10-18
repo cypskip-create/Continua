@@ -5,6 +5,14 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "backend/src/streaming/websocketServer.js; app/src/api/websocketClient.ts",
+      "category": "Authenticate broadcasts and stop placeholder-key reconnect storms",
+      "language": "Existing JavaScript backend compatibility repair and existing frontend TypeScript",
+      "runtime": "Existing API socket server and browser polling",
+      "reason": "Fix the deployed authorization boundary immediately without native cutover or a frontend redesign. Gate every broadcast, require quote symbol subscriptions, bound frames and auth concurrency, and retain existing HTTP quote polling on hosted pages until a server-minted browser socket credential is available. Never ship the backend gateway key to repair socket authentication.",
+      "references": ["https://github.com/websockets/ws/blob/master/doc/ws.md", "https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close_event"]
+    },
+    {
       "file": "backend/src/api/middleware/edgeClientIdentity.js; backend/src/api/middleware/sharedRateStore.js; backend/src/api/middleware/workloadRateLimit.js",
       "category": "Production proxy identity and shared request protection",
       "language": "Go native implementation retained; JavaScript compatibility repair",

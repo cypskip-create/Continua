@@ -25,6 +25,8 @@ class ContinuaRealtimeClient {
   private connecting = false;
   private reconnectAttempt = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private authorized = false;
+  private rejected = false;
 
   /** symbol -> set of listeners currently interested in it */
   private quoteListeners = new Map<string, Set<QuoteListener>>();
@@ -42,6 +44,9 @@ class ContinuaRealtimeClient {
   }
 
   private ensureConnected() {
+    // Hosted pages use the server-key HTTP gateway and existing quote polling.
+    // Never authenticate production sockets with a development placeholder.
+    if (import.meta.env.PROD || this.rejected) return;
     if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) return;
     if (this.connecting) return;
     this.connecting = true;
@@ -65,6 +70,7 @@ class ContinuaRealtimeClient {
       }
       if (!parsed || typeof parsed !== "object") return;
       if ((parsed as { type?: string }).type === "authenticated") {
+        this.authorized = true;
         this.reconnectAttempt = 0;
         this.notifyConnection(true);
         if (this.subscribedSymbols.length > 0) {
@@ -78,12 +84,15 @@ class ContinuaRealtimeClient {
       }
     };
 
-    socket.onclose = () => {
+    socket.onclose = (event) => {
+      if (this.socket !== socket) return;
       this.connecting = false;
+      this.authorized = false;
       this.socket = null;
+      if (event.code === 1008) this.rejected = true;
       this.notifyConnection(false);
       // Only keep trying to reconnect while someone still wants data.
-      if (this.subscribedSymbols.length > 0 || this.corporateActionListeners.size > 0) {
+      if (!this.rejected && (this.subscribedSymbols.length > 0 || this.corporateActionListeners.size > 0)) {
         this.scheduleReconnect();
       }
     };
@@ -104,7 +113,7 @@ class ContinuaRealtimeClient {
   }
 
   private send(msg: { action: "subscribe" | "unsubscribe"; symbols: string[] }) {
-    if (this.socket?.readyState === WebSocket.OPEN) {
+    if (this.authorized && this.socket?.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(msg));
     }
   }
@@ -114,7 +123,7 @@ class ContinuaRealtimeClient {
   }
 
   isConnected(): boolean {
-    return this.socket?.readyState === WebSocket.OPEN;
+    return this.authorized && this.socket?.readyState === WebSocket.OPEN;
   }
 
   onConnectionChange(listener: (connected: boolean) => void): () => void {
@@ -148,13 +157,21 @@ class ContinuaRealtimeClient {
         this.quoteListeners.delete(key);
         this.send({ action: "unsubscribe", symbols: [key] });
       }
+      this.closeIfIdle();
     };
   }
 
   onCorporateAction(listener: CorporateActionListener): () => void {
     this.corporateActionListeners.add(listener);
     this.ensureConnected();
-    return () => this.corporateActionListeners.delete(listener);
+    return () => {this.corporateActionListeners.delete(listener); this.closeIfIdle();};
+  }
+
+  private closeIfIdle() {
+    if (this.quoteListeners.size || this.corporateActionListeners.size) return;
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
+    this.socket?.close(1000, 'No active subscriptions');
   }
 }
 

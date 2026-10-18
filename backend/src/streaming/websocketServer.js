@@ -38,10 +38,13 @@ export function startWebSocketServer(httpServer) {
     // Services. Railway happened to expose a second port as its own
     // subdomain, which masked this constraint; that's not a general
     // assumption we can keep making about every host.
-    const wss = new WebSocketServer({ server: httpServer });
+    const wss = new WebSocketServer({ server: httpServer, maxPayload: 16 * 1024, perMessageDeflate: false });
     const clients = new Set();
+    let authenticating = 0;
     wss.on("connection", (socket) => {
+        if (clients.size >= 128) { socket.close(1013, 'Connection capacity reached'); return; }
         const state = { socket, symbols: new Set(), authorized: !env.API_KEY_AUTH_ENABLED };
+        let authPending = false, messages = 0, windowStart = Date.now();
         clients.add(state);
         const authTimer = setTimeout(() => {
             if (!state.authorized)
@@ -49,11 +52,18 @@ export function startWebSocketServer(httpServer) {
         }, 5000);
         authTimer.unref();
         socket.on("message", (raw) => {
+            if (Date.now() - windowStart >= 60_000) {windowStart = Date.now(); messages = 0;}
+            if (++messages > 120) {socket.close(1008, 'Message limit exceeded'); return;}
             try {
                 const msg = JSON.parse(raw.toString());
+                if (!msg || typeof msg !== 'object' || Array.isArray(msg)) throw Error('Invalid message');
                 if (msg.action === "authenticate" && typeof msg.apiKey === "string") {
+                    if (state.authorized) {socket.send(JSON.stringify({type: 'authenticated'})); return;}
+                    if (authPending || authenticating >= 32 || msg.apiKey.length > 512) {socket.close(1008, 'Authentication unavailable'); return;}
+                    authPending = true; authenticating++;
                     void isAuthorized(msg.apiKey)
                         .then((ok) => {
+                        if (socket.readyState !== WebSocket.OPEN) return;
                         if (!ok) {
                             socket.close(1008, "Invalid API key");
                             return;
@@ -64,9 +74,9 @@ export function startWebSocketServer(httpServer) {
                         logger.info({ clientCount: clients.size }, "WebSocket client authenticated");
                     })
                         .catch((err) => {
-                        logger.error({ err }, "WebSocket auth check failed");
+                        logger.warn("WebSocket auth check failed");
                         socket.close(1011, "Authentication failed");
-                    });
+                    }).finally(() => {authPending = false; authenticating--;});
                     return;
                 }
                 if (!state.authorized) {
@@ -74,9 +84,13 @@ export function startWebSocketServer(httpServer) {
                     return;
                 }
                 if (msg.action === "subscribe" && Array.isArray(msg.symbols)) {
-                    msg.symbols.forEach((s) => state.symbols.add(s.toUpperCase()));
+                    if (msg.symbols.length > 100 || msg.symbols.some(s => typeof s !== 'string' || !/^[A-Z0-9.-]{1,20}$/i.test(s))) {socket.close(1008, 'Invalid symbols'); return;}
+                    const next = new Set([...state.symbols, ...msg.symbols.map(s => s.toUpperCase())]);
+                    if (next.size > 100) {socket.close(1008, 'Subscription limit exceeded'); return;}
+                    state.symbols = next;
                 }
                 else if (msg.action === "unsubscribe" && Array.isArray(msg.symbols)) {
+                    if (msg.symbols.length > 100 || msg.symbols.some(s => typeof s !== 'string')) {socket.close(1008, 'Invalid symbols'); return;}
                     msg.symbols.forEach((s) => state.symbols.delete(s.toUpperCase()));
                 }
             }
@@ -84,6 +98,7 @@ export function startWebSocketServer(httpServer) {
                 socket.send(JSON.stringify({ type: "error", message: "Invalid message — expected JSON { action, symbols }" }));
             }
         });
+        socket.on('error', () => socket.terminate());
         socket.on("close", () => {
             clearTimeout(authTimer);
             clients.delete(state);
@@ -93,12 +108,13 @@ export function startWebSocketServer(httpServer) {
     const unsubscribe = marketEventBus.onEvent((event) => {
         const symbol = event.type === "quote" ? event.payload.symbol : undefined;
         for (const client of clients) {
-            if (client.socket.readyState !== WebSocket.OPEN)
+            if (!client.authorized || client.socket.readyState !== WebSocket.OPEN)
                 continue;
             // No symbol filter (e.g. corporate_action broadcasts) → send to everyone
             // subscribed to anything; symbol-scoped events only go to matching subs.
-            if (symbol && client.symbols.size > 0 && !client.symbols.has(symbol))
+            if (symbol && !client.symbols.has(symbol))
                 continue;
+            if (client.socket.bufferedAmount > 512 * 1024) {client.socket.close(1013, 'Consumer too slow'); continue;}
             client.socket.send(JSON.stringify(event));
         }
     });
