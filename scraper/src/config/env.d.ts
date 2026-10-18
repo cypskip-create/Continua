@@ -28,8 +28,6 @@ declare const EnvSchema: z.ZodObject<{
     R2_ARCHIVE_CRON: z.ZodDefault<z.ZodString>;
     R2_ARCHIVE_BATCH_SIZE: z.ZodDefault<z.ZodNumber>;
     RAW_STORAGE_LOCAL_PATH: z.ZodDefault<z.ZodString>;
-    SUPABASE_URL: z.ZodOptional<z.ZodString>;
-    SUPABASE_SERVICE_ROLE_KEY: z.ZodOptional<z.ZodString>;
     SUPABASE_STORAGE_BUCKET: z.ZodDefault<z.ZodString>;
     DEFAULT_REQUESTS_PER_SECOND: z.ZodDefault<z.ZodNumber>;
     DEFAULT_REQUEST_TIMEOUT_MS: z.ZodDefault<z.ZodNumber>;
@@ -77,8 +75,6 @@ declare const EnvSchema: z.ZodObject<{
     R2_ACCESS_KEY_ID?: string | undefined;
     R2_SECRET_ACCESS_KEY?: string | undefined;
     R2_BUCKET?: string | undefined;
-    SUPABASE_URL?: string | undefined;
-    SUPABASE_SERVICE_ROLE_KEY?: string | undefined;
 }, {
     DATABASE_URL: string;
     PDF_NATIVE_ENGINE?: "poppler" | "python" | undefined;
@@ -96,8 +92,6 @@ declare const EnvSchema: z.ZodObject<{
     R2_ARCHIVE_CRON?: string | undefined;
     R2_ARCHIVE_BATCH_SIZE?: number | undefined;
     RAW_STORAGE_LOCAL_PATH?: string | undefined;
-    SUPABASE_URL?: string | undefined;
-    SUPABASE_SERVICE_ROLE_KEY?: string | undefined;
     SUPABASE_STORAGE_BUCKET?: string | undefined;
     DEFAULT_REQUESTS_PER_SECOND?: number | undefined;
     DEFAULT_REQUEST_TIMEOUT_MS?: number | undefined;
@@ -147,7 +141,5 @@ export declare const env: {
     R2_ACCESS_KEY_ID?: string | undefined;
     R2_SECRET_ACCESS_KEY?: string | undefined;
     R2_BUCKET?: string | undefined;
-    SUPABASE_URL?: string | undefined;
-    SUPABASE_SERVICE_ROLE_KEY?: string | undefined;
 };
 export {};

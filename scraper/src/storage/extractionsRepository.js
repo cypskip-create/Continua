@@ -55,6 +55,7 @@ export async function findUnextracted(limit = 50) {
        ORDER BY e.extracted_at DESC,e.id DESC LIMIT 1) e ON true
      WHERE (e.id IS NULL OR (a.content_type ILIKE '%pdf%' AND length(trim(coalesce(e.text,'')))<50))
        AND (a.content_type ILIKE '%pdf%' OR a.content_type ILIKE '%html%')
+       AND ($4::text IS NULL OR a.storage_path LIKE $4)
        AND ($2::boolean = false OR EXISTS (
          SELECT 1 FROM storage.objects o WHERE o.bucket_id=$3
            AND o.name=replace(a.storage_path,chr(92),'/')
@@ -63,7 +64,7 @@ export async function findUnextracted(limit = 50) {
          WHERE d.source_id=a.source_id AND d.url=a.document_url AND d.stage='parse'
            AND d.last_failed > now()-interval '1 hour')
      ORDER BY (a.content_type ILIKE '%pdf%') DESC, a.discovered_at ASC
-     LIMIT $1`, [limit, env.RAW_STORAGE_DRIVER === 'supabase', env.SUPABASE_STORAGE_BUCKET]);
+     LIMIT $1`, [limit, false, 'scraper-raw', env.RAW_STORAGE_DRIVER === 'r2' ? `r2://${env.R2_BUCKET}/%` : null]);
     return res.rows.map((row) => ({
         artifactId: row.artifact_id,
         sourceId: row.source_id,

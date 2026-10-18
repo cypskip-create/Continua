@@ -40,8 +40,6 @@ const EnvSchema = z.object({
     R2_ARCHIVE_CRON: z.string().default('*/15 * * * *'),
     R2_ARCHIVE_BATCH_SIZE: z.coerce.number().int().min(1).max(20).default(5),
     RAW_STORAGE_LOCAL_PATH: z.string().default("./data/raw"),
-    SUPABASE_URL: z.string().optional(),
-    SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
     SUPABASE_STORAGE_BUCKET: z.string().default("scraper-raw"),
     // Global default politeness settings — per-source overrides live in
     // scraping.sources.config, this is just the fallback when a source

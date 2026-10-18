@@ -15,9 +15,10 @@ it('claims a durable bounded recovery and records its attempt without widening c
  f.crawl.mockResolvedValue({visited:1,failed:0});
  const {refreshIndexSource}=await import('../src/scheduler/scheduler.js');await refreshIndexSource();
  expect(f.crawl).toHaveBeenCalledWith('nse-index-summary',1);
- const sql=f.query.mock.calls[0][0];
+ expect(f.query.mock.calls.length).toBe(2);
+ const sql=f.query.mock.calls[0]![0];
  expect(sql).toContain("status='failed'");expect(sql).toContain("::int,1)<2");expect(sql).toContain("interval '20 minutes'");
- expect(JSON.parse(f.query.mock.calls[1][1][2])).toMatchObject({attempt:2,visited:1,failed:0});
+ expect(JSON.parse(f.query.mock.calls[1]![1][2])).toMatchObject({attempt:2,visited:1,failed:0});
 });
 it('a completed or locked slot performs no publisher request',async()=>{
  f.get.mockResolvedValue({id:'nse-index-summary',enabled:true,adapter:'web'});f.query.mockResolvedValue({rows:[]});
