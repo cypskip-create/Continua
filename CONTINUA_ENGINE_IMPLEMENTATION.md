@@ -230,3 +230,22 @@ financial responses and coverage reports before/after numerical projection.
 Additional tests verify atomic context/pointer updates, restoration of full
 presentations, bounded decompression, private-reader requirements, retryable API
 failures, cancellation ownership and provider retry-reservation parity.
+
+Live verification of `f7bb1ab` confirmed Render's health revision, HTTP 200
+prepared-research responses for CGEN and COOP, and **50 retired presentations
+with zero missing/stale current receipts and no bulk presentation fields left
+in those SQL rows**. The pass processed five additional observations without
+assistant-entered financial values. The full backend suite passed 424 tests;
+the collector suite ran 153 tests (six skipped).
+
+## Extraction-version receipt continuity
+
+The migration now records every newly verified extraction snapshot in private
+`scraping.extraction_cloud_archive`, indexed by extraction ID and immutable
+content hash. One SQL statement commits its receipt only when the raw-artifact
+compare-and-set succeeds. The legacy storage path is retained when first moved.
+Previously copied snapshots are not retrospectively claimed as catalogued.
+This enables later private reader migration without losing older version
+pointers; it does not authorize removal of originals or SQL extraction bodies.
+Disposable PostgreSQL passes **55 checks**, including the actual archive CAS,
+concurrent-loser suppression, no-extraction handling and restricted table access.

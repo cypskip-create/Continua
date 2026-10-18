@@ -5,6 +5,18 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "scraper-python/continua_scraper/archive.py",
+      "category": "Per-version verified extraction receipts",
+      "language": "Python and PostgreSQL",
+      "runtime": "Existing finite migration worker",
+      "reason": "Keep streaming compression and S3 verification in the existing Python worker. Use one PostgreSQL data-modifying CTE to atomically compare-and-set the raw pointer and retain each verified immutable extraction receipt; a concurrent loser cannot publish a misleading receipt. Preserve legacy object identity for subsequent reconciliation. No original or extracted SQL body is deleted at this stage.",
+      "references": [
+        "https://www.postgresql.org/docs/current/sql-insert.html",
+        "https://developers.cloudflare.com/r2/objects/",
+        "https://developers.cloudflare.com/r2/reference/consistency/"
+      ]
+    },
+    {
       "file": "scraper-python/continua_scraper/processed_archive.py",
       "category": "Verified processed-payload retirement and atomic context publication",
       "language": "Python with SQL transaction guarantees; Go and compatibility API guards",

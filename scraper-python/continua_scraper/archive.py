@@ -117,16 +117,29 @@ class R2Archive:
                 prior_version=str((row.get("metadata") or {}).get("r2ExtractionId") or "")
                 key=await asyncio.to_thread(self._copy_raw,row)
                 metadata={"r2ArchivedAt":datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00","Z"),"r2ArchiveRetryAt":"","r2ArchiveFailures":0,"r2ArchiveState":"verified"}
+                if not old.startswith('r2://'):metadata['r2LegacyStoragePath']=old
                 if row.get("extraction_id"):
                     snapshots=await self.database.query("SELECT * FROM scraping.extractions WHERE id=%s AND artifact_id=%s",(row["extraction_id"],row["id"]))
                     if not snapshots:raise ValueError("Extraction snapshot disappeared")
                     metadata["r2ExtractionObject"]=await asyncio.to_thread(self._copy_snapshot,row,key,snapshots[0])
                     metadata["r2ExtractionId"]=str(row["extraction_id"])
                     metadata['r2ExtractionFormat']='gzip-json-v1'
-                updated=await self.database.query("""UPDATE scraping.raw_artifacts SET storage_path=%s,
+                # The checkpoint and version receipt commit together. A losing
+                # CAS must not claim a snapshot for concurrently replaced input.
+                location=f"r2://{self.storage.bucket}/{key}"
+                snapshot_uri=metadata.get('r2ExtractionObject')
+                snapshot_hash=snapshot_uri.rsplit('/',1)[-1].split('.')[0] if snapshot_uri else None
+                updated=await self.database.query("""WITH updated AS (UPDATE scraping.raw_artifacts SET storage_path=%s,
                     metadata=COALESCE(metadata,'{}'::jsonb)||%s::jsonb WHERE id=%s AND storage_path=%s
-                    AND COALESCE(metadata->>'r2ExtractionId','')=%s RETURNING id""",
-                    (f"r2://{self.storage.bucket}/{key}",json.dumps(metadata),row["id"],old,prior_version))
+                    AND COALESCE(metadata->>'r2ExtractionId','')=%s RETURNING id),
+                  saved AS (INSERT INTO scraping.extraction_cloud_archive
+                    (extraction_id,artifact_id,object_uri,sha256,raw_object_uri,format)
+                    SELECT %s,updated.id,%s,%s,%s,'gzip-json-v1' FROM updated
+                    WHERE %s::text IS NOT NULL
+                    ON CONFLICT(extraction_id,sha256) DO NOTHING RETURNING extraction_id)
+                  SELECT id FROM updated""",
+                    (location,json.dumps(metadata),row["id"],old,prior_version,
+                     row.get('extraction_id'),snapshot_uri,snapshot_hash,location,snapshot_uri))
                 summary["copied" if updated else "superseded"]+=1
             except Exception as error:
                 from .transfer_budget import TransferLimitReached

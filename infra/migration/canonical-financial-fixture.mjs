@@ -80,6 +80,23 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  const cgen=await observe('CGEN','Profit/Loss',[
   [2021,'revenue',10e9],[2022,'revenue',12e9],[2023,'revenue',18e9],
   [2024,'revenue',20.94e9],[2024,'netIncome',526.05e6],[2024,'eps',6.56]]);
+ // Exercise the actual worker's checkpoint/receipt CTE, including a losing
+ // compare-and-set. No provider objects or production credentials are used.
+ const archiveSource=await readFile(new URL('scraper-python/continua_scraper/archive.py',root),'utf8');
+ let archiveParam=0;
+ const archiveSQL=archiveSource.match(/updated=await self.database.query\("""([\s\S]*?)"""/)[1].replace(/%s/g,()=>'$'+(++archiveParam));
+ const original=(await db.query('SELECT storage_path FROM scraping.raw_artifacts WHERE id=$1',[cgen.artifact])).rows[0].storage_path;
+ const archiveHash='a'.repeat(64),archiveURI='r2://continua-financial-documents/extractions/fixture/'+cgen.artifact+'/'+archiveHash+'.json.gz';
+ const archiveArgs=[original,JSON.stringify({r2ExtractionId:String(cgen.extraction)}),cgen.artifact,original,'',cgen.extraction,archiveURI,archiveHash,original,archiveURI];
+ check((await db.query(archiveSQL,archiveArgs)).rows,[{id:cgen.artifact}]);
+ check((await db.query('SELECT count(*)::int n FROM scraping.extraction_cloud_archive')).rows[0].n,1);
+ check((await db.query(archiveSQL,archiveArgs)).rows,[]);
+ check((await db.query('SELECT count(*)::int n FROM scraping.extraction_cloud_archive')).rows[0].n,1);
+ check((await db.query("SELECT has_table_privilege('anon','scraping.extraction_cloud_archive','SELECT') AS allowed")).rows[0].allowed,false);
+ // An artifact without an extraction still advances safely, with no invented receipt.
+ const withoutSnapshot=[original,'{}',cgen.artifact,original,String(cgen.extraction),null,null,null,original,null];
+ check((await db.query(archiveSQL,withoutSnapshot)).rows,[{id:cgen.artifact}]);
+ check((await db.query('SELECT count(*)::int n FROM scraping.extraction_cloud_archive')).rows[0].n,1);
  for(const symbol of symbols.slice(1))await observe(symbol,'Profit/Loss',[[2024,'revenue',100],[2024,'netIncome',10]]);
  await observe('COOP','Invalid values', [['tomorrow','revenue',1],[9999,'revenue',2],[2024,'revenue','bad'],[2024,'__proto__',77]]);
  check((await history('COOP'))[0].revenue,100);
