@@ -24,8 +24,10 @@ export async function boundedBody(request,max=512*1024){
  const body=new Uint8Array(size);let offset=0;for(const chunk of chunks){body.set(chunk,offset);offset+=chunk.byteLength;}return body;
 }
 function reply(body,status=200){return new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store',...security}});}
+import {media} from './media.mjs';
 export default {async fetch(request,env,ctx){
  const url=new URL(request.url),id=crypto.randomUUID();
+ const mediaResponse=await media(request,env,security);if(mediaResponse)return mediaResponse;
  if(!url.pathname.startsWith('/api/')) {
   const asset=await env.ASSETS.fetch(request),headers=new Headers(asset.headers);
   for(const [name,value]of Object.entries(security))headers.set(name,value);

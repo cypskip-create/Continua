@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadCloudImage, removeCloudImages } from "@/lib/cloudMedia.js";
 import { useAuth } from "@/hooks/useAuth";
 import { useFollows } from "@/hooks/useFollows";
 import { useToast } from "@/hooks/use-toast";
@@ -251,12 +252,9 @@ export default function UserProfile() {
     if (file.size > 5 * 1024 * 1024) { toast({ title: "Max 5MB", variant: "destructive" }); return; }
     setUploadingBanner(true);
     try {
-      const ext = file.name.split(".").pop();
-      const fn = `${user.id}/banner-${Date.now()}.${ext}`;
-      const { error: ue } = await supabase.storage.from("banners").upload(fn, file, { upsert: true });
-      if (ue) throw ue;
-      const { data: { publicUrl } } = supabase.storage.from("banners").getPublicUrl(fn);
-      await supabase.from("profiles").update({ banner_url: publicUrl }).eq("user_id", user.id);
+      const publicUrl = await uploadCloudImage('banners', file);
+      const { error: profileError } = await supabase.from("profiles").update({ banner_url: publicUrl }).eq("user_id", user.id);
+      if (profileError) { await removeCloudImages([publicUrl]); throw profileError; }
       setProfileData(prev => prev ? { ...prev, banner_url: publicUrl } : null);
       toast({ title: "Banner updated!" });
     } catch { toast({ title: "Upload failed", variant: "destructive" }); }

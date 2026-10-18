@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePageRefresh } from './usePageRefresh';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadCloudImage, removeCloudImages } from '@/lib/cloudMedia.js';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
@@ -300,11 +301,9 @@ export function usePosts() {
       for (const image of images) {
         if (!image.startsWith('data:')) { urls.push(image); continue; }
         const blob = await (await fetch(image)).blob();
-        const path = `${user.id}/${crypto.randomUUID()}`;
-        const { error } = await supabase.storage.from('post-images').upload(path, blob, { contentType: blob.type, upsert: false });
-        if (error) throw error;
-        uploaded.push(path);
-        urls.push(supabase.storage.from('post-images').getPublicUrl(path).data.publicUrl);
+        const publicUrl = await uploadCloudImage('post-images', blob);
+        uploaded.push(publicUrl);
+        urls.push(publicUrl);
       }
       const stockMentions = [...new Set(content.match(/\$[A-Z]+/g)?.map(s => s.slice(1)) || [])];
       const { data, error } = await supabase.from('posts')
@@ -314,7 +313,7 @@ export function usePosts() {
       void fetchPosts();
       return { data, error: null };
     } catch (error) {
-      if (uploaded.length) await supabase.storage.from('post-images').remove(uploaded);
+      if (uploaded.length) await removeCloudImages(uploaded).catch(() => {});
       return { error };
     }
   };

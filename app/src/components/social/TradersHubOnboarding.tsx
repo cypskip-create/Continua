@@ -8,6 +8,7 @@ import {
   User, PenLine, Users, ShieldCheck, UserPlus, CheckCircle2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadCloudImage } from "@/lib/cloudMedia.js";
 import { normalizeHandle, fallbackHandle, atHandle, getInitials } from "@/lib/handle";
 import { EXPERIENCE_OPTIONS, GENDER_OPTIONS } from "@/lib/tradersHubOnboarding";
 import { PortfolioVisibilityToggles, type PortfolioVisibilitySettings } from "@/components/portfolio/PortfolioVisibilityToggles";
@@ -209,13 +210,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
 
     setAvatarUploading(true);
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${userId}/avatar-${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(fileName, file, { upsert: true });
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(fileName);
+      const publicUrl = await uploadCloudImage('avatars', file);
       setAvatarUrl(publicUrl);
     } catch {
       // Non-fatal — the person can just try again or skip the step entirely.

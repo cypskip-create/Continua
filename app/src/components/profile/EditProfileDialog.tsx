@@ -11,6 +11,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadCloudImage } from "@/lib/cloudMedia.js";
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -109,21 +110,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     setUploading(true);
 
     try {
-      // Create a unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`;
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
+      const publicUrl = await uploadCloudImage('avatars', file);
 
       setAvatarUrl(publicUrl);
       setPreviewUrl(publicUrl);

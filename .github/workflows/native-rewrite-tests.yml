@@ -73,7 +73,7 @@ jobs:
         env:
           NATIVE_COLLECTOR_POSTGRES_FIXTURE_URL: postgresql://postgres:continua-fixture-only@127.0.0.1:5432/continua_native_fixture?sslmode=disable&application_name=continua-native-fixture
       - run: python -m unittest discover -s scraper-python/tests -v
-      - run: node --test infra/cloudflare/worker.test.mjs
+      - run: node --test infra/cloudflare/worker.test.mjs infra/cloudflare/media.test.mjs
       - run: npm ci --prefix backend
       - run: npm ci --prefix scraper
       - run: npm --prefix scraper test -- --run tests/storage/storagePolicy.test.ts tests/storage/r2Storage.test.ts tests/storage/r2Archive.test.ts tests/storage/sourceCompression.test.ts

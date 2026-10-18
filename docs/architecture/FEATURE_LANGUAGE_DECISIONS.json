@@ -5,6 +5,18 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "infra/cloudflare/media.mjs; scraper-python/migrate_media.py",
+      "category": "Cloudflare profile and community media storage",
+      "language": "JavaScript at the existing Cloudflare platform entrypoint; Python for bounded migration",
+      "runtime": "Existing Worker with an isolated media R2 binding",
+      "reason": "Use the platform-native R2 binding to keep images outside Render and Supabase file storage. Validate account tokens against the fixed owned Supabase project, bound bytes and rates, validate raster signatures and scope writes to the verified owner. Public application media stays separate from private financial evidence. No additional service or backend TypeScript implementation is needed.",
+      "references": [
+        "https://developers.cloudflare.com/r2/get-started/workers-api/",
+        "https://developers.cloudflare.com/r2/api/workers/workers-api-reference/",
+        "https://supabase.com/docs/reference/javascript/auth-getuser"
+      ]
+    },
+    {
       "file": "scraper-python/continua_scraper/archive.py",
       "category": "Per-version verified extraction receipts",
       "language": "Python and PostgreSQL",
