@@ -69,7 +69,7 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
     VALUES('kenyanstocks','fixture',$1,$2,$3,'fixture') RETURNING id`,[hash,'https://fixture.invalid/'+serial,'r2://continua-financial-documents/'+hash])).rows[0].id;
   const extraction=(await db.query(`INSERT INTO scraping.extractions(artifact_id,method,parser_version,entity)
     VALUES($1,'html','fixture',$2::jsonb) RETURNING id`,[artifact,JSON.stringify({ticker:symbol})])).rows[0].id;
-  const payload={destination,category,status:'publisher_observation',financialFields:values.map(([year,metric,value])=>({year,metric,value,raw:String(value)}))};
+  const payload={destination,category,status:'publisher_observation',tables:[{fixture:true}],charts:[{fixture:true}],financialFields:values.map(([year,metric,value])=>({year,metric,value,raw:String(value)}))};
   await db.query(`INSERT INTO scraping.processed_research(extraction_id,processor_version,security_id,destination,status,payload)
     VALUES($1,'collected-research-v1',$2,$3,'publisher_observation',$4::jsonb)`,[extraction,'NSE:'+symbol,destination,JSON.stringify(payload)]);
   return {artifact,extraction};
@@ -125,6 +125,33 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  const coverage=(await db.query(coverageSQL,[null,null])).rows;
  check(coverage.length,6);check(coverage.find(r=>r.symbol==='CGEN').periods,4);
  check((await db.query(coverageSQL,['COOP','COOP'])).rows.length,1);
+ const beforeProjection=await Promise.all(symbols.map(symbol=>history(symbol)));
+ const reports=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',`
+import asyncio,json,sys
+sys.path.insert(0,'scraper-python')
+from continua_scraper.research_processing import ResearchProcessor
+class DB:
+ async def query(self,sql,params=()):
+  print(json.dumps(sql));return []
+async def run():
+ processor=ResearchProcessor(DB());await processor.available_financials();await processor.stock_coverage()
+asyncio.run(run())
+ `],{cwd:new URL('../../',import.meta.url),encoding:'utf8'});
+ if(reports.status!==0)throw new Error('Python coverage-report SQL fixture unavailable');
+ const reportSQL=reports.stdout.trim().split(/\r?\n/).map(line=>JSON.parse(line).replaceAll('%%','%'));
+ const beforeReports=await Promise.all(reportSQL.map(async sql=>(await db.query(sql)).rows));
+ const stored=(await db.query('SELECT extraction_id,payload FROM scraping.processed_research ORDER BY extraction_id')).rows;
+ const compact=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',`
+import json,sys
+sys.path.insert(0,'scraper-python')
+from continua_scraper.processed_archive import read_projection
+print(json.dumps([read_projection(row['payload']) for row in json.load(sys.stdin)]))
+ `],{cwd:new URL('../../',import.meta.url),encoding:'utf8',input:JSON.stringify(stored)});
+ if(compact.status!==0)throw new Error('Python numerical projection fixture unavailable');
+ const projections=JSON.parse(compact.stdout);
+ for(const [index,row]of stored.entries())await db.query('UPDATE scraping.processed_research SET payload=$1::jsonb WHERE extraction_id=$2',[JSON.stringify(projections[index]),row.extraction_id]);
+ for(const [index,symbol]of symbols.entries())check(await history(symbol),beforeProjection[index]);
+ for(const [index,sql]of reportSQL.entries())check((await db.query(sql)).rows,beforeReports[index]);
  const access=(await db.query(`SELECT has_function_privilege('anon','market.canonical_financial_history(text,text,integer,boolean)','EXECUTE') AS public,
   has_function_privilege('authenticated','market.publisher_financial_history(text)','EXECUTE') AS user`)).rows[0];
  check(access,{public:false,user:false});

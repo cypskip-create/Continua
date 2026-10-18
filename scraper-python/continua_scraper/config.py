@@ -38,6 +38,9 @@ def validate_environment(environment):
         raise ValueError('Invalid private R2 bucket configuration')
     if not environment.get('R2_ACCESS_KEY_ID') or not environment.get('R2_SECRET_ACCESS_KEY'):
         raise ValueError('Private R2 credentials are required')
+    try:upload_attempts=int(environment.get('R2_UPLOAD_ATTEMPTS','4'))
+    except (TypeError,ValueError):raise ValueError('Invalid R2 retry reservation') from None
+    if not 1<=upload_attempts<=4:raise ValueError('Invalid R2 retry reservation')
     for name,default,ceiling in (
         ('DOCUMENT_DRAIN_BATCH_SIZE',10,25),('EXTRACTION_SWEEP_BATCH_SIZE',50,100),
         ('R2_ARCHIVE_BATCH_SIZE',5,20)):

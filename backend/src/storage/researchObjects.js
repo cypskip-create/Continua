@@ -20,13 +20,13 @@ export function decodeProcessedObject(bytes,receipt,expected) {
     processedObjectKey(receipt);
     if(bytes.length!==Number(receipt.size_bytes)||createHash('sha256').update(bytes).digest('hex')!==receipt.sha256)
         throw new Error('Processed object integrity mismatch');
-    const decoded=gunzipSync(bytes,{maxOutputLength:maxBytes});
+    const decoded=gunzipSync(bytes,{maxOutputLength:maxBytes+8192});
     const value=JSON.parse(decoded.toString('utf8'));
     if(value?.schemaVersion!==1||value.kind!=='processed-research'||
        String(value.extractionId)!==String(expected.extraction_id)||
        value.processorVersion!==expected.processor_version||value.securityId!==expected.security_id||
        value.destination!==expected.destination||value.status!==expected.status||
-       !value.payload||typeof value.payload!=='object'||Array.isArray(value.payload))
+       !value.payload||typeof value.payload!=='object'||Array.isArray(value.payload)||Buffer.byteLength(JSON.stringify(value.payload))>maxBytes)
         throw new Error('Processed object identity mismatch');
     return value.payload;
 }

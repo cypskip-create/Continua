@@ -52,8 +52,22 @@ func (s *Store) CollectedResearchFiltered(ctx context.Context, symbol string, li
       ORDER BY p.destination,p.payload->>'tab',coalesce(p.payload->>'category',''),
         CASE WHEN p.destination='documents' THEN a.document_url ELSE '' END,e.extracted_at DESC,e.id DESC
     ) latest ORDER BY extracted_at DESC,id DESC LIMIT $2 OFFSET $3`, args...)
-	if err != nil || s.ProcessedObjects == nil {
+	if err != nil {
 		return rows, err
+	}
+	if s.ProcessedObjects == nil {
+		for _, raw := range rows {
+			var marker struct {
+				CloudPayload bool `json:"cloudPayload"`
+			}
+			if json.Unmarshal(raw, &marker) != nil {
+				return nil, errors.New("invalid processed payload")
+			}
+			if marker.CloudPayload {
+				return nil, errors.New("private cloud payload reader is required")
+			}
+		}
+		return rows, nil
 	}
 	result := make([]json.RawMessage, 0, len(rows))
 	size := 0
@@ -71,8 +85,13 @@ func (s *Store) CollectedResearchFiltered(ctx context.Context, symbol string, li
 			if err != nil {
 				return nil, err
 			}
-		} else if s.ProcessedStorageMode == "r2" {
-			return nil, errors.New("processed cloud object is pending")
+		} else {
+			var marker struct {
+				CloudPayload bool `json:"cloudPayload"`
+			}
+			if json.Unmarshal(payload, &marker) != nil || s.ProcessedStorageMode == "r2" || marker.CloudPayload {
+				return nil, errors.New("processed cloud object is pending")
+			}
 		}
 		size += len(payload)
 		if size > 8*1024*1024 {

@@ -5,6 +5,18 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "scraper-python/continua_scraper/processed_archive.py",
+      "category": "Verified processed-payload retirement and atomic context publication",
+      "language": "Python with SQL transaction guarantees; Go and compatibility API guards",
+      "runtime": "Existing finite collector process, no new service",
+      "reason": "Keep full presentations in immutable private R2 and retain only queryable numerical facts and small metadata in the existing database. Verify every object before retiring its SQL presentation body; context refresh publishes its new object pointer and numerical projection in one transaction. Preserve exact canonical history and coverage output through actual PostgreSQL parity checks. Match logical transfer reservations to the SDK total attempt limit, and drain owned synchronous copies on cancellation rather than accumulating orphan worker threads.",
+      "references": [
+        "https://developers.cloudflare.com/r2/examples/aws/boto3/",
+        "https://docs.aws.amazon.com/boto3/latest/guide/retries.html",
+        "https://www.postgresql.org/docs/current/tutorial-transactions.html"
+      ]
+    },
+    {
       "file": "backend/src/storage/researchObjects.js; backend-go/internal/objectstore",
       "category": "Private Cloudflare prepared-object readers",
       "language": "Go for native readers; JavaScript compatibility adapter during existing production cutover gates",

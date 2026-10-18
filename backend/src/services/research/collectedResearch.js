@@ -36,10 +36,14 @@ export async function collectedResearch(symbol, limit = 20, offset = 0, destinat
     ) latest ORDER BY extracted_at DESC,id DESC LIMIT $2 OFFSET $3`, [`NSE:${symbol}`, limit, offset, ...(destinations.length?[destinations]:[])]);
     if (Buffer.byteLength(JSON.stringify(result.rows)) > 8 * 1024 * 1024)
         throw new Error('Collected research response too large; request a smaller page');
-    if(!cloud)return result.rows.map(r => r.payload);
+    if(!cloud){
+        if(result.rows.some(r=>r.payload?.cloudPayload===true))throw new Error('Private cloud payload reader is required');
+        return result.rows.map(r => r.payload);
+    }
     const payloads=[],signal=AbortSignal.timeout(25000);let size=0;
     for(const row of result.rows) {
         if(!row.object_uri&&cloudMode==='r2')throw new Error('Processed cloud object is pending');
+        if(!row.object_uri&&row.payload?.cloudPayload===true)throw new Error('Processed cloud object is pending');
         const payload=row.object_uri?await processedObjectRepository.read(row,row,signal):row.payload;
         size+=Buffer.byteLength(JSON.stringify(payload));
         if(size>8*1024*1024)throw new Error('Collected research response too large; request a smaller page');

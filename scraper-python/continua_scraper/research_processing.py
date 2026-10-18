@@ -39,16 +39,18 @@ async def reparse_archived_views(runtime,limit=2):
 
 
 class ResearchProcessor:
-    def __init__(self,database):
+    def __init__(self,database,*,processed_storage=None):
         self.database=database
+        self.processed_storage=processed_storage
+        self.contexts_pending=0
 
     async def available_financials(self):
         """Only observations passing the same current rights/evidence gates as API reads."""
         return await self.database.query("""SELECT symbol,category,observed_at,table_count,chart_series FROM (
           SELECT DISTINCT ON(sec.symbol,p.payload->>'category') sec.symbol,
             p.payload->>'category' AS category,p.payload->>'observedAt' AS observed_at,
-            jsonb_array_length(p.payload->'tables') AS table_count,
-            jsonb_array_length(p.payload->'charts') AS chart_series,e.extracted_at,e.id
+            coalesce((p.payload->>'tableCount')::integer,jsonb_array_length(p.payload->'tables')) AS table_count,
+            coalesce((p.payload->>'chartCount')::integer,jsonb_array_length(p.payload->'charts')) AS chart_series,e.extracted_at,e.id
           FROM scraping.processed_research p JOIN scraping.extractions e ON e.id=p.extraction_id
           JOIN scraping.raw_artifacts a ON a.id=e.artifact_id JOIN scraping.sources s ON s.id=a.source_id
           JOIN market.securities sec ON sec.id=p.security_id
@@ -63,7 +65,7 @@ class ResearchProcessor:
         return await self.database.query("""SELECT sec.symbol,
           count(DISTINCT p.payload->>'category') FILTER(WHERE p.destination='financials')::integer AS financial_categories,
           count(DISTINCT p.destination) FILTER(WHERE p.destination<>'review')::integer AS processed_destinations,
-          count(p.extraction_id) FILTER(WHERE p.destination='ownership' AND jsonb_array_length(coalesce(p.payload->'ownership','[]'::jsonb))>0)::integer AS ownership_snapshots
+          count(p.extraction_id) FILTER(WHERE p.destination='ownership' AND coalesce((p.payload->>'ownershipCount')::integer,jsonb_array_length(coalesce(p.payload->'ownership','[]'::jsonb)))>0)::integer AS ownership_snapshots
           FROM market.securities sec LEFT JOIN (
             SELECT p.* FROM scraping.processed_research p
             JOIN scraping.extractions e ON e.id=p.extraction_id
@@ -175,6 +177,7 @@ class ResearchProcessor:
                 for issue in payload.get('issues') or []:
                     code=issue['code'];summary['issueCounts'][code]=summary['issueCounts'].get(code,0)+issue.get('count',1)
         summary['companyContexts']=await self.refresh_company_contexts()
+        summary['companyContextsPending']=self.contexts_pending
         return summary
 
     async def refresh_company_contexts(self):
@@ -192,12 +195,27 @@ class ResearchProcessor:
         groups={}
         for row in rows:groups.setdefault(row['security_id'],[]).append(row)
         count=0
+        self.contexts_pending=0
         for records in groups.values():
             context=company_context([r['payload'] for r in records])
             if not context['history']:continue
             # Store the automatic Engine assembly alongside its existing evidence.
             # All contributors share the same publisher rights gate on API reads.
             anchor=max(records,key=lambda r:(r['extracted_at'],r['extraction_id']))
+            if anchor['payload'].get('cloudPayload') is True:
+                if anchor['payload'].get('companyResearch')==context:
+                    count+=1;continue
+                if self.processed_storage is None:
+                    self.contexts_pending+=1;continue
+                from .processed_archive import ProcessedArchive
+                try:
+                    if await ProcessedArchive(self.database,self.processed_storage).update_context(anchor['extraction_id'],'collected-research-v1',context):count+=1
+                    else:self.contexts_pending+=1
+                except Exception as error:
+                    from .transfer_budget import TransferLimitReached
+                    if isinstance(error,TransferLimitReached):raise
+                    self.contexts_pending+=1
+                continue
             await self.database.query("""UPDATE scraping.processed_research SET
               payload=jsonb_set(payload,'{companyResearch}',%s::jsonb),processed_at=now()
               WHERE extraction_id=%s AND processor_version='collected-research-v1'

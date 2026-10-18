@@ -5,6 +5,8 @@ import hashlib
 import pathlib
 import sys
 import tempfile
+import os
+from unittest.mock import patch
 import unittest
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]))
 from continua_scraper.database import Database
@@ -13,6 +15,14 @@ from continua_scraper.r2 import R2Storage
 
 @unittest.skipUnless(importlib.util.find_spec("boto3"),"install pinned native scraper dependencies")
 class R2DependencyTests(unittest.TestCase):
+    def test_factory_retry_reservation_matches_real_sdk_attempt_ceiling(self):
+        with patch.dict(os.environ,{'R2_ACCOUNT_ID':'0'*32,'R2_BUCKET':'private-fixture','R2_ACCESS_KEY_ID':'fixture-not-live','R2_SECRET_ACCESS_KEY':'fixture-not-live','R2_UPLOAD_ATTEMPTS':'1'},clear=True):
+            storage=R2Storage.from_environment()
+            try:
+                self.assertEqual(storage.upload_attempts,1)
+                self.assertEqual(storage.client.meta.config.retries['total_max_attempts'],1)
+            finally:storage.close()
+
     def test_real_sdk_supports_private_conditional_streaming_upload(self):
         import boto3
         from botocore.config import Config

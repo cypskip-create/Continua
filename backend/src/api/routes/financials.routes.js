@@ -18,7 +18,9 @@ financialsRoutes.get('/financials/:symbol/collected-research', asyncHandler(asyn
     res.setHeader('Cache-Control', 'no-store');
     const destinations=req.query.destinations===undefined?[]:typeof req.query.destinations==='string'?req.query.destinations.split(','):['invalid'];
     if(destinations.length>9||destinations.some(d=>!researchDestinations.has(d)))throw new ApiError(400,'Invalid research destinations');
-    const data = await collectedResearch(symbol, limit, offset, destinations);
+    let data;
+    try { data = await collectedResearch(symbol, limit, offset, destinations); }
+    catch { res.setHeader('Retry-After','30');throw new ApiError(503,'Collected research temporarily unavailable'); }
     res.json({ data, pagination: { limit, offset, nextOffset: data.length === limit ? offset + limit : null } });
 }));
 financialsRoutes.get('/financials/:symbol/publisher-tables', asyncHandler(async (req, res) => {

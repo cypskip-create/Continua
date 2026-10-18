@@ -23,6 +23,14 @@ it('strict cloud reads do not silently return the temporary database projection'
     await expect(collectedResearch('KCB')).rejects.toThrow('cloud object is pending');
 });
 
+it('never serves an internal numerical projection as a full public research payload',async()=>{
+    query.mockResolvedValue({rows:[{payload:{cloudPayload:true,tableCount:5}}]});
+    vi.stubEnv('PROCESSED_STORAGE_READS','database');
+    await expect(collectedResearch('KCB')).rejects.toThrow('cloud payload reader is required');
+    vi.stubEnv('PROCESSED_STORAGE_READS','prefer-r2');
+    await expect(collectedResearch('KCB')).rejects.toThrow('cloud object is pending');
+});
+
 it('reads processed issuer data with current rights, private evidence and latest-category guards', async () => {
     const observation = { destination: 'financials', status: 'publisher_observation', charts: [] };
     query.mockResolvedValue({ rows: [{ payload: observation }] });

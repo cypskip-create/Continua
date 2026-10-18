@@ -16,10 +16,12 @@ def safe_key(value):
     return value
 
 class R2Storage:
-    def __init__(self,client,bucket,*,rollback_write=None,dual_write=False,max_bytes=50*1024*1024,transfers=None):
+    def __init__(self,client,bucket,*,rollback_write=None,dual_write=False,max_bytes=50*1024*1024,transfers=None,upload_attempts=4):
+        if type(upload_attempts) is not int or not 1<=upload_attempts<=4:raise ValueError('Invalid R2 retry reservation')
         self.client,self.bucket=client,bucket
         self.rollback_write,self.dual_write=rollback_write,dual_write
         self.max_bytes=max_bytes
+        self.upload_attempts=upload_attempts
         self.transfers=transfers or TransferCounters()
 
     @classmethod
@@ -30,11 +32,13 @@ class R2Storage:
         bucket=os.environ.get("R2_BUCKET","")
         key=os.environ.get("R2_ACCESS_KEY_ID","")
         secret=os.environ.get("R2_SECRET_ACCESS_KEY","")
+        attempts=int(os.environ.get('R2_UPLOAD_ATTEMPTS','4'))
+        if not 1<=attempts<=4:raise ValueError('Invalid R2 retry reservation')
         if not re.fullmatch(r"[a-f0-9]{32}",account) or not re.fullmatch(r"[a-z0-9][a-z0-9-]{1,61}[a-z0-9]",bucket) or not key or not secret:
             raise ValueError("Private R2 configuration is incomplete")
         client=boto3.client("s3",region_name="auto",endpoint_url=f"https://{account}.r2.cloudflarestorage.com",aws_access_key_id=key,aws_secret_access_key=secret,
-            config=Config(connect_timeout=10,read_timeout=60,retries={"max_attempts":3,"mode":"standard"},request_checksum_calculation="when_required",response_checksum_validation="when_required"))
-        return cls(client,bucket,rollback_write=rollback_write,dual_write=os.environ.get("R2_DUAL_WRITE","false").lower() in ("true","1","yes"))
+            config=Config(connect_timeout=10,read_timeout=60,retries={"total_max_attempts":attempts,"mode":"standard"},request_checksum_calculation="when_required",response_checksum_validation="when_required"))
+        return cls(client,bucket,rollback_write=rollback_write,dual_write=os.environ.get("R2_DUAL_WRITE","false").lower() in ("true","1","yes"),upload_attempts=attempts)
 
     def upload(self,key,artifact):
         safe_key(key)
@@ -60,7 +64,7 @@ class R2Storage:
                 if not exists:
                     # Reserve all permitted SDK payload attempts before upload.
                     # The receipt is conservative, not actual billable bytes.
-                    account('uploadBytes',artifact.size*4)
+                    account('uploadBytes',artifact.size*self.upload_attempts)
                     self.transfers.add('uploadPayloadBytesAttempted',artifact.size)
                     attributes=getattr(artifact,'content_encoding',None)
                     self.client.put_object(Bucket=self.bucket,Key=key,Body=body,ContentLength=artifact.size,ContentType=artifact.content_type,Metadata={"sha256":artifact.sha256},IfNoneMatch="*",**({'ContentEncoding':attributes} if attributes else {}))

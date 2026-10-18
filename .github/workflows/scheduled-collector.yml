@@ -62,7 +62,7 @@ jobs:
           test -x "$chrome" && test -x "$driver"
           echo "CHROMIUM_BIN=$chrome" >> "$GITHUB_ENV"
           echo "CHROMEDRIVER_BIN=$driver" >> "$GITHUB_ENV"
-      - name: Collect directly to private R2 and Supabase
+      - name: Collect directly to private R2 with database checkpoints
         env:
           DATABASE_URL: ${{ secrets.COLLECTOR_DATABASE_URL }}
           R2_ACCOUNT_ID: ${{ secrets.COLLECTOR_R2_ACCOUNT_ID }}
@@ -72,6 +72,7 @@ jobs:
           RAW_STORAGE_DRIVER: r2
           PYTHONPATH: engine-python
           COLLECTOR_PROCESS_RESEARCH: 'true'
+          PROCESSED_PAYLOAD_MODE: r2
           R2_DUAL_WRITE: 'false'
           # 3 news x16MiB + 3 document x48MiB = approved 192MiB/day.
           COLLECTOR_RUN_TRANSFER_BYTES: ${{ (inputs.verify_one || github.event.schedule == '17 */8 * * *' || inputs.kind == 'news') && '16777216' || '50331648' }}

@@ -57,8 +57,8 @@ func Decode(body []byte, r Receipt) (json.RawMessage, error) {
 		return nil, errors.New("invalid processed gzip")
 	}
 	defer reader.Close()
-	decoded, err := io.ReadAll(io.LimitReader(reader, maxBytes+1))
-	if err != nil || len(decoded) > maxBytes {
+	decoded, err := io.ReadAll(io.LimitReader(reader, maxBytes+8192+1))
+	if err != nil || len(decoded) > maxBytes+8192 {
 		return nil, errors.New("processed object decoded limit exceeded")
 	}
 	var value struct {
@@ -73,7 +73,7 @@ func Decode(body []byte, r Receipt) (json.RawMessage, error) {
 	}
 	if json.Unmarshal(decoded, &value) != nil || value.SchemaVersion != 1 || value.Kind != "processed-research" ||
 		value.ExtractionID != r.ExtractionID || value.Version != r.Version || value.SecurityID != r.SecurityID ||
-		value.Destination != r.Destination || value.Status != r.Status || len(value.Payload) == 0 || value.Payload[0] != '{' {
+		value.Destination != r.Destination || value.Status != r.Status || len(value.Payload) == 0 || len(value.Payload) > maxBytes || value.Payload[0] != '{' {
 		return nil, errors.New("processed object identity mismatch")
 	}
 	return value.Payload, nil

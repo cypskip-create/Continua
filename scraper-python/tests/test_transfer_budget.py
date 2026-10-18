@@ -5,8 +5,25 @@ sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]))
 from continua_scraper.transfer_budget import TransferBudget,TransferLimitReached,MeteredReader
 from continua_scraper import transfer_budget
 import asyncio
+import hashlib
+import tempfile
+from test_archive import MemoryClient
+from continua_scraper.r2 import R2Storage
+from continua_scraper.download import Artifact
 
 class TransferTests(unittest.IsolatedAsyncioTestCase):
+    async def test_migration_one_attempt_reserves_only_its_configured_payload_and_verification(self):
+        data=b'fixture';digest=hashlib.sha256(data).hexdigest()
+        previous=transfer_budget.active;transfer_budget.active=TransferBudget(len(data)*2)
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                path=pathlib.Path(directory)/'fixture';path.write_bytes(data)
+                storage=R2Storage(MemoryClient(),'private-fixture',upload_attempts=1)
+                storage.upload('fixture/'+digest+'.bin',Artifact(path,'https://fixture.invalid/never-fetched','application/octet-stream',len(data),digest))
+            self.assertEqual(transfer_budget.active.snapshot()['uploadBytes'],len(data))
+            self.assertEqual(transfer_budget.active.snapshot()['downloadBytes'],len(data))
+        finally:transfer_budget.active=previous
+
     async def test_shared_directions_and_ceiling(self):
         budget=TransferBudget(8)
         budget.consume('uploadBytes',3);budget.consume('downloadBytes',5)

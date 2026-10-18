@@ -72,7 +72,7 @@ class R2Archive:
         # The original private reader is injected, never a user-provided URL.
         # Archive copies already have a retained original: no redundant rollback
         # write. Originals remain readable; new writes default to R2 only.
-        archive_storage=R2Storage(self.storage.client,self.storage.bucket,dual_write=False,max_bytes=self.storage.max_bytes,transfers=self.storage.transfers)
+        archive_storage=R2Storage(self.storage.client,self.storage.bucket,dual_write=False,max_bytes=self.storage.max_bytes,transfers=self.storage.transfers,upload_attempts=self.storage.upload_attempts)
         with self.legacy_reader(old) as artifact:
             if artifact.size!=row["size_bytes"] or artifact.sha256!=row["sha256"]:
                 raise ValueError("Archive source content mismatch")
@@ -98,7 +98,7 @@ class R2Archive:
                 while chunk:=body.read(65536):digest.update(chunk)
             digest=digest.hexdigest()
             snapshot_key=safe_key(f"extractions/{row['source_id']}/{row['id']}/{digest}.json.gz")
-            storage=R2Storage(self.storage.client,self.storage.bucket,dual_write=False,max_bytes=self.storage.max_bytes,transfers=self.storage.transfers)
+            storage=R2Storage(self.storage.client,self.storage.bucket,dual_write=False,max_bytes=self.storage.max_bytes,transfers=self.storage.transfers,upload_attempts=self.storage.upload_attempts)
             return storage.upload(snapshot_key,Artifact(path,row["document_url"],"application/gzip",size,digest))
 
     async def _run(self,limit):

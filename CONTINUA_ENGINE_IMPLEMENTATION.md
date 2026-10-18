@@ -195,3 +195,38 @@ payload readers and application uploads; retire legacy files only after verified
 coverage and explicit deletion approval; finish the rating/forecast/portfolio,
 Premium Plus and full mobile/security audits listed above. Storage quota relief
 is not yet claimed because the legacy bucket has not been purged.
+
+
+## Processed-payload retirement
+
+The temporary migration schedule is now explicitly approved and configured to
+expire on **2026-11-17**, using `CONTINUA_MIGRATE_LEGACY_UNTIL`. The first remote
+Actions migration completed successfully. Production prepared-research endpoints
+returned 200 for CGEN and COOP through Cloudflare; Render confirmed the reader
+commit live. Verification subsequently counted 499 current processed receipts.
+
+`PROCESSED_PAYLOAD_MODE=r2` enables retirement of bulk SQL presentation payloads
+only after an immutable R2 object has been uploaded and read back with matching
+size/hash. SQL retains compact queryable financial facts, daily observations,
+category/count metadata and migration receipts. Full tables, charts, ownership
+and presentation payloads live in R2; the SQL numerical projection is rebuildable.
+Source files and extraction text retirement remain a separate migration stage.
+
+A context refresh on a projected row reads its prior verified R2 object, merges
+new numerical context, verifies the new immutable object, then commits the SQL
+projection and pointer together. Storage failure retains the prior readable
+presentation. DB-only maintenance reports pending contexts instead of publishing
+a projection with a broken pointer. Internal projections are never returned as
+full public research; unavailable storage receives a retryable 503 response.
+
+The finite migration worker uses one SDK upload attempt and durable retries on
+later runs. Its transfer reservation matches that actual SDK attempt limit,
+without reserving unused immediate upload retries. Normal collection keeps its
+previous retry policy and separate allowance. Cancelled SDK copies are drained
+before their shared client/budget can be released.
+
+Disposable PostgreSQL passes **48 checks**, including identical canonical
+financial responses and coverage reports before/after numerical projection.
+Additional tests verify atomic context/pointer updates, restoration of full
+presentations, bounded decompression, private-reader requirements, retryable API
+failures, cancellation ownership and provider retry-reservation parity.

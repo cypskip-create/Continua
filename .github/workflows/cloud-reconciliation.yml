@@ -37,6 +37,10 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.COLLECTOR_R2_SECRET_ACCESS_KEY }}
           RAW_STORAGE_DRIVER: r2
           R2_DUAL_WRITE: 'false'
+          # Durable migration checkpoints retry later. One SDK attempt avoids
+          # reserving three unused duplicate uploads within the same run.
+          R2_UPLOAD_ATTEMPTS: '1'
+          PROCESSED_PAYLOAD_MODE: r2
           SUPABASE_URL: https://jjsetogmnumoudrovpzn.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.COLLECTOR_LEGACY_STORAGE_KEY }}
           SUPABASE_STORAGE_BUCKET: scraper-raw

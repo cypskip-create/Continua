@@ -125,6 +125,8 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
             migration=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261016170000 processed research.sql'
             async with database.pool.connection() as connection:
                 await connection.execute(migration.read_text(encoding='utf-8'),prepare=False)
+                cloud_migration=migration.with_name('20261018120000 processed cloud archive.sql')
+                await connection.execute(cloud_migration.read_text(encoding='utf-8'),prepare=False)
             from continua_scraper.research_processing import ResearchProcessor
             async with asyncio.timeout(60):
                 receipt['processingBefore']=await ResearchProcessor(database).run(25)
@@ -189,7 +191,10 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
                     if process_research:
                         try:
                             async with asyncio.timeout(120):
-                                receipt['processingAfter']=await ResearchProcessor(database).run(100)
+                                receipt['processingAfter']=await ResearchProcessor(database,processed_storage=storage.r2).run(100)
+                                if os.environ.get('PROCESSED_PAYLOAD_MODE')=='r2':
+                                    from continua_scraper.processed_archive import ProcessedArchive
+                                    receipt['processedCloudExport']=await ProcessedArchive(database,storage.r2,retire_payloads=True).run(25)
                                 receipt['availableFinancials']=await ResearchProcessor(database).available_financials()
                         except Exception:
                             receipt['processingAfter']={'status':'failed','retryable':True}

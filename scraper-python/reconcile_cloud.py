@@ -41,7 +41,7 @@ async def reconcile(*,migrate_raw=False):
     storage=None;archive=None
     budget=transfer_budget.TransferBudget(ceiling)
     receipt={'status':'running','mode':'automatic-full-registry','processed':0,
-             'processedObjects':0,'rawObjects':0,'failures':0,'destructive':False}
+             'processedObjects':0,'archiveRecords':0,'failures':0,'destructive':False}
     run_id=('cloud-migration-' if migrate_raw else 'cloud-processed-')+os.environ.get('GITHUB_RUN_ID',uuid.uuid4().hex)+'-'+os.environ.get('GITHUB_RUN_ATTEMPT','1')
     started=time.monotonic()
     try:
@@ -54,8 +54,10 @@ async def reconcile(*,migrate_raw=False):
             transfer_budget.active=budget
             storage=RawStorage.from_environment()
             archive=R2Archive(database,storage.r2,storage.materialize)
-            processor=ResearchProcessor(database)
-            exporter=ProcessedArchive(database,storage.r2)
+            processor=ResearchProcessor(database,processed_storage=storage.r2)
+            payload_mode=os.environ.get('PROCESSED_PAYLOAD_MODE','database')
+            if payload_mode not in ('database','r2'):raise ValueError('Invalid processed payload mode')
+            exporter=ProcessedArchive(database,storage.r2,retire_payloads=payload_mode=='r2')
             # Reserve time for durable final receipts. A bounded batch may cross
             # the soft deadline; individual I/O and SQL already have deadlines.
             stop=started+max(1,seconds-90)
@@ -72,7 +74,7 @@ async def reconcile(*,migrate_raw=False):
                         exporting=result['copied']>0 or result['superseded']>0
                     if raw_pending:
                         result=await archive.run(5)
-                        receipt['rawObjects']+=result['copied'];receipt['failures']+=result['failed']
+                        receipt['archiveRecords']+=result['copied'];receipt['failures']+=result['failed']
                         raw_pending=any(result.get(k,0) for k in ('copied','failed','superseded'))
                         # New R2 pointers can unblock previously gated evidence.
                         processing=processing or result['copied']>0
