@@ -46,8 +46,13 @@ jobs:
           COLLECTOR_RUN_SECONDS: '600'
           CLOUD_MIGRATION_RUN_TRANSFER_BYTES: '402653184'
           CLOUD_MIGRATION_DAILY_TRANSFER_BYTES: '1073741824'
-          MIGRATE_RAW: ${{ inputs.migrate_raw || vars.CONTINUA_MIGRATE_LEGACY_ARCHIVE == 'true' }}
+          MIGRATE_RAW: ${{ inputs.migrate_raw }}
+          EVENT_NAME: ${{ github.event_name }}
+          MIGRATION_UNTIL: ${{ vars.CONTINUA_MIGRATE_LEGACY_UNTIL }}
         run: |
           args=(--apply)
           if [ "$MIGRATE_RAW" = true ]; then args+=(--migrate-raw); fi
+          # Temporary migration scheduling expires automatically. Engine-only
+          # reconciliation continues under the existing collection opt-in.
+          if [ "$EVENT_NAME" = schedule ] && [[ "$MIGRATION_UNTIL" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && [[ "$(date -u +%F)" < "$MIGRATION_UNTIL" ]]; then args+=(--migrate-raw); fi
           python scraper-python/reconcile_cloud.py "${args[@]}"
