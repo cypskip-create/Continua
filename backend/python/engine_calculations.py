@@ -73,7 +73,38 @@ def c_score(security_id, inputs):
         inputs={**seen, **metadata})
 
 
+def value_rating(valuation, now):
+    """Model agreement is evidence coverage, not a probability of investment success."""
+    finite = lambda n: isinstance(n, (int, float)) and not isinstance(n, bool) and math.isfinite(n)
+    positive = lambda n: finite(n) and n > 0
+    price = valuation.get('currentPrice') if positive(valuation.get('currentPrice')) else None
+    models = [m for m in valuation.get('models', []) if positive(m.get('fairValue')) and positive(m.get('currentPrice')) and price and abs(m['currentPrice']/price-1) <= .01]
+    values = sorted(m['fairValue'] for m in models)
+    fair = (values[(len(values)-1)//2]+values[len(values)//2])/2 if values else None
+    low, high = (min(values), max(values)) if values else (None, None)
+    spread = (high-low)/fair if fair else None
+    agreement = 'Limited' if len(models) < 2 else 'Wide' if spread > .5 else 'Mixed' if spread > .2 else 'Close'
+    bands = [10, 30] if agreement == 'Close' else [20, 50] if agreement == 'Mixed' else [30, 75]
+    upside = (fair/price-1)*100 if fair and price else None
+    try:
+        parse = lambda s: datetime.datetime.fromisoformat(s.replace('Z', '+00:00')).astimezone(datetime.timezone.utc)
+        age = (parse(now)-parse(valuation.get('priceAsOf', ''))).total_seconds()/86400
+        fresh = 0 <= age <= 7
+    except (ValueError, TypeError, AttributeError):
+        fresh = False
+    reason = 'A positive observed price is required.' if not price else 'A dated quote no older than seven days is required.' if not fresh else 'At least two usable models with matching prices are required.' if len(models) < 2 else 'Model disagreement exceeds 50%; a star rating is withheld.' if spread > .5 else None
+    b = round(upside, 8) if upside is not None else None
+    stars = None if reason else 5 if b >= bands[1] else 4 if b >= bands[0] else 1 if b <= -bands[1] else 2 if b <= -bands[0] else 3
+    return dict(methodologyVersion='continua-value-rating-v3', price=price, fair=fair, low=low, high=high,
+                spread=spread, agreement=agreement, bands=bands, upside=upside, stars=stars, models=models,
+                excluded=len(valuation.get('models', []))-len(models), unavailableReason=reason,
+                priceAsOf=valuation.get('priceAsOf'), calculatedAt=now,
+                methodology='Median of positive model fair values at matching prices. Stars require two models, a quote no older than seven days and model spread no greater than 50% of the median. Close agreement uses 10/30% upside bands; mixed uses 20/50%. These are disclosed screening assumptions, not calibrated probabilities or a Morningstar rating.')
+
+
 def calculate(operation, a):
+    if operation == 'value_rating':
+        return value_rating(*a)
     if operation == 'cscore':
         return c_score(*a)
     if operation == "stress":

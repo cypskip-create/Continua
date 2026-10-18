@@ -17,6 +17,7 @@ try {
  for(const path of [
   'supabase/migrations/030_market_schema.sql',
   'supabase/migrations/031_production_readiness.sql',
+  'supabase/migrations/20261011211500_candle_provenance.sql',
   'scraper/migrations/20260827090000 scraping engine foundation schema.sql',
   'supabase/migrations/20261007210000_market_research_records.sql',
   'supabase/migrations/20261010220000_historical_document_queue.sql',
@@ -81,11 +82,16 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  const daily=await observe('CGEN','History',[],'history');
  await db.query(`UPDATE scraping.processed_research SET payload=jsonb_set(payload,'{history}',$2::jsonb) WHERE extraction_id=$1`,
   [daily.extraction,JSON.stringify([{date:'2025-10-15',close:20,volume:null},{date:'2025-10-16',close:21,volume:0}])]);
- const {publisherCloseQuery,publisherCandleQuery}=await import('../../backend/src/storage/repositories/publisherCandleQuery.js');
+ const {publisherCloseQuery,publisherCandleQuery,legacyProviderCloseQuery}=await import('../../backend/src/storage/repositories/publisherCandleQuery.js');
  const dailyArgs=['NSE:CGEN','1d','2025-10-01','2025-10-31'];
  const literalCloses=(await db.query(publisherCloseQuery,dailyArgs)).rows;
  check(literalCloses.map(r=>[r.date,r.close,r.open,r.high,r.low,r.volume]),[['2025-10-15','20',null,null,null,null],['2025-10-16','21',null,null,null,'0']]);
  check((await db.query(publisherCandleQuery,dailyArgs)).rows,[]);
+ await db.query(`INSERT INTO market.candles(security_id,interval,bar_time,open,high,low,close,volume,source_url)
+ VALUES('NSE:CGEN','1d','2025-10-15T00:00:00Z',20,20,20,20,0,'https://live.mystocks.co.ke/'),
+ ('NSE:CGEN','1d','2025-10-16T00:00:00Z',21,21,21,21,120,'https://afx.kwayisi.org/nse/cgen.html')`);
+ const legacyCloses=(await db.query(legacyProviderCloseQuery,['NSE:CGEN','2025-10-01','2025-10-31'])).rows;
+ check(legacyCloses.map(r=>[r.date,r.close,r.open,r.high,r.low,r.volume]),[['2025-10-15','20',null,null,null,null],['2025-10-16','21',null,null,null,120]]);
  await db.exec("UPDATE scraping.sources SET redistribution_allowed=false");
  check((await db.query(publisherCloseQuery,dailyArgs)).rows,[]);
  await db.exec("UPDATE scraping.sources SET redistribution_allowed=true");

@@ -40,6 +40,7 @@ export const candlesRepository = {
        FROM market.candles
        WHERE security_id = $1 AND interval = $2 AND bar_time BETWEEN $3 AND $4
          AND ($5 OR source_url IS NOT NULL)
+         AND (source_url IS NULL OR source_url !~ '^https://(live[.]mystocks[.]co[.]ke/|afx[.]kwayisi[.]org/nse/)')
        ORDER BY bar_time ASC`, [securityId, interval, from, to, env.NODE_ENV !== 'production']);
         if(interval!=='1d')return res.rows;
         const observed=await query(publisherCandleQuery,[securityId,interval,from,to]);
@@ -55,7 +56,8 @@ export const candlesRepository = {
     },
     async getHighLow(securityId, from, to) {
         const res = await query(`SELECT MAX(high) as high, MIN(low) as low FROM market.candles
-       WHERE security_id = $1 AND interval = '1d' AND bar_time BETWEEN $2 AND $3 AND ($4 OR source_url IS NOT NULL)`, [securityId, from, to, env.NODE_ENV !== 'production']);
+       WHERE security_id = $1 AND interval = '1d' AND bar_time BETWEEN $2 AND $3 AND ($4 OR source_url IS NOT NULL)
+       AND (source_url IS NULL OR source_url !~ '^https://(live[.]mystocks[.]co[.]ke/|afx[.]kwayisi[.]org/nse/)')`, [securityId, from, to, env.NODE_ENV !== 'production']);
         const row = res.rows[0];
         if (!row || row.high == null)
             return null;
@@ -90,7 +92,8 @@ export const candlesRepository = {
     },
     async getAverageVolume(securityId, from, to) {
         const res = await query(`SELECT AVG(volume) as avg_volume FROM market.candles
-       WHERE security_id = $1 AND interval = '1d' AND bar_time BETWEEN $2 AND $3 AND ($4 OR source_url IS NOT NULL)`, [securityId, from, to, env.NODE_ENV !== 'production']);
+       WHERE security_id = $1 AND interval = '1d' AND bar_time BETWEEN $2 AND $3 AND ($4 OR source_url IS NOT NULL)
+       AND (source_url IS NULL OR source_url !~ '^https://(live[.]mystocks[.]co[.]ke/|afx[.]kwayisi[.]org/nse/)')`, [securityId, from, to, env.NODE_ENV !== 'production']);
         const v = res.rows[0]?.avg_volume;
         return v != null ? Number(v) : null;
     },

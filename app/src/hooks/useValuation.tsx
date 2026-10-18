@@ -12,7 +12,7 @@ export function useValuation(symbol: string, exchange?: string) {
   const activeExchange = exchange ?? selectedExchange;
 
   const query = useQuery({
-    queryKey: ["continua", "valuation", activeExchange, symbol],
+    queryKey: ["continua", "valuation-rating-v3", activeExchange, symbol],
     queryFn: () => valuationApi.get(symbol, activeExchange),
     enabled: !!symbol,
     staleTime: 5 * 60_000,

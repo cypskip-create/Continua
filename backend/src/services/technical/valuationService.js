@@ -19,6 +19,7 @@ import { securitiesRepository } from "../../storage/repositories/securitiesRepos
 import { pricesRepository } from "../../storage/repositories/pricesRepository.js";
 import { corporateActionsRepository } from "../../storage/repositories/corporateActionsRepository.js";
 import { trailingDividendPerShare } from "../research/dividendMetrics.js";
+import { pythonCalculation } from "../research/pythonCalculations.js";
 const CAVEAT = "Illustrative starting points, not price targets or investment advice. Each " +
     "model relies on simplifying assumptions (see each model's methodology) and " +
     "on the most recent annual financials on file, which may lag the current fiscal year.";
@@ -42,7 +43,8 @@ export const valuationService = {
             grahamNumberModel(currentPrice, datedFinancials),
             dividendDiscountModel(currentPrice, dividends),
         ];
-        return { symbol, exchange, currentPrice, currency: quote.currency, models, caveat: CAVEAT };
+        const result = { symbol, exchange, currentPrice, currency: quote.currency, priceAsOf: quote.timestamp, models, caveat: CAVEAT };
+        return {...result, rating: await pythonCalculation('value_rating', [result, new Date().toISOString()])};
     },
 };
 export async function relativeValuationModel(exchange, securityId, sectorId, currentPrice, financials) {

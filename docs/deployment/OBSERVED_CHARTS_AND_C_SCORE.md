@@ -75,3 +75,30 @@ tests, 74 disposable PostgreSQL checks, Go tests/vet, 491 Engine numerical parit
 cases, six company-bundle parity cases and 26 valuation parity cases passed.
 The production build and declaration checks passed. Hosted data coverage and
 native production-cutover gates remain separate from these fixture results.
+
+## Engine value rating v3 and provider corrections
+
+The fair-value star assessment now runs in the same isolated Python Engine,
+shared with the native candidate. Browsers display the versioned result without
+recreating stars from cached model arrays. A rating needs at least two positive
+matching-price models, a dated quote within seven days and model spread no more
+than 50% of the median. Mixed model agreement widens the disclosed upside bands.
+These are screening assumptions, not calibrated probabilities or licensed
+Morningstar research. Unknown and contradictory evidence stays unrated.
+
+The active production provider is MyStocks (confirmed in Render). Its existing
+reported market-cap field now reaches the quote contract, with abbreviated
+currency units converted exactly once. Missing/inconsistent required quote
+fields withhold the update rather than becoming zeros. AFX volume suffixes are
+converted to share counts, and its reported capitalization is retained too.
+Both providers historically wrote close-only history in a flat OHLC transport;
+OHLC/high-low/average-volume reads now exclude these records. The separate
+close-history response exposes their actual close, with absent O/H/L and
+MyStocks daily volume NULL. Legacy rows are preserved. UTC date boundaries are
+explicit and tested against a non-UTC database environment.
+
+Updated validation: 463 backend tests passed (six optional skipped), 119 frontend
+tests passed, 75 disposable PostgreSQL checks and 26 native valuation parity
+cases passed. Frontend/backend type checks and production browser build audit
+passed (171 artifacts; no secret-pattern findings). The source schema remains
+undocumented and must be reverified if the provider changes it.

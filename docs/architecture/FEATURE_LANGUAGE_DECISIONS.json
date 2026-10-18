@@ -9,13 +9,14 @@
       "category": "Observed C score and sourced chart/statistics coverage",
       "language": "Python numerical Engine, JavaScript compatibility API and existing frontend TypeScript",
       "runtime": "Existing isolated secret-free Python calculator and current API",
-      "reason": "Centralize numerical C score in the already deployed Python worker, shared with the native candidate. Use nullable evidence, sector applicability and disclosed bounded thresholds. Reuse canonical SQL and private-source permission gates for price observations and statistics. Browser display validation and persisted preferences never manufacture prices or scores. No new service or native cutover is needed.",
+      "reason": "Centralize numerical C score in the already deployed Python worker, shared with the native candidate. Use nullable evidence, sector applicability and disclosed bounded thresholds. Reuse canonical SQL and private-source permission gates for price observations and statistics. Browser display validation and persisted preferences never manufacture prices or scores. No new service or native cutover is needed. Fair-value star rating v3 also runs here and is shared with the Python native candidate; the browser only presents a versioned result. Reject nonfinite/mismatched inputs, withhold sparse/stale/dispersed evidence and disclose heuristic bands. Reported provider market-cap units are preserved; legacy flat OHLC transports are exposed only through close-only SQL.",
       "references": [
         "https://docs.python.org/3/library/json.html",
         "https://www.postgresql.org/docs/current/ddl-alter.html",
         "https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage",
         "https://www.morningstar.com/investing-terms/morningstar-rating-for-stocks",
-        "https://www.morningstar.com/investing-terms/uncertainty-rating"
+        "https://www.morningstar.com/investing-terms/uncertainty-rating",
+        "https://docs.python.org/3/library/statistics.html#statistics.median"
       ]
     },
     {

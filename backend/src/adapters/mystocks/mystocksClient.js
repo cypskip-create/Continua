@@ -83,9 +83,18 @@ function toSlug(symbol) {
     return SYMBOL_TO_MYSTOCKS_SLUG[symbol] ?? symbol;
 }
 function parseNumber(raw) {
-    if (!raw)
-        return 0;
-    return Number(raw.replace(/,/g, "")) || 0;
+    if (typeof raw !== 'string' || !raw.trim()) return null;
+    const value = Number(raw.replace(/,/g, ''));
+    return Number.isFinite(value) ? value : null;
+}
+/** Reported abbreviated currency amount, converted to the raw contract's millions. */
+export function parseMarketCapMillions(raw) {
+    if (typeof raw !== 'string') return undefined;
+    const match = raw.replace(/,/g, '').trim().match(/^(\d+(?:\.\d+)?)\s*([KMBT])?$/i);
+    if (!match) return undefined;
+    const units = {K:1e3,M:1e6,B:1e9,T:1e12};
+    const amount = Number(match[1]) * (units[match[2]?.toUpperCase()] ?? 1);
+    return Number.isFinite(amount) && amount > 0 ? amount / 1e6 : undefined;
 }
 /** Per-symbol cache so a burst of fetchQuotes() calls close together
  *  (e.g. priceWorker's poll interval) doesn't hammer the endpoint more
@@ -192,7 +201,7 @@ async function fetchOneQuote(symbol) {
         return null;
     }
     const d = parsed.data;
-    if (!Array.isArray(d) || d.length < 7) {
+    if (!Array.isArray(d) || d.length < 8) {
         logger.warn({ symbol, data: d }, "MyStocksClient: unexpected data shape");
         return null;
     }
@@ -201,7 +210,14 @@ async function fetchOneQuote(symbol) {
     const open = parseNumber(d[4]);
     const high = parseNumber(d[5]);
     const low = parseNumber(d[6]);
-    const volume = Math.round(parseNumber(d[7]));
+    const volume = parseNumber(d[7]);
+    if (![last,prevClose,open,high,low].every(v => v !== null && v > 0)
+        || volume === null || !Number.isSafeInteger(volume) || volume < 0
+        || high < Math.max(open,low,last) || low > Math.min(open,last)
+        || !Number.isFinite(parsed.stamp) || parsed.stamp <= 0 || parsed.stamp * 1000 > Date.now()+60000) {
+        logger.warn({symbol}, 'MyStocksClient: incomplete or inconsistent observed quote; withholding update');
+        return null;
+    }
     // Sign derived from actual prices, NOT from the unsigned "X (Y%)"
     // string in d[1] or from "klass" — see file header comment for why.
     const change = prevClose ? last - prevClose : 0;
@@ -216,6 +232,7 @@ async function fetchOneQuote(symbol) {
         Change: Math.round(change * 100) / 100,
         ChangePct: Math.round(changePct * 100) / 100,
         Volume: volume,
+        MarketCapMn: parseMarketCapMillions(d[10]),
         Currency: "KES",
         // "market open/closed" here refers to the exchange's trading session,
         // not this security's own trading status (suspended/halted/delisted),

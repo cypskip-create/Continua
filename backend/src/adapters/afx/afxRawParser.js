@@ -58,6 +58,14 @@ function parsePercent(raw) {
     const match = raw.replace(/,/g, "").match(/-?\d+(\.\d+)?/);
     return match ? parseFloat(match[0]) : null;
 }
+/** Volume is a count of shares, never millions of shares. */
+function parseVolume(raw) {
+    if (typeof raw !== 'string') return null;
+    const match = raw.replace(/,/g, '').trim().match(/^(\d+(?:\.\d+)?)\s*([KMB])?$/i);
+    if (!match) return null;
+    const amount = Number(match[1]) * ({K:1e3,M:1e6,B:1e9}[match[2]?.toUpperCase()] ?? 1);
+    return Number.isSafeInteger(amount) && amount >= 0 ? amount : null;
+}
 /**
  * Reads a "label -> value" table (the "Last Trading Results" and "Growth
  * & Valuation" tables both take this two-column shape) into a plain
@@ -110,7 +118,7 @@ export function parseAfxQuote(html, symbol) {
         prevClose,
         change,
         changePct,
-        volume: parseScaledNumber(labelValues.get("traded volume")),
+        volume: parseVolume(labelValues.get("traded volume")),
         currency: "KES",
         asOfTradingDay: narrativeTradingDayMatch?.[1]?.trim() ?? null,
     };
@@ -194,7 +202,7 @@ export function parseAfxDailyHistory(html) {
             bars.push({
                 date: dateText,
                 close,
-                volume: parseMoney($(cells[1]).text()),
+                volume: parseVolume($(cells[1]).text()),
             });
         });
     });

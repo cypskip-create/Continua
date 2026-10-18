@@ -7,14 +7,14 @@
   "features": [
     {
       "legacyFile": "backend/python/engine_calculations.py",
-      "legacySha256": "ed0d6f24f87824a47397f28d0a4bb57e3829f8606029a92f28a3f04fdb5e6400",
+      "legacySha256": "911bc56f7fe939cfd940b0f00cbf36cc97a154cb97aa5d3d809081d5d53e53df",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
     },
     {
       "legacyFile": "backend/src/services/marketData/marketStatistics.js",
-      "legacySha256": "35ea58afd55cea0d637f4888239b32129cb6f08984335ddc3f576523d95322dd",
+      "legacySha256": "57da640dbc06ea1df09f9469801d949219f39239cf3a22d36d9aa634f18f9e62",
       "targetLanguage": "Go",
       "status": "pending",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
@@ -553,7 +553,7 @@
     },
     {
       "legacyFile": "backend/src/adapters/afx/afxClient.js",
-      "legacySha256": "b09912a3620bf2e2b26eec331cd68bfd2db880885fe1eb2d087482b3db9ce23e",
+      "legacySha256": "3da55572ee536ab3768477f5560af293329673b8115524ac328d2d2c787519d3",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -561,7 +561,7 @@
     },
     {
       "legacyFile": "backend/src/adapters/afx/afxRawParser.js",
-      "legacySha256": "862abfcd5b9b828decacf0021b1fc54430e346f849769aa47822551d74cbf8c0",
+      "legacySha256": "d76144323141adc23ada67fb380a778e16acf2eaf5d39d30524978dac5d32a1e",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -569,7 +569,7 @@
     },
     {
       "legacyFile": "backend/src/adapters/mystocks/mystocksClient.js",
-      "legacySha256": "e57b4590ecfd0a9d31ac6db92e4d37b6e431bcc370c0a85a30d630d81818c1c0",
+      "legacySha256": "36835c18727b2841b66ce5438595d2201f70b994bc8a494f092570f1804a0fd7",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -1942,7 +1942,7 @@
     },
     {
       "legacyFile": "backend/src/services/technical/valuationService.js",
-      "legacySha256": "1ac9750c84aa38d86e9abbd66e806af05c0b796e0bb20c085a32ccfb6b95bae5",
+      "legacySha256": "6f3a042d4e4277bc39f51a87cf40fab1b7bb6104ce474d51bd1b43435984bc41",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -1993,7 +1993,7 @@
     },
     {
       "legacyFile": "backend/src/storage/repositories/candlesRepository.js",
-      "legacySha256": "14ee701d7cdbc0bbc3e5423999c0609485bb59673f761f4d98cb9269d0af4e42",
+      "legacySha256": "be6fee35e1e11fca646564ceacaf306684d0fed559b3448ca890df68198c6ae9",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -3330,7 +3330,7 @@
     },
     {
       "legacyFile": "backend/src/api/routes/priceHistory.routes.js",
-      "legacySha256": "2535ae1bd88f62e1b6138c97e5fc85e042d1655e0db1b8f407edc17dbccf4376",
+      "legacySha256": "c0483582cb4e9427b8a0445d2a71271428ec012f4ac039637762d649a9979aed",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -3353,7 +3353,7 @@
     },
     {
       "legacyFile": "backend/src/storage/repositories/publisherCandleQuery.js",
-      "legacySha256": "0daae029b06f5c84637d710b1c43def7514632c92a6a7c9864a5026e6fb7f0a5",
+      "legacySha256": "cc1581ccdfe2b9e40203165cf2c80607f23fcf2756e0ec305bd60297798a86d1",
       "targetLanguage": "Go",
       "status": "pending",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."

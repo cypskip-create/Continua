@@ -81,5 +81,10 @@ def valuation_bundle(symbol, exchange, quote, financials, dividends, sector_id, 
     if not quote: return None
     dated = financials if financials and compatible_currency(financials.get('currency'),quote.get('currency')) and financials.get('reportedAt') and financials.get('periodEnd') and financials['reportedAt'][:10] <= quote['timestamp'][:10] and financials['periodEnd'][:10] <= quote['timestamp'][:10] else None
     price = quote['lastPrice']
-    return {'symbol': symbol, 'exchange': exchange, 'currentPrice': price, 'currency': quote['currency'],
+    result = {'symbol': symbol, 'exchange': exchange, 'currentPrice': price, 'currency': quote['currency'], 'priceAsOf': quote['timestamp'],
             'models': [relative_valuation(price, dated, sector_id, sector), graham_number(price, dated), dividend_discount(price, dividends, now)], 'caveat': CAVEAT}
+    import pathlib
+    import sys
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / 'backend' / 'python'))
+    from engine_calculations import value_rating
+    return dict(result, rating=value_rating(result, now))

@@ -28,3 +28,14 @@ export function mergeDailyObservations(canonical, observed) {
  const dates=new Set(canonical.map(r=>new Date(r.timestamp).toISOString().slice(0,10)));
  return [...canonical,...observed.filter(r=>!dates.has(new Date(r.timestamp).toISOString().slice(0,10)))].sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
 }
+
+// Legacy provider records contain observed closes only; never expose flat OHLC.
+export const legacyProviderCloseQuery = `SELECT security_id AS "securityId",to_char(bar_time AT TIME ZONE 'UTC','YYYY-MM-DD') AS date,
+            close,CASE WHEN source_url LIKE 'https://afx.kwayisi.org/nse/%' THEN volume ELSE NULL END AS volume,
+            'unknown'::text AS adjustment,source_url AS "sourceUrl",'daily_close_only'::text AS basis,
+            NULL::numeric AS open,NULL::numeric AS high,NULL::numeric AS low
+            FROM market.candles WHERE security_id=$1 AND interval='1d' AND close>0
+            AND bar_time >= ($2::date::timestamp AT TIME ZONE 'UTC')
+            AND bar_time < (($3::date+1)::timestamp AT TIME ZONE 'UTC')
+            AND source_url ~ '^https://(live[.]mystocks[.]co[.]ke/|afx[.]kwayisi[.]org/nse/)'
+            ORDER BY bar_time LIMIT 10001`;

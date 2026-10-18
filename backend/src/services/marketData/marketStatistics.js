@@ -5,6 +5,7 @@ export function marketStatistics(quote, history, candles, closes, now = new Date
     const usableQuote = quote?.source !== 'mock' && Number.isFinite(Date.parse(quote?.timestamp)) && Date.parse(quote.timestamp) <= now.getTime();
     const at = usableQuote ? quote.timestamp.slice(0, 10) : now.toISOString().slice(0, 10), price = usableQuote && positive(quote?.lastPrice) ? quote.lastPrice : null;
     const financial = [...history].filter(r => r.periodEnd && (!at || r.periodEnd.slice(0, 10) <= at)
+        && (!r.reportedAt || r.reportedAt.slice(0, 10) <= at)
         && (!r.currency || !quote?.currency || r.currency === quote.currency))
         .sort((a, b) => b.fiscalYear - a.fiscalYear)[0];
     const shares = positive(financial?.sharesOutstanding) ? financial.sharesOutstanding : null;

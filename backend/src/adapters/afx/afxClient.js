@@ -144,7 +144,7 @@ export class AfxClient {
                 Change: quote.change ?? 0,
                 ChangePct: quote.changePct ?? 0,
                 Volume: quote.volume ?? 0,
-                MarketCapMn: undefined,
+                MarketCapMn: parseAfxSecurityProfile(html, symbol).marketCapMn ?? undefined,
                 Currency: quote.currency,
                 TradingStatus: "ACTIVE",
                 EventTimestamp: new Date().toISOString(),
