@@ -102,14 +102,20 @@ class R2Archive:
             return storage.upload(snapshot_key,Artifact(path,row["document_url"],"application/gzip",size,digest))
 
     async def _run(self,limit):
-        pending=await self.database.query("""SELECT a.*,e.id AS extraction_id FROM scraping.raw_artifacts a
+        pending=await self.database.query("""WITH coverage AS MATERIALIZED (
+          SELECT security_id,count(*) AS completed FROM scraping.processed_research
+          WHERE status='publisher_observation' AND destination='financials' GROUP BY security_id)
+          SELECT a.*,e.id AS extraction_id FROM scraping.raw_artifacts a
           LEFT JOIN LATERAL (SELECT * FROM scraping.extractions WHERE artifact_id=a.id
             AND id>COALESCE(NULLIF(a.metadata->>'r2ExtractionId','')::bigint,0)
             ORDER BY id ASC LIMIT 1) e ON true
+          LEFT JOIN coverage c ON c.security_id='NSE:'||coalesce(a.metadata->>'ticker',e.entity->>'ticker')
           WHERE (a.storage_path NOT LIKE 'r2://%%' OR e.id IS NOT NULL)
             AND COALESCE((a.metadata->>'r2ArchiveFailures')::integer,0)<5
             AND COALESCE(NULLIF(a.metadata->>'r2ArchiveRetryAt','')::timestamptz,'epoch'::timestamptz)<now()
-          ORDER BY (a.content_type LIKE '%%pdf%%') DESC,a.id LIMIT %s""",(limit,))
+          ORDER BY (a.source_id='kenyanstocks' AND a.content_type LIKE 'text/html%%'
+            AND coalesce(a.metadata->>'ticker',e.entity->>'ticker') IS NOT NULL) DESC,
+            coalesce(c.completed,0),a.id LIMIT %s""",(limit,))
         summary={"copied":0,"failed":0,"superseded":0}
         for row in pending:
             try:

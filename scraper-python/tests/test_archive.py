@@ -30,7 +30,7 @@ class DB:
     def __init__(self,row,*,superseded=False):self.row=row;self.calls=[];self.superseded=superseded
     async def query(self,sql,args=()):
         self.calls.append((sql,args))
-        if sql.startswith("SELECT a.*"):return [self.row]
+        if 'SELECT a.*,e.id AS extraction_id' in sql:return [self.row]
         if sql.startswith("SELECT * FROM scraping.extractions"):return [{"id":7,"artifact_id":1,"text":"source evidence","confidence":Decimal("0.8"),"extracted_at":datetime(2026,10,13,tzinfo=timezone.utc)}]
         if "RETURNING id" in sql:return [] if self.superseded else [{"id":1}]
         return []

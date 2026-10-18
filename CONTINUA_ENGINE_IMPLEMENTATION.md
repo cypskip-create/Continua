@@ -249,3 +249,8 @@ This enables later private reader migration without losing older version
 pointers; it does not authorize removal of originals or SQL extraction bodies.
 Disposable PostgreSQL passes **55 checks**, including the actual archive CAS,
 concurrent-loser suppression, no-extraction handling and restricted table access.
+
+Archive scheduling also prioritizes already collected primary-source issuer HTML
+over the legacy PDF backlog, then issuers with fewer completed financial views.
+This removes the PDF-first migration bottleneck without a ticker allowlist or
+manual financial entry. Other archive sources remain in the same durable queue.

@@ -172,5 +172,14 @@ print(json.dumps([read_projection(row['payload']) for row in json.load(sys.stdin
  const access=(await db.query(`SELECT has_function_privilege('anon','market.canonical_financial_history(text,text,integer,boolean)','EXECUTE') AS public,
   has_function_privilege('authenticated','market.publisher_financial_history(text)','EXECUTE') AS user`)).rows[0];
  check(access,{public:false,user:false});
+ // An older large PDF must not monopolize migration ahead of collected issuer
+ // views. The issuer with fewer completed financial categories advances first.
+ const archiveSelection=archiveSource.match(/pending=await self.database.query\("""([\s\S]*?)"""/)[1].replaceAll('%%','%').replace('%s','$1');
+ for(const [index,ticker]of ['PDF','CGEN','COOP'].entries())await db.query(`INSERT INTO scraping.raw_artifacts
+  (source_id,adapter,sha256,document_url,storage_path,crawler_version,content_type,metadata)
+  VALUES('kenyanstocks','fixture',$1,$2,$3,'fixture',$4,$5::jsonb)`,[(9000+index).toString(16).padStart(64,'0'),
+   'https://fixture.invalid/archive-'+ticker,'legacy/'+ticker,index===0?'application/pdf':'text/html',JSON.stringify(index===0?{}:{ticker})]);
+ const ordered=(await db.query(archiveSelection,[20])).rows.filter(row=>row.document_url.includes('/archive-'));
+ check(ordered.map(row=>row.metadata.ticker??'PDF'),['COOP','CGEN','PDF']);
  console.log(JSON.stringify({checks,fixtureCompanies:symbols.length,productionCompaniesProcessed:0,status:'passed'}));
 } catch(error) { console.error(error.message); process.exitCode=1; } finally {await db.close()}
