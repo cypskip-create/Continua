@@ -53,6 +53,8 @@ class PrivateSupabaseStorage:
                 path=pathlib.Path(directory)/'artifact';digest,total=hashlib.sha256(),0
                 with path.open('xb') as body:
                     while chunk:=response.read(65536,decode_content=False):
+                        from .transfer_budget import account
+                        account('downloadBytes',len(chunk))
                         total+=len(chunk)
                         if total>self.max_bytes:raise ValueError('Stored artifact exceeds response limit')
                         body.write(chunk);digest.update(chunk)
@@ -75,6 +77,8 @@ class RawStorage:
         # The legacy reader remains available for migration, but a configured
         # service key alone must never enable duplicate uploads.
         dual_write=os.environ.get('R2_DUAL_WRITE','false').lower() in ('true','1','yes')
+        if dual_write:
+            raise ValueError('Supabase file writes are disabled; set R2_DUAL_WRITE=false')
         if dual_write or os.environ.get('SUPABASE_SERVICE_ROLE_KEY'):
             rollback=PrivateSupabaseStorage(os.environ.get('SUPABASE_URL',''),'scraper-raw' if not os.environ.get('SUPABASE_STORAGE_BUCKET') else os.environ['SUPABASE_STORAGE_BUCKET'],os.environ.get('SUPABASE_SERVICE_ROLE_KEY',''))
         try:r2=R2Storage.from_environment(rollback_write=rollback.upload if rollback and dual_write else None)

@@ -44,15 +44,18 @@ def source_batch(environment,adapter):
     if not 1<=value<=100:raise ValueError('Invalid source batch configuration')
     return value
 
-async def settle_completed_reservations(tx):
+async def settle_completed_reservations(tx,*,migration=False):
     """Return measured unused allowance, not failed/crashed reservations.
 
     Called under the shared scheduler transaction lock. Retain a 1MiB buffer
     above already conservative transfer counters; append an idempotent receipt.
     Never reset a day, raise its allowance or refund incomplete work.
     """
-    rows=await tx.query("""SELECT id,receipt FROM scraping.scheduled_runs
+    ledger='scraping.cloud_migration_transfer_days' if migration else 'scraping.scheduled_transfer_days'
+    scope="id LIKE 'cloud-migration-%%'" if migration else "id NOT LIKE 'cloud-migration-%%'"
+    rows=await tx.query(f"""SELECT id,receipt FROM scraping.scheduled_runs
       WHERE status='completed' AND started_at >= date_trunc('day',now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'
+        AND {scope}
         AND id NOT LIKE 'render-index-%%' AND NOT(receipt ? 'reservationSettlement')
         AND receipt ? 'limitBytes' AND receipt ? 'downloadBytes' AND receipt ? 'uploadBytes'
       ORDER BY started_at,id FOR UPDATE LIMIT 100""")
@@ -62,19 +65,19 @@ async def settle_completed_reservations(tx):
         if not isinstance(receipt,dict):continue
         reserved,download,upload=(receipt.get(k) for k in ('limitBytes','downloadBytes','uploadBytes'))
         if any(type(n) is not int or n<0 for n in (reserved,download,upload)):continue
-        if reserved>256*1024**2 or reserved<1 or download+upload>reserved:continue
+        if reserved>(384 if migration else 256)*1024**2 or reserved<1 or download+upload>reserved:continue
         retained=min(reserved,download+upload+1024**2)
         settlements.append((row['id'],{'originalReservedBytes':reserved,'retainedBytes':retained,'refundedBytes':reserved-retained}))
     refund=sum(s['refundedBytes'] for _,s in settlements)
     if not settlements:return
-    balance=await tx.query("SELECT reserved_bytes FROM scraping.scheduled_transfer_days WHERE day=(now() AT TIME ZONE 'UTC')::date FOR UPDATE")
+    balance=await tx.query(f"SELECT reserved_bytes FROM {ledger} WHERE day=(now() AT TIME ZONE 'UTC')::date FOR UPDATE")
     if not balance or balance[0]['reserved_bytes']<refund:raise ValueError('Reservation audit does not match the daily ledger')
-    await tx.query("UPDATE scraping.scheduled_transfer_days SET reserved_bytes=reserved_bytes-%s WHERE day=(now() AT TIME ZONE 'UTC')::date",(refund,))
+    await tx.query(f"UPDATE {ledger} SET reserved_bytes=reserved_bytes-%s WHERE day=(now() AT TIME ZONE 'UTC')::date",(refund,))
     for run_id,settlement in settlements:
         await tx.query("UPDATE scraping.scheduled_runs SET receipt=receipt || %s::jsonb WHERE id=%s",(encode({'reservationSettlement':settlement}),run_id))
 
 @asynccontextmanager
-async def scheduled_slot(database,run_id,kind,ceiling,daily):
+async def scheduled_slot(database,run_id,kind,ceiling,daily,*,migration=False):
     """Transaction-pooler-safe atomic claim; never leave a session lock behind."""
     skipped=None
     async with database.transaction() as tx:
@@ -84,11 +87,12 @@ async def scheduled_slot(database,run_id,kind,ceiling,daily):
         elif await tx.query("SELECT id FROM scraping.scheduled_runs WHERE status='running' AND id NOT LIKE 'render-index-%%' AND started_at>now()-interval '30 minutes' LIMIT 1"):
             skipped='overlap-skipped'
         else:
-            await settle_completed_reservations(tx)
-            reserved=await tx.query('''INSERT INTO scraping.scheduled_transfer_days(day,reserved_bytes)
+            await settle_completed_reservations(tx,migration=migration)
+            ledger='scraping.cloud_migration_transfer_days' if migration else 'scraping.scheduled_transfer_days'
+            reserved=await tx.query(f'''INSERT INTO {ledger}(day,reserved_bytes)
                 VALUES((now() AT TIME ZONE 'UTC')::date,%s)
-                ON CONFLICT(day) DO UPDATE SET reserved_bytes=scraping.scheduled_transfer_days.reserved_bytes+EXCLUDED.reserved_bytes
-                WHERE scraping.scheduled_transfer_days.reserved_bytes+EXCLUDED.reserved_bytes<=%s RETURNING day''',(ceiling,daily))
+                ON CONFLICT(day) DO UPDATE SET reserved_bytes={ledger}.reserved_bytes+EXCLUDED.reserved_bytes
+                WHERE {ledger}.reserved_bytes+EXCLUDED.reserved_bytes<=%s RETURNING day''',(ceiling,daily))
             if not reserved:skipped='budget-paused'
             else:await tx.query('INSERT INTO scraping.scheduled_runs(id,kind,status) VALUES(%s,%s,%s)',(run_id,kind,'running'))
     if skipped:
@@ -132,6 +136,8 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
                 storage=RawStorage.from_environment()
                 runtime=CollectorRuntime(database,storage,scheduler_enabled=False)
                 runtime.jobs.max_attempts=5
+                if kind=='documents':
+                    receipt['queueRecovery']={'requeuedMissingPrivateEvidence':await runtime.jobs.recover_unarchived('kenyanstocks')}
                 try:
                     async with asyncio.timeout(seconds):
                         if process_research:

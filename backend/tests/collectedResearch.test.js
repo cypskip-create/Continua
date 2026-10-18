@@ -1,7 +1,27 @@
-import { expect, it, vi } from 'vitest';
+import { expect, it, vi,afterEach } from 'vitest';
 vi.mock('../src/storage/db.js', () => ({ query: vi.fn() }));
 import { query } from '../src/storage/db.js';
 import { collectedResearch } from '../src/services/research/collectedResearch.js';
+import {processedObjectRepository} from '../src/storage/researchObjects.js';
+afterEach(()=>{vi.unstubAllEnvs();vi.restoreAllMocks();});
+
+it('hydrates prepared objects only after the current source rights query and never masks corrupt cloud data',async()=>{
+    vi.stubEnv('PROCESSED_STORAGE_READS','r2');
+    const row={payload:{stale:true},object_uri:'private-receipt'};
+    query.mockResolvedValue({rows:[row]});
+    const reader=vi.spyOn(processedObjectRepository,'read').mockResolvedValue({revenue:123.45});
+    expect(await collectedResearch('KCB')).toEqual([{revenue:123.45}]);
+    expect(query.mock.calls.at(-1)[0]).toContain('c.processed_at=p.processed_at');
+    expect(query.mock.calls.at(-1)[0]).toContain('s.redistribution_allowed=true');
+    reader.mockRejectedValue(new Error('integrity mismatch'));
+    await expect(collectedResearch('KCB')).rejects.toThrow('integrity');
+});
+
+it('strict cloud reads do not silently return the temporary database projection',async()=>{
+    vi.stubEnv('PROCESSED_STORAGE_READS','r2');
+    query.mockResolvedValue({rows:[{payload:{stale:true}}]});
+    await expect(collectedResearch('KCB')).rejects.toThrow('cloud object is pending');
+});
 
 it('reads processed issuer data with current rights, private evidence and latest-category guards', async () => {
     const observation = { destination: 'financials', status: 'publisher_observation', charts: [] };

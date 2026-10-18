@@ -103,10 +103,7 @@ Validation completed:
   checks were not performed. Embedded PostgreSQL verifies the migration itself.
 
 Local frontend reference registry: **57 tickers**. The live database is the
-authoritative, dynamically discovered universe. Production NSE registry count: **not queried**. Production completed/partial/failed
-counts: **not measured**. Production tickers backfilled by this session: **0**.
-No production database/R2 credentials are configured in the execution environment.
-No migration or deployment success is claimed.
+authoritative, dynamically discovered universe. At the foundational verification checkpoint, production coverage had not yet been queried and no live migration was claimed. The live migration measurements below supersede that checkpoint.
 
 ## Deployment configuration still required
 
@@ -132,3 +129,69 @@ UPSTASH_REDIS_REST_URL/TOKEN configuration. No provider credentials belong in Gi
   source licensing must be recorded before previously blocked data is published.
 - API caches retain existing short TTLs; source-rights changes are immediate at
   database reads but may persist until an already cached API response expires.
+
+
+## Cloudflare migration checkpoint — 2026-10-18
+
+The live registry has **69 active NSE instruments**. A live annual-coverage query
+reported 5 complete basic-field observations, 11 partial and 53 discovered with
+no usable annual history. This label does not certify the full financial
+statement taxonomy, dated valuation eligibility, source licensing or ratings.
+It is not a claim that all 69 companies have completed research.
+
+Initial physical inventory: Supabase `scraper-raw` contained 9,150 objects and
+3,994,020,859 bytes. Archive metadata contained 13,242 legacy pointers and 475 R2
+pointers. Some legacy pointers have no corresponding retained object, including
+two NSE PDFs. Missing objects stay explicit, retry with bounded attempts and
+quarantine after five failures; verified originals are never invented.
+
+The deployed scraper's `R2_DUAL_WRITE` was found true and corrected to false in
+Render, with a successful deployment and persisted-value verification. Both
+runtime startup policies now reject duplicate Supabase file writes. The legacy
+reader remains solely for verified migration.
+
+`reconcile_cloud.py` automatically scans pending evidence without an issuer
+allowlist, processes it with the Python Engine, exports immutable gzip payloads
+to `processed/research/...`, and resumes raw/extraction archival. Its SQL receipts
+are committed only after R2 size/hash verification. Company-context changes
+invalidate prior processed receipts by timestamp. Original archive and prepared
+research objects use separate private namespaces in the existing bucket.
+
+A new finite Actions workflow runs every six hours using the existing document
+schedule opt-in. User-approved migration limits are 384 MiB/run and 1 GiB/day,
+tracked separately from the unchanged normal collection allowance. The existing
+Supabase legacy reader credential was configured as an encrypted repository
+secret with the user's explicit approval. No secret is committed to the repo.
+
+An initial automatic run processed 2 newly eligible records and verified 75
+processed objects, then checkpointed. A subsequent 566-second run processed 25 records, verified 150 additional
+processed objects and advanced 30 raw/archive records without failures. These
+are checkpoint counts, not final migration totals. Scheduled document runs
+now recover missing private issuer evidence. Claim ordering balances completed
+financial views across issuers, so the oldest issuer cannot consume every
+category before newly discovered issuers advance.
+
+Native Go and compatibility API readers support private processed R2 objects with
+checksum, exact issuer/version/status verification, bounded gzip decoding, bounded
+caches and deadlines. Current SQL source-permission gates still execute before
+object reads. `prefer-r2` is the staged cutover mode; `r2` rejects missing receipts
+without silently returning the database projection. Full SQL payload retirement
+must wait for every remaining direct reader to be migrated and checked.
+
+A read-only account credential restricted to `continua-financial-documents` was
+created with explicit user approval, expires 2027-10-18, and was saved in the Render
+backend environment. The native production runtime cutover remains guarded.
+
+Validation at this checkpoint: 422 backend tests passed, 17 skipped; 146 Python
+collector tests passed, 6 skipped; all Go packages and vet passed; backend build
+and type contracts passed; private-object tests cover corruption, cross-issuer
+identity and decompression limits. Live staged reads matched existing responses
+for five issuers. Disposable PostgreSQL now passes 40 checks, including actual
+Python issuer-fairness claim SQL and checkpoint-table access restrictions.
+
+Still outstanding: deploy this commit and enable the reconciliation workflow;
+verify production readers and final object coverage; migrate remaining direct
+payload readers and application uploads; retire legacy files only after verified
+coverage and explicit deletion approval; finish the rating/forecast/portfolio,
+Premium Plus and full mobile/security audits listed above. Storage quota relief
+is not yet claimed because the legacy bucket has not been purged.

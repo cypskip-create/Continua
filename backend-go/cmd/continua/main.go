@@ -10,6 +10,7 @@ import (
 	"continua/backend/internal/engine"
 	"continua/backend/internal/httpapi"
 	"continua/backend/internal/marketdata"
+	"continua/backend/internal/objectstore"
 	"continua/backend/internal/publication"
 	"continua/backend/internal/streaming"
 	"encoding/json"
@@ -43,6 +44,15 @@ func main() {
 		os.Exit(1)
 	}
 	defer store.DB.Close()
+	objects, objectMode, err := objectstore.FromEnvironment(os.Getenv)
+	if err != nil {
+		slog.Error("Private processed storage configuration rejected")
+		os.Exit(1)
+	}
+	if objects != nil {
+		store.ProcessedObjects = objects
+	}
+	store.ProcessedStorageMode = objectMode
 	authenticator := auth.New(store, false)
 	authenticator.DevelopmentKey = os.Getenv("DEV_API_KEY")
 	api := httpapi.New(store, authenticator)

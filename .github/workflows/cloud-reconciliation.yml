@@ -1,0 +1,53 @@
+name: Automatic full-registry Engine and Cloudflare reconciliation
+on:
+  schedule:
+    - cron: '11 0,6,12,18 * * *'
+  workflow_dispatch:
+    inputs:
+      migrate_raw:
+        description: Also resume verified legacy originals and extraction snapshots
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: continua-scheduled-collector
+  cancel-in-progress: false
+jobs:
+  reconcile:
+    if: github.event_name == 'workflow_dispatch' || vars.CONTINUA_SCHEDULED_DOCUMENTS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: scraper-python/requirements-lock.txt
+      - run: python -m pip install -r scraper-python/requirements-lock.txt
+      - name: Process every pending issuer and verify separate private objects
+        env:
+          DATABASE_URL: ${{ secrets.COLLECTOR_DATABASE_URL }}
+          R2_ACCOUNT_ID: ${{ secrets.COLLECTOR_R2_ACCOUNT_ID }}
+          R2_BUCKET: continua-financial-documents
+          R2_ACCESS_KEY_ID: ${{ secrets.COLLECTOR_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.COLLECTOR_R2_SECRET_ACCESS_KEY }}
+          RAW_STORAGE_DRIVER: r2
+          R2_DUAL_WRITE: 'false'
+          SUPABASE_URL: https://jjsetogmnumoudrovpzn.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.COLLECTOR_LEGACY_STORAGE_KEY }}
+          SUPABASE_STORAGE_BUCKET: scraper-raw
+          PYTHONPATH: engine-python
+          COLLECTOR_RUN_TRANSFER_BYTES: '16777216'
+          COLLECTOR_DAILY_TRANSFER_BYTES: ${{ vars.CONTINUA_COLLECTOR_DAILY_TRANSFER_BYTES || '134217728' }}
+          COLLECTOR_RUN_SECONDS: '600'
+          CLOUD_MIGRATION_RUN_TRANSFER_BYTES: '402653184'
+          CLOUD_MIGRATION_DAILY_TRANSFER_BYTES: '1073741824'
+          MIGRATE_RAW: ${{ inputs.migrate_raw || vars.CONTINUA_MIGRATE_LEGACY_ARCHIVE == 'true' }}
+        run: |
+          args=(--apply)
+          if [ "$MIGRATE_RAW" = true ]; then args+=(--migrate-raw); fi
+          python scraper-python/reconcile_cloud.py "${args[@]}"

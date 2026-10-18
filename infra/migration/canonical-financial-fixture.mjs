@@ -4,6 +4,7 @@
 import {createRequire} from 'node:module';
 import {readFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
+import {spawnSync} from 'node:child_process';
 const require=createRequire(new URL('../../.qa-artifacts/canonical-fixture/package.json',import.meta.url));
 const {PGlite}=require('@electric-sql/pglite');
 const db=new PGlite();
@@ -12,20 +13,48 @@ let checks=0;
 const check=(a,b)=>{assert.deepEqual(a,b);checks++};
 try {
  await db.exec('CREATE ROLE anon; CREATE ROLE authenticated;');
+ await db.exec('CREATE SCHEMA storage; CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean);');
  for(const path of [
   'supabase/migrations/030_market_schema.sql',
   'supabase/migrations/031_production_readiness.sql',
   'scraper/migrations/20260827090000 scraping engine foundation schema.sql',
+  'supabase/migrations/20261007210000_market_research_records.sql',
+  'supabase/migrations/20261010220000_historical_document_queue.sql',
   'backend/migration/20260901090000 financial statement candidates bridge.sql',
   'supabase/migrations/20261010140000_filing_history_reviews.sql',
   'supabase/migrations/20261011123000_partial_reported_statements.sql',
   'scraper/migrations/20261016170000 processed research.sql',
+  'scraper/migrations/20261018120000 processed cloud archive.sql',
   'supabase/migrations/20261018100000_canonical_financial_observations.sql',
  ]) await db.exec(await readFile(new URL(path,root),'utf8'));
  // Reapplying the additive migration must not damage or duplicate data.
  await db.exec(await readFile(new URL('supabase/migrations/20261018100000_canonical_financial_observations.sql',root),'utf8'));
+ await db.exec(await readFile(new URL('scraper/migrations/20261018120000 processed cloud archive.sql',root),'utf8'));
+ check((await db.query("SELECT has_table_privilege('anon','scraping.processed_cloud_archive','SELECT') AS allowed")).rows[0].allowed,false);
+ check((await db.query("SELECT has_table_privilege('authenticated','scraping.cloud_migration_transfer_days','UPDATE') AS allowed")).rows[0].allowed,false);
  await db.query(`INSERT INTO scraping.sources(id,name,adapter,redistribution_allowed,config)
   VALUES('kenyanstocks','Fixture publisher','kenyanstocks',true,'{"permissionReference":"synthetic fixture only"}')`);
+ // Execute the actual Python claim SQL against disposable PostgreSQL. Even
+ // when older issuer categories remain queued, a completed view lets the next
+ // issuer advance. No provider/browser/production credential is involved.
+ const claim=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',`
+import asyncio,json,sys
+sys.path.insert(0,'scraper-python')
+from continua_scraper.documents import DocumentJobs
+class DB:
+ async def query(self,sql,params=()):
+  print(json.dumps({'sql':sql,'params':params}));return []
+asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
+ `],{cwd:new URL('../../',import.meta.url),encoding:'utf8'});
+ if(claim.status!==0)throw new Error('Python claim SQL fixture unavailable');
+ const captured=JSON.parse(claim.stdout);let claimParam=0;
+ const claimSQL=captured.sql.replaceAll('%%','%').replace(/%s/g,()=>'$'+(++claimParam));
+ for(const [i,ticker] of ['COOP','COOP','CGEN'].entries())await db.query(
+  `INSERT INTO scraping.document_jobs(source_id,url,document) VALUES('kenyanstocks',$1,$2::jsonb)`,
+  ['https://fixture.invalid/job/'+i,JSON.stringify({context:{ticker,tab:'Financials'}})]);
+ const first=(await db.query(claimSQL,captured.params)).rows[0];check(first.document.context.ticker,'COOP');
+ await db.query("UPDATE scraping.document_jobs SET status='complete' WHERE id=$1",[first.id]);
+ check((await db.query(claimSQL,captured.params)).rows[0].document.context.ticker,'CGEN');
  const symbols=['CGEN','COOP','SCOM','KCB','BRIT','KUKZ'];
  for(const symbol of symbols){
   await db.query('INSERT INTO market.companies(id,name) VALUES($1,$2)',['company:'+symbol,'Fixture '+symbol]);

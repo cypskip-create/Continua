@@ -4,6 +4,7 @@ import hashlib
 import gzip
 import json
 import math
+import re
 import pathlib
 import tempfile
 from datetime import datetime,date,timezone,timedelta
@@ -106,6 +107,7 @@ class R2Archive:
             AND id>COALESCE(NULLIF(a.metadata->>'r2ExtractionId','')::bigint,0)
             ORDER BY id ASC LIMIT 1) e ON true
           WHERE (a.storage_path NOT LIKE 'r2://%%' OR e.id IS NOT NULL)
+            AND COALESCE((a.metadata->>'r2ArchiveFailures')::integer,0)<5
             AND COALESCE(NULLIF(a.metadata->>'r2ArchiveRetryAt','')::timestamptz,'epoch'::timestamptz)<now()
           ORDER BY (a.content_type LIKE '%%pdf%%') DESC,a.id LIMIT %s""",(limit,))
         summary={"copied":0,"failed":0,"superseded":0}
@@ -114,7 +116,7 @@ class R2Archive:
                 old=row["storage_path"]
                 prior_version=str((row.get("metadata") or {}).get("r2ExtractionId") or "")
                 key=await asyncio.to_thread(self._copy_raw,row)
-                metadata={"r2ArchivedAt":datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00","Z"),"r2ArchiveRetryAt":""}
+                metadata={"r2ArchivedAt":datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00","Z"),"r2ArchiveRetryAt":"","r2ArchiveFailures":0,"r2ArchiveState":"verified"}
                 if row.get("extraction_id"):
                     snapshots=await self.database.query("SELECT * FROM scraping.extractions WHERE id=%s AND artifact_id=%s",(row["extraction_id"],row["id"]))
                     if not snapshots:raise ValueError("Extraction snapshot disappeared")
@@ -126,10 +128,20 @@ class R2Archive:
                     AND COALESCE(metadata->>'r2ExtractionId','')=%s RETURNING id""",
                     (f"r2://{self.storage.bucket}/{key}",json.dumps(metadata),row["id"],old,prior_version))
                 summary["copied" if updated else "superseded"]+=1
-            except Exception:
+            except Exception as error:
+                from .transfer_budget import TransferLimitReached
+                if isinstance(error,TransferLimitReached):raise
                 summary["failed"]+=1
+                code=type(error).__name__
+                if isinstance(error,ValueError) and re.fullmatch(r'Private artifact read HTTP [0-9]{3}',str(error)):
+                    code='legacy_http_'+str(error)[-3:]
+                failures=summary.setdefault('failureClasses',{})
+                failures[code]=failures.get(code,0)+1
                 retry=(datetime.now(timezone.utc)+timedelta(hours=1)).isoformat(timespec="milliseconds").replace("+00:00","Z")
                 # Error detail can contain private URLs/credentials; don't log it.
-                await self.database.query("UPDATE scraping.raw_artifacts SET metadata=COALESCE(metadata,'{}'::jsonb)||%s::jsonb WHERE id=%s AND storage_path=%s AND COALESCE(metadata->>'r2ExtractionId','')=%s",
-                                          (json.dumps({"r2ArchiveRetryAt":retry}),row["id"],row["storage_path"],str((row.get("metadata") or {}).get("r2ExtractionId") or "")))
+                await self.database.query("""UPDATE scraping.raw_artifacts SET metadata=COALESCE(metadata,'{}'::jsonb)||%s::jsonb||
+                    jsonb_build_object('r2ArchiveFailures',COALESCE((metadata->>'r2ArchiveFailures')::integer,0)+1,
+                    'r2ArchiveState',CASE WHEN COALESCE((metadata->>'r2ArchiveFailures')::integer,0)>=4 THEN 'quarantined' ELSE 'retry' END)
+                    WHERE id=%s AND storage_path=%s AND COALESCE(metadata->>'r2ExtractionId','')=%s""",
+                                          (json.dumps({"r2ArchiveRetryAt":retry,"r2ArchiveError":code}),row["id"],row["storage_path"],str((row.get("metadata") or {}).get("r2ExtractionId") or "")))
         return summary

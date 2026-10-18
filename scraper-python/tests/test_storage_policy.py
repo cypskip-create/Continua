@@ -12,6 +12,10 @@ from continua_scraper.r2 import R2Storage
 from continua_scraper.download import Artifact
 
 class PolicyTests(unittest.TestCase):
+    def test_legacy_duplicate_writes_are_rejected_even_with_credentials(self):
+        with patch.dict(os.environ,{'RAW_STORAGE_DRIVER':'r2','R2_DUAL_WRITE':'true'},clear=True):
+            with self.assertRaisesRegex(ValueError,'Supabase file writes are disabled'):RawStorage.from_environment()
+
     def test_render_and_production_never_fall_back_to_local_or_other_storage(self):
         for environment in [{'RENDER':'true'},{'RENDER_SERVICE_ID':'fixture'},{'NODE_ENV':'production'}]:
             for driver in ('local','supabase',''):

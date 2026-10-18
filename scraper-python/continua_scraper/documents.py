@@ -85,6 +85,18 @@ class DocumentJobs:
             lease_until=now()+interval '2 hours',updated_at=now()
           FROM pending WHERE j.id=pending.id RETURNING j.id,j.document,j.attempts"""
         values=[source_id]
+        if source_id=='kenyanstocks' and issuer is None:
+            # Every claim sees completions from earlier documents in this run.
+            # Do not finish every category of the oldest configured issuer
+            # while newly discovered/registered issuers remain untouched.
+            sql=sql.replace('WITH pending AS (',"""WITH issuer_coverage AS MATERIALIZED (
+              SELECT document->'context'->>'ticker' AS ticker,count(*) AS completed
+              FROM scraping.document_jobs WHERE source_id='kenyanstocks' AND status='complete'
+                AND document->'context'->>'tab'='Financials'
+              GROUP BY document->'context'->>'ticker'), pending AS (""")
+            sql=sql.replace('SELECT id FROM scraping.document_jobs WHERE','SELECT j.id FROM scraping.document_jobs j WHERE')
+            sql=sql.replace('updated_at,id FOR UPDATE',"""coalesce((SELECT c.completed FROM issuer_coverage c
+              WHERE c.ticker=j.document->'context'->>'ticker'),0),updated_at,id FOR UPDATE""")
         if issuer is not None:
             import re
             if not isinstance(issuer,str) or not re.fullmatch('[A-Z0-9-]{1,20}',issuer):raise ValueError('Invalid issuer')

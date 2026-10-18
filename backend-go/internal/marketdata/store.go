@@ -3,6 +3,7 @@ package marketdata
 import (
 	"context"
 	"continua/backend/internal/auth"
+	"continua/backend/internal/objectstore"
 	"crypto/tls"
 	"database/sql"
 	"encoding/json"
@@ -14,9 +15,13 @@ import (
 )
 
 type Store struct {
-	DB                  *sql.DB
-	AllowUnreviewed     bool
-	DurableQuoteRefresh bool
+	DB                   *sql.DB
+	AllowUnreviewed      bool
+	DurableQuoteRefresh  bool
+	ProcessedStorageMode string
+	ProcessedObjects     interface {
+		Read(context.Context, objectstore.Receipt) (json.RawMessage, error)
+	}
 }
 
 func (s *Store) EffectivePlan(ctx context.Context, id string) (string, error) {

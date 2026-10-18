@@ -17,6 +17,17 @@ class FakeDatabase:
         return []
 
 class JobTests(unittest.IsolatedAsyncioTestCase):
+    async def test_automatic_claim_balances_issuers_without_changing_explicit_target_scope(self):
+        database=FakeDatabase();jobs=DocumentJobs(database)
+        await jobs.claim('kenyanstocks',1,lane='Financials')
+        sql,params=database.calls[-1]
+        self.assertIn('issuer_coverage AS MATERIALIZED',sql)
+        self.assertIn("c.ticker=j.document->'context'->>'ticker'",sql)
+        self.assertEqual(params,('kenyanstocks','Financials',1))
+        await jobs.claim('kenyanstocks',1,issuer='COOP',lane='Financials')
+        self.assertNotIn('issuer_coverage',database.calls[-1][0])
+        self.assertEqual(database.calls[-1][1],('kenyanstocks','COOP','Financials',1))
+
     async def test_scheduled_retry_ceiling_is_parameter_bound(self):
         database=FakeDatabase()
         await DocumentJobs(database,max_attempts=5).claim('fixture',2)

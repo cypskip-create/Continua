@@ -5,12 +5,39 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "backend/src/storage/researchObjects.js; backend-go/internal/objectstore",
+      "category": "Private Cloudflare prepared-object readers",
+      "language": "Go for native readers; JavaScript compatibility adapter during existing production cutover gates",
+      "runtime": "Existing API processes with bounded immutable-object caches and provider SDK clients",
+      "reason": "Cloudflare supports AWS S3 SDK clients in both runtimes. Use maintained SDK signing, fixed owned endpoints, byte/hash/issuer verification, decoded gzip limits and current SQL source-permission checks. Keep migration-only database projections until every consumer and failure path is verified. Do not expose raw objects or storage credentials to the browser, and do not switch native production ahead of its route ledger.",
+      "references": [
+        "https://developers.cloudflare.com/r2/examples/aws/aws-sdk-js-v3/",
+        "https://developers.cloudflare.com/r2/examples/aws/aws-sdk-go/"
+      ]
+    },
+    {
+      "file": "scraper-python/reconcile_cloud.py",
+      "category": "Full-registry automatic processing and separate private processed objects",
+      "language": "Python and SQL checkpoint guarantees",
+      "runtime": "Finite existing collector runtime; no additional always-on service",
+      "reason": "Reuse streamed boto3 object verification, deterministic gzip and bounded Engine processing. SQL retains only migration receipts beside the temporary read projection during staged reader cutover. Use separate processed/research and extractions prefixes in the existing private bucket to preserve existing credential scope. A copy receipt is not authorization to retire source bodies. Scheduled runs use the existing durable transfer ledger and live NSE registry, with no ticker-specific worklist.",
+      "references": [
+        "https://developers.cloudflare.com/r2/examples/aws/boto3/",
+        "https://docs.python.org/3.13/library/gzip.html",
+        "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule"
+      ]
+    },
+    {
       "file": "backend-go/internal/cache/rate.go",
       "category": "Distributed request protection and private coverage operations",
       "language": "Go, Redis Lua and existing Python operational CLI",
       "runtime": "Existing bounded Redis/Upstash connections and native API; compatibility public-request limiter repair",
       "reason": "Use atomic server-side counters and expiry through the existing remote cache connections. Keep request deadlines, verified identities, IPv6 normalization and bounded in-memory single-process operation in Go. A configured remote protection outage fails closed rather than resetting counters through cache fallback. The Python coverage CLI queries the authoritative NSE registry without source downloads or new services.",
-      "references": ["https://redis.io/docs/latest/commands/incr/", "https://upstash.com/docs/redis/features/restapi", "https://go.dev/doc/database/execute-transactions"]
+      "references": [
+        "https://redis.io/docs/latest/commands/incr/",
+        "https://upstash.com/docs/redis/features/restapi",
+        "https://go.dev/doc/database/execute-transactions"
+      ]
     },
     {
       "file": "supabase/migrations/20261018100000_canonical_financial_observations.sql",
@@ -31,7 +58,10 @@
       "language": "Python decimal and SQL; existing Go and compatibility JavaScript API readers",
       "runtime": "Existing bounded post-collection Engine; no additional service",
       "reason": "Calculate reproducible ratios only from matching-year labelled observations and persist the assembly in Supabase. Read Engine-validated daily history through provenance-gated SQL without replacing canonical candles, inventing intraday paths, or moving raw archives to Render. Existing React consumers only render prepared observations; missing analyst estimates, filing dates and fair-value model inputs remain unknown.",
-      "references": ["https://docs.python.org/3/library/decimal.html", "https://www.postgresql.org/docs/current/sql-insert.html"]
+      "references": [
+        "https://docs.python.org/3/library/decimal.html",
+        "https://www.postgresql.org/docs/current/sql-insert.html"
+      ]
     },
     {
       "file": "engine-python/continua_engine/publisher_context.py",
@@ -39,7 +69,10 @@
       "language": "Python and SQL; existing React frontend consumers",
       "runtime": "Existing bounded automatic post-collection Engine",
       "reason": "Project exact source-labelled annual metrics and ownership percentages beside the existing deterministic extraction pipeline, retaining source data and accounting approval boundaries. Versioned presentation upgrades reprocess existing eligible evidence automatically. UI research consumers opt into labelled observations without modifying verified valuation records, inventing reporting dates or converting reported actuals into analyst estimates.",
-      "references": ["https://docs.python.org/3.13/library/decimal.html", "https://www.postgresql.org/docs/current/explicit-locking.html"]
+      "references": [
+        "https://docs.python.org/3.13/library/decimal.html",
+        "https://www.postgresql.org/docs/current/explicit-locking.html"
+      ]
     },
     {
       "file": "app/src/components/stock/PublisherFinancialTables.tsx",
@@ -47,7 +80,10 @@
       "language": "Existing React/TypeScript frontend; Python Engine series retained",
       "runtime": "Existing browser chart library, no new backend runtime",
       "reason": "Use the existing Recharts renderer for interactive bars/lines and the existing Python Engine's persisted decimal-derived series for values. The browser does not parse source financial cells, fabricate missing years, merge observations into verified statements or require per-stock chart code. Every available processed metric stays selectable in its source financial category.",
-      "references": ["https://github.com/recharts/recharts", "https://docs.python.org/3.13/library/decimal.html"]
+      "references": [
+        "https://github.com/recharts/recharts",
+        "https://docs.python.org/3.13/library/decimal.html"
+      ]
     },
     {
       "file": "scraper-python/scheduled_collect.py",
@@ -55,7 +91,10 @@
       "language": "Python and SQL",
       "runtime": "Existing bounded Actions collector and Engine package",
       "reason": "Keep targeted browser fetch, extraction and automatic Engine processing in the existing asynchronous Python runtime. SQL exact-issuer queue filters and active-lease checks preserve retries and immutable originals; availability receipts recheck the same permission, hash and private-storage gates used by API reads. No manual transcription or additional service is needed.",
-      "references": ["https://docs.python.org/3.13/library/asyncio-task.html", "https://www.postgresql.org/docs/current/explicit-locking.html"]
+      "references": [
+        "https://docs.python.org/3.13/library/asyncio-task.html",
+        "https://www.postgresql.org/docs/current/explicit-locking.html"
+      ]
     },
     {
       "file": "tools/audit-service-files.mjs",
@@ -63,7 +102,9 @@
       "language": "JavaScript",
       "runtime": "Existing local Node/TypeScript development toolchain only",
       "reason": "Use the existing compiler parser to follow literal module references across deployment entrypoints, operator scripts, tests and declaration contracts. Do not delete deployed JavaScript or necessary typing contracts merely because native Go/Python candidates exist. Empty generated declarations carry no API contract and can be removed without changing service behavior.",
-      "references": ["https://www.typescriptlang.org/docs/handbook/2/type-declarations.html"],
+      "references": [
+        "https://www.typescriptlang.org/docs/handbook/2/type-declarations.html"
+      ],
       "classificationBasis": "Cleanup tooling only; no new backend TypeScript implementation or production runtime migration"
     },
     {
@@ -72,7 +113,11 @@
       "language": "Python and SQL",
       "runtime": "Bounded existing GitHub Actions collector; existing API readers with native Go counterpart",
       "reason": "Python provides deterministic decimal parsing, chronological series preparation and document/table classification alongside existing PDF/OCR extraction. SQL transactions, row locks and versioned receipts provide restart-safe incremental processing without another always-on service. Literal observations remain separate from approved canonical statements; existing deployed JavaScript only reads prepared data, while Go provides the equivalent candidate reader.",
-      "references": ["https://docs.python.org/3.13/library/decimal.html", "https://www.postgresql.org/docs/18/sql-select.html", "https://www.postgresql.org/docs/18/sql-insert.html"],
+      "references": [
+        "https://docs.python.org/3.13/library/decimal.html",
+        "https://www.postgresql.org/docs/18/sql-select.html",
+        "https://www.postgresql.org/docs/18/sql-insert.html"
+      ],
       "classificationBasis": "No paid AI, speculative financial figures, browser-side secrets or new backend TypeScript"
     },
     {
@@ -81,7 +126,10 @@
       "language": "JavaScript and SQL",
       "runtime": "Maintenance of existing production reference; not native runtime cutover",
       "reason": "Keep the deployed validator and canonical publication rules intact while atomically recording derived-research work in its existing audit transaction. Bounded SQL SKIP LOCKED claims recover failed computations without streaming R2 files through Render. The native Go/Python equivalent already has its own versioned outbox and remains subject to migration gates.",
-      "references": ["https://www.postgresql.org/docs/18/sql-select.html", "https://www.postgresql.org/docs/18/sql-insert.html"],
+      "references": [
+        "https://www.postgresql.org/docs/18/sql-select.html",
+        "https://www.postgresql.org/docs/18/sql-insert.html"
+      ],
       "classificationBasis": "Reliability repair, no new TypeScript runtime, paid service or production native cutover"
     },
     {
@@ -90,7 +138,10 @@
       "language": "Python",
       "runtime": "Existing isolated Selenium worker in bounded GitHub Actions",
       "reason": "Reuse native async collection, PDF/OCR and private R2 storage. Recursive DOM expansion and explicit settle checks capture nested financial rows without adding a Node runtime or Render browser workload. SQL leases and alternating tab/PDF lanes preserve restart recovery and bounded backfill.",
-      "references": ["https://www.selenium.dev/documentation/webdriver/waits/", "https://docs.python.org/3/library/asyncio-task.html"],
+      "references": [
+        "https://www.selenium.dev/documentation/webdriver/waits/",
+        "https://docs.python.org/3/library/asyncio-task.html"
+      ],
       "classificationBasis": "Feature-specific browser and document workload; incremental archive coverage remains subject to daily budgets and source availability"
     },
     {
@@ -99,7 +150,10 @@
       "language": "JavaScript",
       "runtime": "Existing Render rollback service only",
       "reason": "Constrain the currently deployed runtime before restoring it, without an unverified Python production cutover. SQL unique six-hour slots survive restarts; AsyncLocalStorage bounds source requests per job. Bulk discovery, PDFs, OCR and news remain in the Python Actions runner. This guard is not completion of the native migration.",
-      "references": ["https://nodejs.org/api/async_context.html", "https://render.com/docs/outbound-bandwidth"],
+      "references": [
+        "https://nodejs.org/api/async_context.html",
+        "https://render.com/docs/outbound-bandwidth"
+      ],
       "classificationBasis": "Small maintenance guard in existing runtime; no new TypeScript or additional service"
     },
     {
