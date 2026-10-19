@@ -85,7 +85,9 @@ async def reconcile(*,migrate_raw=False,cleanup_verified=False,cleanup_only=Fals
                         finally:await orphan_worker.close()
                         receipt['originalsDeleted']+=orphan_result['deleted'];receipt['sourceBytesRemoved']+=orphan_result['sourceBytesRemoved'];receipt['failures']+=orphan_result['failed']
                         if orphan_result.get('budgetPaused'):raise transfer_budget.TransferLimitReached()
-                        result=await cleanup.run(5)
+                        # Finish the small uncatalogued inventory before large
+                        # linked duplicates consume this run's transfer ceiling.
+                        result=await cleanup.run(5) if not orphan_result['deleted'] else {'deleted':0,'sourceBytesRemoved':0,'failed':0}
                         receipt['originalsDeleted']+=result['deleted'];receipt['sourceBytesRemoved']+=result['sourceBytesRemoved'];receipt['failures']+=result['failed']
                         if result.get('budgetPaused'):raise transfer_budget.TransferLimitReached()
                         cleanup_pending=result['deleted']>0 or orphan_result['deleted']>0
