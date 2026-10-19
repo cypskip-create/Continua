@@ -6,6 +6,13 @@
   "nativeCandidate": "backend-go/cmd/continua (loopback only; readiness deliberately 503)",
   "features": [
     {
+      "legacyFile": "backend-go/internal/marketdata/registry_refresh.go",
+      "legacySha256": "2bd4b7b2cd29f8efcff154a2faaf60c8a6374add181c2f270078bace8114fd2f",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
       "legacyFile": "scraper-python/continua_scraper/uncatalogued_archive.py",
       "legacySha256": "68fbbf12eb83d36f9da0e92c6c2735669611fc9ef8dbfde14ecc9b90d39196c1",
       "targetLanguage": "Python",
@@ -3403,8 +3410,9 @@
       "legacyFile": "backend/src/workers/researchRefreshWorker.js",
       "legacySha256": "756422a22bcef0af4272f5963d5cd495f201654e508db35ef5667b929ca5b18e",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native startup/six-hour live-registry trigger enqueues every non-delisted NSE security into the existing serial recoverable research outbox. Version increments preserve active leases and cancellation/retry semantics. Unit tests and real PostgreSQL lease-preservation fixture included; hosted native release gates remain outstanding."
     },
     {
       "legacyFile": "scraper/src/extraction/nseIndexSummary.test.js",

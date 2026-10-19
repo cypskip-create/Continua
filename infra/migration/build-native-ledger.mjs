@@ -48,6 +48,7 @@ const nativePorts={
  'backend/src/services/research/reportedResearch.js':['engine-python/continua_engine/reported.py','127-case native Python parity suite'],
 };
 const partial={
+ 'backend/src/workers/researchRefreshWorker.js':'Native startup/six-hour live-registry trigger enqueues every non-delisted NSE security into the existing serial recoverable research outbox. Version increments preserve active leases and cancellation/retry semantics. Unit tests and real PostgreSQL lease-preservation fixture included; hosted native release gates remain outstanding.',
  'backend/src/api/middleware/edgeClientIdentity.js':'Native constant-time owned-edge secret validation rejects invalid and scoped IP addresses; focused spoofing tests pass. Hosted native proxy topology and final security gates remain outstanding.',
  'backend/src/api/middleware/workloadRateLimit.js':'Native shared research scope now includes statistics, research, price-history and valuation, preserves HEAD and exact transfer segments, and keys verified users independently of API keys. Fail-closed distributed counter and policy tests pass; hosted/recovery gates remain outstanding.',
  'backend/src/api/routes/statistics.routes.js':'Native Go validated symbol route, minute cache and bounded SQL/Python statistics inputs implemented. HTTP cache/validation/error tests and 216 calculation parity cases pass. Hosted native and final cross-feature release gates remain outstanding.',

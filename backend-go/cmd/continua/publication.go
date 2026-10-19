@@ -72,6 +72,10 @@ func publicationRunner(store *marketdata.Store, api *httpapi.Server, bundles *en
 		return fallback
 	}
 	for _, job := range []jobs.Job{
+		{Name: "registry-research-refresh", Schedule: "37 */6 * * *", Timeout: 30 * time.Second, Initial: true, Run: func(ctx context.Context) error {
+			_, err := store.QueueRegistryRefresh(ctx, "NSE")
+			return err
+		}},
 		{Name: "quote-publication", Schedule: "*/30 * * * * *", Timeout: 15 * time.Second, Cooldown: 15 * time.Second, Initial: true, Run: func(ctx context.Context) error {
 			// Publishing an existing dated extraction performs no external polling;
 			// closing-session observations must also recover after an evening boot.

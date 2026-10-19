@@ -5,6 +5,17 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "backend-go/internal/marketdata/registry_refresh.go",
+      "category": "Automatic live-registry C score refresh",
+      "language": "Go",
+      "runtime": "Existing native serial job runner and PostgreSQL outbox",
+      "reason": "One cancellable parameterized INSERT SELECT enumerates the active registry and preserves versioned leases. Existing bounded serial draining supplies retries and restart recovery without per-stock goroutines or another always-on service. Startup and UTC six-hour scheduling retain the compatibility worker intent.",
+      "references": [
+        "https://go.dev/doc/database/querying",
+        "https://www.postgresql.org/docs/current/sql-insert.html"
+      ]
+    },
+    {
       "file": "scraper-python/continua_scraper/uncatalogued_archive.py",
       "category": "Preservation of uncatalogued legacy raw files",
       "language": "Python",

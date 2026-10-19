@@ -164,4 +164,20 @@ func TestPostgresOwnedFixtureMigrationAndAtomicQuoteOutbox(t *testing.T) {
 	}
 	verifyResearchPostgresFixture(t, store, ctx)
 	verifyImportPostgresFixture(t, store, ctx)
+	if _, err = store.DB.ExecContext(ctx, `ALTER TABLE market.native_research_refresh DROP CONSTRAINT fixture_refresh_failure;
+ UPDATE market.native_research_refresh SET lease_token='fixture-lease',lease_until=now()+interval '1 minute' WHERE security_id='NSE:KCB'`); err != nil {
+		t.Fatal(err)
+	}
+	var expected int64
+	if err = store.DB.QueryRowContext(ctx, `SELECT count(*) FROM market.securities WHERE exchange='NSE' AND status<>'delisted'`).Scan(&expected); err != nil {
+		t.Fatal(err)
+	}
+	queued, err := store.QueueRegistryRefresh(ctx, "NSE")
+	if err != nil || queued != expected {
+		t.Fatal("full active registry was not queued", queued, expected, err)
+	}
+	var lease string
+	if err = store.DB.QueryRowContext(ctx, `SELECT lease_token FROM market.native_research_refresh WHERE security_id='NSE:KCB'`).Scan(&lease); err != nil || lease != "fixture-lease" {
+		t.Fatal("registry refresh stole active lease", err)
+	}
 }
