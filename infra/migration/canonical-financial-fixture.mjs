@@ -30,6 +30,7 @@ try {
   'supabase/migrations/20261018100000_canonical_financial_observations.sql',
   'supabase/migrations/20261018200000_c_score_evidence.sql',
   'supabase/migrations/20261019123000_company_processing_status.sql',
+  'supabase/migrations/20261019133000_processing_receipt_counts.sql',
  ]) await db.exec(await readFile(new URL(path,root),'utf8'));
  // Reapplying the additive migration must not damage or duplicate data.
  await db.exec(await readFile(new URL('supabase/migrations/20261018100000_canonical_financial_observations.sql',root),'utf8'));
@@ -197,6 +198,10 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  const processing=(await db.query("SELECT public.company_processing_status('CGEN') AS data")).rows[0].data;
  check(processing.collectedFiles>0,true);check(processing.processedFiles>0,true);check(JSON.stringify(processing).includes('r2://'),false);
  check((await db.query("SELECT public.company_processing_status('UNKNOWN') AS data")).rows[0].data,null);
+ await db.exec("BEGIN;UPDATE scraping.processed_research SET status='blocked' WHERE security_id='NSE:CGEN'");
+ const blocked=(await db.query("SELECT public.company_processing_status('CGEN') AS data")).rows[0].data;
+ check(blocked.processedFiles,0);check(blocked.preparedFiles,0);check(blocked.awaitingReview>0,true);
+ await db.exec('ROLLBACK');
  await db.exec("UPDATE scraping.sources SET redistribution_allowed=false");
  check((await db.query("SELECT public.company_processing_status('CGEN') AS data")).rows[0].data.collectedFiles,0);
  await db.exec("UPDATE scraping.sources SET redistribution_allowed=true");
