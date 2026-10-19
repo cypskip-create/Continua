@@ -55,7 +55,7 @@ async def reconcile(*,migrate_raw=False,cleanup_verified=False,cleanup_only=Fals
             if skipped:return dict(receipt,status=skipped)
             transfer_budget.active=budget
             storage=RawStorage.from_environment()
-            archive=R2Archive(database,storage.r2,storage.materialize)
+            archive=R2Archive(database,storage.r2,storage.materialize,include_legacy=migrate_raw)
             if cleanup_verified or cleanup_only:
                 from continua_scraper.legacy_cleanup import VerifiedLegacyCleanup
                 cleanup=VerifiedLegacyCleanup(database,storage)
@@ -70,7 +70,7 @@ async def reconcile(*,migrate_raw=False,cleanup_verified=False,cleanup_only=Fals
             # the soft deadline; individual I/O and SQL already have deadlines.
             stop=started+max(1,seconds-90)
             try:
-                processing=not cleanup_only;exporting=not cleanup_only;raw_pending=migrate_raw and not cleanup_only
+                processing=not cleanup_only;exporting=not cleanup_only;raw_pending=not cleanup_only
                 cleanup_pending=cleanup is not None
                 while time.monotonic()<stop and (processing or exporting or raw_pending or cleanup_pending):
                     if cleanup_pending:

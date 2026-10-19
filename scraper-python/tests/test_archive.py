@@ -129,4 +129,24 @@ class ArchiveTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(ValueError):await archive.run(limit)
         with self.assertRaises(ValueError):snapshot_json({'timestamp':datetime(2026,1,1)})
 
+    async def test_steady_state_archives_r2_snapshots_without_legacy_reads(self):
+        digest=hashlib.sha256(b'evidence').hexdigest()
+        key=f'source/2026/{digest}.pdf'
+        row={'id':1,'source_id':'source','document_url':'https://fixture.example/a.pdf','storage_path':'r2://private-fixture/'+key,'sha256':digest,'size_bytes':8,'extraction_id':7}
+        def forbidden_legacy_reader(path):raise AssertionError('Steady-state archival accessed Supabase files')
+        db=DB(row);archive=R2Archive(db,R2Storage(MemoryClient(),'private-fixture'),forbidden_legacy_reader,include_legacy=False)
+        self.assertEqual((await archive.run(1))['copied'],1)
+        self.assertEqual(db.calls[0][1],(False,1))
+        with self.assertRaisesRegex(ValueError,'Legacy file reads are disabled'):
+            archive._copy_raw(dict(row,storage_path=key))
+        await archive.close()
+
+    async def test_budget_pause_is_not_raised_again_during_graceful_shutdown(self):
+        from continua_scraper.transfer_budget import TransferLimitReached
+        archive=R2Archive(None,None,None)
+        async def paused(limit):raise TransferLimitReached()
+        archive._run=paused
+        with self.assertRaises(TransferLimitReached):await archive.run(1)
+        await archive.close()
+
 if __name__=="__main__":unittest.main()

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-10-18",
+  "asOf": "2026-10-19",
   "scope": "Full native-runtime rewrite; not the already-deployed TS-to-JS migration.",
   "productionCutoverAllowed": false,
   "nativeCandidate": "backend-go/cmd/continua (loopback only; readiness deliberately 503)",
@@ -85,7 +85,7 @@
     },
     {
       "legacyFile": "scraper-python/continua_scraper/archive.py",
-      "legacySha256": "b00cc61314c5f54943234500ca753855f1f3b11997ae0ebc8e25377e8063dbc3",
+      "legacySha256": "3585e431faed2a295645038461b565563800877948c0454c3c719af4deea290e",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
@@ -106,7 +106,7 @@
     },
     {
       "legacyFile": "scraper-python/reconcile_cloud.py",
-      "legacySha256": "378c5fe7cc2c85d586bd3086b796b93bfccf4fdf8c38dce998590ce1741f9b8b",
+      "legacySha256": "6ac8bcd84d6e37fbcb07fe3b4d52bb8a909d348d9512734af7c37bf81ee6465a",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."

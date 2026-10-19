@@ -27,6 +27,11 @@ The approved migration ceiling remains 384 MiB/run and 1 GiB/day. The workflow
 uses 256 MiB per run so four six-hour runs fit that daily ceiling. Cleanup and
 migration share it; normal collection keeps its separate allowance. Automatic
 migration and cleanup expire November 17, 2026. Engine processing continues.
+Already-R2 extraction snapshots continue to archive under the normal allowance
+after that date. Steady-state selection accepts only R2 artifact pointers and
+refuses legacy reads even if a caller bypasses selection. The workflow unsets
+all Supabase file credential variables before starting the steady-state process.
+An expected transfer-budget pause is not rethrown during archive shutdown.
 Deleting files reduces retained storage and future file traffic; it does not
 erase previously incurred monthly egress.
 
@@ -37,3 +42,10 @@ includes old duplicate-write keys. The CI numerical fixture now loads its
 unreachable test DSN before static configuration imports; all 491 Engine parity
 cases passed with DATABASE_URL unset externally. Production results must be
 read from workflow receipts and storage inventory, not inferred from these tests.
+
+Production checks on October 19: the previously failing native candidate check
+passed on commits 8b2584a, d7fc677 and 306441a. Three successful, bounded cleanup
+runs removed 175 originals (276,772,835 bytes), with zero verification/removal
+failures and zero uploads. Cloudflare copies were retained. This is partial
+retirement, not a claim that the roughly 4 GB archive has finished migration or
+that historical monthly usage totals have reset.

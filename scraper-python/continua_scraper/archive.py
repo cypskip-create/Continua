@@ -42,9 +42,11 @@ def read_snapshot(path,*,format='json-v1',max_bytes=50*1024*1024):
     return value
 
 class R2Archive:
-    def __init__(self,database,storage,legacy_reader,*,enabled=True):
+    def __init__(self,database,storage,legacy_reader,*,enabled=True,include_legacy=True):
         self.database,self.storage,self.legacy_reader=database,storage,legacy_reader
         self.enabled=enabled
+        if type(include_legacy) is not bool:raise ValueError('Invalid legacy archive mode')
+        self.include_legacy=include_legacy
         self._task=None
         self._closed=False
 
@@ -62,7 +64,9 @@ class R2Archive:
     async def close(self):
         self._closed=True
         if self._task is not None:
-            await asyncio.shield(self._task)
+            from .transfer_budget import TransferLimitReached
+            try:await asyncio.shield(self._task)
+            except TransferLimitReached:pass  # run() already reported the bounded pause
 
     async def inventory(self):
         rows=await self.database.query("""SELECT
@@ -80,6 +84,7 @@ class R2Archive:
         old=row["storage_path"]
         if old.startswith("r2://"):
             return self.storage.key_from_location(old)
+        if not self.include_legacy:raise ValueError('Legacy file reads are disabled in steady-state archival')
         key=safe_key(old.replace("\\","/"))
         # The original private reader is injected, never a user-provided URL.
         # Archive copies already have a retained original: no redundant rollback
@@ -123,13 +128,14 @@ class R2Archive:
             ORDER BY id ASC LIMIT 1) e ON true
           LEFT JOIN coverage c ON c.security_id='NSE:'||coalesce(a.metadata->>'ticker',e.entity->>'ticker')
           WHERE (a.storage_path NOT LIKE 'r2://%%' OR e.id IS NOT NULL)
+            AND (%s OR a.storage_path LIKE 'r2://%%')
             AND (a.storage_path LIKE 'r2://%%' OR EXISTS(SELECT 1 FROM storage.objects o
               WHERE o.bucket_id='scraper-raw' AND o.name=replace(a.storage_path,chr(92),'/')))
             AND COALESCE((a.metadata->>'r2ArchiveFailures')::integer,0)<5
             AND COALESCE(NULLIF(a.metadata->>'r2ArchiveRetryAt','')::timestamptz,'epoch'::timestamptz)<now()
           ORDER BY (a.source_id='kenyanstocks' AND a.content_type LIKE 'text/html%%'
             AND coalesce(a.metadata->>'ticker',e.entity->>'ticker') IS NOT NULL) DESC,
-            coalesce(c.completed,0),a.id LIMIT %s""",(limit,))
+            coalesce(c.completed,0),a.id LIMIT %s""",(self.include_legacy,limit))
         summary={"copied":0,"failed":0,"superseded":0}
         for row in pending:
             try:
