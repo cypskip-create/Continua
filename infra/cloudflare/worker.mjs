@@ -1,3 +1,5 @@
+import {session} from './session.mjs';
+import {reportPolicy,cspReport} from './browser-security.mjs';
 const security={"X-Content-Type-Options":"nosniff","X-Frame-Options":"DENY","Referrer-Policy":"no-referrer","Strict-Transport-Security":"max-age=31536000","Permissions-Policy":"camera=(self), microphone=(self), geolocation=()","Content-Security-Policy":"frame-ancestors 'none'; base-uri 'self'; object-src 'none'"};
 export const publicTtl=path=>/^\/api\/v1\/(?:quotes(?:\/[A-Z0-9.-]{1,20})?|indices)$/.test(path)?5:/^\/api\/v1\/(?:instruments|sectors)$/.test(path)?60:0;
 export function publicCacheKey(request,env){
@@ -27,10 +29,13 @@ function reply(body,status=200){return new Response(JSON.stringify(body),{status
 import {media} from './media.mjs';
 export default {async fetch(request,env,ctx){
  const url=new URL(request.url),id=crypto.randomUUID();
+ const sessionResponse=await session(request,env);if(sessionResponse)return sessionResponse;
+ const reportResponse=await cspReport(request,env);if(reportResponse)return reportResponse;
  const mediaResponse=await media(request,env,security);if(mediaResponse)return mediaResponse;
  if(!url.pathname.startsWith('/api/')) {
   const asset=await env.ASSETS.fetch(request),headers=new Headers(asset.headers);
   for(const [name,value]of Object.entries(security))headers.set(name,value);
+  headers.set('Content-Security-Policy-Report-Only',reportPolicy);
   // Auth and checkout HTML must never be retained as a user-specific document.
   if(/^\/(?:checkout|auth)(?:\/|$)/.test(url.pathname))headers.set('Cache-Control','no-store');
   return new Response(asset.body,{status:asset.status,headers});

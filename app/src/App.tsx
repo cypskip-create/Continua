@@ -11,6 +11,7 @@ import { MainLayout } from "./components/layout/MainLayout";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ProfileProvider } from "./hooks/useProfile";
 import { ExchangeProvider } from "./hooks/useExchange";
+import {SessionAssuranceGate} from './components/security/SessionAssuranceGate';
 import { AppLockGate } from "./components/security/AppLockGate";
 import { useScrollRestoration } from "./hooks/useScrollRestoration";
 import { Suspense } from "react";
@@ -70,6 +71,7 @@ const App = () => (
     <ThemeProvider defaultTheme="light" storageKey="kenyan-stocks-theme">
       <TooltipProvider>
         <AuthProvider>
+          <SessionAssuranceGate>
           <ProfileProvider>
           <ExchangeProvider>
             <Toaster />
@@ -130,6 +132,7 @@ const App = () => (
             </AppLockGate>
           </ExchangeProvider>
           </ProfileProvider>
+          </SessionAssuranceGate>
         </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>

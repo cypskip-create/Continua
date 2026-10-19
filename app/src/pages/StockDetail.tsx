@@ -22,6 +22,7 @@ import { PriceAlertsManager } from "@/components/alerts/PriceAlertsManager";
 import { StockAlertDialog } from "@/components/alerts/StockAlertDialog";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { AddInvestmentDialog } from "@/components/portfolio/AddInvestmentDialog";
+import {CompanyProcessingStatus} from '@/components/stock/CompanyProcessingStatus';
 import { ContinuaScoreCard } from "@/components/stock/ContinuaScore";
 import { STOCK_META } from "@/lib/stockPrices";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -795,6 +796,7 @@ export default function StockDetail() {
           </div>
 
           <div>
+            <CompanyProcessingStatus symbol={symbol!}/>
             <Eyebrow>C score</Eyebrow>
             {scores ? <ContinuaScoreCard scores={scores} /> : <p className="text-sm text-muted-foreground">Engine research is not available yet. No placeholder score is shown.</p>}
           </div>

@@ -30,7 +30,7 @@ def research_snapshot(security_id, quote, history, candles, dividends, now, sect
         else: ratios.pop(key, None)
     record = {'securityId': security_id, 'asOf': quote['timestamp'], **ratios}
     score = afri_score(security_id, {'ratios': ratios, 'sector': sector, 'basis': latest.get('basis') or 'reviewed_filing',
-                                   'fiscalYear': latest.get('fiscalYear'), 'filingDateKnown': bool(latest.get('reportedAt')), 'sourceUrls': latest.get('sourceUrls') or [], 'calculatedAt': now,
+                                   'fiscalYear': latest.get('fiscalYear'), 'filingDateKnown': bool(latest.get('reportedAt')), 'filingDate': latest.get('reportedAt'), 'financialPeriodEnd': latest.get('periodEnd'), 'priceAsOf': quote.get('timestamp'), 'sourceUrls': latest.get('sourceUrls') or [], 'calculatedAt': now,
                                    'revenueGrowthYoy': yoy_growth(latest.get('revenue'), prior.get('revenue')) if prior else None,
                                    'epsGrowthYoy': yoy_growth(latest.get('eps'), prior.get('eps')) if prior else None})
     score['asOf'] = quote['timestamp']

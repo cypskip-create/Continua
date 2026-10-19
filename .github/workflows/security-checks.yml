@@ -1,0 +1,57 @@
+name: Security release checks
+on:
+  push:
+    branches: [main]
+  pull_request: {}
+  schedule:
+    - cron: '29 3 * * 1'
+permissions:
+  contents: read
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser-and-secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: node infra/security/repository-secret-audit.mjs
+      - run: node --test infra/cloudflare/*.test.mjs
+      - run: npm --workspace app test
+      - run: node node_modules/typescript/bin/tsc --noEmit -p app/tsconfig.app.json
+      - run: npm run build
+      - run: npm audit --audit-level=high
+      - run: npm --prefix backend audit --audit-level=high
+      - run: npm --prefix scraper audit --audit-level=high
+  python-dependencies:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install pip-audit==2.10.1
+      - run: python -m pip_audit --no-deps --disable-pip -r scraper-python/requirements-lock.txt --progress-spinner off
+  go-dependencies:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend-go/go.mod
+      - run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+        working-directory: backend-go

@@ -29,6 +29,7 @@ try {
   'scraper/migrations/20261019100000 uncatalogued raw archive.sql',
   'supabase/migrations/20261018100000_canonical_financial_observations.sql',
   'supabase/migrations/20261018200000_c_score_evidence.sql',
+  'supabase/migrations/20261019123000_company_processing_status.sql',
  ]) await db.exec(await readFile(new URL(path,root),'utf8'));
  // Reapplying the additive migration must not damage or duplicate data.
  await db.exec(await readFile(new URL('supabase/migrations/20261018100000_canonical_financial_observations.sql',root),'utf8'));
@@ -193,6 +194,12 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  for(const symbol of symbols.slice(1))await observe(symbol,'Profit/Loss',[[2024,'revenue',100],[2024,'netIncome',10]]);
  await observe('COOP','Invalid values', [['tomorrow','revenue',1],[9999,'revenue',2],[2024,'revenue','bad'],[2024,'__proto__',77]]);
  check((await history('COOP'))[0].revenue,100);
+ const processing=(await db.query("SELECT public.company_processing_status('CGEN') AS data")).rows[0].data;
+ check(processing.collectedFiles>0,true);check(processing.processedFiles>0,true);check(JSON.stringify(processing).includes('r2://'),false);
+ check((await db.query("SELECT public.company_processing_status('UNKNOWN') AS data")).rows[0].data,null);
+ await db.exec("UPDATE scraping.sources SET redistribution_allowed=false");
+ check((await db.query("SELECT public.company_processing_status('CGEN') AS data")).rows[0].data.collectedFiles,0);
+ await db.exec("UPDATE scraping.sources SET redistribution_allowed=true");
  let rows=await history('CGEN');
  check(rows.length,4);check(rows.at(-1).revenue,20.94e9);check(rows.at(-1).netIncome,526.05e6);check(rows.at(-1).eps,6.56);
  check(rows.at(-1).reportedAt,null);check(rows.at(-1).periodEnd,null);check(rows.at(-1).currency,null);

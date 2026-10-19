@@ -8,8 +8,9 @@ declare global {
     turnstile?: Turnstile;
   }
 }
-export const AUTH_BOT_CHECK_CONFIGURED = !!import.meta.env
-  .VITE_AUTH_TURNSTILE_SITE_KEY;
+// Public widget identifier, restricted to the three owned deployment hostnames.
+const AUTH_SITE_KEY=import.meta.env.VITE_AUTH_TURNSTILE_SITE_KEY || '0x4AAAAAAFbf8SzHtO9iWsEA';
+export const AUTH_BOT_CHECK_CONFIGURED = !!AUTH_SITE_KEY;
 let scriptLoad: Promise<void> | undefined;
 function load() {
   if (window.turnstile) return Promise.resolve();
@@ -55,7 +56,7 @@ export function AuthBotCheck({
       .then(() => {
         if (cancelled || !ref.current || !window.turnstile) return;
         id = window.turnstile.render(ref.current, {
-          sitekey: import.meta.env.VITE_AUTH_TURNSTILE_SITE_KEY,
+          sitekey: AUTH_SITE_KEY,
           size: "flexible",
           callback: (token: string) => {
             if (!cancelled) onToken(token);

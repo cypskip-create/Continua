@@ -1,0 +1,22 @@
+name: Continua operational health
+on:
+  schedule:
+    - cron: '41 */6 * * *'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: continua-health
+  cancel-in-progress: false
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node infra/security/health-probe.mjs

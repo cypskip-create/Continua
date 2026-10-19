@@ -36,3 +36,12 @@ it.each(["free", "premium", "premium_plus"])("checks the verified user's server-
   if (plan === "free") expect(next.mock.calls[0]?.[0]).toMatchObject({ status: 403 });
   else expect(next).toHaveBeenCalledWith();
 });
+
+it.each(['aal1','aal2'])('requires verified MFA assurance for an enrolled Engine user: %s',async aal=>{
+ const id='11111111-1111-4111-8111-111111111111';
+ vi.stubGlobal('fetch',vi.fn().mockResolvedValue(Response.json({id,factors:[{status:'verified'}]})));
+ mocks.query.mockResolvedValue({rows:[{subscription_plan:'premium'}]});
+ const token='fixture.'+Buffer.from(JSON.stringify({sub:id,aal})).toString('base64url')+'.fixture';
+ const next=vi.fn();await requireSubscriber(req({'x-user-token':token,'x-supabase-key':'public'}),{} as Response,next);
+ if(aal==='aal2')expect(next).toHaveBeenCalledWith();else expect(next.mock.calls[0]?.[0]).toMatchObject({status:403});
+});

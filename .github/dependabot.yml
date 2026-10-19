@@ -1,9 +1,19 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "monthly"
-    open-pull-requests-limit: 1
-    commit-message:
-      prefix: "chore(deps)"
+  - package-ecosystem: npm
+    directories: ["/", "/backend", "/scraper"]
+    schedule: {interval: weekly}
+    open-pull-requests-limit: 3
+    commit-message: {prefix: "chore(deps)"}
+  - package-ecosystem: gomod
+    directory: /backend-go
+    schedule: {interval: weekly}
+    open-pull-requests-limit: 2
+  - package-ecosystem: pip
+    directory: /scraper-python
+    schedule: {interval: weekly}
+    open-pull-requests-limit: 2
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: {interval: weekly}
+    open-pull-requests-limit: 2

@@ -25,6 +25,8 @@ import { PortfolioVisibilityToggles } from "@/components/portfolio/PortfolioVisi
 import {paymentLabel,SUPPORT_EMAIL} from '@/lib/legalPolicy';
 import {clearDeletedAccountStorage} from '@/lib/deletedAccountStorage';
 
+import {AccountSecurity} from '@/components/security/AccountSecurity';
+
 const HANDLE_REGEX = /^[a-z0-9_]{3,20}$/;
 
 // "menu" is the top-level Settings list. "tradershub" is its own sub-menu —
@@ -214,7 +216,7 @@ export default function Settings() {
     if (!user || deleteConfirmText.trim().toUpperCase() !== "DELETE") return;
     setDeletingAccount(true);
     try {
-      const { data, error } = await supabase.functions.invoke("delete-account");
+      const { data, error } = await supabase.functions.invoke("delete-account",{body:{confirmation:"DELETE",accountId:user.id}});
       if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || "Deletion failed");
       let cleared=false;try{cleared=clearDeletedAccountStorage(user.id,localStorage).complete;}catch{/* Browser may prohibit storage access. */}
       toast({ title: "Account deleted", description: cleared?'Your local journal and app-lock records were cleared on this device.':'Account deletion completed. Browser storage could not be fully cleared; clear this site’s stored data on your device.' });
@@ -425,6 +427,7 @@ export default function Settings() {
         {section === "account" && (
           <div className="space-y-4 pb-4">
             <Header title="Your account" />
+            <AccountSecurity/>
             <div className="space-y-2">
               <Label className="text-xs font-semibold flex items-center gap-1.5"><AtSign className="h-3.5 w-3.5" />Username</Label>
               <div className="relative">

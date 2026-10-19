@@ -13,6 +13,7 @@ import { ContinuaMark } from '@/components/shared/ContinuaMark';
 import './auth.css';
 import { lovable } from '@/integrations/lovable';
 import { useTouchClick } from '@/hooks/useTouchClick';
+import {RecoveryPassword} from '@/components/security/RecoveryPassword';
 import {AuthBotCheck,AUTH_BOT_CHECK_CONFIGURED} from '@/components/security/AuthBotCheck';
 
 type Mode = 'signin' | 'signup' | 'reset';
@@ -51,7 +52,7 @@ export default function Auth() {
   const [adult,setAdult]=useState(false),[acceptedTerms,setAcceptedTerms]=useState(false);
   const [captchaToken,setCaptchaToken]=useState(''),[captchaAttempt,setCaptchaAttempt]=useState(0);
 
-  const { signUp, signIn, resetPassword, user, loading: sessionLoading } = useAuth();
+  const { signUp, signIn, resetPassword, user, recoveryMode, loading: sessionLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const submitTap = useTouchClick<HTMLButtonElement>();
@@ -64,11 +65,11 @@ export default function Auth() {
   useEffect(() => {
     // AppLockGate remounts this screen when the account changes. Redirect
     // from the shared session rather than local state lost by that remount.
-    if (!sessionLoading && user && mode !== 'reset') {
+    if (!sessionLoading && user && !recoveryMode && mode !== 'reset') {
       const from = location.state?.from;
       navigate(from?.pathname?.startsWith('/') && !from.pathname.startsWith('//') && from.pathname !== '/auth' ? `${from.pathname}${from.search ?? ''}${from.hash ?? ''}` : '/', { replace: true });
     }
-  }, [sessionLoading, user, mode, navigate, location.state]);
+  }, [sessionLoading, user, recoveryMode, mode, navigate, location.state]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,6 +138,8 @@ export default function Auth() {
   };
 
   const switchMode = (next: Mode) => { setMode(next); setResetSent(false); };
+
+  if(recoveryMode)return <RecoveryPassword/>;
 
   return (
     <div className="continua-auth min-h-screen">

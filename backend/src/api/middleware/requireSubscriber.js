@@ -28,6 +28,10 @@ export async function requireEngineUser(req, res, next) {
         res.locals.engineUserId = user.id;
         res.locals.engineUserEmail = user.email;
         res.locals.enginePlan = profile.rows[0]?.subscription_plan ?? "free";
+        if(Array.isArray(user.factors)&&user.factors.some(f=>f.status==='verified')) {
+            let claims;try{claims=JSON.parse(Buffer.from(token.split('.')[1]??'','base64url').toString('utf8'));}catch{}
+            if(claims?.aal!=='aal2'||claims?.sub!==user.id)throw new ApiError(403,'Complete two-step verification to continue.');
+        }
         res.locals.engineIdentityVerified = true;
         next();
     }

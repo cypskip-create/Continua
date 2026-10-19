@@ -66,7 +66,7 @@ def c_score(security_id, inputs):
         status='observed' if eligible else 'insufficient_evidence',
         reason=None if eligible else 'Requires at least 60% applicable metric coverage, four observed pillars and observed valuation, financial strength and quality. Missing inputs are not neutral scores.',
         basis=inputs.get('basis'), sourceUrls=inputs.get('sourceUrls') or [], fiscalYear=inputs.get('fiscalYear'),
-        filingDateKnown=inputs.get('filingDateKnown'), calculatedAt=inputs.get('calculatedAt'),
+        filingDateKnown=inputs.get('filingDateKnown'), filingDate=inputs.get('filingDate'), financialPeriodEnd=inputs.get('financialPeriodEnd'), priceAsOf=inputs.get('priceAsOf'), calculatedAt=inputs.get('calculatedAt'),
         interpretation='Custom bounded factor assessment of observed inputs, not a probability, return forecast, fair-value star rating or Morningstar methodology. Coverage measures evidence, not investment quality. Thresholds are disclosed research assumptions, not validated predictive accuracy.')
     return dict(securityId=security_id, afriScore=overall,
         **{'afri'+k.capitalize():v for k,v in scores.items()},

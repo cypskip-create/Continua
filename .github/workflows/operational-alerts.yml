@@ -1,0 +1,39 @@
+name: Continua failure receipts
+on:
+  workflow_run:
+    workflows: ['Continua operational health', 'Automatic full-registry Engine and Cloudflare reconciliation', 'Bounded financial collection outside Render']
+    types: [completed]
+permissions:
+  contents: read
+  actions: read
+  issues: write
+concurrency:
+  group: continua-operational-alert
+  cancel-in-progress: false
+jobs:
+  receipt:
+    if: github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.event != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      # No checkout, artifact download, provider secret or execution of code
+      # from the triggering run. Only fixed repository run metadata is used.
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const run=context.payload.workflow_run;
+            if(run.head_repository?.full_name!==`${context.repo.owner}/${context.repo.repo}`)return;
+            const latest=await github.rest.actions.listWorkflowRuns({...context.repo,workflow_id:run.workflow_id,branch:'main',per_page:1});
+            if(latest.data.workflow_runs[0]?.id!==run.id)return;
+            const name=String(run.name).replace(/[\r\n]/g,' ').slice(0,140);
+            const title=`Continua automation: ${name}`;
+            const issues=await github.paginate(github.rest.issues.listForRepo,{...context.repo,state:'open',per_page:100});
+            const existing=issues.find(i=>!i.pull_request&&i.title===title&&i.user?.login==='github-actions[bot]');
+            const url=`https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${run.id}`;
+            if(['failure','timed_out'].includes(run.conclusion)){
+              const body=`An automatic run needs attention: [open the run](${url}).\n\nCheck the failed step and retry after correcting the cause. Transfer-budget pauses reported as successful checkpoints are expected and do not trigger this alert. Private provider logs and credentials are deliberately excluded.`;
+              if(existing)await github.rest.issues.update({...context.repo,issue_number:existing.number,body});
+              else await github.rest.issues.create({...context.repo,title,body});
+            }else if(run.conclusion==='success'&&existing){
+              await github.rest.issues.update({...context.repo,issue_number:existing.number,state:'closed',state_reason:'completed',body:`Recovered successfully: [verified run](${url}).`});
+            }

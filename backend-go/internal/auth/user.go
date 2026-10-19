@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io"
@@ -60,11 +61,31 @@ func (v *UserVerifier) Verify(ctx context.Context, headers http.Header) (*Identi
 		return nil, &AccessError{503, "Unable to verify Engine access. Please retry."}
 	}
 	var user struct {
-		ID    string `json:"id"`
-		Email string `json:"email"`
+		ID      string `json:"id"`
+		Email   string `json:"email"`
+		Factors []struct {
+			Status string `json:"status"`
+		} `json:"factors"`
 	}
 	if json.Unmarshal(raw, &user) != nil || !userPattern.MatchString(user.ID) {
 		return nil, &AccessError{401, "Invalid user session"}
+	}
+	for _, factor := range user.Factors {
+		if factor.Status == "verified" {
+			parts := strings.Split(token, ".")
+			var claims struct {
+				AAL string `json:"aal"`
+				Sub string `json:"sub"`
+			}
+			if len(parts) != 3 {
+				return nil, &AccessError{403, "Complete two-step verification to continue."}
+			}
+			payload, e := base64.RawURLEncoding.DecodeString(parts[1])
+			if e != nil || json.Unmarshal(payload, &claims) != nil || claims.AAL != "aal2" || claims.Sub != user.ID {
+				return nil, &AccessError{403, "Complete two-step verification to continue."}
+			}
+			break
+		}
 	}
 	plan, err := v.Store.EffectivePlan(ctx, user.ID)
 	if err != nil {

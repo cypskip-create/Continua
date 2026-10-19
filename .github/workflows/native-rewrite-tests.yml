@@ -11,6 +11,8 @@ on:
       - 'infra/migration/native-*.py'
       - 'infra/migration/canonical-financial-fixture.mjs'
       - 'infra/cloudflare/**'
+      - 'infra/security/**'
+      - 'supabase/migrations/**'
       - '.github/workflows/native-rewrite-tests.yml'
   pull_request:
     paths:
@@ -22,6 +24,8 @@ on:
       - 'infra/migration/native-*.py'
       - 'infra/migration/canonical-financial-fixture.mjs'
       - 'infra/cloudflare/**'
+      - 'infra/security/**'
+      - 'supabase/migrations/**'
       - '.github/workflows/native-rewrite-tests.yml'
 permissions:
   contents: read
@@ -68,6 +72,11 @@ jobs:
         run: go -C backend-go test ./internal/marketdata -run '^TestPostgresOwnedFixtureMigrationAndAtomicQuoteOutbox$' -count=1 -v
         env:
           NATIVE_POSTGRES_FIXTURE_URL: postgresql://postgres:continua-fixture-only@127.0.0.1:5432/continua_native_fixture?sslmode=disable&application_name=continua-native-fixture
+      - name: Restore a real disposable database backup
+        run: node infra/security/restore-fixture.mjs
+        env:
+          CONTINUA_DISPOSABLE_FIXTURE: 'true'
+          NATIVE_POSTGRES_CONTAINER: ${{ job.services.native-postgres.id }}
       - run: go -C backend-go vet ./...
       - run: python -m unittest discover -s engine-python/tests -v
       - run: python -m pip install -r scraper-python/requirements-lock.txt
@@ -77,7 +86,7 @@ jobs:
         env:
           NATIVE_COLLECTOR_POSTGRES_FIXTURE_URL: postgresql://postgres:continua-fixture-only@127.0.0.1:5432/continua_native_fixture?sslmode=disable&application_name=continua-native-fixture
       - run: python -m unittest discover -s scraper-python/tests -v
-      - run: node --test infra/cloudflare/worker.test.mjs infra/cloudflare/media.test.mjs
+      - run: node --test infra/cloudflare/*.test.mjs
       - run: npm ci --prefix backend
       - run: npm ci --prefix scraper
       - run: npm --prefix scraper test -- --run tests/storage/storagePolicy.test.ts tests/storage/r2Storage.test.ts tests/storage/r2Archive.test.ts tests/storage/sourceCompression.test.ts
@@ -88,6 +97,7 @@ jobs:
       - name: Install pinned disposable PostgreSQL fixture
         run: npm install --prefix .qa-artifacts/canonical-fixture --no-save --package-lock=false @electric-sql/pglite@0.5.10
       - run: node infra/migration/canonical-financial-fixture.mjs
+      - run: node infra/security/session-assurance-fixture.mjs
       - run: node infra/migration/native-bundle-parity.mjs
       - run: node infra/migration/native-valuation-parity.mjs
       - run: node infra/migration/native-statistics-parity.mjs

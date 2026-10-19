@@ -6,10 +6,11 @@
   ],
   "scripts": {
     "dev": "npm --workspace app run dev",
-    "build": "npm --workspace app run build && node infra/security/browser-secret-audit.mjs app/dist",
+    "build": "npm run security:check && npm --workspace app run build && node infra/security/browser-secret-audit.mjs app/dist",
     "build:dev": "npm --workspace app run build:dev",
     "lint": "npm --workspace app run lint",
-    "preview": "npm --workspace app run preview"
+    "preview": "npm --workspace app run preview",
+    "security:check": "node --test infra/cloudflare/*.test.mjs && node node_modules/typescript/bin/tsc --noEmit -p app/tsconfig.app.json"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

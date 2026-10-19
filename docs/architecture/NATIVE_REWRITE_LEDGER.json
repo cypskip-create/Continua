@@ -6,6 +6,13 @@
   "nativeCandidate": "backend-go/cmd/continua (loopback only; readiness deliberately 503)",
   "features": [
     {
+      "legacyFile": "infra/cloudflare/session.mjs",
+      "legacySha256": "34229a1f4eaadf1e74d86b83207906372d6345f170d6e38c222e6cbda4ff4dc4",
+      "targetLanguage": "JavaScript (provider-native)",
+      "status": "retained",
+      "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
+    },
+    {
       "legacyFile": "scraper-python/continua_scraper/render_light.py",
       "legacySha256": "0edb9bda33d6881c05808d6255e3edcf6b1e983d7660318d2d4e9c54b63e0b54",
       "targetLanguage": "Python",
@@ -58,7 +65,7 @@
     },
     {
       "legacyFile": "backend/python/engine_calculations.py",
-      "legacySha256": "911bc56f7fe939cfd940b0f00cbf36cc97a154cb97aa5d3d809081d5d53e53df",
+      "legacySha256": "4ce4726f949cc80f54bc925d4d52a099a6f66538858a7a53ba753c784803094a",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
@@ -919,7 +926,7 @@
     },
     {
       "legacyFile": "backend/src/api/middleware/requireSubscriber.js",
-      "legacySha256": "0f209ff7782bfb986c9d63dfb7f503e7270fd7f4b1f20425b8fc6238dde5d4d5",
+      "legacySha256": "43d76cf379fd9c7de4792c1c01abc5b96ce75e076817d33b08ea7ce444a7a3f4",
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
@@ -1934,7 +1941,7 @@
     },
     {
       "legacyFile": "backend/src/services/research/researchService.js",
-      "legacySha256": "2fc51e8a0a6bb3ac3325c187117253723359552086479e245b5cdefd38ecef83",
+      "legacySha256": "873fd1d0d2c4008be4bc2aa8c2d217d4b61daf4a58b8c85ad6b0d15ecdf97c63",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
@@ -2864,7 +2871,7 @@
     },
     {
       "legacyFile": "supabase/functions/delete-account/index.js",
-      "legacySha256": "498f4050195757cd2c5a1569f8d9553c977c708499ba7946022e5e9b6bc358a9",
+      "legacySha256": "c3b629738c7616d61c46ed4f1c6c09ede204d3e6f0aee2203f4e50cd88a89b09",
       "targetLanguage": "JavaScript (provider-native)",
       "status": "retained",
       "rationale": "Retain authoritative SQL or provider-compatible entrypoint."

@@ -78,7 +78,7 @@ export const researchService = {
         const epsGrowthYoy = prior ? yoyGrowth(latest.eps, prior.eps) : undefined;
         const scoreResult = await computeAfriScore(securityId, { ratios: computedRatios, revenueGrowthYoy, epsGrowthYoy,
             sector, basis: latest.basis ?? 'reviewed_filing', fiscalYear: latest.fiscalYear,
-            filingDateKnown: Boolean(latest.reportedAt), sourceUrls: latest.sourceUrls ?? [], calculatedAt: new Date().toISOString() });
+            filingDateKnown: Boolean(latest.reportedAt), filingDate: latest.reportedAt ?? null, financialPeriodEnd: latest.periodEnd ?? null, priceAsOf: quote?.timestamp ?? null, sourceUrls: latest.sourceUrls ?? [], calculatedAt: new Date().toISOString() });
         const score = { ...scoreResult, asOf: quote?.timestamp ?? asOf };
         const published = await scoresRepository.upsertResearchSnapshot(ratios, score);
         if (published === false) return {ratios: await scoresRepository.getRatios(securityId), score: await scoresRepository.getAfriScore(securityId)};

@@ -38,6 +38,15 @@ Deno.serve(async (req) => {
                 status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
         }
+        if(req.method!=='POST')return new Response(JSON.stringify({error:'Method not allowed'}),{status:405,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        const {data:current,error:currentError}=await supabaseAuth.auth.getUser(token);
+        if(currentError||current.user?.id!==userId)return new Response(JSON.stringify({error:'Sign in again before deleting your account.'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        let confirmation;try {const reader=req.body?.getReader();let size=0;const chunks=[];if(reader)for(;;){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>1024){await reader.cancel();throw Error();}chunks.push(value);}const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}confirmation=JSON.parse(new TextDecoder().decode(bytes));}catch{return new Response(JSON.stringify({error:'Account confirmation required.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});}
+        if(confirmation?.confirmation!=='DELETE'||confirmation.accountId!==userId)return new Response(JSON.stringify({error:'Account confirmation required.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        const claims=claimsData.claims,now=Date.now();
+        const recent=Array.isArray(claims.amr)&&claims.amr.some(a=>['password','oauth','otp','recovery','webauthn','mfa/totp','mfa/phone','mfa/webauthn'].includes(a.method)&&Number.isFinite(a.timestamp)&&a.timestamp*1000<=now+30000&&now-a.timestamp*1000<=600000);
+        const verifiedMfa=current.user.factors?.some(f=>f.status==='verified');
+        if(!recent||(verifiedMfa&&claims.aal!=='aal2'))return new Response(JSON.stringify({error:'Verify a recent sign-in and any enabled authenticator before deleting your account.'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
         const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
         // Child/leaf tables first, then content the person authored, then
         // relationships, then preferences, then the profile itself. Most
@@ -79,7 +88,7 @@ Deno.serve(async (req) => {
             if (error) {
                 // Keep going -- a missing/renamed table shouldn't block the rest of
                 // the wipe, but log it so it's visible in the function's logs.
-                console.error(`delete-account: failed to clear ${table}.${column}`, error.message);
+                console.error(`delete-account: failed to clear ${table}.${column}`);
             }
         }
         // Avatar files live at `${userId}/...` inside the public avatars bucket.
@@ -89,11 +98,11 @@ Deno.serve(async (req) => {
         }
         const { error: profileError } = await supabaseAdmin.from("profiles").delete().eq("user_id", userId);
         if (profileError) {
-            console.error("delete-account: failed to delete profile row", profileError.message);
+            console.error("delete-account: failed to delete profile row");
         }
         const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
         if (authDeleteError) {
-            console.error("delete-account: auth.admin.deleteUser failed", authDeleteError.message);
+            console.error("delete-account: auth.admin.deleteUser failed");
             return new Response(JSON.stringify({ error: "Your data was cleared but the account itself couldn't be removed. Contact support@continua.app." }), {
                 status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
@@ -103,7 +112,7 @@ Deno.serve(async (req) => {
         });
     }
     catch (err) {
-        console.error("delete-account error:", err);
+        console.error("delete-account: request failed");
         return new Response(JSON.stringify({ error: "Internal error" }), {
             status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
