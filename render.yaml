@@ -27,6 +27,7 @@ services:
   - type: web
     name: continua-backend
     runtime: docker
+    autoDeployTrigger: checksPass
     rootDir: backend
     dockerfilePath: ./Dockerfile
     dockerContext: .
@@ -72,6 +73,7 @@ services:
   - type: web
     name: continua-scraper
     runtime: docker
+    autoDeployTrigger: checksPass
     rootDir: scraper
     dockerfilePath: ./Dockerfile
     dockerContext: .
