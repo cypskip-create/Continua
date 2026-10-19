@@ -19,6 +19,8 @@ class AdapterRegistry:
         self.state,self.dead_letters,self.pdf,self.heavy_queue,self.database=state,dead_letters,pdf,heavy_queue,database
 
     async def build(self,source_id):
+        light=getattr(self,'workload_role','full')=='render-light'
+        if light and source_id!='nse-index-summary':raise ValueError('Bulk source is disabled on the light collector')
         source=await self.sources.get(source_id)
         if not source or not source['enabled']:raise ValueError('Source is missing or disabled')
         config=source.get('config') or {};adapter=source['adapter']
@@ -26,7 +28,12 @@ class AdapterRegistry:
             permission=config.get('permissionReference')
             if not isinstance(permission,str) or not 1<=len(permission.strip())<=200:
                 raise PermissionError('Source requires its own recorded commercial permission reference')
+        if light and adapter!='web':raise ValueError('Light collector requires the official HTML adapter')
         domains=list(config.get('allowedDomains') or [])
+        if light:
+            if any(domain not in ('nse.co.ke','www.nse.co.ke') for domain in domains):
+                raise ValueError('Light source must remain on the official NSE origin')
+            domains=['nse.co.ke','www.nse.co.ke']
         if adapter=='kenyanstocks':domains+=['kenyanstocks.com','assets.kenyanstocks.com']
         elif adapter=='nse':domains+=['nse.co.ke','www.nse.co.ke']
         elif adapter=='afx':domains+=['afx.kwayisi.org']
@@ -39,7 +46,8 @@ class AdapterRegistry:
         # The publication worker independently enforces the recorded rights.
         policy=SourcePolicy(source_id,domains,source.get('redistributionAllowed') is True,
             user_agent='ContinuaBot/1.0 (+https://github.com/cypskip-create/Continua)',collection_allowed=True,allow_subdomains=True)
-        downloader=Downloader(policy,requests_per_second=config.get('requestsPerSecond',.2))
+        downloader=Downloader(policy,requests_per_second=config.get('requestsPerSecond',.2),max_bytes=512*1024 if light else 50*1024*1024)
+        downloader.light_workload=light
         io=AdapterIO(source,downloader,self.storage,self.evidence)
         if adapter=='rss':return RssAdapter(io)
         if adapter=='afx':return AfxAdapter(io)

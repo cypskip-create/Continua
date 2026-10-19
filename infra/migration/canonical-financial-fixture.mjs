@@ -129,6 +129,17 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  check((await db.query("SELECT has_table_privilege('anon','scraping.uncatalogued_raw_archive','SELECT') AS allowed")).rows[0].allowed,false);
  check((await db.query("SELECT has_table_privilege('authenticated','scraping.uncatalogued_raw_archive','UPDATE') AS allowed")).rows[0].allowed,false);
  await db.exec('DELETE FROM storage.objects WHERE id=998');
+ // Actual light-role SQL: a slot survives restarts, with one delayed recovery.
+ await db.exec("CREATE TABLE scraping.scheduled_runs(id text PRIMARY KEY,kind text,status text,receipt jsonb DEFAULT '{}'::jsonb,started_at timestamptz DEFAULT now(),completed_at timestamptz)");
+ const lightProcess=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',"import sys;sys.path.insert(0,'scraper-python');from continua_scraper.render_light import CLAIM;print(CLAIM)"],{cwd:new URL('../../',import.meta.url),encoding:'utf8'});
+ assert.equal(lightProcess.status,0);
+ const lightSQL=lightProcess.stdout.replace('%s','$1');
+ check((await db.query(lightSQL,['render-index-fixture'])).rows[0].attempt,'1');
+ check((await db.query(lightSQL,['render-index-fixture'])).rows,[]);
+ await db.exec("UPDATE scraping.scheduled_runs SET status='failed',completed_at=now()-interval '21 minutes'");
+ check((await db.query(lightSQL,['render-index-fixture'])).rows[0].attempt,'2');
+ await db.exec("UPDATE scraping.scheduled_runs SET status='failed',completed_at=now()-interval '21 minutes'");
+ check((await db.query(lightSQL,['render-index-fixture'])).rows,[]);
  await db.exec("UPDATE scraping.sources SET redistribution_allowed=false");
  check((await db.query(publisherCloseQuery,dailyArgs)).rows,[]);
  await db.exec("UPDATE scraping.sources SET redistribution_allowed=true");

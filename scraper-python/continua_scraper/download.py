@@ -133,6 +133,9 @@ class Downloader:
         self.request_interval=1/requests_per_second
 
     async def _connection(self, url,form=None,request_headers=None):
+        if getattr(self,'light_workload',False):
+            from .render_light import reserve_request
+            reserve_request()
         parsed=self.policy.check_url(url)
         header_lines=''
         if request_headers is not None:
@@ -249,6 +252,8 @@ class Downloader:
                             continue
                         if status!=200:
                             raise SourceHTTPError(status)
+                        if getattr(self,'light_workload',False) and 'text/html' not in headers.get('content-type',''):
+                            raise ValueError('Light collector requires an HTML response')
                         file=tempfile.NamedTemporaryFile(prefix="continua-native-",suffix=".raw",dir=self.directory,delete=False)
                         try:
                             with file:

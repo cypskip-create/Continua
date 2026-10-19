@@ -22,6 +22,12 @@ def create_server(runtime,*,operator_key='',market_key='',release_ready=False,re
     def response(data,status=200):return web.Response(body=snapshot_json(data),status=status,content_type='application/json')
     @web.middleware
     async def guard(request,handler):
+        if getattr(runtime,'workload_role','full')=='render-light':
+            from .render_light import route_allowed
+            if not route_allowed(request.method,request.path):
+                result=response({'error':'operation_owned_by_finite_collector'},503)
+                result.headers['Cache-Control']='no-store';result.headers['X-Content-Type-Options']='nosniff'
+                return result
         market_route=request.path=='/internal/nse/read'
         permitted=valid_operator_key(request.headers.get('X-Collector-Market-Key'),market_key) if market_route else (public_route(request.method,request.path) or valid_operator_key(request.headers.get('X-Scraper-Admin-Key'),operator_key))
         if not permitted:

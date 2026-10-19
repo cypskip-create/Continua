@@ -25,6 +25,13 @@ class GenericCrawler:
                 document={'url':item['url'],'discoveredFrom':item.get('parentUrl'),'title':config.get('issuerName')}
                 fetched=await self.io.fetch_document(document,source['adapter'],'scraper-phase6-0.1.0')
                 if fetched['isNewArtifact']:summary['stored']+=1
+                if self.id=='nse-index-summary' and 'text/html' in (fetched.get('contentType') or ''):
+                    from .html import nse_index_summary
+                    tables=nse_index_summary(self.io.text(fetched['artifact']))
+                    existing=await self.io.evidence.latest_extraction(fetched['artifactId'])
+                    if tables and (not existing or existing.get('parserVersion')!='render-index-html-v1'):
+                        await self.io.evidence.insert_extraction(dict(artifactId=fetched['artifactId'],method='html',confidence=.8,
+                            parserVersion='render-index-html-v1',tables=tables,entity={},needsReview=False))
                 if 'text/html' in (fetched.get('contentType') or '') and item['depth']<maximum:
                     for link in extract_from_html(self.io.text(fetched['artifact']),fetched['artifact'].url)['links']:
                         try:self.io.downloader.policy.check_url(link['url'])

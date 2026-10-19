@@ -15,6 +15,8 @@ def boolean(value,default=False):
 def validate_environment(environment):
     if environment.get('NODE_ENV','development') not in ('development','test','production'):
         raise ValueError('Invalid collector runtime environment')
+    if environment.get('SCRAPER_WORKLOAD_ROLE','full') not in ('full','render-light'):
+        raise ValueError('Invalid collector workload role')
     connection=environment.get('DATABASE_URL','')
     try:
         target=urlsplit(connection)

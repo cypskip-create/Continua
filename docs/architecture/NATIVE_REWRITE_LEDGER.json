@@ -6,6 +6,13 @@
   "nativeCandidate": "backend-go/cmd/continua (loopback only; readiness deliberately 503)",
   "features": [
     {
+      "legacyFile": "scraper-python/continua_scraper/render_light.py",
+      "legacySha256": "0edb9bda33d6881c05808d6255e3edcf6b1e983d7660318d2d4e9c54b63e0b54",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
       "legacyFile": "backend-go/internal/marketdata/registry_refresh.go",
       "legacySha256": "2bd4b7b2cd29f8efcff154a2faaf60c8a6374add181c2f270078bace8114fd2f",
       "targetLanguage": "Go",
@@ -142,7 +149,7 @@
     },
     {
       "legacyFile": "scraper-python/reconcile_cloud.py",
-      "legacySha256": "675375a91db654342ecce2b0232e87a91c6a732dac4ed16e1e09ead05f65d6af",
+      "legacySha256": "f31003b3e83471dea6843c68e5cb7d45232ca6ef46e892c94f0847e9e7380d44",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
@@ -216,8 +223,9 @@
       "legacyFile": "scraper/src/scheduler/renderLight.js",
       "legacySha256": "9ed96861689152a158cc754a2d380de6a9526729d03e3c6d30a95a04e8e75985",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Python index-only role restricts routes/sources, requires bounded HTML and four scoped connections, and persists six-hour slot claims with one delayed retry. Native collector and actual PostgreSQL claim fixtures cover this behavior; hosted native and final recovery/resource release gates remain outstanding."
     },
     {
       "legacyFile": "backend/scripts/applyCandleProvenanceMigration.js",

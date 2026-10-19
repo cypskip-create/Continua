@@ -105,3 +105,14 @@ provider-error redaction, corruption rejection and body/admission cleanup.
 The registry refresh PostgreSQL fixture also passes with an actual active lease;
 the native six-hour trigger preserves that lease while incrementing its version.
 These checks do not enable production native cutover.
+
+
+The native render-light role is now implemented: only the official small index
+HTML source is eligible, a task-local four-connection budget includes redirects
+and robots requests, HTML is capped at 512 KiB, bulk routes stay blocked even
+with operator credentials, and startup does not run archive/sweep/news/PDF work.
+An immutable index extraction is saved beside its already archived HTML.
+The actual PostgreSQL slot claim verifies restart deduplication and one delayed
+failure recovery. Collector regressions pass 173 discovered tests with six
+explicit external-database skips, and the embedded SQL suite passes 91 checks.
+Production remains on the compatibility runtime pending the full release gates.

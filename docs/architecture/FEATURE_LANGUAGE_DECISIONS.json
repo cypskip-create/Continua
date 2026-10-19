@@ -5,6 +5,17 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "scraper-python/continua_scraper/render_light.py",
+      "category": "Free-instance native index-only workload role",
+      "language": "Python",
+      "runtime": "Existing collector, asyncio scheduler and PostgreSQL slot receipt",
+      "reason": "Use task-local context variables to cap actual source connections at four, stream only bounded 512 KiB HTML, claim one durable six-hour slot with one delayed failure retry, and reject every bulk route even with operator authentication. Reuse the serial scheduler without starting archive, PDF, news, browser or sweep jobs on this role.",
+      "references": [
+        "https://docs.python.org/3/library/contextvars.html",
+        "https://docs.python.org/3/library/asyncio-task.html"
+      ]
+    },
+    {
       "file": "backend-go/internal/marketdata/registry_refresh.go",
       "category": "Automatic live-registry C score refresh",
       "language": "Go",

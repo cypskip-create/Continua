@@ -49,6 +49,7 @@ const nativePorts={
  'backend/src/services/research/reportedResearch.js':['engine-python/continua_engine/reported.py','127-case native Python parity suite'],
 };
 const partial={
+ 'scraper/src/scheduler/renderLight.js':'Native Python index-only role restricts routes/sources, requires bounded HTML and four scoped connections, and persists six-hour slot claims with one delayed retry. Native collector and actual PostgreSQL claim fixtures cover this behavior; hosted native and final recovery/resource release gates remain outstanding.',
  'backend-go/internal/httpapi/statistics.go':'Native candidate statistics handler is implemented and its validation/cache/error fixtures pass; hosted native and final release gates remain outstanding.',
  'backend-go/internal/marketdata/registry_refresh.go':'Native full-registry durable queue is implemented; SQL and real PostgreSQL lease-preservation fixtures pass. Hosted native scheduler/recovery gates remain outstanding.',
  'backend-go/internal/cache/rate.go':'Native atomic Redis/Upstash rate counter and fail-closed bounded admission are implemented and tested, including prior real Redis concurrency checks. Hosted native topology/recovery gates remain outstanding.',
