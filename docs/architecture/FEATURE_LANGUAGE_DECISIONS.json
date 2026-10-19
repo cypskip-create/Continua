@@ -5419,6 +5419,18 @@
         "https://supabase.com/docs/guides/api/securing-your-api",
         "https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html"
       ]
+    },
+    {
+      "file": "infra/cloudflare/legacy-redirect.mjs",
+      "category": "Recover renamed hosting origin",
+      "language": "Existing Cloudflare JavaScript entrypoint and frontend TypeScript",
+      "runtime": "Current app Worker plus a credential-free serverless redirect at its former address",
+      "reason": "The dashboard-renamed Worker serves a new workers.dev origin. Align cookie transport, media and probes with that existing target, retain provider verification, and redirect old public navigation/media without forwarding credentials or granting the compatibility Worker any bindings. A service rewrite or new always-on runtime does not solve an origin mismatch.",
+      "references": [
+        "https://developers.cloudflare.com/workers/configuration/routing/workers-dev/",
+        "https://developers.cloudflare.com/turnstile/concepts/domain-management/",
+        "https://supabase.com/docs/guides/auth/redirect-urls"
+      ]
     }
   ]
 }

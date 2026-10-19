@@ -1,4 +1,4 @@
-const checks=[['backend','https://continua-backend.onrender.com/api/v1/health/live'],['frontend','https://continua-preview.cypriankiprop41.workers.dev/'],['market','https://continua-preview.cypriankiprop41.workers.dev/api/v1/indices?exchange=NSE']];
+const checks=[['backend','https://continua-backend.onrender.com/api/v1/health/live'],['frontend','https://continua.cypriankiprop41.workers.dev/'],['market','https://continua.cypriankiprop41.workers.dev/api/v1/indices?exchange=NSE']];
 let failed=false;
 for(const [name,url]of checks){let ok=false,status=0;
  for(let attempt=0;attempt<3;attempt++){

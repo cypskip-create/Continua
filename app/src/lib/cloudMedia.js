@@ -1,5 +1,6 @@
 import {supabase} from '@/integrations/supabase/client';
-const MEDIA_ORIGIN='https://continua-preview.cypriankiprop41.workers.dev';
+const MEDIA_ORIGIN='https://continua.cypriankiprop41.workers.dev';
+const MEDIA_ORIGINS=new Set([MEDIA_ORIGIN,'https://continua-preview.cypriankiprop41.workers.dev']);
 
 async function mediaHeaders(){
  const {data:{session},error}=await supabase.auth.getSession();
@@ -19,7 +20,7 @@ export async function removeCloudImages(urls){
  const headers=await mediaHeaders();
  await Promise.allSettled(urls.map(async value=>{
   const url=new URL(value,MEDIA_ORIGIN);
-  if(url.origin!==MEDIA_ORIGIN||!url.pathname.startsWith('/media/'))return;
+  if(!MEDIA_ORIGINS.has(url.origin)||!url.pathname.startsWith('/media/'))return;
   const response=await fetch(MEDIA_ORIGIN+'/api/v1/media/object/'+url.pathname.slice(7),{method:'DELETE',headers,signal:AbortSignal.timeout(10000)});
   if(!response.ok)throw Error('Image cleanup pending');
  }));

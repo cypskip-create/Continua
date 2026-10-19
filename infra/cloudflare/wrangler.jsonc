@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
-  "name": "continua-preview",
+  "name": "continua",
   "main": "worker.mjs",
   "compatibility_date": "2026-10-12",
   "workers_dev": true,

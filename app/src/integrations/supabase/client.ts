@@ -9,7 +9,7 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-const gateway=typeof window!=='undefined'&&window.location.protocol==='https:'&&(window.location.hostname==='continua-preview.cypriankiprop41.workers.dev'||import.meta.env.VITE_SESSION_GATEWAY_ENABLED==='true');
+const gateway=typeof window!=='undefined'&&window.location.protocol==='https:'&&(['continua.cypriankiprop41.workers.dev','continua-preview.cypriankiprop41.workers.dev'].includes(window.location.hostname)||import.meta.env.VITE_SESSION_GATEWAY_ENABLED==='true');
 let verifierStorage:Storage|undefined;try{if(typeof window!=='undefined')verifierStorage=window.sessionStorage;}catch{/* Browser storage may be disabled. */}
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   global: gateway?{fetch:createSessionFetch(SUPABASE_URL,window.location.origin)}:undefined,
