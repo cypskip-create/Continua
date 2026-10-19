@@ -78,7 +78,7 @@ export async function session(request,env,fetcher=fetch){
  let upstream;try{upstream=await fetcher(target,{method:request.method,headers,body:body?JSON.stringify(body):undefined,redirect:'manual',signal:AbortSignal.timeout(15000)});}catch{return reply({error:'Session service unavailable'},503);}
  if(upstream.status>=300&&upstream.status<400)return reply({error:'Unexpected session redirect'},502);
  if(upstream.status===204)return path==='/auth/v1/logout'?attach(reply(null,204),'',true):reply(null,204);
- let value;try{value=await readJSON(upstream);}catch{return reply({error:'Invalid session response'},502);}
+ let value;try{value=await readJSON(upstream,path==='/auth/v1/factors'&&request.method==='POST'?1048576:131072);}catch{return reply({error:'Invalid session response'},502);}
  let refresh=null;
  for(const candidate of [value,value?.session])if(candidate&&typeof candidate==='object'&&typeof candidate.refresh_token==='string'){
   if(upstream.ok&&tokenPattern.test(candidate.refresh_token)){refresh=candidate.refresh_token;candidate.refresh_token=marker;}

@@ -41,3 +41,12 @@ test('sensitive changes require provider-bound identity, fresh authentication an
  assert.equal(stepUpAllowed({...claims,amr:[{method:'password',timestamp:now/1000-601}]},user,now),false);
  assert.equal(stepUpAllowed({...claims,amr:[{method:'password',timestamp:now/1000+60}]},user,now),false);
 });
+
+test('large provider authenticator QR responses are bounded separately from ordinary sessions',async()=>{
+ const user={id:'fixture-owner'},claims={sub:user.id,aal:'aal1',amr:[{method:'password',timestamp:Math.floor(Date.now()/1000)}]};
+ const token='fixture.'+Buffer.from(JSON.stringify(claims)).toString('base64url')+'.fixture';
+ const req=()=>request('/auth/v1/factors',{factor_type:'totp'},{Authorization:'Bearer '+token});
+ const provider=size=>async url=>String(url).endsWith('/user')?Response.json(user):Response.json({id:'fixture',totp:{qr_code:'x'.repeat(size)}});
+ const accepted=await session(req(),env,provider(640000));assert.equal(accepted.status,200);assert.equal((await accepted.json()).totp.qr_code.length,640000);
+ assert.equal((await session(req(),env,provider(1048577))).status,502);
+});
