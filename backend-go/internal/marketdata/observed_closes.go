@@ -162,11 +162,11 @@ func (s *Store) DailyCloseHistory(ctx context.Context, id string, from, to time.
 	if err != nil {
 		return nil, err
 	}
-	legacy, err := s.JSONRowsBounded(ctx, 4*1024*1024, legacyProviderCloseSQL, id, from.UTC().Format("2006-01-02"), to.UTC().Format("2006-01-02"))
+	legacy, err := s.JSONRowsBounded(ctx, 4*1024*1024, "SELECT row_to_json(result) FROM ("+legacyProviderCloseSQL+") result", id, from.UTC().Format("2006-01-02"), to.UTC().Format("2006-01-02"))
 	if err != nil {
 		return nil, err
 	}
-	publisher, err := s.JSONRowsBounded(ctx, 4*1024*1024, publisherCloseSQL, id, "1d", from, to)
+	publisher, err := s.JSONRowsBounded(ctx, 4*1024*1024, "SELECT row_to_json(result) FROM ("+publisherCloseSQL+") result", id, "1d", from, to)
 	if err != nil {
 		return nil, err
 	}
