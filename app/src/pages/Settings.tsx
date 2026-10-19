@@ -55,7 +55,6 @@ export default function Settings() {
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
-  const [changingPassword, setChangingPassword] = useState(false);
   const [portfolioOn, setPortfolioOn] = useState(!!profile?.portfolio_public);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -134,20 +133,6 @@ export default function Settings() {
     } catch (e: any) {
       toast({ title: "Save failed", description: e.message, variant: "destructive" });
     } finally { setSaving(false); }
-  };
-
-  const handleChangePassword = async () => {
-    if (!user?.email) return;
-    setChangingPassword(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/auth`,
-      });
-      if (error) throw error;
-      toast({ title: "Password reset email sent", description: `Check ${user.email} for a link` });
-    } catch (e: any) {
-      toast({ title: "Couldn't send reset email", description: e?.message, variant: "destructive" });
-    } finally { setChangingPassword(false); }
   };
 
   const addKeyword = async () => {
@@ -445,10 +430,6 @@ export default function Settings() {
               <Label className="text-xs font-semibold flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" />Email</Label>
               <Input value={user?.email || ""} disabled className="mt-1 h-10" />
             </div>
-            <Button variant="outline" className="w-full rounded-full" onClick={handleChangePassword} disabled={changingPassword}>
-              {changingPassword ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <KeyRound className="h-4 w-4 mr-2" />}
-              Email me a password reset link
-            </Button>
             <Button className="w-full rounded-full" onClick={handleSave} disabled={saving || (handle !== (profile?.handle || "") && available === false)}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save changes"}
             </Button>

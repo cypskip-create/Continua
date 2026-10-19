@@ -13,6 +13,9 @@ on:
       - "supabase/config.toml"
   workflow_dispatch: {} # lets you trigger a redeploy manually from the Actions tab, no push needed
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest

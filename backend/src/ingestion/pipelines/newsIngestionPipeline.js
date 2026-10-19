@@ -21,9 +21,10 @@ import { ingestionLogRepository } from "../../storage/repositories/ingestionLogR
 import { logger } from "../../monitoring/logger.js";
 const EXCERPT_LENGTH = 400;
 function isDisallowedTestFeed(sourceId, documentUrl) {
-    const value = `${sourceId} ${documentUrl}`.toLowerCase();
-    return sourceId === "test-rss" || sourceId === "real-rss" || value.includes("hacker-news")
-        || value.includes("news.ycombinator.com") || value.includes("hnrss.org");
+    const source=String(sourceId??'').toLowerCase();
+    let host;try{host=new URL(documentUrl).hostname.toLowerCase();}catch{return true;}
+    return source==='test-rss'||source==='real-rss'||source.includes('hacker-news')
+        || ['news.ycombinator.com','hnrss.org'].some(domain=>host===domain||host.endsWith('.'+domain));
 }
 async function fetchPendingExtractions(limit) {
     const res = await query(`SELECT e.id as "extractionId", e.confidence, e.needs_review as "needsReview", e.text, e.entity,
