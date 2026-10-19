@@ -6,6 +6,20 @@
   "nativeCandidate": "backend-go/cmd/continua (loopback only; readiness deliberately 503)",
   "features": [
     {
+      "legacyFile": "scraper-python/continua_scraper/legacy_cleanup.py",
+      "legacySha256": "53a98968056ff42510cb1c96cfde93ea1cab87f7cf8d015352fb981854736fe9",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
+      "legacyFile": "infra/migration/native-fixture-env.mjs",
+      "legacySha256": "89f871e1bb85d3d2d1fefa4bc8acb076cc7b8cae2adbc3a1705e9efad0235ea8",
+      "targetLanguage": "Go",
+      "status": "retained",
+      "rationale": "Legacy development-only build/inventory/oracle/sandbox or one-off evidence verification reference. Not included or executed in either native container. Native Go/Python commands and tests replace production execution; retaining a comparison fixture is not a Node production dependency."
+    },
+    {
       "legacyFile": "backend/python/engine_calculations.py",
       "legacySha256": "911bc56f7fe939cfd940b0f00cbf36cc97a154cb97aa5d3d809081d5d53e53df",
       "targetLanguage": "Python",
@@ -92,7 +106,7 @@
     },
     {
       "legacyFile": "scraper-python/reconcile_cloud.py",
-      "legacySha256": "89a13a4e05031a45f59e2e9a8510c8c18b60f4f0d058f25fdcfc8f7a90dae832",
+      "legacySha256": "378c5fe7cc2c85d586bd3086b796b93bfccf4fdf8c38dce998590ce1741f9b8b",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."

@@ -295,6 +295,7 @@ for(const file of inventory.features.map(x=>x.file).filter(file=>/^backend\/src\
 }
 const developmentReferences=new Set([
  'infra/security/browser-secret-audit.mjs',
+ 'infra/migration/native-fixture-env.mjs',
  'backend/scripts/build.mjs','scraper/scripts/build.mjs',
  'backend/scripts/exportMigrationInventory.js','backend/scripts/serveNativeCheckoutSandbox.js',
  'backend/scripts/testNativePaymentLedger.js','backend/scripts/testNativePaystackProvider.js',

@@ -1,7 +1,8 @@
 """Finite automatic reconciliation over the live registry, never an issuer list.
 
 Restartable receipts are in SQL; originals, extraction snapshots and prepared
-payloads are private R2 objects. This worker never deletes legacy data.
+payloads are private R2 objects. Explicit verified-original cleanup removes only
+duplicates whose private copies and database references pass fresh checks.
 """
 import argparse
 import asyncio
@@ -32,16 +33,17 @@ def reconciliation_limits(environment,migrate_raw):
     return ceiling,daily,seconds
 
 
-async def reconcile(*,migrate_raw=False):
+async def reconcile(*,migrate_raw=False,cleanup_verified=False,cleanup_only=False):
+    if (cleanup_verified or cleanup_only) and not migrate_raw:raise ValueError('Legacy cleanup requires the migration allowance')
     validate_environment(os.environ)
     if os.environ.get('R2_DUAL_WRITE','false').lower() not in ('false','0','no',''):
         raise ValueError('Cloud reconciliation requires R2-only writes')
     ceiling,daily,seconds=reconciliation_limits(os.environ,migrate_raw)
     database=await Database.open(os.environ['DATABASE_URL'])
-    storage=None;archive=None
+    storage=None;archive=None;cleanup=None
     budget=transfer_budget.TransferBudget(ceiling)
     receipt={'status':'running','mode':'automatic-full-registry','processed':0,
-             'processedObjects':0,'archiveRecords':0,'failures':0,'destructive':False}
+             'processedObjects':0,'archiveRecords':0,'failures':0,'destructive':cleanup_verified or cleanup_only,'originalsDeleted':0,'sourceBytesRemoved':0}
     run_id=('cloud-migration-' if migrate_raw else 'cloud-processed-')+os.environ.get('GITHUB_RUN_ID',uuid.uuid4().hex)+'-'+os.environ.get('GITHUB_RUN_ATTEMPT','1')
     started=time.monotonic()
     try:
@@ -54,7 +56,10 @@ async def reconcile(*,migrate_raw=False):
             transfer_budget.active=budget
             storage=RawStorage.from_environment()
             archive=R2Archive(database,storage.r2,storage.materialize)
-            if migrate_raw:
+            if cleanup_verified or cleanup_only:
+                from continua_scraper.legacy_cleanup import VerifiedLegacyCleanup
+                cleanup=VerifiedLegacyCleanup(database,storage)
+            if migrate_raw and not cleanup_only:
                 from continua_scraper.documents import DocumentJobs
                 receipt['recollectionJobsRequeued']=await DocumentJobs(database).recover_unarchived('kenyanstocks')
             processor=ResearchProcessor(database,processed_storage=storage.r2)
@@ -65,8 +70,14 @@ async def reconcile(*,migrate_raw=False):
             # the soft deadline; individual I/O and SQL already have deadlines.
             stop=started+max(1,seconds-90)
             try:
-                processing=True;exporting=True;raw_pending=migrate_raw
-                while time.monotonic()<stop and (processing or exporting or raw_pending):
+                processing=not cleanup_only;exporting=not cleanup_only;raw_pending=migrate_raw and not cleanup_only
+                cleanup_pending=cleanup is not None
+                while time.monotonic()<stop and (processing or exporting or raw_pending or cleanup_pending):
+                    if cleanup_pending:
+                        result=await cleanup.run(5)
+                        receipt['originalsDeleted']+=result['deleted'];receipt['sourceBytesRemoved']+=result['sourceBytesRemoved'];receipt['failures']+=result['failed']
+                        if result.get('budgetPaused'):raise transfer_budget.TransferLimitReached()
+                        cleanup_pending=result['deleted']>0
                     if processing:
                         result=await processor.run(25)
                         receipt['processed']+=result['processed'];receipt['failures']+=result['failed']
@@ -81,8 +92,9 @@ async def reconcile(*,migrate_raw=False):
                         raw_pending=any(result.get(k,0) for k in ('copied','failed','superseded'))
                         # New R2 pointers can unblock previously gated evidence.
                         processing=processing or result['copied']>0
+                        if cleanup and result['copied']>0:cleanup_pending=True
                     if processing:exporting=True
-                receipt['status']='completed' if not(processing or exporting or raw_pending) else 'checkpointed'
+                receipt['status']='completed' if not(processing or exporting or raw_pending or cleanup_pending) else 'checkpointed'
             except transfer_budget.TransferLimitReached:receipt['status']='budget-paused'
             finally:
                 receipt.update(budget.snapshot(),durationSeconds=round(time.monotonic()-started,3))
@@ -93,6 +105,7 @@ async def reconcile(*,migrate_raw=False):
                 await database.query("UPDATE scraping.scheduled_runs SET status=%s,completed_at=now(),receipt=%s::jsonb WHERE id=%s",
                     ('completed' if receipt['status'] in ('completed','checkpointed') else receipt['status'],encode(receipt),run_id))
     finally:
+        if cleanup:await cleanup.close()
         if archive:await archive.close()
         transfer_budget.active=None
         if storage:storage.close()
@@ -104,11 +117,13 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--apply',action='store_true')
     parser.add_argument('--migrate-raw',action='store_true')
+    parser.add_argument('--cleanup-verified-originals',action='store_true')
+    parser.add_argument('--cleanup-only',action='store_true')
     args=parser.parse_args()
     if not args.apply:
-        print(json.dumps({'submitted':False,'mode':'offline-plan','scope':'live NSE registry','migrateRaw':args.migrate_raw}));return 0
+        print(json.dumps({'submitted':False,'mode':'offline-plan','scope':'live NSE registry','migrateRaw':args.migrate_raw,'cleanupVerifiedOriginals':args.cleanup_verified_originals,'cleanupOnly':args.cleanup_only}));return 0
     try:
-        result=asyncio.run(reconcile(migrate_raw=args.migrate_raw),loop_factory=database_event_loop)
+        result=asyncio.run(reconcile(migrate_raw=args.migrate_raw,cleanup_verified=args.cleanup_verified_originals,cleanup_only=args.cleanup_only),loop_factory=database_event_loop)
         print(json.dumps(result,allow_nan=False,separators=(',',':')))
         return 1 if result.get('failures',0) else 0
     except Exception as error:

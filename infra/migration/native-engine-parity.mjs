@@ -1,4 +1,5 @@
 /** Native Python vs existing pure JS oracle. Node is test-only, never a server proxy. */
+import './native-fixture-env.mjs';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {computeRatios,yoyGrowth} from '../../backend/src/services/research/ratiosEngine.js';

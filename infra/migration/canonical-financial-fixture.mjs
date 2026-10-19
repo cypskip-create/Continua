@@ -92,6 +92,28 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  ('NSE:CGEN','1d','2025-10-16T00:00:00Z',21,21,21,21,120,'https://afx.kwayisi.org/nse/cgen.html')`);
  const legacyCloses=(await db.query(legacyProviderCloseQuery,['NSE:CGEN','2025-10-01','2025-10-31'])).rows;
  check(legacyCloses.map(r=>[r.date,r.close,r.open,r.high,r.low,r.volume]),[['2025-10-15','20',null,null,null,null],['2025-10-16','21',null,null,null,120]]);
+ // Execute the cleanup worker's actual candidate SQL: a verified copy alone
+ // must not authorize removal while any artifact still uses the original.
+ const cleanupSQLProcess=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',"import sys;sys.path.insert(0,'scraper-python');from continua_scraper.legacy_cleanup import CANDIDATES;print(CANDIDATES)"],{cwd:new URL('../../',import.meta.url),encoding:'utf8'});
+ if(cleanupSQLProcess.status!==0)throw Error('Cleanup SQL fixture unavailable');
+ const cleanupSQL=cleanupSQLProcess.stdout.replaceAll('%%','%').replace('%s','$1');
+ await db.exec('ALTER TABLE storage.objects ADD COLUMN updated_at timestamptz DEFAULT now()');
+ const cleanupHash='c'.repeat(64),cleanupKey=`fixture/2026/${cleanupHash}.pdf`;
+ const cleanupArtifact=(await db.query(`INSERT INTO scraping.raw_artifacts(source_id,adapter,sha256,document_url,storage_path,crawler_version,size_bytes,metadata)
+ VALUES('kenyanstocks','fixture',$1,'https://fixture.invalid/cleanup',$2,'fixture',7,$3::jsonb) RETURNING id`,[cleanupHash,'r2://continua-financial-documents/'+cleanupKey,JSON.stringify({r2LegacyStoragePath:cleanupKey,r2ArchiveState:'verified'})])).rows[0].id;
+ await db.query("INSERT INTO storage.objects(id,bucket_id,name) VALUES(999,'scraper-raw',$1)",[cleanupKey]);
+ check((await db.query(cleanupSQL,[20])).rows.map(r=>r.legacy_key),[cleanupKey]);
+ await db.query("UPDATE scraping.raw_artifacts SET storage_path=$2 WHERE id=$1",[cleanupArtifact,cleanupKey]);
+ check((await db.query(cleanupSQL,[20])).rows,[]);
+ await db.query('UPDATE scraping.raw_artifacts SET storage_path=$2 WHERE id=$1',[cleanupArtifact,'r2://continua-financial-documents/'+cleanupKey]);
+ await db.query("UPDATE scraping.raw_artifacts SET metadata=metadata-'r2LegacyStoragePath'-'r2ArchiveState' WHERE id=$1",[cleanupArtifact]);
+ check((await db.query(cleanupSQL,[20])).rows.map(r=>r.legacy_key),[cleanupKey]);
+ const stillUsing=(await db.query(`INSERT INTO scraping.raw_artifacts(source_id,adapter,sha256,document_url,storage_path,crawler_version)
+ VALUES('kenyanstocks','fixture',$1,'https://fixture.invalid/still-using',$2,'fixture') RETURNING id`,['d'.repeat(64),cleanupKey])).rows[0].id;
+ check((await db.query(cleanupSQL,[20])).rows,[]);
+ await db.query('DELETE FROM scraping.raw_artifacts WHERE id=$1',[stillUsing]);
+ check((await db.query(cleanupSQL,[20])).rows.length,1);
+ await db.exec('DELETE FROM storage.objects WHERE id=999');
  await db.exec("UPDATE scraping.sources SET redistribution_allowed=false");
  check((await db.query(publisherCloseQuery,dailyArgs)).rows,[]);
  await db.exec("UPDATE scraping.sources SET redistribution_allowed=true");

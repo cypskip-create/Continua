@@ -1,9 +1,30 @@
 {
-  "reviewDate": "2026-10-18",
+  "reviewDate": "2026-10-19",
   "scope": "Every backend/Engine/scraper runtime module, operator script, Edge entrypoint and existing SQL migration",
   "method": "Workload-specific rationale, supported tooling and feature-preserving tests; not a universal fastest-language claim.",
   "runtimeImplementationsUseTypeScript": false,
   "features": [
+    {
+      "file": "scraper-python/continua_scraper/legacy_cleanup.py",
+      "category": "Verified legacy duplicate retirement",
+      "language": "Python",
+      "runtime": "Existing finite collector, private R2 and owned Supabase Storage API",
+      "reason": "Reuse bounded streaming readers, psycopg session locks, shared daily transfer reservations and checkpoint metadata. Verify both original and R2 hashes, reject any remaining legacy database reference, record verification before exact file removal, retain all R2 evidence and extraction versions. Shield cleanup through cancellation and reverify after restart. No Render storage credentials or new service are needed.",
+      "references": [
+        "https://supabase.com/docs/reference/python/storage-from-remove",
+        "https://docs.python.org/3/library/asyncio-task.html#asyncio.shield"
+      ]
+    },
+    {
+      "file": "infra/migration/native-fixture-env.mjs",
+      "category": "CI fixture bootstrap",
+      "language": "JavaScript development tooling",
+      "runtime": "Node test process only",
+      "reason": "Set an unreachable fixture DSN before compatibility static imports validate configuration. This fixes CI without exposing production credentials or weakening validation.",
+      "references": [
+        "https://nodejs.org/api/esm.html"
+      ]
+    },
     {
       "file": "backend/python/engine_calculations.py",
       "category": "Observed C score and sourced chart/statistics coverage",
