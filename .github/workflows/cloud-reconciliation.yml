@@ -16,6 +16,10 @@ on:
         description: Only remove reverified duplicates (requires migrate_raw)
         type: boolean
         default: false
+      migration_run_mib:
+        description: Migration transfer reservation in MiB (1–384; daily allowance unchanged)
+        type: string
+        default: '256'
 permissions:
   contents: read
 concurrency:
@@ -60,12 +64,17 @@ jobs:
           # Each stays below the approved 384 MiB maximum per run.
           CLOUD_MIGRATION_RUN_TRANSFER_BYTES: '268435456'
           CLOUD_MIGRATION_DAILY_TRANSFER_BYTES: '1073741824'
+          MIGRATION_RUN_MIB: ${{ inputs.migration_run_mib || '256' }}
           MIGRATE_RAW: ${{ inputs.migrate_raw }}
           CLEANUP_VERIFIED: ${{ inputs.cleanup_verified_originals }}
           CLEANUP_ONLY: ${{ inputs.cleanup_only }}
           EVENT_NAME: ${{ github.event_name }}
           MIGRATION_UNTIL: ${{ vars.CONTINUA_MIGRATE_LEGACY_UNTIL }}
         run: |
+          if ! [[ "$MIGRATION_RUN_MIB" =~ ^[1-9][0-9]{0,2}$ ]] || [ "$MIGRATION_RUN_MIB" -gt 384 ]; then
+            echo 'Invalid bounded migration reservation'; exit 1
+          fi
+          export CLOUD_MIGRATION_RUN_TRANSFER_BYTES=$((MIGRATION_RUN_MIB * 1024 * 1024))
           args=(--apply)
           migrate=false
           if [ "$MIGRATE_RAW" = true ]; then args+=(--migrate-raw); migrate=true; fi
