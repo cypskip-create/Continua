@@ -1,7 +1,7 @@
 name: Continua failure receipts
 on:
   workflow_run:
-    workflows: ['Continua operational health', 'Automatic full-registry Engine and Cloudflare reconciliation', 'Bounded financial collection outside Render']
+    workflows: ['Continua operational health', 'Automatic full-registry Engine and Cloudflare reconciliation', 'Bounded financial collection outside Render', 'Security release checks', 'Native rewrite candidate tests (not production cutover)', 'CodeQL Advanced', 'Deploy Supabase Edge Functions']
     types: [completed]
 permissions:
   contents: read
