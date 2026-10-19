@@ -5,6 +5,17 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "scraper-python/continua_scraper/uncatalogued_archive.py",
+      "category": "Preservation of uncatalogued legacy raw files",
+      "language": "Python",
+      "runtime": "Existing finite migration worker and private R2 client",
+      "reason": "Reuse bounded streaming hash verification, immutable upload/readback, shared daily transfer accounting and cancellation shields. Keep independent SQL receipts instead of inventing source URLs, issuers, extraction or licensing for unlinked files. Recheck exact Storage identity and absence of catalog references before the approved original removal.",
+      "references": [
+        "https://docs.python.org/3/library/asyncio-task.html#asyncio.shield",
+        "https://docs.python.org/3/library/hashlib.html"
+      ]
+    },
+    {
       "file": "backend-go/internal/httpapi/statistics.go",
       "category": "Native statistics API and evidence reads",
       "language": "Go",

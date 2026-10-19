@@ -6,6 +6,13 @@
   "nativeCandidate": "backend-go/cmd/continua (loopback only; readiness deliberately 503)",
   "features": [
     {
+      "legacyFile": "scraper-python/continua_scraper/uncatalogued_archive.py",
+      "legacySha256": "68fbbf12eb83d36f9da0e92c6c2735669611fc9ef8dbfde14ecc9b90d39196c1",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
       "legacyFile": "backend-go/internal/httpapi/statistics.go",
       "legacySha256": "2105453889b617f77360fa89a3bf9d47f6008cf50e93bd6afc9ce25a0ff96a2c",
       "targetLanguage": "Go",
@@ -124,7 +131,7 @@
     },
     {
       "legacyFile": "scraper-python/reconcile_cloud.py",
-      "legacySha256": "6ac8bcd84d6e37fbcb07fe3b4d52bb8a909d348d9512734af7c37bf81ee6465a",
+      "legacySha256": "675375a91db654342ecce2b0232e87a91c6a732dac4ed16e1e09ead05f65d6af",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."

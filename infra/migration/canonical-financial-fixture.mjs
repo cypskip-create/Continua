@@ -26,6 +26,7 @@ try {
   'supabase/migrations/20261011123000_partial_reported_statements.sql',
   'scraper/migrations/20261016170000 processed research.sql',
   'scraper/migrations/20261018120000 processed cloud archive.sql',
+  'scraper/migrations/20261019100000 uncatalogued raw archive.sql',
   'supabase/migrations/20261018100000_canonical_financial_observations.sql',
   'supabase/migrations/20261018200000_c_score_evidence.sql',
  ]) await db.exec(await readFile(new URL(path,root),'utf8'));
@@ -114,6 +115,20 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  await db.query('DELETE FROM scraping.raw_artifacts WHERE id=$1',[stillUsing]);
  check((await db.query(cleanupSQL,[20])).rows.length,1);
  await db.exec('DELETE FROM storage.objects WHERE id=999');
+ await db.exec("ALTER TABLE storage.objects ADD COLUMN metadata jsonb DEFAULT '{}'::jsonb");
+ const orphanProcess=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',"import sys;sys.path.insert(0,'scraper-python');from continua_scraper.uncatalogued_archive import CANDIDATES;print(CANDIDATES)"],{cwd:new URL('../../',import.meta.url),encoding:'utf8'});
+ assert.equal(orphanProcess.status,0);
+ const orphanSQL=orphanProcess.stdout.replaceAll('%%','%').replace('%s','$1');
+ const orphanKey=`fixture/2026/${'e'.repeat(64)}.html`;
+ await db.query("INSERT INTO storage.objects(id,bucket_id,name,metadata) VALUES(998,'scraper-raw',$1,'{\"size\":7}')",[orphanKey]);
+ check((await db.query(orphanSQL,[5])).rows.map(r=>r.legacy_key),[orphanKey]);
+ const orphanReference=(await db.query(`INSERT INTO scraping.raw_artifacts(source_id,adapter,sha256,document_url,storage_path,crawler_version) VALUES('kenyanstocks','fixture',$1,'https://fixture.invalid/orphan',$2,'fixture') RETURNING id`,['e'.repeat(64),orphanKey])).rows[0].id;
+ check((await db.query(orphanSQL,[5])).rows,[]);
+ await db.query('DELETE FROM scraping.raw_artifacts WHERE id=$1',[orphanReference]);
+ check((await db.query(orphanSQL,[5])).rows.length,1);
+ check((await db.query("SELECT has_table_privilege('anon','scraping.uncatalogued_raw_archive','SELECT') AS allowed")).rows[0].allowed,false);
+ check((await db.query("SELECT has_table_privilege('authenticated','scraping.uncatalogued_raw_archive','UPDATE') AS allowed")).rows[0].allowed,false);
+ await db.exec('DELETE FROM storage.objects WHERE id=998');
  await db.exec("UPDATE scraping.sources SET redistribution_allowed=false");
  check((await db.query(publisherCloseQuery,dailyArgs)).rows,[]);
  await db.exec("UPDATE scraping.sources SET redistribution_allowed=true");

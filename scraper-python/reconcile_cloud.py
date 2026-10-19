@@ -51,6 +51,9 @@ async def reconcile(*,migrate_raw=False,cleanup_verified=False,cleanup_only=Fals
         migration=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261018120000 processed cloud archive.sql'
         async with database.pool.connection() as connection:
             await connection.execute(migration.read_text(encoding='utf-8'),prepare=False)
+            if cleanup_verified or cleanup_only:
+                orphan_migration=migration.parent/'20261019100000 uncatalogued raw archive.sql'
+                await connection.execute(orphan_migration.read_text(encoding='utf-8'),prepare=False)
         async with scheduled_slot(database,run_id,'drain',ceiling,daily,migration=migrate_raw) as skipped:
             if skipped:return dict(receipt,status=skipped)
             transfer_budget.active=budget
@@ -74,10 +77,18 @@ async def reconcile(*,migrate_raw=False,cleanup_verified=False,cleanup_only=Fals
                 cleanup_pending=cleanup is not None
                 while time.monotonic()<stop and (processing or exporting or raw_pending or cleanup_pending):
                     if cleanup_pending:
+                        # Previously uncatalogued files need preservation too;
+                        # the independent receipt never invents publication data.
+                        from continua_scraper.uncatalogued_archive import UncataloguedArchive
+                        orphan_worker=UncataloguedArchive(database,storage)
+                        try:orphan_result=await orphan_worker.run(5)
+                        finally:await orphan_worker.close()
+                        receipt['originalsDeleted']+=orphan_result['deleted'];receipt['sourceBytesRemoved']+=orphan_result['sourceBytesRemoved'];receipt['failures']+=orphan_result['failed']
+                        if orphan_result.get('budgetPaused'):raise transfer_budget.TransferLimitReached()
                         result=await cleanup.run(5)
                         receipt['originalsDeleted']+=result['deleted'];receipt['sourceBytesRemoved']+=result['sourceBytesRemoved'];receipt['failures']+=result['failed']
                         if result.get('budgetPaused'):raise transfer_budget.TransferLimitReached()
-                        cleanup_pending=result['deleted']>0
+                        cleanup_pending=result['deleted']>0 or orphan_result['deleted']>0
                     if processing:
                         result=await processor.run(25)
                         receipt['processed']+=result['processed'];receipt['failures']+=result['failed']
