@@ -7,7 +7,7 @@
   "features": [
     {
       "legacyFile": "scraper-python/continua_scraper/legacy_cleanup.py",
-      "legacySha256": "53a98968056ff42510cb1c96cfde93ea1cab87f7cf8d015352fb981854736fe9",
+      "legacySha256": "1ceda2f17f3d53e0712df09cf657639c96674d5d28e5d4a029a4ada4bcb6ef37",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."

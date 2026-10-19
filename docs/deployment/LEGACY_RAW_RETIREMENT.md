@@ -9,7 +9,9 @@ Candidates must be content-addressed files in `scraper-raw`, no larger than the
 existing 50 MiB object ceiling. Every associated artifact must point to one
 owned R2 object with one hash and size; no artifact may still use the legacy
 path. Both migration checkpoints and earlier duplicate-write keys are covered.
-The worker freshly streams and hashes the R2 copy and Supabase original, checks
+Largest verified duplicates are considered first to free storage within the
+finite runtime, rather than spending the whole run on tiny files. The worker
+freshly streams and hashes the R2 copy and Supabase original, checks
 all references and the original object identity again, writes a verification
 receipt, then removes that exact file through the Storage API. It verifies
 absence and records completion. It never deletes directly from storage tables.

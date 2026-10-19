@@ -24,7 +24,7 @@ CANDIDATES = """WITH copies AS (
  WHERE c.size_bytes BETWEEN 1 AND 52428800
  AND NOT EXISTS(SELECT 1 FROM scraping.raw_artifacts a
    WHERE replace(a.storage_path,chr(92),'/')=c.legacy_key)
- ORDER BY c.size_bytes,c.legacy_key LIMIT %s"""
+ ORDER BY c.size_bytes DESC,c.legacy_key LIMIT %s"""
 
 
 def validate_candidate(row,storage):
