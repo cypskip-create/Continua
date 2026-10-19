@@ -9,6 +9,7 @@ on:
       - 'scraper-python/**'
       - 'infra/migration/native-*.mjs'
       - 'infra/migration/native-*.py'
+      - 'infra/migration/canonical-financial-fixture.mjs'
       - 'infra/cloudflare/**'
       - '.github/workflows/native-rewrite-tests.yml'
   pull_request:
@@ -19,6 +20,7 @@ on:
       - 'scraper-python/**'
       - 'infra/migration/native-*.mjs'
       - 'infra/migration/native-*.py'
+      - 'infra/migration/canonical-financial-fixture.mjs'
       - 'infra/cloudflare/**'
       - '.github/workflows/native-rewrite-tests.yml'
 permissions:
