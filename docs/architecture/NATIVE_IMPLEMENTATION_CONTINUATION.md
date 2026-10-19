@@ -79,3 +79,20 @@ are still outstanding. Do not alter ledger status to imply they are complete.
 No live charges, paid Render activation, new domain cutover or paid AI activation
 is authorized by this continuation. Keep original PDFs and extraction snapshots
 in private R2; Render is compute with bounded temporary staging only.
+
+
+## 19 October: statistics and request protection
+
+Native Python observed market statistics pass 216 full-response comparisons with
+production: missing/mock/future quotes, actual zero volume, reporting dates,
+currency, negative shares, sparse/gapped/conflicting closes and complete OHLC.
+Go provides the validated cached route and bounded SQL inputs. Licensed publisher
+and legacy provider observations remain close-only; unknown MyStocks volume is
+null and these records are excluded from OHLC candle reads. A disposable
+PostgreSQL regression checks those reader contracts in CI.
+
+Native workload protection now shares one research scope across Engine,
+statistics, history, valuation and research URLs. Verified users cannot reset
+that scope by changing API keys. HEAD and exact transfer path segments retain
+compatibility policy. Scoped IPv6 edge identities are rejected. These are
+candidate changes; full rewrite and hosted release gates remain unresolved.

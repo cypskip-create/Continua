@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/netip"
+	"strings"
 )
 
 // A public forwarded header alone is never a trusted rate-limit identity.
@@ -17,7 +18,7 @@ func (s *Server) clientIdentity(r *http.Request) string {
 			actual, expected := sha256.Sum256([]byte(provided)), sha256.Sum256([]byte(s.EdgeOriginSecret))
 			if subtle.ConstantTimeCompare(actual[:], expected[:]) == 1 {
 				ip := r.Header.Get("X-Continua-Client-IP")
-				if len(ip) <= 64 {
+				if len(ip) <= 64 && !strings.Contains(ip, "%") {
 					if parsed, err := netip.ParseAddr(ip); err == nil {
 						return parsed.Unmap().String()
 					}

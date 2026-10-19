@@ -158,5 +158,35 @@ func (s *Store) DailyCloseHistory(ctx context.Context, id string, from, to time.
 	if !strings.HasPrefix(id, "NSE:") || from.After(to) {
 		return nil, errors.New("invalid daily close history request")
 	}
-	return s.JSONRowsBounded(ctx, 4*1024*1024, `SELECT row_to_json(result) FROM (SELECT c.security_id AS "securityId",to_char(c.observed_date,'YYYY-MM-DD') AS date,c.close,c.volume,c.adjustment,c.source_url AS "sourceUrl",c.source_id AS "sourceId",'daily_close_only' AS basis,NULL::numeric AS open,NULL::numeric AS high,NULL::numeric AS low FROM market.observed_daily_closes c JOIN scraping.sources src ON src.id=c.source_id WHERE c.security_id=$1 AND c.observed_date BETWEEN $2::date AND $3::date AND src.enabled AND src.redistribution_allowed=true AND src.config->>'closeMappingApproved'='publisher-daily-close-v1' AND length(trim(src.config->>'permissionReference')) BETWEEN 1 AND 200 ORDER BY c.observed_date,c.source_id LIMIT 10001) result`, id, from.UTC().Format("2006-01-02"), to.UTC().Format("2006-01-02"))
+	rows, err := s.JSONRowsBounded(ctx, 4*1024*1024, `SELECT row_to_json(result) FROM (SELECT c.security_id AS "securityId",to_char(c.observed_date,'YYYY-MM-DD') AS date,c.close,c.volume,c.adjustment,c.source_url AS "sourceUrl",c.source_id AS "sourceId",'daily_close_only' AS basis,NULL::numeric AS open,NULL::numeric AS high,NULL::numeric AS low FROM market.observed_daily_closes c JOIN scraping.sources src ON src.id=c.source_id WHERE c.security_id=$1 AND c.observed_date BETWEEN $2::date AND $3::date AND src.enabled AND src.redistribution_allowed=true AND src.config->>'closeMappingApproved'='publisher-daily-close-v1' AND length(trim(src.config->>'permissionReference')) BETWEEN 1 AND 200 ORDER BY c.observed_date,c.source_id LIMIT 10001) result`, id, from.UTC().Format("2006-01-02"), to.UTC().Format("2006-01-02"))
+	if err != nil {
+		return nil, err
+	}
+	legacy, err := s.JSONRowsBounded(ctx, 4*1024*1024, legacyProviderCloseSQL, id, from.UTC().Format("2006-01-02"), to.UTC().Format("2006-01-02"))
+	if err != nil {
+		return nil, err
+	}
+	publisher, err := s.JSONRowsBounded(ctx, 4*1024*1024, publisherCloseSQL, id, "1d", from, to)
+	if err != nil {
+		return nil, err
+	}
+	rows = append(rows, legacy...)
+	rows = append(rows, publisher...)
+	total := 0
+	for _, row := range rows {
+		total += len(row)
+	}
+	if len(rows) > 10000 || total > 4*1024*1024 {
+		return nil, ErrReadBudget
+	}
+	sort.SliceStable(rows, func(i, j int) bool {
+		var a, b struct {
+			Date string `json:"date"`
+		}
+		_ = json.Unmarshal(rows[i], &a)
+		_ = json.Unmarshal(rows[j], &b)
+		return a.Date < b.Date
+	})
+	return rows, nil
+
 }

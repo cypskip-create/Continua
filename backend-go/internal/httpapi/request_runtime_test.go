@@ -65,4 +65,8 @@ func TestForwardedIdentityRequiresSeparateOwnedEdgeSecret(t *testing.T) {
 	if server.clientIdentity(request) != "192.0.2.1" {
 		t.Fatal("invalid edge IP not rejected")
 	}
+	request.Header.Set("X-Continua-Client-IP", "fe80::1%fixture")
+	if server.clientIdentity(request) != "192.0.2.1" {
+		t.Fatal("scoped edge IP accepted")
+	}
 }

@@ -6,6 +6,20 @@
   "nativeCandidate": "backend-go/cmd/continua (loopback only; readiness deliberately 503)",
   "features": [
     {
+      "legacyFile": "backend-go/internal/httpapi/statistics.go",
+      "legacySha256": "2105453889b617f77360fa89a3bf9d47f6008cf50e93bd6afc9ce25a0ff96a2c",
+      "targetLanguage": "Go",
+      "status": "pending",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+    },
+    {
+      "legacyFile": "engine-python/continua_engine/market_statistics.py",
+      "legacySha256": "65ab6a6b9d5456f238a4fdb409d0295ab740a34c56650e5707cbc98c205306d9",
+      "targetLanguage": "Python",
+      "status": "retained",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+    },
+    {
       "legacyFile": "scraper-python/continua_scraper/legacy_cleanup.py",
       "legacySha256": "1ceda2f17f3d53e0712df09cf657639c96674d5d28e5d4a029a4ada4bcb6ef37",
       "targetLanguage": "Python",
@@ -29,9 +43,11 @@
     {
       "legacyFile": "backend/src/services/marketData/marketStatistics.js",
       "legacySha256": "57da640dbc06ea1df09f9469801d949219f39239cf3a22d36d9aa634f18f9e62",
-      "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "targetLanguage": "Python",
+      "status": "ported",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "replacement": "engine-python/continua_engine/market_statistics.py",
+      "validation": "216 full-response compatibility comparisons cover missing/mock/future quotes, zero volume, filing availability/currency, invalid shares, sparse/gapped/conflicting closes and observed OHLC ranges. No fabricated values."
     },
     {
       "legacyFile": "backend/src/streaming/websocketServer.js",
@@ -45,8 +61,9 @@
       "legacyFile": "backend/src/api/middleware/edgeClientIdentity.js",
       "legacySha256": "75d289bbae18decf62de5c57e980b7ebc79792c50b55ee165e5d350d9cd73250",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native constant-time owned-edge secret validation rejects invalid and scoped IP addresses; focused spoofing tests pass. Hosted native proxy topology and final security gates remain outstanding."
     },
     {
       "legacyFile": "backend/src/api/middleware/sharedRateStore.js",
@@ -59,8 +76,9 @@
       "legacyFile": "backend/src/api/middleware/workloadRateLimit.js",
       "legacySha256": "ed7299e395da6431fd2174a76fff92251c66e9760f2696518cca65096f06c1af",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native shared research scope now includes statistics, research, price-history and valuation, preserves HEAD and exact transfer segments, and keys verified users independently of API keys. Fail-closed distributed counter and policy tests pass; hosted/recovery gates remain outstanding."
     },
     {
       "legacyFile": "supabase/migrations/20261018160000_cloudflare_only_file_writes.sql",
@@ -3355,8 +3373,9 @@
       "legacyFile": "backend/src/api/routes/statistics.routes.js",
       "legacySha256": "48783f48d94992ed69923dafebdc351045c0b180cda616e0ce57f51db378bbb0",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go validated symbol route, minute cache and bounded SQL/Python statistics inputs implemented. HTTP cache/validation/error tests and 216 calculation parity cases pass. Hosted native and final cross-feature release gates remain outstanding."
     },
     {
       "legacyFile": "backend/src/services/research/collectedResearch.js",
@@ -3369,8 +3388,9 @@
       "legacyFile": "backend/src/storage/repositories/publisherCandleQuery.js",
       "legacySha256": "cc1581ccdfe2b9e40203165cf2c80607f23fcf2756e0ec305bd60297798a86d1",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go separates licensed publisher/legacy closes from OHLC; preserves immutable R2 evidence and missing provider volume. Actual PostgreSQL regression fixture added; final hosted/recovery gates remain outstanding."
     },
     {
       "legacyFile": "backend/src/workers/researchRefreshWorker.js",

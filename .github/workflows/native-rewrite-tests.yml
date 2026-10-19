@@ -90,6 +90,7 @@ jobs:
       - run: node infra/migration/canonical-financial-fixture.mjs
       - run: node infra/migration/native-bundle-parity.mjs
       - run: node infra/migration/native-valuation-parity.mjs
+      - run: node infra/migration/native-statistics-parity.mjs
       - run: node infra/migration/native-execution-parity.mjs
       - run: node infra/migration/native-notebook-parity.mjs
       - run: node infra/migration/native-advanced-parity.mjs

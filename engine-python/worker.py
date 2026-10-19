@@ -2,6 +2,7 @@
 import json
 import pathlib
 import sys
+from continua_engine.market_statistics import market_statistics
 from continua_engine.filing_draft import filing_draft
 from continua_engine.notebook import validate_forecast,private_calibration
 from continua_engine.market_intelligence import analyse_market
@@ -13,7 +14,7 @@ from continua_engine.feed_mapping import map_feed,normalize_feed,map_fundamental
 from continua_engine.execution import simulate_execution, backtest, volume_profile
 from continua_engine import indicators, ratios, valuation, preferences, monitoring, dividends, portfolio, reported, candles, publisher, risk, analytics, publication, reports, briefing, safaricom, registered_reports, cbk, document_plan, readiness, research_components, bundle, news, valuation_models, research_snapshot
 
-OPERATIONS = {"simulate_execution":simulate_execution,"backtest":backtest,"volume_profile":volume_profile,"filing_draft":filing_draft,"sma":indicators.sma,"ema":indicators.ema,"rsi":indicators.rsi,
+OPERATIONS = {"market_statistics":market_statistics,"simulate_execution":simulate_execution,"backtest":backtest,"volume_profile":volume_profile,"filing_draft":filing_draft,"sma":indicators.sma,"ema":indicators.ema,"rsi":indicators.rsi,
               "macd":indicators.macd,"crossover":indicators.latest_crossover,
               "ratios":ratios.compute_ratios,"yoy":ratios.yoy_growth,"annual_ratio":valuation.annual_ratio_at,
               "record_interest":preferences.record_interest,"recommendations":preferences.recommendations,

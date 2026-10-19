@@ -42,7 +42,14 @@ func TestResourcePoliciesAndMachineReadable429(t *testing.T) {
 		method, path, policy string
 		limit                int
 	}{
-		{"GET", "/api/v1/engine/CGEN", "research:/api/v1/engine/CGEN", 30},
+		{"GET", "/api/v1/engine/CGEN", "research", 30},
+		{"HEAD", "/api/v1/engine/CGEN", "research", 30},
+		{"GET", "/api/v1/statistics/KCB", "research", 30},
+		{"GET", "/api/v1/research/COOP", "research", 30},
+		{"GET", "/api/v1/valuation/CGEN", "research", 30},
+		{"GET", "/api/v1/price-history/CGEN", "research", 30},
+		{"GET", "/api/v1/exports", "", 0},
+		{"OPTIONS", "/api/v1/quotes", "", 0},
 		{"POST", "/api/v1/engine/portfolio", "calculation-write", 20},
 		{"POST", "/api/v1/engine/notebook/export", "transfer", 5},
 		{"POST", "/api/v1/billing/checkout", "billing", 20},

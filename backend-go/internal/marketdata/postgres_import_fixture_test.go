@@ -50,6 +50,17 @@ func verifyImportPostgresFixture(t *testing.T, store *Store, ctx context.Context
 		t.Fatal(err)
 	}
 	date := now.UTC().Add(-48 * time.Hour).Format("2006-01-02")
+	// Provider close observations must survive history reads without claiming OHLC.
+	exec(`INSERT INTO market.candles(security_id,interval,bar_time,open,high,low,close,volume,source_url) VALUES('NSE:KCB','1d',$1,91,91,91,91,123,'https://live.mystocks.co.ke/stock=KCB')`, date)
+	legacy, err := store.DailyCloseHistory(ctx, "NSE:KCB", now.Add(-72*time.Hour), now)
+	if err != nil || len(legacy) != 1 || !strings.Contains(string(legacy[0]), `"volume":null`) || !strings.Contains(string(legacy[0]), `"high":null`) {
+		t.Fatal("legacy provider close was lost or invented OHLC/volume", err)
+	}
+	providerCandles, err := store.Candles(ctx, "NSE:KCB", "1d", now.Add(-72*time.Hour), now)
+	if err != nil || len(providerCandles) != 0 {
+		t.Fatal("close-only provider was exposed as OHLC", err)
+	}
+	exec(`DELETE FROM market.candles WHERE security_id='NSE:KCB' AND interval='1d' AND bar_time=$1`, date)
 	exec(`INSERT INTO scraping.sources(id,name,adapter,enabled,redistribution_allowed,config) VALUES('fixture-closes','Fixture closes','mystocks',true,true,'{"permissionReference":"synthetic-fixture-only","closeMappingApproved":"publisher-daily-close-v1","historyAdjustment":"unknown"}')`)
 	var artifact, extraction int64
 	if err = store.DB.QueryRowContext(ctx, `INSERT INTO scraping.raw_artifacts(source_id,adapter,sha256,document_url,source_url,storage_path,crawler_version) VALUES('fixture-closes','mystocks',repeat('b',64),'https://live.mystocks.co.ke/stock=KCB?historical','https://live.mystocks.co.ke/stock=KCB?historical','r2://continua-financial-documents/fixture/b','fixture') RETURNING id`).Scan(&artifact); err != nil {

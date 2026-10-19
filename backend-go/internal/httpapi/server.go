@@ -49,6 +49,7 @@ type Server struct {
 	largeBodies                      chan struct{}
 	Engine                           Calculator
 	EngineBundles                    CompanyBundles
+	Statistics                       StatisticsProvider
 	Valuations                       ValuationProvider
 	News                             NewsProvider
 	RequestNews                      func()
@@ -212,7 +213,11 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if policy, maximum := workloadPolicy(r); maximum > 0 {
-		if !s.admit(ctx, w, "work:"+limitIdentity+":"+policy, maximum, time.Minute) {
+		workIdentity := limitIdentity
+		if identity != nil {
+			workIdentity = "user:" + identity.UserID
+		}
+		if !s.admit(ctx, w, "work:"+workIdentity+":"+policy, maximum, time.Minute) {
 			return
 		}
 	}
@@ -299,6 +304,9 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if s.indicatorReads(ctx, w, r, exchange) {
+		return
+	}
+	if s.statisticsReads(ctx, w, r, exchange) {
 		return
 	}
 	if s.valuationReads(ctx, w, r, exchange) {

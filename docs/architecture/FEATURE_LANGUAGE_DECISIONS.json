@@ -5,6 +5,28 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "backend-go/internal/httpapi/statistics.go",
+      "category": "Native statistics API and evidence reads",
+      "language": "Go",
+      "runtime": "Existing native backend and bounded Python worker",
+      "reason": "Use cancellable parameterized SQL, existing authenticated HTTP middleware and a minute cache; finite Python performs numerical work. Preserve strict symbol validation, generic errors, unavailable securities and source permission checks. No new service or production cutover.",
+      "references": [
+        "https://go.dev/doc/database/querying",
+        "https://pkg.go.dev/context"
+      ]
+    },
+    {
+      "file": "engine-python/continua_engine/market_statistics.py",
+      "category": "Observed market statistics native calculation",
+      "language": "Python",
+      "runtime": "Existing bounded Engine subprocess",
+      "reason": "Reuse finite numeric and UTC date arithmetic for nullable market capitalization, filing-time eligibility and evidence-qualified annual ranges; compare every response field with the compatibility implementation. Go owns the authenticated cached HTTP route and bounded SQL readers. No production cutover.",
+      "references": [
+        "https://docs.python.org/3.12/library/datetime.html",
+        "https://docs.python.org/3/library/math.html#math.isfinite"
+      ]
+    },
+    {
       "file": "scraper-python/continua_scraper/legacy_cleanup.py",
       "category": "Verified legacy duplicate retirement",
       "language": "Python",

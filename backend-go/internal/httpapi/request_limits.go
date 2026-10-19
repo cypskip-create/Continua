@@ -39,18 +39,29 @@ func (s *Server) admit(ctx context.Context, w http.ResponseWriter, key string, l
 func workloadPolicy(r *http.Request) (string, int) {
 	path := r.URL.Path
 	switch {
-	case strings.Contains(path, "/export") || strings.Contains(path, "/import"):
+	case transferPath(path):
 		return "transfer", 5
 	case strings.HasPrefix(path, "/api/v1/billing/"):
 		return "billing", 20
 	case strings.HasPrefix(path, "/api/v1/engine/"):
-		if r.Method != http.MethodGet {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			return "calculation-write", 20
 		}
-		return "research:" + path, 30
-	case r.Method != http.MethodGet && r.Method != http.MethodHead:
+		return "research", 30
+	case strings.HasPrefix(path, "/api/v1/research/") || strings.HasPrefix(path, "/api/v1/statistics/") || strings.HasPrefix(path, "/api/v1/price-history/") || strings.HasPrefix(path, "/api/v1/valuation/"):
+		return "research", 30
+	case r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions:
 		return "mutation", 30
 	default:
 		return "", 0
 	}
+}
+
+func transferPath(path string) bool {
+	for _, segment := range strings.Split(path, "/") {
+		if segment == "export" || segment == "import" {
+			return true
+		}
+	}
+	return false
 }

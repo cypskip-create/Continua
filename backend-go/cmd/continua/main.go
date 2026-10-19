@@ -153,6 +153,7 @@ func main() {
 		api.News = news
 		inputs := &engine.NativeInputs{Store: store, Worker: worker, News: news}
 		api.Valuations = inputs
+		api.Statistics = inputs
 		recompute := engine.NewRecomputeService(store, worker)
 		api.Recompute = recompute
 		bundles := engine.NewBundleService(inputs, worker, &engine.ObservationRepository{DB: store.DB, Worker: worker}, api.ReadCache)
