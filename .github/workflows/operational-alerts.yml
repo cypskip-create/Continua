@@ -18,7 +18,7 @@ jobs:
     steps:
       # No checkout, artifact download, provider secret or execution of code
       # from the triggering run. Only fixed repository run metadata is used.
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v9
         with:
           script: |
             const run=context.payload.workflow_run;
