@@ -1,6 +1,25 @@
 # Continua parallel Cloudflare migration
 
-## Audit and staged plan
+## Current state — 19 October 2026
+
+Cloudflare serves the frontend, isolated application media and private financial
+raw/processed objects. The 18 original application images were removed from
+Supabase after URL migration. Render scraper uploads only to R2 and no longer
+has Supabase file credentials. Supabase remains the database/Auth provider.
+Legacy raw cleanup is still in progress: 443 verified originals removed,
+485,260,917 bytes freed; 3,508,759,942 bytes remain. All 90 uncatalogued raw files
+are preserved in R2 and removed from Supabase with independent receipts.
+
+The approved migration runs every six hours through 16 November, within a
+separate 1 GiB/day allowance and at most 384 MiB/run; manual smaller runs can
+use a partial remaining allowance. New extraction archiving and registry-driven
+Engine processing continue after temporary migration expires. Do not describe
+this as completed storage cleanup or a production native runtime cutover.
+
+The following dated notes preserve the original staged rollout history. They do
+not override the current R2-only write policy or explicit verified-deletion authorization.
+
+## Historical audit and staged plan
 
 - Frontend: React/Vite in `app/`, root npm workspace, `app/dist` output,
   lazy routes. Paystack live initialization/verification/webhook run on Render.

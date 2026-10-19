@@ -1,8 +1,31 @@
 # Continua persistence and transfer policy — 14 October 2026
 
-These changes are implemented locally and tested where stated. They are **not yet
-deployed**: the user requires finishing the full native migration before commit
-and push. No Render billing, upgrade or paid keepalive has been enabled.
+The current user authorization permits direct commits/pushes to main, private R2
+migration and deletion of reverified legacy originals. No paid hosting, keepalive
+or native production cutover has been activated.
+
+## Current verified position
+
+- Supabase Storage: 443 raw originals removed after verification, freeing
+  485,260,917 bytes; 8,707 objects / 3,508,759,942 bytes remain in scraper-raw.
+  The 90 previously uncatalogued originals (15,786,092 bytes) are all preserved
+  privately in R2 and their Supabase originals are removed with SQL receipts.
+- The finite migration's 1 GiB/day allowance is nearly exhausted today. Its
+  separate durable ledger reserved 1,072,134,648 bytes on 19 October. Do not
+  bypass this limit; the approved six-hour schedule resumes when quota permits.
+  Automatic migration expires 17 November; ordinary Engine processing continues.
+- The latest automatic Engine run archived 350 prepared objects and 70
+  raw/extraction records, with zero failures. Coverage uses the active 69-stock
+  registry; this receipt is not proof that all issuer evidence is complete.
+- Render scraper stores new files only in R2 and has no Supabase file credentials.
+  Application images use the separate private media bucket. Database/Auth remain
+  on Supabase. The live backend and sampled prepared-data routes returned 200.
+- Native Go/Python implementation and tests are pushed, including private owned
+  R2 read verification and index-only workload guards. Production still uses
+  the compatibility runtime. Partial ledger entries and full release gates remain.
+
+The sections below retain the earlier bandwidth rationale and fixture scope;
+references to the earlier suspension or undeployed candidate are historical.
 
 ## What the suspension means
 
@@ -28,7 +51,7 @@ disable protections, or attach the future custom domain to bypass this issue.
 - Supabase stores authoritative structured records, leases, provenance and audit
   data. Existing legacy private objects remain readable for recovery.
 - Duplicate legacy uploads default off (`R2_DUAL_WRITE=false`). Existing legacy
-  originals are not deleted. Operator credentials alone cannot turn dual writes on.
+  originals are removed only by the approved reverified migration. Operator credentials alone cannot turn dual writes on.
 - R2 checks for an existing object before sending its body, then verifies the
   actual stored size and SHA-256. A HEAD response alone is not trusted evidence.
 - New extraction snapshots use deterministic, compressed `gzip-json-v1`, with
