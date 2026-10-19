@@ -165,7 +165,9 @@ func TestPostgresOwnedFixtureMigrationAndAtomicQuoteOutbox(t *testing.T) {
 	verifyResearchPostgresFixture(t, store, ctx)
 	verifyImportPostgresFixture(t, store, ctx)
 	if _, err = store.DB.ExecContext(ctx, `ALTER TABLE market.native_research_refresh DROP CONSTRAINT fixture_refresh_failure;
- UPDATE market.native_research_refresh SET lease_token='fixture-lease',lease_until=now()+interval '1 minute' WHERE security_id='NSE:KCB'`); err != nil {
+	 INSERT INTO market.native_research_refresh(security_id,symbol,lease_token,lease_until)
+	 VALUES('NSE:KCB','KCB','fixture-lease',now()+interval '1 minute')
+	 ON CONFLICT(security_id) DO UPDATE SET lease_token=EXCLUDED.lease_token,lease_until=EXCLUDED.lease_until`); err != nil {
 		t.Fatal(err)
 	}
 	var expected int64
