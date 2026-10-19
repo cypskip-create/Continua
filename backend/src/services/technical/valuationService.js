@@ -37,7 +37,8 @@ export const valuationService = {
             financialsRepository.getLatestPeriodBundle(securityId, "annual"),
             corporateActionsRepository.getDividendsBySecurity(securityId),
         ]);
-        const datedFinancials = latestFinancials?.reportedAt?.slice(0, 10) <= quote.timestamp.slice(0, 10) && latestFinancials?.periodEnd?.slice(0, 10) <= quote.timestamp.slice(0, 10) ? latestFinancials : null;
+        const compatibleCurrency = !latestFinancials?.currency || latestFinancials.currency === quote.currency;
+        const datedFinancials = compatibleCurrency && latestFinancials?.reportedAt?.slice(0, 10) <= quote.timestamp.slice(0, 10) && latestFinancials?.periodEnd?.slice(0, 10) <= quote.timestamp.slice(0, 10) ? latestFinancials : null;
         const models = [
             await relativeValuationModel(exchange, securityId, profile.company.sectorId, currentPrice, datedFinancials),
             grahamNumberModel(currentPrice, datedFinancials),
@@ -70,8 +71,8 @@ function grahamNumberModel(currentPrice, financials) {
     const methodology = "Benjamin Graham's formula: √(22.5 × EPS × Book Value per Share). Originally calibrated for defensive-investor screening in a different era/market; treat as a conservative floor estimate, not a target.";
     if (!financials)
         return { model: "Graham Number", fairValue: null, currentPrice, upsidePercent: null, inputs: {}, methodology, unavailableReason: "No fundamentals on file for this security yet." };
-    const eps = financials.eps ?? (financials.sharesOutstanding ? financials.netIncome / financials.sharesOutstanding : null);
-    const bookValuePerShare = financials.sharesOutstanding ? financials.totalEquity / financials.sharesOutstanding : null;
+    const eps = financials.eps ?? (financials.sharesOutstanding > 0 ? financials.netIncome / financials.sharesOutstanding : null);
+    const bookValuePerShare = financials.sharesOutstanding > 0 ? financials.totalEquity / financials.sharesOutstanding : null;
     if (eps == null || bookValuePerShare == null || eps <= 0 || bookValuePerShare <= 0) {
         return { model: "Graham Number", fairValue: null, currentPrice, upsidePercent: null, inputs: {}, methodology, unavailableReason: "Requires positive EPS, positive book value per share, and shares outstanding on file — at least one is missing or non-positive." };
     }

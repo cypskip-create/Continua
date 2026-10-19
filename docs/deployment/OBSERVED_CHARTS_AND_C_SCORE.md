@@ -102,3 +102,5 @@ tests passed, 75 disposable PostgreSQL checks and 26 native valuation parity
 cases passed. Frontend/backend type checks and production browser build audit
 passed (171 artifacts; no secret-pattern findings). The source schema remains
 undocumented and must be reverified if the provider changes it.
+
+Valuation eligibility also rejects a reporting currency that differs from the quoted currency and nonpositive shares when deriving per-share values. The compatibility service and native Python Engine pass 28 valuation parity cases, including both invalid-input cases. No currency conversion is invented.

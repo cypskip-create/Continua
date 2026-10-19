@@ -29,7 +29,7 @@ try{
   check('relative_valuation',[30,f,'banking',sector],await relativeValuationModel('NSE','NSE:KCB','banking',30,f));
  }
  for(const payouts of [[],[dividend('2026-05-01',2)],[dividend('2026-05-01',2),dividend('2025-05-01',1.8)],[dividend('2026-05-01',0),dividend('2025-05-01',2)],[dividend('2026-05-01',2,'cancelled'),dividend('2025-05-01',2)]])for(const now of [instant,'2024-02-29T12:00:00.000Z'])check('dividend_discount',[30,payouts,now],dividendDiscountModel(30,payouts,new Date(now)));
- for(const f of [null,financial,{...financial,reportedAt:'2027-03-01'},{...financial,eps:null,sharesOutstanding:0}]){
+ for(const f of [null,financial,{...financial,reportedAt:'2027-03-01'},{...financial,eps:null,sharesOutstanding:0},{...financial,currency:'USD'},{...financial,eps:null,sharesOutstanding:-100}]){
   const quote={lastPrice:30,timestamp:'2026-10-12T12:00:00.000Z',currency:'KES'},payouts=[dividend('2026-05-01',2),dividend('2025-05-01',1.8)],sector={avgPe:7.73,sampleSize:3};
   securitiesRepository.getCompanyProfile=async()=>({company:{sectorId:'banking'}});pricesRepository.getQuote=async()=>quote;
   financialsRepository.getLatestPeriodBundle=async()=>f;corporateActionsRepository.getDividendsBySecurity=async()=>payouts;scoresRepository.getSectorAverageRatios=async()=>sector;

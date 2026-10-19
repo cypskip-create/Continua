@@ -1956,7 +1956,7 @@
     },
     {
       "legacyFile": "backend/src/services/technical/valuationService.js",
-      "legacySha256": "6f3a042d4e4277bc39f51a87cf40fab1b7bb6104ce474d51bd1b43435984bc41",
+      "legacySha256": "ded34ba61509e42ab7293b4e13f931aa7d74cfd4f0280d9527c822724e38684e",
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
