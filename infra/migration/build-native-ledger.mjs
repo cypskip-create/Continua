@@ -10,6 +10,7 @@ const inventory=JSON.parse(await readFile(new URL('../../docs/architecture/FEATU
 const retiredUnused = new Map([['backend/src/services/portfolio/corporateActionAdjustments.js',
  '2e6a0ca6d932ce0ae8314ae675ee66be02989352d517e32ef437968d682459ea']]);
 const nativePorts={
+ 'scraper/src/storage/storagePolicy.js':['scraper-python/continua_scraper/storage.py','Native storage tests enforce R2-only writes even when legacy credentials are present, reject non-R2 production/local fallback and preserve bounded read-only migration access. Full collector suite passes.'],
  'backend/src/services/marketData/marketStatistics.js':['engine-python/continua_engine/market_statistics.py','216 full-response compatibility comparisons cover missing/mock/future quotes, zero volume, filing availability/currency, invalid shares, sparse/gapped/conflicting closes and observed OHLC ranges. No fabricated values.'],
  'backend/src/ingestion/retry.js':['backend-go/internal/ingestion/retry.go','Native Go bounded retry preserves default three attempts, 300/600ms backoff and permanent 401/403/404/429 handling. Tests cover wrapped provider errors, exhaustion, success, cancellation and fail-before-call policy budgets. Provider exception text is not logged; callback cancellation remains explicit.'],
  'backend/src/storage/repositories/apiKeyRepository.js':['backend-go/internal/maintenance/keys.go','Native Go lookup/touch, legacy-compatible scrypt hashing, OS-random hash-only creation and exact-ID revocation pass SQL-driver fixtures and a real dedicated PostgreSQL create/lookup/auth/revoke test. Existing short auth-cache behavior is preserved; no user/admin/Premium rights added.'],
@@ -48,6 +49,12 @@ const nativePorts={
  'backend/src/services/research/reportedResearch.js':['engine-python/continua_engine/reported.py','127-case native Python parity suite'],
 };
 const partial={
+ 'backend-go/internal/httpapi/statistics.go':'Native candidate statistics handler is implemented and its validation/cache/error fixtures pass; hosted native and final release gates remain outstanding.',
+ 'backend-go/internal/marketdata/registry_refresh.go':'Native full-registry durable queue is implemented; SQL and real PostgreSQL lease-preservation fixtures pass. Hosted native scheduler/recovery gates remain outstanding.',
+ 'backend-go/internal/cache/rate.go':'Native atomic Redis/Upstash rate counter and fail-closed bounded admission are implemented and tested, including prior real Redis concurrency checks. Hosted native topology/recovery gates remain outstanding.',
+ 'backend/src/api/middleware/sharedRateStore.js':'Native Go atomic Redis/Upstash counters and bounded fail-closed request admission replace this middleware. Memory mode remains single-process only. Counter/policy tests pass; hosted topology/recovery gates remain outstanding.',
+ 'backend/src/storage/researchObjects.js':'Native private Go R2 reader passes owned prepared-object read/cache/issuer-identity verification plus bounded concurrency, corruption, decompression and body/slot cleanup fixtures. Full reader/permission/hosted resource release gates remain outstanding.',
+ 'backend/src/services/research/collectedResearch.js':'Native Go rights-checked SQL, private object hydration, retired-projection refusal and page/response limits are implemented and tested. Hosted end-to-end source-rights/recovery validation remains a release gate.',
  'backend/src/workers/researchRefreshWorker.js':'Native startup/six-hour live-registry trigger enqueues every non-delisted NSE security into the existing serial recoverable research outbox. Version increments preserve active leases and cancellation/retry semantics. Unit tests and real PostgreSQL lease-preservation fixture included; hosted native release gates remain outstanding.',
  'backend/src/api/middleware/edgeClientIdentity.js':'Native constant-time owned-edge secret validation rejects invalid and scoped IP addresses; focused spoofing tests pass. Hosted native proxy topology and final security gates remain outstanding.',
  'backend/src/api/middleware/workloadRateLimit.js':'Native shared research scope now includes statistics, research, price-history and valuation, preserves HEAD and exact transfer segments, and keys verified users independently of API keys. Fail-closed distributed counter and policy tests pass; hosted/recovery gates remain outstanding.',
@@ -300,6 +307,8 @@ for(const file of inventory.features.map(x=>x.file).filter(file=>/^backend\/src\
  partial[file]??='Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.';
 }
 const developmentReferences=new Set([
+ 'tools/audit-service-files.mjs',
+ 'scraper/src/extraction/nseIndexSummary.test.js',
  'infra/security/browser-secret-audit.mjs',
  'infra/migration/native-fixture-env.mjs',
  'backend/scripts/build.mjs','scraper/scripts/build.mjs',

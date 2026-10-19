@@ -9,8 +9,9 @@
       "legacyFile": "backend-go/internal/marketdata/registry_refresh.go",
       "legacySha256": "2bd4b7b2cd29f8efcff154a2faaf60c8a6374add181c2f270078bace8114fd2f",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native full-registry durable queue is implemented; SQL and real PostgreSQL lease-preservation fixtures pass. Hosted native scheduler/recovery gates remain outstanding."
     },
     {
       "legacyFile": "scraper-python/continua_scraper/uncatalogued_archive.py",
@@ -23,8 +24,9 @@
       "legacyFile": "backend-go/internal/httpapi/statistics.go",
       "legacySha256": "2105453889b617f77360fa89a3bf9d47f6008cf50e93bd6afc9ce25a0ff96a2c",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native candidate statistics handler is implemented and its validation/cache/error fixtures pass; hosted native and final release gates remain outstanding."
     },
     {
       "legacyFile": "engine-python/continua_engine/market_statistics.py",
@@ -83,8 +85,9 @@
       "legacyFile": "backend/src/api/middleware/sharedRateStore.js",
       "legacySha256": "335a91c69ba7b01846fb2a8bcec23c2934632d7360f2343aa2e8177b656266f3",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native Go atomic Redis/Upstash counters and bounded fail-closed request admission replace this middleware. Memory mode remains single-process only. Counter/policy tests pass; hosted topology/recovery gates remain outstanding."
     },
     {
       "legacyFile": "backend/src/api/middleware/workloadRateLimit.js",
@@ -133,8 +136,9 @@
       "legacyFile": "backend/src/storage/researchObjects.js",
       "legacySha256": "47872237b98eb438f740dd28340b355b5c73aa16165bf5f3b0978e708568b785",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native private Go R2 reader passes owned prepared-object read/cache/issuer-identity verification plus bounded concurrency, corruption, decompression and body/slot cleanup fixtures. Full reader/permission/hosted resource release gates remain outstanding."
     },
     {
       "legacyFile": "scraper-python/reconcile_cloud.py",
@@ -147,8 +151,9 @@
       "legacyFile": "backend-go/internal/cache/rate.go",
       "legacySha256": "a7050107f0436b7f23ad8110cab7a181b523bd8fa692067d44c6ac3f39e65e83",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "partial",
+      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
+      "remaining": "Native atomic Redis/Upstash rate counter and fail-closed bounded admission are implemented and tested, including prior real Redis concurrency checks. Hosted native topology/recovery gates remain outstanding."
     },
     {
       "legacyFile": "supabase/migrations/20261018100000_canonical_financial_observations.sql",
@@ -182,8 +187,8 @@
       "legacyFile": "tools/audit-service-files.mjs",
       "legacySha256": "57a1463b2e6dd3338596d17e666fd804bd4aa216ea0da6bf0df62d56dbaf02b4",
       "targetLanguage": "Go",
-      "status": "pending",
-      "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding."
+      "status": "retained",
+      "rationale": "Legacy development-only build/inventory/oracle/sandbox or one-off evidence verification reference. Not included or executed in either native container. Native Go/Python commands and tests replace production execution; retaining a comparison fixture is not a Node production dependency."
     },
     {
       "legacyFile": "engine-python/continua_engine/collected.py",
@@ -3395,8 +3400,9 @@
       "legacyFile": "backend/src/services/research/collectedResearch.js",
       "legacySha256": "52a16401d397af1d585a584640b4c615d05e05fdf757e89e66f60dd3da00e526",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "partial",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "remaining": "Native Go rights-checked SQL, private object hydration, retired-projection refusal and page/response limits are implemented and tested. Hosted end-to-end source-rights/recovery validation remains a release gate."
     },
     {
       "legacyFile": "backend/src/storage/repositories/publisherCandleQuery.js",
@@ -3418,15 +3424,17 @@
       "legacyFile": "scraper/src/extraction/nseIndexSummary.test.js",
       "legacySha256": "65a5686043e8056ecd4fd20d11a47fe9b338d34f4366f39c2c221c37184d272e",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "retained",
+      "rationale": "Legacy development-only build/inventory/oracle/sandbox or one-off evidence verification reference. Not included or executed in either native container. Native Go/Python commands and tests replace production execution; retaining a comparison fixture is not a Node production dependency."
     },
     {
       "legacyFile": "scraper/src/storage/storagePolicy.js",
       "legacySha256": "7d7ef526be4225fdd80331735984506517fd00d6d9d45c98a8d17408ea9fcfa8",
       "targetLanguage": "Python",
-      "status": "pending",
-      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
+      "status": "ported",
+      "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
+      "replacement": "scraper-python/continua_scraper/storage.py",
+      "validation": "Native storage tests enforce R2-only writes even when legacy credentials are present, reject non-R2 production/local fallback and preserve bounded read-only migration access. Full collector suite passes."
     },
     {
       "legacyFile": "supabase/migrations/20261018200000_c_score_evidence.sql",

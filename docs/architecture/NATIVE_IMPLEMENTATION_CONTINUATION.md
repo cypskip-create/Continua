@@ -96,3 +96,12 @@ statistics, history, valuation and research URLs. Verified users cannot reset
 that scope by changing API keys. HEAD and exact transfer path segments retain
 compatibility policy. Scoped IPv6 edge identities are rejected. These are
 candidate changes; full rewrite and hosted release gates remain unresolved.
+
+
+The native prepared-object reader now passed a read-only owned Cloudflare smoke
+check using one 2,137-byte CGEN object, an immutable cached read and rejection of
+a different issuer's identity. Deterministic tests verify four-fetch capacity,
+provider-error redaction, corruption rejection and body/admission cleanup.
+The registry refresh PostgreSQL fixture also passes with an actual active lease;
+the native six-hour trigger preserves that lease while incrementing its version.
+These checks do not enable production native cutover.
