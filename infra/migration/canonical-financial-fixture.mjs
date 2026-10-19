@@ -241,13 +241,17 @@ print(json.dumps([read_projection(row['payload']) for row in json.load(sys.stdin
  check(access,{public:false,user:false});
  // An older large PDF must not monopolize migration ahead of collected issuer
  // views. The issuer with fewer completed financial categories advances first.
- const archiveSelection=archiveSource.match(/pending=await self.database.query\("""([\s\S]*?)"""/)[1].replaceAll('%%','%').replace('%s','$1');
+ let archiveSelectionParam=0;
+ const archiveSelection=archiveSource.match(/pending=await self.database.query\("""([\s\S]*?)"""/)[1].replaceAll('%%','%').replace(/%s/g,()=>'$'+(++archiveSelectionParam));
  for(const [index,ticker]of ['PDF','CGEN','COOP','MISSING'].entries())await db.query(`INSERT INTO scraping.raw_artifacts
   (source_id,adapter,sha256,document_url,storage_path,crawler_version,content_type,metadata)
   VALUES('kenyanstocks','fixture',$1,$2,$3,'fixture',$4,$5::jsonb)`,[(9000+index).toString(16).padStart(64,'0'),
    'https://fixture.invalid/archive-'+ticker,'legacy/'+ticker,index===0?'application/pdf':'text/html',JSON.stringify(index===0?{}:{ticker})]);
  for(const [index,ticker]of ['PDF','CGEN','COOP'].entries())await db.query("INSERT INTO storage.objects(id,bucket_id,name) VALUES($1,'scraper-raw',$2)",[9000+index,'legacy/'+ticker]);
- const ordered=(await db.query(archiveSelection,[20])).rows.filter(row=>row.document_url.includes('/archive-'));
+ const ordered=(await db.query(archiveSelection,[true,20])).rows.filter(row=>row.document_url.includes('/archive-'));
+ const steadyState=(await db.query(archiveSelection,[false,20])).rows;
+ check(steadyState.length>0,true);
+ check(steadyState.every(row=>row.storage_path.startsWith('r2://')),true);
  check(ordered.map(row=>row.metadata.ticker??'PDF'),['COOP','CGEN','PDF']);
  // A restrictive storage policy blocks old-client uploads/upserts without
  // granting reads or deletions that the existing owner policies disallow.
