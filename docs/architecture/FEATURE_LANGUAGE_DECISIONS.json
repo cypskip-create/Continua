@@ -5382,6 +5382,17 @@
         "https://github.com/recharts/recharts",
         "https://docs.python.org/3.13/library/decimal.html"
       ]
+    },
+    {
+      "file": "app/src/lib/botVerification.ts",
+      "category": "Recover browser authentication failures without weakening CAPTCHA",
+      "language": "Existing React/TypeScript browser runtime and existing JavaScript gateway",
+      "runtime": "Existing browser and Worker; no new service",
+      "reason": "Keep provider verification mandatory, make endless/expired challenge states recoverable, and normalize network or HTML challenge responses before the Auth SDK parses them. Preserve no-store cookies, same-origin checks and credential redaction. Browser-specific failures require a device retry; fixture tests do not claim iOS execution.",
+      "references": [
+        "https://developers.cloudflare.com/turnstile/troubleshooting/client-side-errors/",
+        "https://developers.cloudflare.com/turnstile/get-started/client-side-rendering/widget-configurations/"
+      ]
     }
   ],
   "nativeComponentDecisions": [
