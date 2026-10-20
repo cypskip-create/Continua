@@ -633,6 +633,13 @@ body { overflow-x: clip; }
 .home-developments .section-eyebrow { text-transform: none; letter-spacing: 0; font-size: .75rem; font-weight: 600; }
 @media (max-width: 390px) { .home-quick-quote { flex-direction: column; align-items: flex-start; } .home-engine-intro nav { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (min-width: 360px) { .home-developments { grid-template-columns: minmax(0,1.2fr) minmax(0,1fr); } .home-developments aside { border-left: 1px solid var(--home-rule); padding-left: .85rem; } }
+@media (min-width: 768px) {
+  .app-shell .home-flow > .home-session-row,
+  .app-shell .home-flow > .home-portfolio,
+  .app-shell .home-flow > .home-engine-intro,
+  .app-shell .home-flow > .home-engine-intro + div,
+  .app-shell .home-flow > .home-developments { grid-column: 1 / -1; }
+}
 .marquee-container { width: 100%; min-width: 0; contain: inline-size; }
 .market-table-scroll, .market-index-strip, .market-choices, .market-tool-rail { max-width: 100%; min-width: 0; }
 .payment-accordion { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows 220ms ease, visibility 0s 220ms; }

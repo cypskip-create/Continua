@@ -133,7 +133,7 @@ export default function Home() {
 
         {/* Greeting line + status */}
         {user && (
-          <div className="flex items-center justify-between pb-1">
+          <div className="home-session-row flex items-center justify-between pb-1">
             <p className="text-[0.6875rem] text-muted-foreground">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'Africa/Nairobi' })}
             </p>
