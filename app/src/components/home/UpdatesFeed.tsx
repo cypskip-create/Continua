@@ -151,7 +151,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12, compact = false }: Up
       {newsError && <p role="status" className="px-4 pb-3 text-xs text-muted-foreground">News could not refresh. {news.length ? 'Showing saved stories.' : 'Please retry.'} <button className="underline" onClick={()=>void refreshNews()}>Retry</button></p>}
       <div className="flex items-center justify-between mb-2 px-4">
         <div className="flex items-center gap-2">
-          <p className="section-eyebrow">{compact ? 'Recent developments' : 'Updates'}</p>
+          <h2 className={compact ? 'text-xs font-semibold tracking-normal' : 'section-eyebrow'}>{compact ? 'Recent developments' : 'Updates'}</h2>
           {newCount > 0 && (
             <span className="text-[0.625rem] font-bold text-primary bg-primary/10 rounded-full px-2 py-0.5">
               {newCount} new
@@ -161,7 +161,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12, compact = false }: Up
         <button
           data-small-target
           onClick={() => navigate("/traders-hub?tab=media")}
-          className="text-[0.6875rem] text-primary font-semibold flex items-center"
+          className="shrink-0 text-[0.6875rem] text-primary font-semibold flex items-center"
         >
           All <ChevronRight className="h-3 w-3" />
         </button>
