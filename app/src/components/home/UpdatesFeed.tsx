@@ -57,9 +57,10 @@ const LAST_SEEN_KEY = "continua:updates:lastSeenAt";
 interface UpdatesFeedProps {
   followedSymbols: string[];
   limit?: number;
+  compact?: boolean;
 }
 
-export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
+export function UpdatesFeed({ followedSymbols, limit = 12, compact = false }: UpdatesFeedProps) {
   const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [readerItem, setReaderItem] = useState<NewsItem | null>(null);
@@ -150,7 +151,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
       {newsError && <p role="status" className="px-4 pb-3 text-xs text-muted-foreground">News could not refresh. {news.length ? 'Showing saved stories.' : 'Please retry.'} <button className="underline" onClick={()=>void refreshNews()}>Retry</button></p>}
       <div className="flex items-center justify-between mb-2 px-4">
         <div className="flex items-center gap-2">
-          <p className="section-eyebrow">Updates</p>
+          <p className="section-eyebrow">{compact ? 'Recent developments' : 'Updates'}</p>
           {newCount > 0 && (
             <span className="text-[0.625rem] font-bold text-primary bg-primary/10 rounded-full px-2 py-0.5">
               {newCount} new
@@ -169,7 +170,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
       <div className="px-4 space-y-2">
         {filtered.map((e) => {
           if (e.type === "news" && e.newsItem) {
-            return <NewsStoryCard key={e.id} item={e.newsItem} quotes={newsQuotes} onSymbolOpen={(symbol) => navigate(`/stock/${symbol}`)} onOpen={() => setReaderItem(e.newsItem!)} />;
+            return <NewsStoryCard key={e.id} compact={compact} item={e.newsItem} quotes={newsQuotes} onSymbolOpen={(symbol) => navigate(`/stock/${symbol}`)} onOpen={() => setReaderItem(e.newsItem!)} />;
           }
           const style = TYPE_STYLES[e.type];
           const Icon = style.icon;
@@ -181,7 +182,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12 }: UpdatesFeedProps) {
               key={e.id}
               data-small-target
               onClick={() => handleTap(e)}
-              className="flat-section rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors cursor-pointer overflow-hidden"
+              className={compact ? 'border-b border-border/60 cursor-pointer' : 'flat-section rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors cursor-pointer overflow-hidden'}
             >
               {hasImage && (
                 <img src={e.newsItem!.imageUrl!} alt="" className="w-full h-32 object-cover" />

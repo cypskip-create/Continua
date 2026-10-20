@@ -5,13 +5,15 @@ import type { NewsItem } from "@/api/types";
 import type { Quote } from "@/api/types";
 
 interface Props {
+  compact?: boolean;
   item: NewsItem;
   onOpen: () => void;
   quotes?: Record<string, Quote>;
   onSymbolOpen?: (symbol: string) => void;
 }
 
-export function NewsStoryCard({ item, onOpen, quotes = {}, onSymbolOpen }: Props) {
+export function NewsStoryCard({ item, onOpen, quotes = {}, onSymbolOpen, compact = false }: Props) {
+  if (compact) return <button type="button" onClick={onOpen} className="flex w-full items-start gap-3 border-b border-border/60 py-3 text-left"><div className="min-w-0 flex-1"><h3 className="line-clamp-3 text-xs font-semibold leading-relaxed">{item.headline}</h3><p className="mt-1 text-[0.625rem] text-muted-foreground">{item.sourceName} · {formatTimestamp(item.publishedAt)}</p></div>{item.imageUrl && <img src={item.imageUrl} alt="" loading="lazy" className="h-14 w-14 shrink-0 object-cover"/>}</button>;
   return (
     <div role="button" tabIndex={0} data-small-target onClick={onOpen} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onOpen(); }} className="block w-full border-b border-border/60 pb-3 text-left">
       <Card className="soft-card cursor-pointer overflow-hidden transition-opacity active:opacity-70">

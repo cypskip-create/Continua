@@ -5011,6 +5011,17 @@
         "https://www.postgresql.org/docs/current/ddl-alter.html",
         "https://supabase.com/docs/guides/getting-started/api-keys"
       ]
+    },
+    {
+      "file": "app/src/components/home/HomePortfolioOverview.jsx",
+      "category": "User-requested flat homepage design",
+      "language": "Existing React frontend with JavaScript JSX and CSS",
+      "runtime": "Existing browser bundle and portfolio/quotes APIs",
+      "reason": "Reuse React and Recharts for the reference layout without cards or cash balance. No backend or entitlement changes. Display only real daily observations with unavailable states for missing history, retaining research tools and all sections below news.",
+      "references": [
+        "https://react.dev/learn/conditional-rendering",
+        "https://recharts.github.io/en-US/api/AreaChart/"
+      ]
     }
   ],
   "nativeRewrite": {

@@ -1,12 +1,12 @@
-import { EngineFocus } from "@/components/home/EngineFocus";
+import { HomeEngineIntro } from "@/components/home/HomeEngineIntro";
+import { HomePortfolioOverview } from "@/components/home/HomePortfolioOverview";
+import { HomeQuickWatch } from "@/components/home/HomeQuickWatch";
 import { useMemo, useState } from "react";
-import { Crown, ChevronRight, Eye, EyeOff, ArrowUpRight, ArrowDownRight, LogIn, TrendingUp, Search, Coins, Shield, BarChart3, Bell, Binoculars, GitCompare, Grid3X3 } from "lucide-react";
-import { QuickTradeWidget } from "@/components/home/QuickTradeWidget";
+import { Crown, ChevronRight, LogIn, TrendingUp, Search, Coins, Shield, Bell, Binoculars, GitCompare, Grid3X3 } from "lucide-react";
 import { CommandCenterSections } from "@/components/home/CommandCenterSections";
 import { TopBar } from "@/components/shared/TopBar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -15,7 +15,6 @@ import { useWatchlist } from "@/hooks/useWatchlist";
 import { usePosts } from "@/hooks/usePosts";
 import { getTimeBasedGreeting } from "@/utils/timeGreeting";
 import { MarketStatusIndicator } from "@/components/shared/MarketStatusIndicator";
-import { computePortfolioStats } from "@/lib/stockPrices";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { STOCK_POOL } from "@/lib/homeSymbolPools";
 import { useIndices } from "@/hooks/useIndices";
@@ -53,7 +52,6 @@ export default function Home() {
   const [showBalance, setShowBalance] = useState(true);
 
   const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : 'Investor';
-  const hasPortfolio = user && portfolio.length > 0;
 
   // ONE shared quote fetch for the whole Home page — portfolio holdings,
   // watchlist, and CommandCenterSections'/QuickTradeWidget's pools, all in
@@ -66,20 +64,6 @@ export default function Home() {
     [portfolio, watchlist]
   );
   const { quotes: homeQuotes } = useLiveQuotes(unionSymbols);
-
-  const livePortfolioQuotes = useMemo(() => {
-    const map: Record<string, { price: number; dayChangeAbs: number }> = {};
-    Object.values(homeQuotes).forEach(q => { map[q.symbol.toUpperCase()] = { price: q.lastPrice, dayChangeAbs: q.change }; });
-    return map;
-  }, [homeQuotes]);
-  const { totalValue: portfolioValue, totalGain: portfolioGain, gainPct: portfolioGainPct, pricedCount: portfolioPricedCount } = computePortfolioStats(portfolio, livePortfolioQuotes);
-  // Nothing priced yet on first render (before the initial quotes fetch
-  // resolves) is a real, temporary "don't know yet" state — computed
-  // totalValue is legitimately 0 at that point, not wrong, just not
-  // ready to show. Distinguishing it from "genuinely worth zero" avoids
-  // the balance flashing KES 0 before quotes land (see useLiveQuotes.tsx
-  // — quotes starts as {} until the REST snapshot resolves).
-  const portfolioPricesLoading = hasPortfolio && portfolioPricedCount === 0;
 
   // Real watchlist, ranked by today's biggest movers. Overlaid with live
   // Continua Data Layer quotes; a symbol with no live quote yet is
@@ -151,46 +135,13 @@ export default function Home() {
         {user && (
           <div className="flex items-center justify-between pb-1">
             <p className="text-[0.6875rem] text-muted-foreground">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'Africa/Nairobi' })}
             </p>
             <MarketStatusIndicator />
           </div>
         )}
 
-        {/* PORTFOLIO SUMMARY — no card, big number */}
-        {hasPortfolio && (
-          <div className="cursor-pointer" onClick={() => navigate('/track-investments')}>
-            <Eyebrow action="Details" onAction={() => navigate('/track-investments')}>Portfolio</Eyebrow>
-            <div className="flex items-end justify-between">
-              <div>
-                {portfolioPricesLoading ? (
-                  <div className="py-1">
-                    <Skeleton className="h-8 w-40 mb-1.5" />
-                    <Skeleton className="h-3.5 w-24" />
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-3xl font-bold tabular tracking-tight">
-                      {showBalance ? `KES ${portfolioValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '••••••'}
-                    </p>
-                    <div className={`text-xs font-semibold flex items-center gap-1 mt-0.5 tabular ${portfolioGain >= 0 ? 'text-bull' : 'text-bear'}`}>
-                      {portfolioGain >= 0 ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
-                      {showBalance && (
-                        <>
-                          {portfolioGain >= 0 ? '+' : ''}KES {Math.abs(portfolioGain).toLocaleString('en-US', { maximumFractionDigits: 0 })} ·{' '}
-                        </>
-                      )}
-                      <span>{portfolioGainPct >= 0 ? '+' : ''}{portfolioGainPct.toFixed(2)}%</span>
-                    </div>
-                  </>
-                )}
-              </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => { e.stopPropagation(); setShowBalance(!showBalance); }}>
-                {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              </Button>
-            </div>
-          </div>
-        )}
+        {user && <HomePortfolioOverview portfolio={portfolio} quotes={homeQuotes} visible={showBalance} onToggle={() => setShowBalance(value => !value)} />}
 
         {/* MARKET SNAPSHOT — inline stat row */}
         <div>
@@ -203,15 +154,14 @@ export default function Home() {
             from the index overview into individual live quotes. */}
         {user && (
           <div>
-            <Eyebrow>Quick Watch</Eyebrow>
-            <QuickTradeWidget quotes={homeQuotes} />
+            <Eyebrow action="Edit" onAction={() => navigate('/watchlist')}>Quick Watch</Eyebrow>
+            <HomeQuickWatch watchlist={watchlist} quotes={homeQuotes} />
           </div>
         )}
 
         {/* UPDATES — real scraped news, real upcoming dividends, and real
             reported earnings merged into one chronological feed. */}
-        <EngineFocus />
-        {user && <PortfolioPulse showValues={showBalance} />}
+        <HomeEngineIntro plan={profile?.subscription_plan} />
 
         {/* A compact research launchpad makes the analysis workflow visible
             from Home instead of hiding capable tools several screens deep. */}
@@ -234,7 +184,7 @@ export default function Home() {
           </div>
         </div>
 
-        <UpdatesFeed followedSymbols={followedSymbols} limit={6} />
+        <div className="home-developments"><div><UpdatesFeed compact followedSymbols={followedSymbols} limit={3} /></div>{user && <aside><PortfolioPulse title="Insights for you" showValues={showBalance} /></aside>}</div>
 
         {/* OPPORTUNITIES — pill row */}
         <div>

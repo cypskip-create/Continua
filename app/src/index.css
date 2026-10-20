@@ -595,6 +595,42 @@ body { overflow-x: clip; }
    clip (unlike hidden) does not turn the shell into a new sticky scroll owner. */
 .app-shell { width: 100%; max-width: 100%; overflow-x: clip; }
 .home-desk, .market-desk, .desk-content { width: 100%; min-width: 0; }
+/* Home's reference layout is deliberately unboxed: typography and rules,
+   never elevated or bordered cards. Lower-page tools retain their styling. */
+.home-flow { --home-rule: hsl(var(--border) / .55); }
+.home-portfolio { padding: .1rem 0 1rem; border-bottom: 1px solid var(--home-rule); }
+.home-portfolio-heading { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.home-periods { display: flex; gap: .1rem; }
+.home-periods button { min-height: 36px; min-width: 34px; padding: 0 .45rem; font-size: .6875rem; font-weight: 600; color: hsl(var(--muted-foreground)); border-bottom: 2px solid transparent; }
+.home-periods button[aria-pressed="true"] { color: hsl(var(--primary)); border-color: hsl(var(--primary)); }
+.home-portfolio-value { font-size: clamp(1.8rem, 7vw, 2.5rem); font-weight: 750; letter-spacing: -.045em; line-height: 1.2; margin-top: .25rem; font-variant-numeric: tabular-nums; }
+.home-portfolio-return { font-size: .875rem; font-weight: 600; margin-top: .4rem; }
+.home-portfolio-chart { height: 180px; min-width: 0; margin-top: .25rem; }
+.home-portfolio-chart > p { height: 100%; display: grid; place-items: center; color: hsl(var(--muted-foreground)); font-size: .75rem; text-align: center; padding: 1.5rem; }
+.home-chart-note { font-size: .625rem; color: hsl(var(--muted-foreground)); margin: .25rem 0 .75rem; }
+.home-portfolio-metrics { display: grid; grid-template-columns: 1fr 1fr .7fr; gap: .75rem; padding-top: 1rem; border-top: 1px solid var(--home-rule); }
+.home-portfolio-metrics > * + * { border-left: 1px solid var(--home-rule); padding-left: .75rem; }
+.home-portfolio-metrics span { display: block; font-size: .6875rem; color: hsl(var(--muted-foreground)); margin-bottom: .35rem; }
+.home-portfolio-metrics strong { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem; font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.home-portfolio-metrics small { display: block; flex-basis: 100%; font-size: .6875rem; }
+.home-flow [aria-label="NSE indices, scroll horizontally"] { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .8rem; border-top: 0; padding: .4rem 0 1rem; border-bottom: 1px solid var(--home-rule); }
+.home-flow [aria-label="NSE indices, scroll horizontally"] button { min-width: 0; padding: 0 .2rem; }
+.home-flow [aria-label="NSE indices, scroll horizontally"] button + button { border-left: 1px solid var(--home-rule); padding-left: .8rem; }
+.home-quick-watch { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); padding: .5rem 0 1rem; border-bottom: 1px solid var(--home-rule); gap: .75rem; }
+.home-quick-quote { display: flex; gap: .35rem; align-items: center; justify-content: space-between; min-width: 0; font-size: .6875rem; }
+.home-quick-quote strong { font-size: .75rem; }
+.home-quick-quote p { margin-top: .15rem; font-variant-numeric: tabular-nums; }
+.home-quick-quote svg { flex-shrink: 0; }
+.home-engine-intro { border-bottom: 1px solid var(--home-rule); padding: .15rem 0 1.25rem; }
+.home-engine-intro h3 { font-size: clamp(1.4rem, 5.3vw, 1.85rem); font-weight: 700; letter-spacing: -.04em; margin: .5rem 0 .25rem; }
+.home-engine-intro > p { font-size: .8125rem; color: hsl(var(--muted-foreground)); line-height: 1.6; }
+.home-engine-intro nav { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .75rem; margin-top: 1rem; }
+.home-engine-intro nav a { display: flex; align-items: center; gap: .4rem; font-size: .6875rem; font-weight: 600; min-height: 44px; }
+.home-engine-intro nav svg { color: hsl(var(--primary)); flex-shrink: 0; }
+.home-developments { display: grid; gap: 1.25rem; }
+.home-developments > * { min-width: 0; }
+@media (max-width: 390px) { .home-quick-quote { flex-direction: column; align-items: flex-start; } .home-engine-intro nav { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (min-width: 640px) { .home-developments { grid-template-columns: minmax(0,1.2fr) minmax(0,1fr); } .home-developments aside { border-left: 1px solid var(--home-rule); padding-left: 1.25rem; } }
 .marquee-container { width: 100%; min-width: 0; contain: inline-size; }
 .market-table-scroll, .market-index-strip, .market-choices, .market-tool-rail { max-width: 100%; min-width: 0; }
 .payment-accordion { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows 220ms ease, visibility 0s 220ms; }

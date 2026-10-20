@@ -10,7 +10,7 @@ test("every statically imported app-local module survives legacy cleanup", () =>
   for (const file of fs
     .readdirSync(root, { recursive: true })
     .filter(
-      (f): f is string => typeof f === "string" && /\.(tsx?|m?js)$/.test(f),
+      (f): f is string => typeof f === "string" && /\.(tsx?|jsx?|mjs)$/.test(f),
     )) {
     const full = path.join(root, file),
       text = fs.readFileSync(full, "utf8");
@@ -28,6 +28,7 @@ test("every statically imported app-local module survives legacy cleanup", () =>
           target + ".ts",
           target + ".tsx",
           target + ".js",
+          target + ".jsx",
           path.join(target, "index.ts"),
           path.join(target, "index.tsx"),
         ].some((f) => fs.existsSync(f))
