@@ -1,13 +1,25 @@
-import { createHmac, randomBytes } from 'node:crypto';
 import { LRUCache } from 'lru-cache';
 import { apiKeyRepository, hashApiKeyAsync } from '../storage/repositories/apiKeyRepository.js';
 import { cache } from '../storage/cache.js';
 import { logger } from '../monitoring/logger.js';
-const fingerprintKey = randomBytes(32);
+import {ApiError} from '../api/middleware/errorHandler.js';
+let activeDerivations=0;
+const derivationQueue=[];
+async function deriveCredential(presented) {
+    if(activeDerivations>=2)await new Promise((resolve,reject)=>{
+        if(derivationQueue.length>=32)reject(new ApiError(503,'Credential verification is busy. Retry shortly.'));
+        else derivationQueue.push(resolve);
+    });
+    else activeDerivations++;
+    try{return await hashApiKeyAsync(presented);}
+    finally{const next=derivationQueue.shift();if(next)next();else activeDerivations--;}
+}
 // No plaintext credentials in cache keys. TTL still bounds revocation to 30 seconds.
-export function findApiKey(presented) {
-    const fingerprint = createHmac('sha256', fingerprintKey).update(presented).digest('hex');
-    return cache.getOrSet(`apikey-access:${fingerprint}`, 30_000, async () => apiKeyRepository.findActiveByHash(await hashApiKeyAsync(presented)));
+export async function findApiKey(presented) {
+    if(typeof presented!=='string'||!presented||Buffer.byteLength(presented)>512)return null;
+    // Reuse the existing stored KDF; no fast password-derived cache fingerprint.
+    const hash=await deriveCredential(presented);
+    return cache.getOrSet(`apikey-access:${hash}`, 30_000, () => apiKeyRepository.findActiveByHash(hash));
 }
 const touches = new LRUCache({ max: 1000, ttl: 60_000 });
 export function recordApiKeyUse(id) {

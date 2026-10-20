@@ -95,7 +95,7 @@ The heatmap scrolls on narrow screens and supports pair inspection with dates/co
 | 14 | Screener direction selects fixed `ASC` / `DESC` literals; sort columns remain allowlisted and filter values parameterized. |
 | 11, 10 | Test assertions match URL structure instead of substring-based host checks. |
 | 9, 7 | Operator/admin key comparisons use bounded padded buffers and constant-time equality, without fast password hashes. |
-| 8 | Compatibility credential-cache fingerprints use process-keyed HMAC; existing asynchronous scrypt database verification is unchanged. |
+| 8 | Compatibility credential-cache keys use the existing asynchronous scrypt derivation, with two active derivations and a bounded 32-request queue; stored database hashes are unchanged. |
 | 6 | Company Engine bundles use memory query caching; the hook no longer persists authentication-tainted responses in localStorage. |
 | 5 | Webhook route explicitly attaches `express-rate-limit` with the existing bounded/shared store. |
 | 4, 3 | Billing routes explicitly apply admission limiting before authentication. Shared-store outages still fail closed with 503. |
@@ -117,7 +117,7 @@ Remaining data-dependent work: verified NSE session calendar and matching benchm
 ### Executed local verification
 
 - Python: 121 tests passed.
-- Compatibility backend: 471 tests passed, 6 skipped before the final cache/worker additions; subsequent affected-suite checks are also executed.
+- Compatibility backend: 474 tests passed, 6 skipped, including the real shared risk worker, cache owner isolation and bounded scrypt verification queue.
 - Frontend: 128 tests passed.
 - Native Go: all packages passed; marketdata, HTTP and Engine suites rechecked after final integration changes.
 - Edge/security: 26 tests passed; browser artifact audit returned zero findings.

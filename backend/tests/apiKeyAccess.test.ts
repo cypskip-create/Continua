@@ -22,4 +22,18 @@ describe('API authentication reliability', () => {
     recordApiKeyUse('audit-failure');
     expect(mocks.touch).toHaveBeenCalledTimes(1);
   });
+  it('bounds expensive credential derivations and releases queued work',async()=>{
+    let outstanding=0,maximum=0;
+    const completions:(()=>void)[]=[];
+    mocks.hash.mockImplementation(()=>new Promise<string>(resolve=>{
+      outstanding++;maximum=Math.max(maximum,outstanding);
+      completions.push(()=>{outstanding--;resolve('derived-fixture-hash');});
+    }));
+    mocks.get.mockImplementation((_key,_ttl,fn)=>fn());mocks.find.mockResolvedValue({id:'bounded'});
+    const jobs=Array.from({length:34},(_,i)=>findApiKey('bounded-fixture-'+i));
+    await expect(findApiKey('excess-fixture')).rejects.toThrow('busy');
+    expect(outstanding).toBe(2);
+    for(let index=0;index<34;index++){completions[index]!();await Promise.resolve();await Promise.resolve();}
+    await expect(Promise.all(jobs)).resolves.toHaveLength(34);expect(maximum).toBe(2);
+  });
 });
