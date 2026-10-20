@@ -18,7 +18,7 @@ const portfolioPositionsSQL = `WITH holdings AS (
 )
 SELECT row_to_json(result) FROM (
  SELECT h.cost,upper(h.symbol) AS symbol,h.shares,
- COALESCE(h.sector,i.sector,'Unclassified') AS sector,
+ COALESCE(NULLIF(i.sector,''),NULLIF(h.sector,''),'Unclassified') AS sector,
  q.last_price AS price,q.change,q.volume,COALESCE(q.currency,'unknown') AS currency,
  to_char(q.event_timestamp AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "asOf"
  FROM holdings h LEFT JOIN instruments i ON i.symbol=upper(h.symbol)

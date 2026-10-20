@@ -1,3 +1,4 @@
+import type {RiskIntelligence} from './riskIntelligence';
 import { continuaFetch } from "./client";
 export interface StressResult {totalValue:number;pnl:number;stressedValue:number;returnPercent:number|null;contributions:{symbol:string;sector:string;value:number;shock:number;pnl:number;stressedValue:number;asOf?:string|null}[];methodology:string;coverage:string;datedQuoteCoverage:string;warnings:string[];generatedAt:string}
 export interface BondResult {dirtyPrice:number;cleanPrice:number;accruedInterest:number;modifiedDuration:number;convexity:number;dv01:number;stressedDirtyPrice:number;pnl:number;approximatePnl:number;cashFlows:{date:string;amount:number;presentValue:number}[];basis:string}
@@ -11,8 +12,9 @@ export const defaultEnginePreferences:EnginePreferences={goal:"Balanced",horizon
 export interface MonitorRule {id:string;exchange:string;symbol:string;kind:string;threshold:number|null;enabled:boolean;last_state?:{checkedAt?:string;asOf?:string|null;value?:number|null;triggered?:boolean;unavailable?:boolean;error?:string}|null}
 export interface AssistantAnswer {answer:string;citations:string[];limitations:string[];cached:boolean;sources:{id:string;title:string;asOf:string|null;url:string|null}[]}
 export interface EnginePortfolio {
+ riskIntelligence?:RiskIntelligence;
   snapshots?:{date:string;value:number;flow:number}[];
-  risk?:{available:boolean;reason:string;symbols:string[];observations:number;coveredWeight:number;excludedIntervals:number;metrics:null|{attribution?:RiskAttribution|null;portfolioVolatility:number;marketVolatility:number;portfolioMaxDrawdown:number;portfolioBeta:number|null;sharpe:null;sortino:null;volatilityByHolding:{symbol:string;volatility:number}[];drawdownByHolding:{symbol:string;drawdown:number}[]}};
+  risk?:{available:boolean;reason:string;symbols:string[];observations:number;coveredWeight:number;excludedIntervals:number;metrics:null|{attribution?:RiskAttribution|null;portfolioVolatility:number|null;marketVolatility:number|null;portfolioMaxDrawdown:number;portfolioBeta:number|null;sharpe:null;sortino:null;volatilityByHolding:{symbol:string;volatility:number}[];drawdownByHolding:{symbol:string;drawdown:number}[]}};
   researchBriefing?:{covered:number;requested:number;limit:number;methodology:string;companies:{symbol:string;weight:number;period:number|null;metrics:Record<string,number|null>;findings:string[];sectorNote?:string|null;facts?:string[];risks:string[];qualityWarnings:string[];unavailable:string[];changes:{topic:string;text:string;material:boolean}[]}[];news:{id:string;symbol:string;headline:string;summary:string;url:string;publishedAt:string|null;source:string}[]};
   available:boolean;reason:string|null;totalValue:number;sessionPnl:number|null;coverage:string;currency:string|null;warnings:string[];methodology:string;historyWarnings:string[];
   positions:{symbol:string;sector:string;value:number;weight:number;sessionContribution:number|null;asOf:string|null}[];

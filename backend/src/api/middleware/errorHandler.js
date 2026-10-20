@@ -16,6 +16,10 @@ export function asyncHandler(fn) {
 }
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorHandler(err, req, res, _next) {
+    if (err?.code === 'RATE_LIMIT_STORE_UNAVAILABLE') {
+        res.status(503).set('Retry-After','2').json({error:'Request protection is temporarily unavailable. Please retry.',code:'RATE_LIMIT_STORE_UNAVAILABLE'});
+        return;
+    }
     if (err instanceof ApiError) {
         res.status(err.status).json({ error: err.message });
         return;

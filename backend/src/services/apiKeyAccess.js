@@ -1,11 +1,12 @@
-import { createHash } from 'node:crypto';
+import { createHmac, randomBytes } from 'node:crypto';
 import { LRUCache } from 'lru-cache';
 import { apiKeyRepository, hashApiKeyAsync } from '../storage/repositories/apiKeyRepository.js';
 import { cache } from '../storage/cache.js';
 import { logger } from '../monitoring/logger.js';
+const fingerprintKey = randomBytes(32);
 // No plaintext credentials in cache keys. TTL still bounds revocation to 30 seconds.
 export function findApiKey(presented) {
-    const fingerprint = createHash('sha256').update(presented).digest('hex');
+    const fingerprint = createHmac('sha256', fingerprintKey).update(presented).digest('hex');
     return cache.getOrSet(`apikey-access:${fingerprint}`, 30_000, async () => apiKeyRepository.findActiveByHash(await hashApiKeyAsync(presented)));
 }
 const touches = new LRUCache({ max: 1000, ttl: 60_000 });

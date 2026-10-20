@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import {ipKeyGenerator} from 'express-rate-limit';
-import {protectedRateLimit} from './middleware/sharedRateStore.js';
+import {rateLimit, ipKeyGenerator} from 'express-rate-limit';
+import {protectionStore} from './middleware/sharedRateStore.js';
 import {adminRateLimit, workloadRateLimit} from './middleware/workloadRateLimit.js';
 import { apiRouter } from "./routes/index.js";
 import { healthRoutes } from "./routes/health.routes.js";
@@ -54,10 +54,10 @@ export function createServer() {
     app.use(cors(corsOptions));
     app.use(edgeClientIdentity());
     app.use('/api/v1', preAuthenticationRateLimit());
-    app.post("/api/v1/billing/paystack/webhook", protectedRateLimit({ windowMs: 60_000, limit: 120,
+    app.post("/api/v1/billing/paystack/webhook", rateLimit({ store: protectionStore('webhook'), passOnStoreError: false, windowMs: 60_000, limit: 120,
         keyGenerator: (req, res) => ipKeyGenerator(rateLimitClientIP(req, res)),
         standardHeaders: true, legacyHeaders: false,
-    }, 'webhook'), express.raw({ type: "application/json", limit: "64kb" }), paystackWebhook);
+    }), express.raw({ type: "application/json", limit: "64kb" }), paystackWebhook);
     app.use(express.json({ limit: '512kb' }));
     app.use(requestLogger);
     // Health stays open and unmetered — infra probes shouldn't need a key or

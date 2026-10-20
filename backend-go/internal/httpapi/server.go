@@ -258,6 +258,9 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.advanced(ctx, w, r, identity) {
 		return
 	}
+	if s.stockRisk(ctx, w, r, identity) {
+		return
+	}
 	if s.riskLabs(ctx, w, r, identity) {
 		return
 	}

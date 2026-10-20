@@ -2,7 +2,10 @@ package engine
 
 import (
 	"context"
+	"continua/backend/internal/cache"
 	"continua/backend/internal/marketdata"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"time"
@@ -15,14 +18,16 @@ type PortfolioWorkspace struct {
 	Bundles  interface {
 		Bundle(context.Context, string, string) (json.RawMessage, error)
 	}
-	Now   func() time.Time
-	slots chan struct{}
+	Now     func() time.Time
+	slots   chan struct{}
+	results *cache.Memory
 }
 
 func NewPortfolioWorkspace(store *marketdata.Store, worker, assembly CalculationWorker, bundles interface {
 	Bundle(context.Context, string, string) (json.RawMessage, error)
 }) *PortfolioWorkspace {
-	return &PortfolioWorkspace{Store: store, Worker: worker, Assembly: assembly, Bundles: bundles, Now: time.Now, slots: make(chan struct{}, 2)}
+	results, _ := cache.NewMemoryWithBudget(32, 8*1024*1024)
+	return &PortfolioWorkspace{Store: store, Worker: worker, Assembly: assembly, Bundles: bundles, Now: time.Now, slots: make(chan struct{}, 2), results: results}
 }
 func (s *PortfolioWorkspace) Research(ctx context.Context, owner, exchange string) (json.RawMessage, error) {
 	if owner == "" || exchange != "NSE" || s.Store == nil || s.Worker == nil || s.Assembly == nil || s.Bundles == nil {
@@ -37,6 +42,17 @@ func (s *PortfolioWorkspace) Research(ctx context.Context, owner, exchange strin
 	positions, e := s.Store.PortfolioPositions(ctx, owner, exchange)
 	if e != nil {
 		return nil, e
+	}
+	identity, e := json.Marshal([]any{"risk-v1", owner, exchange, positions})
+	if e != nil {
+		return nil, e
+	}
+	fingerprint := sha256.Sum256(identity)
+	cacheKey := hex.EncodeToString(fingerprint[:])
+	if s.results != nil {
+		if value := s.results.Get(cacheKey); value != nil {
+			return value, nil
+		}
 	}
 	now := s.Now().UTC()
 	stamp := now.Format(time.RFC3339Nano)
@@ -82,7 +98,7 @@ func (s *PortfolioWorkspace) Research(ctx context.Context, owner, exchange strin
 			continue
 		}
 		priced++
-		if priced <= 10 {
+		{
 			bars, be := s.Store.Candles(ctx, "NSE:"+p.Symbol, "1d", now.Add(-365*24*time.Hour), now)
 			actions, ae := s.Store.CorporateActions(ctx, "NSE:"+p.Symbol)
 			blocked := false
@@ -148,5 +164,9 @@ func (s *PortfolioWorkspace) Research(ctx context.Context, owner, exchange strin
 			data[key] = []json.RawMessage{}
 		}
 	}
-	return s.Assembly.Calculate(ctx, Request{Operation: "portfolio_workspace", Args: []any{data, stamp}})
+	result, e := s.Assembly.Calculate(ctx, Request{Operation: "portfolio_workspace", Args: []any{data, stamp}})
+	if e == nil && s.results != nil {
+		s.results.Set(cacheKey, result, 30*time.Second)
+	}
+	return result, e
 }

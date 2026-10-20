@@ -21,6 +21,10 @@ func (s *Store) Screen(ctx context.Context, f Screen) ([]json.RawMessage, error)
 	if f.Exchange != "NSE" || column == "" || (f.Direction != "asc" && f.Direction != "desc") || f.Limit < 1 || f.Limit > 200 {
 		return nil, errors.New("invalid screening options")
 	}
+	direction := "ASC"
+	if f.Direction == "desc" {
+		direction = "DESC"
+	}
 	conditions := []string{"s.exchange=$1", "s.status='active'"}
 	args := []any{f.Exchange}
 	add := func(condition string, v any) {
@@ -45,6 +49,6 @@ func (s *Store) Screen(ctx context.Context, f Screen) ([]json.RawMessage, error)
  r.as_of AS "ratiosAsOf",r.price_momentum_3m AS "priceMomentum3m",r.dividend_yield AS "dividendYield",sc.afri_score AS "afriScore"
  FROM market.securities s JOIN market.companies co ON co.id=s.company_id LEFT JOIN market.sectors c ON c.id=co.sector_id
  LEFT JOIN market.live_quotes q ON q.security_id=s.id LEFT JOIN market.computed_ratios r ON r.security_id=s.id
- LEFT JOIN market.afri_scores sc ON sc.security_id=s.id WHERE ` + strings.Join(conditions, " AND ") + ` ORDER BY ` + column + ` ` + strings.ToUpper(f.Direction) + ` NULLS LAST LIMIT $` + fmt.Sprint(len(args)) + `) result`
+ LEFT JOIN market.afri_scores sc ON sc.security_id=s.id WHERE ` + strings.Join(conditions, " AND ") + ` ORDER BY ` + column + ` ` + direction + ` NULLS LAST LIMIT $` + fmt.Sprint(len(args)) + `) result`
 	return s.JSONRows(ctx, query, args...)
 }

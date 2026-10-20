@@ -1,3 +1,4 @@
+import {getStockRisk} from '../../services/research/stockRisk.js';
 import { Router } from "express";
 import { requireSubscriber } from "../middleware/requireSubscriber.js";
 import { asyncHandler, ApiError } from "../middleware/errorHandler.js";
@@ -5,6 +6,12 @@ import { validateQuery, getQuery } from "../middleware/validateQuery.js";
 import { ExchangeQuery } from "../validators/querySchemas.js";
 import { getEngineBundle } from "../../services/research/engineBundle.js";
 export const engineRoutes = Router();
+engineRoutes.get('/engine/risk/:symbol', requireSubscriber, asyncHandler(async (req,res)=>{
+    const symbol=String(req.params.symbol).toUpperCase();
+    if(!/^[A-Z0-9.\-]{1,20}$/.test(symbol))throw new ApiError(400,'Invalid stock symbol');
+    res.setHeader('Cache-Control','no-store');
+    res.json({data:await getStockRisk(symbol)});
+}));
 engineRoutes.get("/engine/research-access/:symbol", requireSubscriber, validateQuery(ExchangeQuery), asyncHandler(async (_req, res) => {
     res.json({ data: { allowed: true } });
 }));

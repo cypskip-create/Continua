@@ -3,7 +3,7 @@ import {afterEach,expect,it,vi} from 'vitest';
 const m=vi.hoisted(()=>({native:vi.fn(),live:vi.fn()}));
 vi.mock('../src/config/index.js',()=>({env:{PAYSTACK_SECRET_KEY:'sk_live_fixture',PAYSTACK_NATIVE_MODE:'test'}}));
 vi.mock('../src/storage/db.js',()=>({query:vi.fn()}));
-vi.mock('../src/monitoring/logger.js',()=>({logger:{error:vi.fn(),warn:vi.fn()}}));
+vi.mock('../src/monitoring/logger.js',()=>({logger:{info:vi.fn(),error:vi.fn(),warn:vi.fn()}}));
 vi.mock('../src/api/middleware/requireSubscriber.js',()=>({requireEngineUser:vi.fn()}));
 vi.mock('../src/services/paystackLive.js',()=>({liveCheckoutEnabled:()=>true,initializeLiveCheckout:vi.fn(),verifyLiveCheckout:m.live,liveReferencePattern:/^continua-live-[0-9a-f-]{36}$/}));
 vi.mock('../src/services/paystackNative.js',()=>({nativeCheckoutForUser:()=>false,nativeCheckoutInput:{safeParse:vi.fn()},initializeNativeCheckout:vi.fn(),verifyNativeCheckout:m.native,nativeSecret:(mode:string)=>`sk_${mode}_fixture`,nativeReferencePattern:/^continua-(live|test)-[0-9a-f-]{36}$/,cardRenewalEnabled:()=>false}));

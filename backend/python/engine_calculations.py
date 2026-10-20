@@ -103,6 +103,12 @@ def value_rating(valuation, now):
 
 
 def calculate(operation, a):
+    if operation == 'stock_risk':
+        from continua_risk import stock_risk
+        return stock_risk(*a)
+    if operation in ('risk_intelligence', 'risk_simulation'):
+        from continua_risk import build_risk_intelligence, simulate_risk
+        return build_risk_intelligence(*a) if operation == 'risk_intelligence' else simulate_risk(*a)
     if operation == 'value_rating':
         return value_rating(*a)
     if operation == 'cscore':
@@ -175,8 +181,8 @@ def calculate(operation, a):
 
 if __name__ == "__main__":
     try:
-        payload = sys.stdin.buffer.read(131073)
-        if len(payload) > 131072:
+        payload = sys.stdin.buffer.read(2097153)
+        if len(payload) > 2097152:
             raise ValueError("input_limit")
         request = json.loads(payload, parse_constant=lambda value: (_ for _ in ()).throw(ValueError("nonfinite")))
         print(json.dumps(calculate(request["operation"], request["args"]), allow_nan=False))

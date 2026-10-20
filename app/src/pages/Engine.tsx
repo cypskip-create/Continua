@@ -1,3 +1,4 @@
+import {RiskIntelligence} from '@/components/engine/RiskIntelligence';
 import { EngineCompanyHero, EngineHeadlineMetrics } from "@/components/engine/EngineCompanyHero";
 import { EngineNewsDesk } from "@/components/engine/EngineNewsDesk";
 import {
@@ -52,6 +53,7 @@ const tools = [
   "Technicals",
   "Scenario lab",
   "Risk lab",
+  "Risk Intelligence",
   "Peers",
   "Portfolio",
   "Ask Engine",
@@ -76,7 +78,7 @@ const groups: { name: string; tools: Tool[] }[] = [
   },
   {
     name: "Analysis",
-    tools: ["Evidence", "Technicals", "Scenario lab", "Risk lab", "Peers"],
+    tools: ["Evidence", "Technicals", "Scenario lab", "Risk lab", "Risk Intelligence", "Peers"],
   },
   {
     name: "My workspace",
@@ -94,6 +96,7 @@ const toolHelp: Record<Tool, string> = {
   Technicals: "Explore price history and signals, then set an alert for a level you want to follow.",
   "Scenario lab": "Change assumptions to explore outcomes. Scenarios are not forecasts or guarantees.",
   "Risk lab": "Test portfolio shocks, bond cash flows and futures exposure. See the assumptions and limits beside each result.",
+  "Risk Intelligence": "Inspect portfolio risk drivers, correlations, stress scenarios and manual reallocation with dated evidence.",
   Peers: "Choose a peer and a specific metric to compare on a like-for-like basis.",
   Portfolio: "Review holdings, allocation and observed income together, with coverage limits visible.",
   Monitoring: "Track a research question, inspect check results and review triggered alerts.",
@@ -160,7 +163,7 @@ export default function Engine() {
   );
   const fullEngine = profile?.subscription_plan === "premium_plus";
   const toolAllowed = canUseEngineTool(profile?.subscription_plan, tool);
-  const query = useEngineBundle(symbol,exchange,toolAllowed&&group.name!=='My workspace'&&tool!=='Risk lab',tool==='News');
+  const query = useEngineBundle(symbol,exchange,toolAllowed&&group.name!=='My workspace'&&tool!=='Risk lab'&&tool!=='Risk Intelligence',tool==='News');
   const data = query.data;
   const {
     settings: researchPreferences,
@@ -365,7 +368,7 @@ export default function Engine() {
               <p className="font-semibold flex items-center gap-2">{tool}{["Portfolio", "Preferences"].includes(tool) ? "" : ` · ${symbol}`}<ToolHelp tool={tool} description={toolHelp[tool]}/></p>
               <p className="text-sm text-muted-foreground">{toolHelp[tool]}</p>
             </div>
-            {!toolAllowed ? <section className="py-6 space-y-3"><h3 className="text-lg font-semibold">{tool} is included with Premium Plus</h3><p className="text-sm text-muted-foreground">Your Premium company research and all expanded Fundamentals Forecast details remain available.</p><Link to="/upgrade" className="text-primary font-semibold">Explore Premium Plus →</Link></section> : group.name === "My workspace" || tool==='Risk lab' ? null : query.isLoading ? (
+            {!toolAllowed ? <section className="py-6 space-y-3"><h3 className="text-lg font-semibold">{tool} is included with Premium Plus</h3><p className="text-sm text-muted-foreground">Your Premium company research and all expanded Fundamentals Forecast details remain available.</p><Link to="/upgrade" className="text-primary font-semibold">Explore Premium Plus →</Link></section> : group.name === "My workspace" || (tool==='Risk lab'||tool==='Risk Intelligence') ? null : query.isLoading ? (
               <p role="status" className="py-10 text-sm text-muted-foreground">
                 Preparing your analysis…
               </p>
@@ -563,9 +566,11 @@ export default function Engine() {
               "Preferences",
               "Journal",
               "Risk lab",
+              "Risk Intelligence",
               "Research questions",
             ].includes(tool) && toolAllowed && (
               <div className="py-5">
+                {tool === "Risk Intelligence" && <RiskIntelligence exchange={exchange} stockSymbol={symbol}/>}
                 {tool === "Risk lab" && <><EngineRiskLab /><div className="mt-8"><AdvancedResearchLab key={symbol} symbol={symbol}/></div></>}
                 {tool === 'Research questions' && <ForecastNotebook key={`${user?.id}:${symbol}`} symbol={symbol}/>}
                 {tool === "Journal" && (

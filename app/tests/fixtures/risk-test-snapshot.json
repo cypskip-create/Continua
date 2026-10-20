@@ -1,0 +1,370 @@
+{
+  "version": "continua-risk-v1",
+  "legacyRisk": {
+    "available": true,
+    "reason": "Constant-weight daily-rebalanced current-holdings simulation, not realized portfolio performance. Verified NSE trading-session calendar unavailable. Daily volatility is shown; annual volatility is withheld. Beta uses an equal-weight holdings basket, not an NSE benchmark.",
+    "symbols": [
+      "A",
+      "B"
+    ],
+    "observations": 79,
+    "excludedIntervals": 0,
+    "coveredWeight": 1.0,
+    "metrics": {
+      "attribution": {
+        "coveredWeight": 1.0,
+        "observations": 79,
+        "contributions": [
+          {
+            "symbol": "A",
+            "weight": 0.8,
+            "varianceContribution": 0.0001275949367088612,
+            "riskShare": 1.1428571428571417
+          },
+          {
+            "symbol": "B",
+            "weight": 0.2,
+            "varianceContribution": -1.594936708860753e-05,
+            "riskShare": -0.14285714285714163
+          }
+        ],
+        "historicalVaR95": 0.7000000000000117,
+        "expectedShortfall95": 0.7000000000000117,
+        "tailObservations": 4,
+        "methodology": "Simple price returns on identical observed consecutive-date intervals, at most four calendar days apart; sample covariance (n\u22121). Historical one-day 95% tails require 60 returns and are not forecasts."
+      },
+      "portfolioVolatility": null,
+      "marketVolatility": null,
+      "dailyPortfolioVolatility": 1.0566246713959204,
+      "portfolioMaxDrawdown": -0.7000000000000117,
+      "portfolioBeta": 2.7999999999999825,
+      "sharpe": null,
+      "sortino": null,
+      "volatilityByHolding": [
+        {
+          "symbol": "A",
+          "volatility": null
+        },
+        {
+          "symbol": "B",
+          "volatility": null
+        }
+      ],
+      "drawdownByHolding": [
+        {
+          "symbol": "A",
+          "drawdown": -1.000000000000012
+        },
+        {
+          "symbol": "B",
+          "drawdown": -18.73862017569149
+        }
+      ]
+    }
+  },
+  "overview": {
+    "coveredValue": 1000,
+    "riskCoveredValue": 1000,
+    "accountValue": null,
+    "largestWeight": 0.8,
+    "topFiveWeight": 1.0,
+    "sectors": [
+      {
+        "sector": "Banking",
+        "value": 800,
+        "weight": 0.8
+      },
+      {
+        "sector": "Energy",
+        "value": 200,
+        "weight": 0.2
+      }
+    ],
+    "positions": [
+      {
+        "symbol": "A",
+        "shares": 10,
+        "price": 80,
+        "cost": 100,
+        "currency": "KES",
+        "sector": "Banking",
+        "asOf": "2026-10-20T15:00:00Z",
+        "volume": 1000,
+        "change": 0,
+        "value": 800,
+        "weight": 0.8,
+        "sessionContribution": 0,
+        "participation": 0.01
+      },
+      {
+        "symbol": "B",
+        "shares": 10,
+        "price": 20,
+        "cost": 100,
+        "currency": "KES",
+        "sector": "Energy",
+        "asOf": "2026-10-20T15:00:00Z",
+        "volume": 1000,
+        "change": 0,
+        "value": 200,
+        "weight": 0.2,
+        "sessionContribution": 0,
+        "participation": 0.01
+      }
+    ],
+    "dailyVolatility": 1.0566246713959204,
+    "annualizedVolatility": null,
+    "maxDrawdown": -0.7000000000000117
+  },
+  "coverage": [
+    {
+      "symbol": "A",
+      "included": true,
+      "reason": null,
+      "observations": 79,
+      "priceAsOf": "2026-10-20T15:00:00Z",
+      "lastHistoryDate": "2026-10-20",
+      "unchangedFraction": 0.0,
+      "latestVolume": 1000,
+      "sector": "Banking"
+    },
+    {
+      "symbol": "B",
+      "included": true,
+      "reason": null,
+      "observations": 79,
+      "priceAsOf": "2026-10-20T15:00:00Z",
+      "lastHistoryDate": "2026-10-20",
+      "unchangedFraction": 0.0,
+      "latestVolume": 1000,
+      "sector": "Energy"
+    }
+  ],
+  "sampleDates": [
+    "2026-07-01",
+    "2026-07-02",
+    "2026-07-03",
+    "2026-07-06",
+    "2026-07-07",
+    "2026-07-08",
+    "2026-07-09",
+    "2026-07-10",
+    "2026-07-13",
+    "2026-07-14",
+    "2026-07-15",
+    "2026-07-16",
+    "2026-07-17",
+    "2026-07-20",
+    "2026-07-21",
+    "2026-07-22",
+    "2026-07-23",
+    "2026-07-24",
+    "2026-07-27",
+    "2026-07-28",
+    "2026-07-29",
+    "2026-07-30",
+    "2026-07-31",
+    "2026-08-03",
+    "2026-08-04",
+    "2026-08-05",
+    "2026-08-06",
+    "2026-08-07",
+    "2026-08-10",
+    "2026-08-11",
+    "2026-08-12",
+    "2026-08-13",
+    "2026-08-14",
+    "2026-08-17",
+    "2026-08-18",
+    "2026-08-19",
+    "2026-08-20",
+    "2026-08-21",
+    "2026-08-24",
+    "2026-08-25",
+    "2026-08-26",
+    "2026-08-27",
+    "2026-08-28",
+    "2026-08-31",
+    "2026-09-01",
+    "2026-09-02",
+    "2026-09-03",
+    "2026-09-04",
+    "2026-09-07",
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11",
+    "2026-09-14",
+    "2026-09-15",
+    "2026-09-16",
+    "2026-09-17",
+    "2026-09-18",
+    "2026-09-21",
+    "2026-09-22",
+    "2026-09-23",
+    "2026-09-24",
+    "2026-09-25",
+    "2026-09-28",
+    "2026-09-29",
+    "2026-09-30",
+    "2026-10-01",
+    "2026-10-02",
+    "2026-10-05",
+    "2026-10-06",
+    "2026-10-07",
+    "2026-10-08",
+    "2026-10-09",
+    "2026-10-12",
+    "2026-10-13",
+    "2026-10-14",
+    "2026-10-15",
+    "2026-10-16",
+    "2026-10-19",
+    "2026-10-20"
+  ],
+  "symbols": [
+    "A",
+    "B"
+  ],
+  "covariance": [
+    [
+      0.0002278481012658233,
+      -0.00011392405063291079
+    ],
+    [
+      -0.00011392405063291079,
+      5.6962025316454975e-05
+    ]
+  ],
+  "weights": [
+    0.8,
+    0.2
+  ],
+  "attribution": {
+    "dailyVolatility": 1.0566246713959204,
+    "contributions": [
+      {
+        "symbol": "A",
+        "sector": "Banking",
+        "weight": 0.8,
+        "marginalVolatility": 1.5094638162798844,
+        "componentVolatility": 1.2075710530239077,
+        "riskPercent": 114.28571428571416
+      },
+      {
+        "symbol": "B",
+        "sector": "Energy",
+        "weight": 0.2,
+        "marginalVolatility": -0.7547319081399366,
+        "componentVolatility": -0.15094638162798732,
+        "riskPercent": -14.285714285714162
+      }
+    ],
+    "sectors": [
+      {
+        "sector": "Banking",
+        "componentVolatility": 1.2075710530239077,
+        "riskPercent": 114.28571428571415
+      },
+      {
+        "sector": "Energy",
+        "componentVolatility": -0.15094638162798732,
+        "riskPercent": -14.285714285714162
+      }
+    ],
+    "reconciliationError": 0.0,
+    "tolerance": 1e-08,
+    "diversificationRatio": 1.2857142857142834
+  },
+  "pairs": [
+    {
+      "a": "A",
+      "b": "B",
+      "correlation": -1.0,
+      "observations": 79,
+      "start": "2026-07-01",
+      "end": "2026-10-20",
+      "rolling": [
+        {
+          "date": "2026-09-23",
+          "correlation": -0.9999999999999999,
+          "observations": 60
+        }
+      ]
+    }
+  ],
+  "stocks": [
+    {
+      "symbol": "A",
+      "dailyVolatility": 1.5094638162798844,
+      "maxDrawdown": -1.000000000000012,
+      "downsideDeviation": 0.7026171689305285,
+      "observations": 79,
+      "benchmarkBeta": null,
+      "benchmarkReason": "Verified matching NSE benchmark history unavailable; holdings basket is not an index."
+    },
+    {
+      "symbol": "B",
+      "dailyVolatility": 0.7547319081399366,
+      "maxDrawdown": -18.73862017569149,
+      "downsideDeviation": 0.7115680669648209,
+      "observations": 79,
+      "benchmarkBeta": null,
+      "benchmarkReason": "Verified matching NSE benchmark history unavailable; holdings basket is not an index."
+    }
+  ],
+  "replays": [
+    {
+      "id": "2026-07-08:2026-08-05",
+      "start": "2026-07-08",
+      "end": "2026-08-05",
+      "holdingShocks": {
+        "A": 0.1024367029790123,
+        "B": -0.04936770625992215
+      },
+      "observations": 20,
+      "coveredReturn": 0.07207582113122542
+    },
+    {
+      "id": "2026-09-22:2026-10-20",
+      "start": "2026-09-22",
+      "end": "2026-10-20",
+      "holdingShocks": {
+        "A": 0.1024367029790123,
+        "B": -0.04936770625992193
+      },
+      "observations": 20,
+      "coveredReturn": 0.07207582113122546
+    }
+  ],
+  "evidence": {
+    "methodologyVersion": "continua-risk-v1",
+    "calculatedAt": "2026-10-20T15:00:00Z",
+    "portfolioSnapshotDate": "2026-10-20T15:00:00Z",
+    "marketDataAsOf": "2026-10-20T15:00:00Z",
+    "valuationDates": [
+      "2026-10-20"
+    ],
+    "synchronizedValuation": true,
+    "sampleStart": "2026-07-01",
+    "sampleEnd": "2026-10-20",
+    "observations": 79,
+    "minimumObservations": 20,
+    "sources": [
+      "https://source.example/observed"
+    ],
+    "quality": "sufficient_coverage",
+    "returnConvention": "Simple price returns on identical observed consecutive-date intervals, at most four calendar days apart; sample covariance (n\u22121).",
+    "annualizationFactor": null,
+    "annualizationReason": "Verified NSE trading-session calendar unavailable. Daily volatility is shown; annual volatility is withheld.",
+    "performanceBasis": "Constant-weight daily-rebalanced current-holdings simulation, not realized portfolio performance.",
+    "limitations": [
+      "Raw price returns exclude dividends. Known unverified splits/bonus issues are excluded.",
+      "No forward fill or missing-as-zero returns. Suspensions and incomplete action history may remain unidentified.",
+      "Repeated closes and thin trading can understate economic risk; low observed volatility is not low investment risk.",
+      "Pairwise correlations use their own overlaps; covariance uses one common sample. Historical relationships can change.",
+      "Covered value excludes missing prices and cash; quote dates can differ. Synchronized valuation requires one dated session.",
+      "Volatility and drawdown describe the eligible historical sleeve, renormalized to its covered value; excluded holdings are not zero risk."
+    ]
+  }
+}

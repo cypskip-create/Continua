@@ -4,18 +4,21 @@ import { env } from '../../config/index.js';
 import { ApiError } from '../../api/middleware/errorHandler.js';
 let active = 0;
 export function pythonCalculation(operation, args) {
+    const riskOperation=operation.startsWith('risk_')||operation==='stock_risk';
     const payload = JSON.stringify({ operation, args });
-    if (Buffer.byteLength(payload) > 131072)
+    if (Buffer.byteLength(payload) > (riskOperation ? 2097152 : 131072))
         return Promise.reject(new ApiError(413, 'Calculation inputs are too large.'));
     if (active >= 2)
         return Promise.reject(new ApiError(503, 'Calculation capacity is busy. Try again shortly.'));
     active++;
     return new Promise((resolve, reject) => {
-        const child = spawn(env.ENGINE_PYTHON_BIN, [fileURLToPath(new URL('../../../python/engine_calculations.py', import.meta.url))], {
+        let child;
+        try { child = spawn(env.ENGINE_PYTHON_BIN, [fileURLToPath(new URL('../../../python/engine_calculations.py', import.meta.url))], {
             windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'],
             // A calculator has no need for payment, database or provider secrets.
             env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, WINDIR: process.env.WINDIR, PYTHONUTF8: '1' },
         });
+        } catch { active--; reject(new ApiError(503,'Calculation worker is unavailable.')); return; }
         const chunks = [];
         let size = 0, settled = false, failure;
         const finish = (error, result) => { if (settled)
@@ -27,7 +30,7 @@ export function pythonCalculation(operation, args) {
         const timer = setTimeout(() => stop(new ApiError(503, 'Calculation deadline exceeded.')), 5000);
         child.on('error', () => finish(new ApiError(503, 'Calculation worker is unavailable.')));
         child.stdin.on('error', () => stop(new ApiError(503, 'Calculation worker could not accept inputs.')));
-        child.stdout.on('data', (chunk) => { size += chunk.length; if (size > 1048576) {
+        child.stdout.on('data', (chunk) => { size += chunk.length; if (size > (riskOperation ? 4194304 : 1048576)) {
             stop(new ApiError(503, 'Calculation output limit exceeded.'));
         }
         else if (!failure)

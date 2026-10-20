@@ -48,8 +48,8 @@ import { KeyMetricsBenchmarks } from "@/components/portfolio/KeyMetricsBenchmark
 import { PortfolioDiversification } from "@/components/portfolio/PortfolioDiversification";
 import { PortfolioUpdates } from "@/components/portfolio/PortfolioUpdates";
 import { PortfolioScorecard } from "@/components/portfolio/PortfolioScorecard";
-import { PortfolioCorrelation } from "@/components/portfolio/PortfolioCorrelation";
-import { PortfolioRiskAnalysis } from "@/components/portfolio/PortfolioRiskAnalysis";
+
+import {RiskIntelligence} from "@/components/engine/RiskIntelligence";
 import { ShareDilution } from "@/components/portfolio/ShareDilution";
 import { useProfile } from "@/hooks/useProfile";
 import { HoldingsList } from "@/components/portfolio/HoldingsList";
@@ -241,26 +241,6 @@ export default function TrackInvestments() {
     isLoading: updatesLoading,
   } = engine.updates;
   const { growth } = engine.growth;
-  const risk = engine.intelligence.data?.risk;
-  const riskAnalytics = {
-    isLoading: engine.intelligence.isLoading,
-    hasEnoughData: !!risk?.available,
-    ...(risk?.metrics ?? {
-      portfolioVolatility: 0,
-      marketVolatility: 0,
-      portfolioMaxDrawdown: 0,
-      portfolioBeta: null,
-      sharpe: null,
-      sortino: null,
-      volatilityByHolding: [],
-      drawdownByHolding: [],
-    }),
-    symbolsWithData: risk?.symbols ?? [],
-    pairs: (engine.intelligence.data?.correlations.pairs ?? []).flatMap((p) =>
-      p.correlation == null ? [] : [{ a: p.a, b: p.b, corr: p.correlation }],
-    ),
-  };
-
   const topMovers = useMemo(() => {
     const sorted = [...holdings].sort(
       (a, b) => Math.abs(b.gainPct) - Math.abs(a.gainPct),
@@ -638,21 +618,7 @@ export default function TrackInvestments() {
                   }))}
                   showValues={showBalance}
                 />
-                <PortfolioCorrelation
-                  pairs={riskAnalytics.pairs}
-                  symbols={riskAnalytics.symbolsWithData}
-                  isLoading={riskAnalytics.isLoading}
-                  hasEnoughData={riskAnalytics.hasEnoughData}
-                />
-                {risk?.available && (
-                  <PortfolioRiskAnalysis
-                    holdings={holdings.map((h) => ({
-                      symbol: h.symbol,
-                      weight: h.weight,
-                    }))}
-                    risk={riskAnalytics}
-                  />
-                )}
+                <RiskIntelligence exchange={engine.exchange}/>
                 <ShareDilution
                   holdings={holdings.map((h) => ({
                     symbol: h.symbol,

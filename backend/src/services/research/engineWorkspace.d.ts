@@ -54,6 +54,7 @@ export declare function getPortfolioOverview(userId: string, exchange: ExchangeC
     coverage: string;
 }>;
 export declare function getPortfolioResearch(userId: string, exchange: ExchangeCode): Promise<{
+ riskIntelligence: unknown;
     currency: string | null;
     correlations: {
         dates: string[];

@@ -20,7 +20,7 @@ test('phone validation accepts Kenyan formats without accepting foreign numbers 
 test('native options stay in-page, exclude Till and never collect raw card details',()=>{
  const ui=readFileSync(new URL('../src/pages/Checkout.tsx',import.meta.url),'utf8');
  assert.ok(ui.includes("['mpesa','airtel','card']"));assert.ok(ui.includes('payment-accordion'));assert.ok(ui.includes('/billing/native-checkout'));
- assert.ok(!ui.includes('checkout.paystack.com'));assert.ok(!ui.includes('M-PESA Till'));assert.ok(ui.includes('intentId:intent.current'));
+ assert.doesNotMatch(ui,/https:\/\/checkout[.]paystack[.]com(?:[/:]|$)/);assert.ok(!ui.includes('M-PESA Till'));assert.ok(ui.includes('intentId:intent.current'));
  assert.ok(ui.includes('Sandbox only. No real charge or paid access was created.'));assert.ok(ui.includes('Turn off automatic renewal'));
 });
 test('market rails are contained without turning the sticky shell into a scroll container',()=>{

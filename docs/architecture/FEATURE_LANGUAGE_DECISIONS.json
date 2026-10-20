@@ -5,6 +5,17 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "backend/python/continua_risk.py",
+      "category": "Risk Intelligence and manual simulations",
+      "language": "Python",
+      "runtime": "Existing bounded Engine subprocess and Go candidate worker; compatibility Node uses the same Python module",
+      "reason": "Sample covariance, Pearson correlation and deterministic scenarios use the standard statistics library, preserve finite/missing-data rules and require no new numerical runtime or service. Go keeps authenticated owner lookups and SQL. React displays server results. Annualization requires a verified NSE session calendar.",
+      "references": [
+        "https://docs.python.org/3/library/statistics.html",
+        "https://go.dev/doc/database/querying"
+      ]
+    },
+    {
       "file": "infra/cloudflare/session.mjs",
       "category": "Browser session and CSP hardening",
       "language": "Provider-native JavaScript",

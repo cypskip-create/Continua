@@ -1,6 +1,7 @@
 """Portfolio workspace assembly from owned holdings and actual dated evidence."""
 from .portfolio import portfolio_analysis,aligned_returns,performance
 from .risk import portfolio_risk
+from .risk_intelligence import build_risk_intelligence
 from .dividends import trailing_dividend_per_share
 from .dates import parse
 from .numbers import finite
@@ -43,8 +44,9 @@ def portfolio_workspace(data,now):
     news.sort(key=lambda n:n.get('publishedAt') or '',reverse=True)
     persistence=data.get('persistenceAvailable',False)
     if not persistence:analysis['warnings'].append('Snapshot or cash-flow storage is unavailable. Holdings remain available; invested returns are withheld until storage recovers.')
-    return {**analysis,'currency':next((p.get('currency') for p in positions if p.get('price') is not None),None),'correlations':aligned_returns(series),'risk':portfolio_risk(series,weights),
+    intelligence=build_risk_intelligence(positions,histories,now)
+    return {**analysis,'currency':next((p.get('currency') for p in positions if p.get('price') is not None),None),'correlations':{'dates':intelligence['sampleDates'],'pairs':intelligence['pairs'],'methodology':intelligence['evidence']['returnConvention']},'risk':intelligence['legacyRisk'],'riskIntelligence':intelligence,
         'researchBriefing':{'covered':covered,'requested':len(eligible),'limit':20,'companies':companies,'news':news[:10],'methodology':'Financial findings remain company-specific and retain fiscal periods. Research covers up to 20 highest-value priced holdings. No weighted valuation ratios or analyst forecasts are invented.'},
         'dividends':dividends,'performance':performance(snapshots,period_flows) if persistence else {'twr':None,'moneyWeighted':None,'reason':'Snapshot and cash-flow storage must recover before returns can be calculated.'},'snapshots':snapshots,'flows':data.get('flows',[]),
         'methodology':'Latest-session contribution uses current share counts and quote changes. Snapshot returns describe recorded invested holdings, not brokerage total return; external flows must be entered, and cash balances are excluded.',
-        'historyWarnings':(['Risk and correlations cover at most ten holdings with prices.'] if len(positions)>10 else [])+(['Dividend detail covers at most twenty holdings with prices.'] if len(positions)>20 else [])+[h['symbol']+': correlation excluded because corporate-action adjustment basis is unverified.' for h in histories if h.get('blocked')]}
+        'historyWarnings':(['Dividend detail covers at most twenty holdings with prices.'] if len(positions)>20 else [])+[h['symbol']+': correlation excluded because corporate-action adjustment basis is unverified.' for h in histories if h.get('blocked')]}

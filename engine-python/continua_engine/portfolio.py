@@ -1,36 +1,10 @@
+from .risk_intelligence import build_risk_intelligence
+from continua_risk import portfolio_analysis, daily_close_map
 """Covered holdings, dated returns and correlation without fabricated coverage."""
 import math
 from .dates import parse
 from .numbers import finite
 
-def portfolio_analysis(positions):
-    priced=[p for p in positions if finite(p.get("price")) and p["price"]>0 and finite(p.get("shares")) and p["shares"]>0]
-    currencies={p.get("currency") for p in priced}
-    coverage=f"{len(priced)}/{len(positions)}"
-    if len(currencies)>1:
-        return {"available":False,"reason":"Mixed currencies cannot be aggregated without dated FX rates.","positions":[],"sectors":[],"totalValue":0,"sessionPnl":None,"coverage":coverage,"warnings":["Currency conversion feed required."]}
-    total=sum(p["shares"]*p["price"] for p in priced)
-    rows=[dict(p,value=p["shares"]*p["price"],weight=p["shares"]*p["price"]/total if total>0 else 0,
-               sessionContribution=p["shares"]*p["change"] if finite(p.get("change")) else None,
-               participation=p["shares"]/p["volume"] if finite(p.get("volume")) and p["volume"]>0 else None) for p in priced]
-    rows.sort(key=lambda p:p["value"],reverse=True)
-    sectors={}
-    for p in rows:
-        sector=p.get("sector")
-        sectors[sector]=sectors.get(sector,0)+p["value"]
-    dates={p.get("asOf","")[:10] if p.get("asOf") else None for p in rows}
-    same=len(dates)==1 and None not in dates
-    warnings=[]
-    if rows and not same:
-        warnings.append("Quotes do not share a dated session; combined session contribution is unavailable.")
-    if any(p["weight"]>.4 for p in rows):
-        warnings.append("A priced position exceeds 40% of covered portfolio value.")
-    if any(p["participation"] is not None and p["participation"]>.1 for p in rows):
-        warnings.append("A holding exceeds 10% of its latest session volume. This is a rough liquidity observation, not a liquidation forecast.")
-    if len(priced)!=len(positions):
-        warnings.append("Unpriced holdings are excluded; weights and contributions describe covered positions only.")
-    return {"available":True,"reason":None,"positions":rows,"sectors":[{"sector":sector,"value":value,"weight":value/total if total else 0} for sector,value in sectors.items()],"totalValue":total,
-            "sessionPnl":sum(p["sessionContribution"] for p in rows) if same and rows and all(p["sessionContribution"] is not None for p in rows) else None,"coverage":coverage,"warnings":warnings}
 
 def performance(points,dated_flows=None):
     ordered=sorted(points,key=lambda p:p["date"])
@@ -61,10 +35,6 @@ def performance(points,dated_flows=None):
         weighted=(lo+hi)/2
     return {"twr":(product-1)*100,"moneyWeighted":weighted*100 if weighted is not None else None,"reason":"End-of-period external-flow convention. Money-weighted return is annualized; snapshots exclude unrecorded cash and dividends."}
 
-def daily_close_map(bars):
-    valid=[b for b in bars if finite(b.get("close")) and b["close"]>0 and parse(b.get("timestamp"))]
-    valid.sort(key=lambda b:parse(b["timestamp"]))
-    return {b["timestamp"][:10]:b["close"] for b in valid}
 
 def aligned_returns(series):
     maps={s:daily_close_map(bars) for s,bars in series.items()}

@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
@@ -38,13 +40,18 @@ type Authenticator struct {
 	cache          map[string]entry
 	touches        map[string]time.Time
 	slots          chan struct{}
+	fingerprintKey [32]byte
 }
 
 var ErrMissing = errors.New("Missing API key — supply 'Authorization: Bearer <key>' or 'X-API-Key: <key>'")
 var ErrInvalid = errors.New("Invalid or revoked API key")
 
 func New(store KeyStore, production bool) *Authenticator {
-	return &Authenticator{Store: store, Production: production, Enabled: true, DefaultLimit: 120, now: time.Now, cache: map[string]entry{}, touches: map[string]time.Time{}, slots: make(chan struct{}, 2)}
+	a := &Authenticator{Store: store, Production: production, Enabled: true, DefaultLimit: 120, now: time.Now, cache: map[string]entry{}, touches: map[string]time.Time{}, slots: make(chan struct{}, 2)}
+	if _, err := rand.Read(a.fingerprintKey[:]); err != nil {
+		panic("credential fingerprint entropy unavailable")
+	}
+	return a
 }
 func ExtractKey(header http.Header) string {
 	if v := header.Get("Authorization"); strings.HasPrefix(v, "Bearer ") {
@@ -70,8 +77,9 @@ func (a *Authenticator) Authenticate(ctx context.Context, header http.Header) (*
 	if !a.Production && a.DevelopmentKey != "" && subtle.ConstantTimeCompare([]byte(presented), []byte(a.DevelopmentKey)) == 1 {
 		return &APIKey{ID: "dev", Name: "dev-key", Active: true, RateLimitPerMin: a.DefaultLimit}, nil
 	}
-	fingerprint := sha256.Sum256([]byte(presented))
-	cacheKey := hex.EncodeToString(fingerprint[:])
+	fingerprint := hmac.New(sha256.New, a.fingerprintKey[:])
+	fingerprint.Write([]byte(presented))
+	cacheKey := hex.EncodeToString(fingerprint.Sum(nil))
 	now := a.now()
 	a.mu.Lock()
 	cached, ok := a.cache[cacheKey]

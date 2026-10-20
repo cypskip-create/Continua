@@ -1,3 +1,6 @@
+import {rateLimit, ipKeyGenerator} from 'express-rate-limit';
+import {protectionStore} from '../middleware/sharedRateStore.js';
+import {rateLimitClientIP} from '../middleware/edgeClientIdentity.js';
 import { Router } from "express";
 import { requireEngineUser } from "../middleware/requireSubscriber.js";
 import { asyncHandler, ApiError } from "../middleware/errorHandler.js";
@@ -7,24 +10,25 @@ import { liveCheckoutEnabled, initializeLiveCheckout, verifyLiveCheckout, liveRe
 import { nativeCheckoutForUser, nativeCheckoutInput, initializeNativeCheckout, verifyNativeCheckout, nativeSecret, nativeReferencePattern, cardRenewalEnabled } from '../../services/paystackNative.js';
 import { query } from '../../storage/db.js';
 export const billingRoutes = Router();
+const billingAdmission = rateLimit({windowMs:60000,limit:20,store:protectionStore('billing-admission'),passOnStoreError:false,standardHeaders:true,legacyHeaders:false,keyGenerator:(req,res)=>ipKeyGenerator(rateLimitClientIP(req,res))});
 billingRoutes.get("/billing/status", (_req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json({ data: { enabled: liveCheckoutEnabled(), nativeCheckout: nativeCheckoutForUser(res.locals.engineUserId), inlineCheckout: true, nativeMode: env.PAYSTACK_NATIVE_MODE, mode: "live", automaticRenewal: cardRenewalEnabled() } }); });
-billingRoutes.get('/billing/renewal', requireEngineUser, asyncHandler(async (_req, res) => {
+billingRoutes.get('/billing/renewal', billingAdmission, requireEngineUser, asyncHandler(async (_req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.json({ data: (await query('SELECT enabled,plan,next_charge_at AS "nextChargeAt",active_reference IS NOT NULL AS processing FROM public.paystack_card_renewals WHERE user_id=$1 AND mode=$2', [res.locals.engineUserId, env.PAYSTACK_NATIVE_MODE])).rows[0] ?? null });
 }));
-billingRoutes.delete('/billing/renewal', requireEngineUser, asyncHandler(async (_req, res) => {
+billingRoutes.delete('/billing/renewal', billingAdmission, requireEngineUser, asyncHandler(async (_req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     await query('UPDATE public.paystack_card_renewals SET enabled=false WHERE user_id=$1 AND mode=$2', [res.locals.engineUserId, env.PAYSTACK_NATIVE_MODE]);
     res.json({ data: { enabled: false } });
 }));
-billingRoutes.post('/billing/native-checkout', requireEngineUser, asyncHandler(async (req, res) => {
+billingRoutes.post('/billing/native-checkout', billingAdmission, requireEngineUser, asyncHandler(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     const input = nativeCheckoutInput.safeParse(req.body);
     if (!input.success)
         throw new ApiError(400, 'Check the payment method, phone number and billing agreement.');
     res.json({ data: await initializeNativeCheckout(res.locals.engineUserId, res.locals.engineUserEmail, input.data) });
 }));
-billingRoutes.get('/billing/native-verify/:reference', requireEngineUser, asyncHandler(async (req, res) => {
+billingRoutes.get('/billing/native-verify/:reference', billingAdmission, requireEngineUser, asyncHandler(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     const reference = String(req.params.reference);
     try {
@@ -38,14 +42,14 @@ billingRoutes.get('/billing/native-verify/:reference', requireEngineUser, asyncH
             throw error;
     }
 }));
-billingRoutes.post("/billing/checkout", requireEngineUser, asyncHandler(async (req, res) => {
+billingRoutes.post("/billing/checkout", billingAdmission, requireEngineUser, asyncHandler(async (req, res) => {
     const input = checkoutAgreementInput.safeParse(req.body);
     if (!input.success)
         throw new ApiError(400, "Choose a valid plan and billing cycle, then acknowledge the current billing terms. Refresh checkout if needed.");
     res.setHeader('Cache-Control', 'no-store');
     res.json({ data: await initializeLiveCheckout(res.locals.engineUserId, res.locals.engineUserEmail, { plan: input.data.plan, cycle: input.data.cycle }, CHECKOUT_POLICY_VERSION, input.data.paymentMethod) });
 }));
-billingRoutes.get("/billing/verify/:reference", requireEngineUser, asyncHandler(async (req, res) => {
+billingRoutes.get("/billing/verify/:reference", billingAdmission, requireEngineUser, asyncHandler(async (req, res) => {
     const reference = String(req.params.reference);
     res.setHeader('Cache-Control', 'no-store');
     res.json({ data: await verifyLiveCheckout(reference, res.locals.engineUserId) });

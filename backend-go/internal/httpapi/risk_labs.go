@@ -13,7 +13,7 @@ import (
 
 func (s *Server) riskLabs(ctx context.Context, w http.ResponseWriter, r *http.Request, id *auth.Identity) bool {
 	kind := strings.TrimPrefix(r.URL.Path, "/api/v1/engine/labs/")
-	if kind != "bond" && kind != "futures" && kind != "earnings-sensitivity" && kind != "stress" {
+	if kind != "bond" && kind != "futures" && kind != "earnings-sensitivity" && kind != "stress" && kind != "intelligence" {
 		return false
 	}
 	if err := auth.RequirePlus(id); err != nil {
@@ -39,6 +39,23 @@ func (s *Server) riskLabs(ctx context.Context, w http.ResponseWriter, r *http.Re
 	}
 	operation := "lab_calculation"
 	args := []any{kind, json.RawMessage(raw), time.Now().UTC().Format("2006-01-02T15:04:05.000Z")}
+
+	if kind == "intelligence" {
+		if s.PortfolioResearch == nil {
+			failure(w, 503, "Portfolio research unavailable")
+			return true
+		}
+		owned, e := s.PortfolioResearch.Research(ctx, id.UserID, "NSE")
+		var snapshot struct {
+			RiskIntelligence json.RawMessage `json:"riskIntelligence"`
+		}
+		if e != nil || json.Unmarshal(owned, &snapshot) != nil || len(snapshot.RiskIntelligence) == 0 {
+			failure(w, 503, "Owned risk evidence unavailable")
+			return true
+		}
+		operation = "risk_simulation"
+		args = []any{snapshot.RiskIntelligence, json.RawMessage(raw)}
+	}
 	if kind == "stress" {
 		store, ok := s.Store.(PortfolioStore)
 		if !ok {

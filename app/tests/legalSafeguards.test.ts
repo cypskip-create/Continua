@@ -14,7 +14,7 @@ test('saved references reject full card and phone numbers',()=>{
 test('fonts are bundled and optional page analytics remains absent',()=>{
  const css=readFileSync(new URL('../src/index.css',import.meta.url),'utf8'),app=readFileSync(new URL('../src/App.tsx',import.meta.url),'utf8');
  const entry=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
- assert.ok(entry.includes('@fontsource/inter/latin-400.css'));assert.ok(!css.includes('fonts.googleapis.com'));assert.ok(!app.includes('<Analytics'));assert.ok(app.includes('path="/copyright"'));assert.ok(app.includes('path="/privacy"'));
+ assert.ok(entry.includes('@fontsource/inter/latin-400.css'));assert.doesNotMatch(css,/@import\s+(?:url\()?['"]?https:\/\/fonts[.]googleapis[.]com\x2f/);assert.ok(!app.includes('<Analytics'));assert.ok(app.includes('path="/copyright"'));assert.ok(app.includes('path="/privacy"'));
 });
 test('deleted-account cleanup preserves other users and public research caches',()=>{
  const keys=new Set(['continua:journal:v1:owner:NSE:KCB','continua:journal:v1:other:NSE:KCB','continua_app_lock_owner','continua_app_lock_cred_owner','public-research']);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { PortfolioRiskAttribution } from './PortfolioRiskAttribution';
+import { RiskIntelligence } from './RiskIntelligence';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useEnginePreferences } from "@/hooks/useEnginePreferences";
@@ -13,7 +13,7 @@ import { PortfolioReviewDesk } from "./PortfolioReviewDesk";
 import { ResearchChart } from "@/components/markets/ResearchChart";
 import { engineReadRetry } from "@/api/engineRetry";
 import { FocusedComparison } from "./FocusedComparison";
-import { ExportResearch, MonitoringReview, PortfolioDiagnostics, PeerResearchMatrix } from "./EngineResearchTools";
+import { ExportResearch, MonitoringReview, PeerResearchMatrix } from "./EngineResearchTools";
 const control =
   "rounded-lg border border-border bg-background px-3 py-2 text-sm min-w-0";
 const action =
@@ -667,8 +667,7 @@ export function EnginePortfolioPanel({ exchange }: { exchange: string }) {
             </p>
           ))}
           <PortfolioReviewDesk data={p} />
-          <PortfolioDiagnostics data={p}/>
-          <PortfolioRiskAttribution data={p.risk?.metrics?.attribution}/>
+          <RiskIntelligence exchange={exchange}/>
           {p.snapshots && p.snapshots.length > 1 && (
             <div>
               <h4 className="text-sm">Recorded invested value</h4>

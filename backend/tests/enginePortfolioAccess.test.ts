@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import express from "express";
 import { createServer } from "node:http";
-const mocks = vi.hoisted(() => ({ query: vi.fn(), overview: vi.fn(), portfolio: vi.fn(), ask: vi.fn(),check:vi.fn(),rules:vi.fn(),bundle:vi.fn() }));
+const mocks = vi.hoisted(() => ({ query: vi.fn(), overview: vi.fn(), portfolio: vi.fn(), ask: vi.fn(),check:vi.fn(),rules:vi.fn(),bundle:vi.fn(),calculate:vi.fn(),stockRisk:vi.fn() }));
 vi.mock("../src/config/index.js", () => ({ ACTIVE_EXCHANGES: ["NSE"], env: { SUPABASE_URL: "https://auth.fixture.invalid", NODE_ENV: "test", LOG_LEVEL: "silent" } }));
 vi.mock("../src/storage/db.js", () => ({ query: mocks.query }));
 vi.mock("../src/services/research/engineWorkspace.js", () => ({ getPortfolioOverview: mocks.overview, getPortfolioResearch: mocks.portfolio, getPeers: vi.fn() }));
@@ -9,6 +9,8 @@ vi.mock("../src/services/research/engineBundle.js", () => ({ getEngineBundle: mo
 vi.mock("../src/services/research/engineAssistant.js", () => ({ askEngine: mocks.ask }));
 vi.mock("../src/storage/repositories/engineRepository.js", () => ({ engineRepository: {rules:mocks.rules} }));
 vi.mock("../src/workers/engineMonitorWorker.js",()=>({runEngineMonitoringOnce:mocks.check}));
+vi.mock('../src/services/research/pythonCalculations.js',async(importOriginal)=>({...await importOriginal<typeof import('../src/services/research/pythonCalculations.js')>(),pythonCalculation:mocks.calculate}));
+vi.mock('../src/services/research/stockRisk.js',()=>({getStockRisk:mocks.stockRisk}));
 import { engineWorkbenchRoutes } from "../src/api/routes/engineWorkbench.routes.js";
 import { engineRoutes } from "../src/api/routes/engine.routes.js";
 
@@ -19,7 +21,9 @@ afterEach(() => { vi.unstubAllGlobals(); vi.clearAllMocks(); });
 async function request(plan: string, path: string, method = "GET", authenticated = true,body?:unknown) {
   mocks.query.mockResolvedValue({ rows: [{ subscription_plan: plan }] });
   mocks.overview.mockResolvedValue({ available:true,totalValue: 500, coverage: "1/1",positions:[{symbol:'KCB',sector:'Banking',value:500,asOf:'2026-10-10T00:00:00Z'}],warnings:[] });
-  mocks.portfolio.mockResolvedValue({ risk: { available: false } });
+  mocks.portfolio.mockResolvedValue({ risk: { available: false },riskIntelligence:{version:"server-owned"} });
+  mocks.calculate.mockResolvedValue({status:200,data:{simulation:true}});
+  mocks.stockRisk.mockResolvedValue({version:"stock-risk"});
   mocks.rules.mockResolvedValue([]);
   mocks.bundle.mockResolvedValue({symbol:'KCB',history:[],valuation:{models:[]}});
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: verifiedId }), { status: 200 })));
@@ -72,4 +76,18 @@ it('stress uses only verified holdings and rejects forged body ownership',async(
  expect(valid.status).toBe(200);expect(mocks.overview).toHaveBeenCalledWith(verifiedId,'NSE');expect((valid.body as {data:{pnl:number}}).data.pnl).toBeCloseTo(-50);
  expect((await request('premium_plus','/engine/labs/stress','POST',true,{marketShock:-.1,userId:'forged'})).status).toBe(400);
  expect((await request('premium_plus','/engine/labs/stress','POST',true,{marketShock:-.1,sectorShocks:{Energy:-.2}})).status).toBe(400);
+});
+
+it.each(['free','premium'])('blocks %s from full risk simulations',async plan=>{
+ expect((await request(plan,'/engine/labs/intelligence','POST',true,{})).status).toBe(403);
+ expect(mocks.portfolio).not.toHaveBeenCalled();expect(mocks.calculate).not.toHaveBeenCalled();
+});
+it('loads risk simulation evidence using the verified owner',async()=>{
+ const result=await request('premium_plus','/engine/labs/intelligence?userId=forged','POST',true,{scenario:{marketShock:-.2}});
+ expect(result.status).toBe(200);expect(mocks.portfolio).toHaveBeenCalledWith(verifiedId,'NSE');
+ expect(mocks.calculate).toHaveBeenCalledWith('risk_simulation',[{version:'server-owned'},{scenario:{marketShock:-.2}}]);
+});
+it.each(['free','premium','premium_plus'])('enforces %s stock risk access on the backend',async plan=>{
+ const result=await request(plan,'/engine/risk/KCB');expect(result.status).toBe(plan==='free'?403:200);
+ if(plan==='free')expect(mocks.stockRisk).not.toHaveBeenCalled();else expect(mocks.stockRisk).toHaveBeenCalledWith('KCB');
 });

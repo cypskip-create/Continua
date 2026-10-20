@@ -1,4 +1,5 @@
-import { portfolioRisk } from "./enginePortfolioRisk.js";
+import {riskHistory} from './stockRisk.js';
+import {riskSnapshot} from './riskSnapshot.js';
 import { getEngineBundle } from "./engineBundle.js";
 import { boundedResearch } from "./boundedResearch.js";
 import { query } from "../../storage/db.js";
@@ -12,7 +13,7 @@ import { corporateActionsRepository } from "../../storage/repositories/corporate
 import { researchService } from "./researchService.js";
 import { trailingDividendPerShare } from "./dividendMetrics.js";
 import { analyzeFinancials } from "./engineAnalytics.js";
-import { portfolioAnalysis, alignedReturns, performance, } from "./enginePortfolio.js";
+import { portfolioAnalysis, performance, } from "./enginePortfolio.js";
 async function loadPortfolioPositions(userId, exchange) {
     const holdings = (await query("SELECT symbol,sum(shares)::float8 AS shares,max(sector) AS sector,sum(shares*avg_cost)::float8 AS cost FROM public.portfolios WHERE user_id=$1 GROUP BY symbol ORDER BY symbol", [userId])).rows;
     const instruments = await securitiesRepository.listInstruments(exchange), known = new Map(instruments.map((i) => [i.symbol, i]));
@@ -32,7 +33,7 @@ async function loadPortfolioPositions(userId, exchange) {
             cost: h.cost,
             symbol: h.symbol.toUpperCase(),
             shares: h.shares,
-            sector: h.sector ?? instrument?.sector ?? "Unclassified",
+            sector: instrument?.sector || h.sector || "Unclassified",
             price: quote?.lastPrice ?? null,
             change: quote?.change ?? null,
             volume: quote?.volume ?? null,
@@ -142,31 +143,23 @@ export async function getPortfolioResearch(userId, exchange) {
                 .filter((f) => f.date > snapshots[index - 1].date && f.date <= s.date)
                 .reduce((sum, f) => sum + f.amount, 0);
     });
-    const histories = await Promise.all(positions
-        .filter((p) => p.price != null)
-        .slice(0, 10)
-        .map(async (p) => {
+    const histories = await boundedResearch(positions.filter(p => p.price != null), async (p) => {
         const instrument = known.get(p.symbol);
         try {
             const from = new Date(Date.now() - 365 * 86400000).toISOString();
-            const [bars, actions] = await Promise.all([
-                candlesRepository.getCandles(instrument.securityId, "1d", from, new Date().toISOString()),
-                corporateActionsRepository.getBySecurity(instrument.securityId),
-            ]);
+            const {bars,actions} = await riskHistory(instrument.securityId,p.asOf);
             const split = actions.some((a) => (a.type === "split" || a.type === "bonus_issue") &&
                 a.status !== "cancelled" &&
                 (a.effectiveDate ?? a.exDate ?? "") >= from.slice(0, 10));
-            return { symbol: p.symbol, bars: split ? [] : bars, blocked: split };
+            return { symbol: p.symbol, bars: split ? [] : bars.map(b => ({timestamp:b.timestamp,close:b.close,volume:b.volume,sourceUrl:b.sourceUrl})), blocked: split };
         }
         catch {
             return { symbol: p.symbol, bars: [], blocked: false };
         }
-    }));
-    const correlations = alignedReturns(analysis.available
-        ? Object.fromEntries(histories
-            .filter((h) => h.bars.length >= 21)
-            .map((h) => [h.symbol, h.bars]))
-        : {});
+    }, 8000, 4);
+    const riskHistories = histories.filter(Boolean).map(h=>({...h,sourceUrls:[...new Set(h.bars.map(b=>b.sourceUrl).filter(Boolean))],bars:h.bars.map(b=>({timestamp:b.timestamp,close:b.close}))}));
+    const riskIntelligence = await riskSnapshot(userId,exchange,positions,riskHistories).catch(() => null);
+    const correlations = {dates:riskIntelligence?.sampleDates??[],pairs:riskIntelligence?.pairs??[],methodology:riskIntelligence?.evidence.returnConvention??'Risk worker unavailable'};
     const dividends = await Promise.all(positions
         .filter((p) => p.price != null)
         .slice(0, 20)
@@ -228,18 +221,14 @@ export async function getPortfolioResearch(userId, exchange) {
         methodology: "Financial findings remain company-specific and retain fiscal periods. Research covers up to 20 highest-value priced holdings. No weighted valuation ratios or analyst forecasts are invented.",
     };
     const weights = Object.fromEntries(analysis.positions.map((p) => [p.symbol, p.weight]));
-    const risk = portfolioRisk(analysis.available
-        ? Object.fromEntries(histories
-            .filter((h) => h.bars.length >= 21)
-            .map((h) => [h.symbol, h.bars]))
-        : {}, weights);
     if (!persistenceAvailable)
         analysis.warnings.push("Snapshot or cash-flow storage is unavailable. Holdings remain available; invested returns are withheld until storage recovers.");
     return {
         ...analysis,
         currency,
         correlations,
-        risk,
+        risk: riskIntelligence?.legacyRisk ?? {available:false,reason:"Risk worker unavailable",symbols:[],observations:0,excludedIntervals:0,coveredWeight:0,metrics:null},
+        riskIntelligence,
         researchBriefing,
         dividends,
         performance: persistenceAvailable
@@ -253,13 +242,12 @@ export async function getPortfolioResearch(userId, exchange) {
         flows,
         methodology: "Latest-session contribution uses current share counts and quote changes. Snapshot returns describe recorded invested holdings, not brokerage total return; external flows must be entered, and cash balances are excluded.",
         historyWarnings: [
-            ...(positions.length > 10
-                ? ["Risk and correlations cover at most ten holdings with prices."]
-                : []),
+            ...(!riskIntelligence ? ["Risk Intelligence calculation is unavailable. Retry or check the configured Python worker."] : []),
+
             ...(positions.length > 20
                 ? ["Dividend detail covers at most twenty holdings with prices."]
                 : []),
-            ...histories
+            ...riskHistories
                 .filter((h) => h.blocked)
                 .map((h) => `${h.symbol}: correlation excluded because corporate-action adjustment basis is unverified.`),
         ],

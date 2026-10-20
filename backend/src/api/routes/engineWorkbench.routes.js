@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { StressSchema, BondLabSchema, FuturesLabSchema } from '../../services/research/engineLabSchemas.js';
 import { stressPortfolio, bondRisk, futuresRisk } from '../../services/research/engineRiskLab.js';
-import { calculateWithRuntime } from '../../services/research/pythonCalculations.js';
+import { calculateWithRuntime, pythonCalculation } from '../../services/research/pythonCalculations.js';
 import { ACTIVE_EXCHANGES, env } from "../../config/index.js";
 import { requirePremiumPlus, requireEngineUser, requireSubscriber } from "../middleware/requireSubscriber.js";
 import { asyncHandler, ApiError } from "../middleware/errorHandler.js";
@@ -19,6 +19,15 @@ import { earningsSensitivity, EarningsSensitivitySchema } from '../../services/r
 import { annualRatioAt } from '../../services/technical/valuationHistory.js';
 import { runHealthCheck } from '../../monitoring/healthCheck.js';
 export const engineWorkbenchRoutes = Router();
+engineWorkbenchRoutes.post('/engine/labs/intelligence', requirePremiumPlus, asyncHandler(async (req,res) => {
+    const owned = await getPortfolioResearch(String(res.locals.engineUserId), 'NSE');
+    if (!owned.riskIntelligence) throw new ApiError(503,'Risk calculation unavailable.');
+    const result = await pythonCalculation('risk_simulation', [owned.riskIntelligence, req.body]);
+    res.setHeader('Cache-Control','no-store');
+    if (result.status !== 200) throw new ApiError(400,result.error);
+    res.json({data:result.data});
+}));
+
 const exchangeSchema = z.enum(ACTIVE_EXCHANGES).default("NSE");
 const symbolSchema = z.string().trim().toUpperCase().regex(/^[A-Z0-9.\-]{1,20}$/);
 const user = (res) => String(res.locals.engineUserId);

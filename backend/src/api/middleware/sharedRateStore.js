@@ -6,7 +6,7 @@ import {cache} from '../../storage/cache.js';
 export const incrementScript="local n=redis.call('INCR',KEYS[1]); local ttl=redis.call('PTTL',KEYS[1]); if ttl<0 then redis.call('PEXPIRE',KEYS[1],ARGV[1]); ttl=tonumber(ARGV[1]); end; return {n,ttl};";
 const decrementScript="local n=tonumber(redis.call('GET',KEYS[1]) or '0'); if n>0 then return redis.call('DECR',KEYS[1]); end; return 0;";
 let activeCommands=0;
-export class RateStoreUnavailable extends Error {constructor(){super('Request protection unavailable');}}
+export class RateStoreUnavailable extends Error {constructor(){super('Request protection unavailable');this.code='RATE_LIMIT_STORE_UNAVAILABLE';}}
 export class BoundedMemoryRateStore {
  localKeys=true;entries=new Map();
  constructor(maximum=10000){if(!Number.isInteger(maximum)||maximum<1||maximum>10000)throw Error('Invalid memory counter capacity');this.maximum=maximum;}
@@ -60,3 +60,5 @@ export function protectedRateLimit(options,scope){
  });
  return Object.assign(guarded,{resetKey:limiter.resetKey,getKey:limiter.getKey});
 }
+
+export function protectionStore(scope) { return env.CACHE_DRIVER==='redis'||env.CACHE_DRIVER==='upstash' ? new SharedRateStore(scope) : new BoundedMemoryRateStore(); }
