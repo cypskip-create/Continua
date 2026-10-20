@@ -83,7 +83,7 @@ export default function Home() {
   // hardcoded fallback here, since a stale/static index value on the home
   // page would silently disagree with the real Markets tab.
   const { indices: liveIndices } = useIndices();
-  const nseIndices = liveIndices.map(idx => ({
+  const nseIndices = liveIndices.filter(idx => ['NASI', 'NSE10', 'NSE20'].includes(idx.code)).map(idx => ({
     name: idx.code,
     value: idx.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     change: idx.changePercent,
@@ -184,7 +184,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="home-developments"><div><UpdatesFeed compact followedSymbols={followedSymbols} limit={3} /></div>{user && <aside><PortfolioPulse title="Insights for you" showValues={showBalance} /></aside>}</div>
+        <div className="home-developments"><div><UpdatesFeed compact followedSymbols={followedSymbols} limit={3} /></div>{user && <aside><PortfolioPulse compact title="Insights for you" showValues={showBalance} /></aside>}</div>
 
         {/* OPPORTUNITIES — pill row */}
         <div>
