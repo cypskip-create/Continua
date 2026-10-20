@@ -9,7 +9,7 @@ import { BasicPriceForecast } from "@/components/stock/ValueSignal";
 /** Basics inherit the stock's Fundamentals allowance; only expanded research is paid. */
 export function CompanyForecast({symbol,currency}: {symbol:string;currency:string}) {
   const prefix=`forecast-${symbol}`;
-  return <div aria-label="Engine Forecast tools">
+  return <div className="company-focus-research" aria-label="Engine Forecast tools">
     <header className="py-5"><p className="text-xs font-semibold uppercase tracking-widest text-primary">Powered by Continua Engine</p><h2 className="mt-2 text-xl font-semibold">Company Forecast</h2><p className="mt-2 text-sm text-muted-foreground">Basic ratings, price illustrations, estimates and scorecards are included in your Fundamentals allowance. Premium adds expanded research and sensitivity tools.</p></header>
     <section id={`${prefix}-0`} className="scroll-mt-48"><FundamentalsInsights symbol={symbol} currency={currency} basic/></section>
     <section id={`${prefix}-1`} className="scroll-mt-48 border-t border-border py-5"><StockSnowflake symbol={symbol} currency={currency} basic/></section>

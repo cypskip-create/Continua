@@ -5022,6 +5022,18 @@
         "https://react.dev/learn/conditional-rendering",
         "https://recharts.github.io/en-US/api/AreaChart/"
       ]
+    },
+    {
+      "file": "app/src/components/engine/EngineCompanyHero.jsx",
+      "category": "Engine and expanded stock research presentation, automatic index refresh",
+      "language": "Existing React frontend with JavaScript JSX/CSS, existing JavaScript backend orchestration",
+      "runtime": "Existing browser bundle, backend and quota-limited render-light collector",
+      "reason": "The user explicitly confirmed canonical financial alignment is already fixed and narrowed this stage to redesign plus index freshness. Preserve existing financial API, calculations, entitlements, background collection budgets and bottom navigation. Reuse source-labelled company/market news, add accessible internal tool/report tabs, manually swipeable indices and a pausable Quick Watch ticker. Restore the already deployed permission-gated index catch-up in Actions mode; do not stamp old official figures as live or add an always-on service.",
+      "references": [
+        "https://react.dev/learn/conditional-rendering",
+        "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/",
+        "https://tanstack.com/query/latest/docs/framework/react/guides/window-focus-refetching"
+      ]
     }
   ],
   "nativeRewrite": {

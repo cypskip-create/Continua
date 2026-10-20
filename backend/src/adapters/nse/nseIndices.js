@@ -20,7 +20,9 @@ export function normalizeNseIndices(rows, now = Date.now()) {
 export async function readPublishedNseIndices() {
     const result = await query(`SELECT e.tables FROM scraping.extractions e
     JOIN scraping.raw_artifacts a ON a.id = e.artifact_id
+    JOIN scraping.sources s ON s.id=a.source_id
     WHERE a.source_id = 'nse-index-summary' AND a.document_url = 'https://www.nse.co.ke/'
+      AND s.enabled AND length(trim(s.config->>'permissionReference')) BETWEEN 1 AND 200
       AND e.tables @> '[{"kind":"nse_index"}]'::jsonb
     ORDER BY a.retrieved_at DESC, e.extracted_at DESC LIMIT 1`);
     return normalizeNseIndices(result.rows[0]?.tables);

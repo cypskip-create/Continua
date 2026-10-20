@@ -1,3 +1,5 @@
+import { EngineCompanyHero, EngineHeadlineMetrics } from "@/components/engine/EngineCompanyHero";
+import { EngineNewsDesk } from "@/components/engine/EngineNewsDesk";
 import {
   EngineInsights,
   EnginePreferencesPanel,
@@ -183,7 +185,7 @@ export default function Engine() {
   return (
     <div
       ref={stickyRef}
-      className="page-canvas min-h-screen bg-background pb-24"
+      className="engine-workbench page-canvas min-h-screen bg-background pb-24"
     >
       <header
         data-sticky-header
@@ -203,8 +205,8 @@ export default function Engine() {
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-4">
-        {fullEngine&&<div className="py-4"><LearningResearchDesk onTool={target=>setTool(toolFromParam(target))} onCompany={next=>setParams(current=>{const p=new URLSearchParams(current);p.set('symbol',next);p.set('tool','Evidence');return p;},{replace:true})}/></div>}
-        <section className="border-b border-border/70 py-5">
+
+        <section className={paid ? "hidden" : "border-b border-border/70 py-5"}>
           {paid ? (
             <>
               <h2 className="text-xl font-semibold tracking-tight">
@@ -329,7 +331,7 @@ export default function Engine() {
                 ))}
               </div>
               <div
-                className="flex gap-1 overflow-x-auto py-3 scrollbar-hide"
+                className="engine-tool-tabs flex gap-1 overflow-x-auto py-3 scrollbar-hide"
                 role="tablist"
                 aria-label="Engine tools"
               >
@@ -339,6 +341,13 @@ export default function Engine() {
                     role="tab"
                     aria-label={`${item}${!fullEngine && !premiumEngineTools.includes(item) ? ' · Plus' : ''}`}
                     aria-selected={tool === item}
+                    tabIndex={tool === item ? 0 : -1}
+                    onKeyDown={event => {
+                      const list=group.tools; const current=list.indexOf(item);
+                      const next=event.key==='ArrowRight'?(current+1)%list.length:event.key==='ArrowLeft'?(current-1+list.length)%list.length:event.key==='Home'?0:event.key==='End'?list.length-1:-1;
+                      if(next<0)return; event.preventDefault(); setTool(list[next]);
+                      (event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next])?.focus();
+                    }}
                     onClick={() => setTool(item)}
                     className={`min-h-10 shrink-0 rounded-full px-4 text-sm ${tool === item ? "bg-foreground font-semibold text-background" : "text-muted-foreground hover:bg-muted"}`}
                   >
@@ -348,10 +357,10 @@ export default function Engine() {
                 ))}
               </div>
             </nav>
-            <section className="py-3 space-y-3" aria-label="Research shortcuts">
+            <details className="engine-tool-finder" open={group.name==='My workspace'}><summary>Find an Engine tool</summary><section className="py-3 space-y-3" aria-label="Research shortcuts">
               <label className="text-xs text-muted-foreground block">Find an Engine tool<input aria-label="Find an Engine tool" type="search" value={toolSearch} onChange={e=>setToolSearch(e.target.value)} placeholder="Search tools, evidence, risk…" className="mt-1 w-full rounded-xl border bg-background px-3 py-2 text-sm text-foreground"/></label>
               {toolSearch.trim()?<div className="flex flex-wrap gap-2">{tools.filter(t=>`${t} ${toolHelp[t]}`.toLowerCase().includes(toolSearch.trim().toLowerCase())).map(t=><button key={t} className="rounded-full border px-3 py-2 text-xs" onClick={()=>{setTool(t);setToolSearch('')}}>{t}{!canUseEngineTool(profile?.subscription_plan,t)?' · Plus':''}</button>)}{!tools.some(t=>`${t} ${toolHelp[t]}`.toLowerCase().includes(toolSearch.trim().toLowerCase()))&&<p className="text-sm text-muted-foreground">No matching tool. Try “evidence”, “earnings” or “risk”.</p>}</div>:<div className="flex flex-wrap gap-2 text-xs">{[['Check the evidence','Evidence'],['Understand results','Earnings & Reports'],['Challenge assumptions','Scenario lab']].map(([label,target])=><button key={target} className="rounded-full border px-3 py-2" onClick={()=>setTool(target as Tool)}>{label} →{!canUseEngineTool(profile?.subscription_plan,target)?' Plus':''}</button>)}</div>}
-            </section>
+            </section></details>
             <div className="engine-tool-context" aria-label="Current research tool">
               <p className="font-semibold flex items-center gap-2">{tool}{["Portfolio", "Preferences"].includes(tool) ? "" : ` · ${symbol}`}<ToolHelp tool={tool} description={toolHelp[tool]}/></p>
               <p className="text-sm text-muted-foreground">{toolHelp[tool]}</p>
@@ -375,32 +384,11 @@ export default function Engine() {
             ) : (
               data && (
                 <div key={`${exchange}:${symbol}`} className="py-6 space-y-6">
-                  <EngineReliabilityDesk data={data} expanded={tool==='Evidence'} onTool={target=>setTool(toolFromParam(target))}/>
+                  {tool==='Evidence'&&<EngineReliabilityDesk data={data} expanded onTool={target=>setTool(toolFromParam(target))}/>}
                   {tool==='Evidence'&&<><FinancialVersionDesk symbol={symbol}/>{fullEngine&&<PipelineHealthDesk/>}</>}
                   {query.isError&&<p role="status" className="text-sm text-muted-foreground">The background update could not connect. Showing your last saved research with its original date. <button className="text-primary" onClick={()=>void query.refetch()}>Retry update</button></p>}
-                  <div className="flex flex-wrap items-end justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                        {symbol} · {exchangeMeta.code}
-                      </p>
-                      <h2 className="mt-1 text-xl font-semibold">
-                        {data.companyName}
-                      </h2>
-                    </div>
-                    <div>
-                      <p className="text-xl font-semibold tabular-nums">
-                        {money(data.quote?.lastPrice, data.currency)}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Analysis updated{" "}
-                        {new Date(data.generatedAt).toLocaleString([], {
-                          day:'2-digit',month:'short',
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
-                  </div>
+                  <EngineCompanyHero data={data} sector={instruments.find(item=>item.symbol===symbol)?.sector}/>
+                  {tool!=='Evidence'&&<details className="engine-source-disclosure"><summary>Evidence & coverage · {data.coverage.annualPeriods} annual observations</summary><EngineReliabilityDesk data={data} onTool={target=>setTool(toolFromParam(target))}/></details>}
                   {!!data.unavailable?.length && (
                     <p role="status" className="text-sm text-muted-foreground">
                       Some feeds could not be loaded:{" "}
@@ -509,52 +497,7 @@ export default function Engine() {
                       )}
                     </>
                   )}
-                  {tool === "News" && (
-                    <section className="space-y-5">
-                      <h3 className="text-lg font-semibold">
-                        Company news digest
-                      </h3>
-                      <p className="text-xs text-muted-foreground">
-                        Reported developments, with company relevance explained.
-                        Open any headline to read that story in Media.
-                      </p>
-                      {data.news.map((item) => (
-                        <article
-                          key={item.id}
-                          className="border-b border-border/70 pb-4"
-                        >
-                          <Link
-                            to={mediaStoryUrl(item.id)}
-                            className="font-semibold text-base leading-snug hover:text-primary"
-                          >
-                            {item.headline}
-                          </Link>
-                          <p className="mt-2 text-sm text-muted-foreground">
-                            {item.summary}
-                          </p>
-                          {item.impact && (
-                            <p className="mt-2 text-xs">
-                              {item.impact.topic}: {item.impact.reason}
-                            </p>
-                          )}
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            {item.methodology}
-                          </p>
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            {item.source} ·{" "}
-                            {item.publishedAt
-                              ? new Date(item.publishedAt).toLocaleDateString()
-                              : "Publication date unavailable"}
-                          </p>
-                        </article>
-                      ))}
-                      {!data.news.length && (
-                        <p className="text-sm text-muted-foreground">
-                          No verified company-linked news is available.
-                        </p>
-                      )}
-                    </section>
-                  )}
+                  {tool === "News" && <EngineNewsDesk key={symbol} data={data}/>}
                   {tool === "Forecast" && <EngineForecastDesk key={symbol} symbol={symbol} currency={data.currency}/>}
                   {tool === "Earnings & Reports" && <><EngineReportsDesk key={symbol} data={data}/><CompanyEvidenceDesk data={data}/></>}
                   {tool === "Valuation" && (
@@ -653,6 +596,7 @@ export default function Engine() {
             )}
           </>
         )}
+        {fullEngine&&group.name==="My workspace"&&<details className="py-4 border-t border-border"><summary className="text-xs font-semibold text-muted-foreground">Suggested research for you</summary><LearningResearchDesk onTool={target=>setTool(toolFromParam(target))} onCompany={next=>setParams(current=>{const p=new URLSearchParams(current);p.set('symbol',next);p.set('tool','Evidence');return p;},{replace:true})}/></details>}
         {fullEngine && <EngineConnectionCheck target={tool === "Portfolio" ? "portfolio" : tool === "Monitoring" ? "monitoring" : "preferences"} exchange={exchange} />}
       </main>
       {paid && (
@@ -681,14 +625,14 @@ function Briefing({ data, goal }: { data: EngineBundle; goal: string }) {
 
   return (
     <section className="engine-briefing space-y-3">
-      <div className="engine-evidence-summary" aria-label="Research coverage">
+      <EngineHeadlineMetrics data={data}/><details><summary className="text-xs font-semibold text-muted-foreground">Research coverage</summary><div className="engine-evidence-summary" aria-label="Research coverage">
         <div><span>Annual periods</span><strong>{data.coverage.annualPeriods}</strong></div>
         <div><span>Valuation models</span><strong>{data.coverage.valuationModels}</strong></div>
         <div><span>Earnings records</span><strong>{data.coverage.earningsEvents}</strong></div>
         <div><span>Analyst estimates</span><strong>{data.coverage.analystEstimates}</strong></div>
       </div>
-      <div>
-        <h3 className="text-lg font-semibold">Fundamental briefing</h3>
+      </details><div>
+        <h3 className="text-lg font-semibold">Investment summary</h3>
         <p className="mt-1 text-xs text-primary">
           Evidence ordered for your {goal.toLowerCase()} research goal
         </p>

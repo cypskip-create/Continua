@@ -10,8 +10,9 @@ export function useIndices(exchange?: string) {
   const query = useQuery({
     queryKey: ["continua", "indices", activeExchange],
     queryFn: () => indicesApi.list(activeExchange),
-    staleTime: 60_000,
-    refetchInterval: 60_000,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+    refetchOnMount: 'always',
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     retry: 1,

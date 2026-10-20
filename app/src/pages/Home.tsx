@@ -83,8 +83,9 @@ export default function Home() {
   // hardcoded fallback here, since a stale/static index value on the home
   // page would silently disagree with the real Markets tab.
   const { indices: liveIndices } = useIndices();
-  const nseIndices = liveIndices.filter(idx => ['NASI', 'NSE10', 'NSE20'].includes(idx.code)).map(idx => ({
+  const nseIndices = liveIndices.map(idx => ({
     name: idx.code,
+    timestamp: idx.timestamp,
     value: idx.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     change: idx.changePercent,
     isUp: idx.change >= 0,

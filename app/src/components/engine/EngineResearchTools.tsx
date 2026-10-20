@@ -18,7 +18,7 @@ export function EngineForecastDesk({ symbol, currency }: {
     currency: string;
 }) {
     const [view, setView] = useState("Price paths");
-    return <section className="space-y-4"><h3 className="text-xl font-semibold">Company Forecast</h3><p className={help}>Keep forward-looking research together. Separate sourced estimates from your own assumptions; price paths are illustrations, not analyst targets.</p><label className="block text-sm">Forecast workbench<select aria-label="Forecast workbench" className={control + " block mt-2"} value={view} onChange={e => setView(e.target.value)}>{["Price paths", "Estimates & coverage", "Value signal research", "Growth quality", "Company scorecard"].map(v => <option key={v}>{v}</option>)}</select></label>
+    return <section className="space-y-4"><h3 className="text-xl font-semibold">Company Forecast</h3><p className={help}>Keep forward-looking research together. Separate sourced estimates from your own assumptions; price paths are illustrations, not analyst targets.</p><div className="engine-segmented" role="tablist" aria-label="Forecast workbench">{["Price paths", "Estimates & coverage", "Value signal research", "Growth quality", "Company scorecard"].map(v=><button key={v} role="tab" aria-selected={view===v} onClick={()=>setView(v)}>{v}</button>)}</div>
     {view === "Price paths" && <BasicPriceForecast symbol={symbol} currency={currency} expanded/>}
     {view === "Estimates & coverage" && <EarningsFundamentals symbol={symbol} currency={currency} mode="forecast"/>}
     {view === "Value signal research" && <ValueSignal symbol={symbol} currency={currency} expanded/>}
@@ -26,17 +26,23 @@ export function EngineForecastDesk({ symbol, currency }: {
     {view === "Company scorecard" && <ScorecardWorkbench symbol={symbol}/>}
   </section>;
 }
-export function EngineReportsDesk({ data }: {
-    data: EngineBundle;
-}) {
+export function EngineReportsDesk({ data }: { data: EngineBundle }) {
+    const [view, setView] = useState("Latest");
     const [period, setPeriod] = useState<"annual" | "quarterly">("annual"), [statement, setStatement] = useState("Income statement");
-    const filings = useStockFinancials(data.symbol, { periodType: period, limit: 10,publisherObservations:true });
+    const filings = useStockFinancials(data.symbol, { periodType: period, limit: 10, publisherObservations: true });
     const bridge = reportBridge(filings.history);
-    return <section className="space-y-5"><h3 className="text-xl font-semibold">Earnings & Reports</h3><p className={help}>Reported results, release-window moves and financial statements. Forward estimates and analyst coverage are now in Forecast.</p><EarningsFundamentals symbol={data.symbol} currency={data.currency} mode="reported"/><EarningsMovePreview symbol={data.symbol} currency={data.currency} events={data.earnings ?? []}/>
-    {filings.usingPublisherObservations&&<p className={help}>Includes Engine-mapped publisher annual observations. Unknown currency, filing dates and accounting fields remain unavailable.</p>}
-    <div className="flex flex-wrap gap-3"><label className="text-sm">Reporting basis<select aria-label="Reports period" className={control + " block mt-1"} value={period} onChange={e => setPeriod(e.target.value as typeof period)}><option value="annual">Annual</option><option value="quarterly">Quarterly</option></select></label><label className="text-sm">Statement<select aria-label="Reports statement" className={control + " block mt-1"} value={statement} onChange={e => setStatement(e.target.value)}>{["Income statement", "Balance sheet", "Cash flows", "Financial indicators"].map(v => <option key={v}>{v}</option>)}</select></label></div>
-    {filings.historyError ? <p role="alert">Filings could not load. <button className={control} onClick={() => void filings.refetchHistory()}>Retry filings</button></p> : filings.isLoading ? <p role="status">Loading filings…</p> : <><FinancialStatementExplorer key={statement + period} title={statement} history={filings.history} currency={data.currency} periodType={period} symbol={data.symbol}/><h4 className="text-lg font-semibold">Profit-to-cash period bridge</h4><ResearchTable headers={["Period / currency", "Revenue YoY", "Net margin", "Cash / profit", "Cash − profit"]} rows={bridge.map(r => [`${financialPeriod(r.row)} · ${r.row.currency??"Currency unavailable"}`, financialPercent(r.revenueGrowth), financialPercent(r.margin), r.cashConversion == null ? "—" : `${r.cashConversion.toFixed(2)}×`, financialNumber(r.cashProfitGap, r.row.currency)])}/><p className={help}>YoY uses the exact preceding fiscal year and matching quarter/currency. Cash conversion is withheld for losses or zero earnings. Cash minus profit is a diagnostic gap, not proof of poor reporting. Closing balances and quarterly ratios are not annualised; banks need sector-specific interpretation.</p><ExportResearch name={`${data.symbol}-reports`} data={{ generatedAt: data.generatedAt, period, bridge, limitations: "Reported fields only; missing periods are not interpolated." }}/></>}
-  </section>;
+    return <section className="space-y-5">
+      <div className="engine-segmented" role="tablist" aria-label="Earnings and reports view">{["Latest", "Historical", "Financial statements", "Ratios"].map(v=><button key={v} role="tab" aria-selected={view===v} onClick={()=>setView(v)}>{v}</button>)}</div>
+      {view==="Latest" ? <><EarningsFundamentals symbol={data.symbol} currency={data.currency} mode="reported"/><EarningsMovePreview symbol={data.symbol} currency={data.currency} events={data.earnings ?? []}/></> : <>
+      <div className="flex flex-wrap gap-3"><label className="text-xs text-muted-foreground">Reporting basis<select aria-label="Reports period" className={control + " block mt-1"} value={period} onChange={e => setPeriod(e.target.value as typeof period)}><option value="annual">Annual</option><option value="quarterly">Quarterly</option></select></label>{view!=="Ratios"&&<label className="text-xs text-muted-foreground">Statement<select aria-label="Reports statement" className={control + " block mt-1"} value={statement} onChange={e => setStatement(e.target.value)}>{["Income statement", "Balance sheet", "Cash flows"].map(v=><option key={v}>{v}</option>)}</select></label>}</div>
+      {filings.usingPublisherObservations&&<p className={help}>Includes Engine-mapped publisher observations. Unknown currency, filing dates and accounting fields remain unavailable.</p>}
+      {filings.historyError ? <p role="alert">Filings could not load. <button className={control} onClick={()=>void filings.refetchHistory()}>Retry filings</button></p> : filings.isLoading ? <p role="status">Loading filings…</p> : <>
+        <FinancialStatementExplorer key={view+statement+period} title={view==="Ratios"?"Financial indicators":statement} history={filings.history} currency={data.currency} periodType={period} symbol={data.symbol}/>
+        <h4 className="text-lg font-semibold">Profit-to-cash period bridge</h4><ResearchTable headers={["Period / currency", "Revenue YoY", "Net margin", "Cash / profit", "Cash − profit"]} rows={bridge.map(r=>[`${financialPeriod(r.row)} · ${r.row.currency??"Currency unavailable"}`,financialPercent(r.revenueGrowth),financialPercent(r.margin),r.cashConversion==null?"—":`${r.cashConversion.toFixed(2)}×`,financialNumber(r.cashProfitGap,r.row.currency)])}/>
+        <p className={help}>YoY requires the exact preceding fiscal period and matching currency. Cash conversion is withheld for losses or zero earnings; missing fields remain unavailable.</p><ExportResearch name={`${data.symbol}-reports`} data={{generatedAt:data.generatedAt,period,bridge,limitations:"Reported fields only; missing periods are not interpolated."}}/>
+      </>}
+      </>}
+    </section>;
 }
 export function BriefingDecisionDesk({ data }: {
     data: EngineBundle;

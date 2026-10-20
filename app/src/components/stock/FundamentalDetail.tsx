@@ -3,10 +3,11 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } fr
 
 export function FundamentalDetail({title,symbol,currency,open,onOpenChange,children}: {title:string;symbol:string;currency:string;open:boolean;onOpenChange:(open:boolean)=>void;children:ReactNode}) {
   return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent fullScreen hideClose className="fundamental-detail block p-0">
-    <header className="sticky top-0 z-30 bg-background border-b border-border px-4 py-3 pr-16">
+    <header className="research-detail-header sticky top-0 z-30 bg-background border-b border-border px-4 py-3 pr-16">
+      <p className="mb-1 text-xs font-semibold text-primary">Continua Engine · Company research</p>
       <DialogTitle>{title}</DialogTitle><DialogDescription className="mt-1">{symbol} · {currency} · Sourced company research</DialogDescription>
       <DialogClose aria-label="Close" className="absolute right-3 top-2 grid h-11 w-11 place-items-center rounded-full bg-muted text-xl">×</DialogClose>
-    </header><div className="px-4 pb-12 space-y-0">{children}</div>
+    </header><div className="research-detail-body px-4 pb-12 space-y-0">{children}</div>
   </DialogContent></Dialog>;
 }
 export function FundamentalHeading({title,onOpen,label}: {title:string;onOpen?:()=>void;label?:string}) {

@@ -613,14 +613,22 @@ body { overflow-x: clip; }
 .home-portfolio-metrics span { display: block; font-size: .6875rem; color: hsl(var(--muted-foreground)); margin-bottom: .35rem; }
 .home-portfolio-metrics strong { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem; font-size: .8125rem; font-variant-numeric: tabular-nums; }
 .home-portfolio-metrics small { display: block; flex-basis: 100%; font-size: .6875rem; }
-.home-flow [aria-label="NSE indices, scroll horizontally"] { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .8rem; border-top: 0; padding: .4rem 0 1rem; border-bottom: 1px solid var(--home-rule); }
-.home-flow [aria-label="NSE indices, scroll horizontally"] button { min-width: 0; padding: 0 .2rem; }
+.home-flow [aria-label="NSE indices, scroll horizontally"] { display: flex; overflow-x: auto; touch-action: pan-x pan-y; gap: .8rem; border-top: 0; padding: .4rem 0 1rem; border-bottom: 1px solid var(--home-rule); }
+.home-flow [aria-label="NSE indices, scroll horizontally"] button { min-width: 110px; flex: 1 0 110px; padding: 0 .2rem; }
 .home-flow [aria-label="NSE indices, scroll horizontally"] button + button { border-left: 1px solid var(--home-rule); padding-left: .8rem; }
 .home-quick-watch { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); padding: .5rem 0 1rem; border-bottom: 1px solid var(--home-rule); gap: .75rem; }
 .home-quick-quote { display: flex; gap: .35rem; align-items: center; justify-content: space-between; min-width: 0; font-size: .6875rem; }
 .home-quick-quote strong { font-size: .75rem; }
 .home-quick-quote p { margin-top: .15rem; font-variant-numeric: tabular-nums; }
 .home-quick-quote svg { flex-shrink: 0; }
+.home-watch-strip { max-width: 100%; min-width: 0; padding: .5rem 0; }
+.home-watch-viewport { overflow: hidden; max-width: 100%; }
+.home-watch-track { display: flex; width: max-content; animation: home-watch-scroll 85s linear infinite; }
+.home-watch-group { display: flex; gap: 1.25rem; padding-right: 1.25rem; }
+.home-watch-group .home-quick-quote { flex: 0 0 145px; min-width: 145px; padding: .35rem 0; }
+.home-watch-strip:hover .home-watch-track, .home-watch-strip:focus-within .home-watch-track, .home-watch-strip[data-paused="true"] .home-watch-track { animation-play-state: paused; }
+@keyframes home-watch-scroll { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .home-watch-track { animation: none; } .home-watch-duplicate { display: none; } .home-watch-viewport { overflow-x: auto; } }
 .home-engine-intro { border-bottom: 1px solid var(--home-rule); padding: .15rem 0 1.25rem; }
 .home-engine-intro h3 { font-size: clamp(1.4rem, 5.3vw, 1.85rem); font-weight: 700; letter-spacing: -.04em; margin: .5rem 0 .25rem; }
 .home-engine-intro > p { font-size: .8125rem; color: hsl(var(--muted-foreground)); line-height: 1.6; }
@@ -647,3 +655,45 @@ body { overflow-x: clip; }
 @media (prefers-reduced-motion: reduce) { .payment-accordion { transition: none; } }
 
 .page-canvas [data-section] { scroll-margin-top: calc(var(--sticky-header-height, 0px) + var(--sticky-nav-height, 0px) + 1rem); }
+
+/* Engine's own tools: flat sections, sourced figures and a compact hierarchy.
+   The app's bottom navigation and other pages are deliberately not selected. */
+.engine-workbench main { max-width: 1040px; }
+.engine-workbench .engine-tool-tabs [role="tab"] { font-size: .75rem; min-height: 36px; padding-inline: .9rem; }
+.engine-workbench .engine-tool-tabs [aria-selected="true"] { background: hsl(var(--primary) / .1); color: hsl(var(--primary)); }
+.engine-tool-finder { padding: .7rem 0; border-bottom: 1px solid hsl(var(--border) / .5); }
+.engine-tool-finder > summary { cursor: pointer; color: hsl(var(--muted-foreground)); font-size: .6875rem; }
+.engine-company-hero { display: flex; justify-content: space-between; gap: 1rem; padding: 0 0 1rem; border-bottom: 1px solid hsl(var(--border) / .5); }
+.engine-company-hero > div { min-width: 0; }
+.engine-kicker { color: hsl(var(--muted-foreground)); font-size: .625rem; }
+.engine-company-hero h2 { font-size: 1.6rem; font-weight: 750; letter-spacing: -.04em; margin: .25rem 0; }
+.engine-quote { font-size: 1.125rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.engine-source-disclosure > summary { font-size: .6875rem; color: hsl(var(--muted-foreground)); cursor: pointer; padding-block: .25rem; }
+.engine-workbench .engine-tool-context > p:first-child { font-size: 1.125rem; }
+.engine-workbench .engine-tool-context > p + p { font-size: .75rem; line-height: 1.6; max-width: 64ch; margin-top: .25rem; }
+.engine-headline-metrics { padding: .5rem 0 1rem; border-bottom: 1px solid hsl(var(--border) / .5); }
+.engine-metric-basis { font-size: .625rem; line-height: 1.6; color: hsl(var(--muted-foreground)); margin-bottom: .75rem; }
+.engine-headline-metrics dl { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .75rem; }
+.engine-headline-metrics dl > div + div { border-left: 1px solid hsl(var(--border) / .5); padding-left: .75rem; }
+.engine-headline-metrics dt { font-size: .6875rem; color: hsl(var(--muted-foreground)); }
+.engine-headline-metrics dd { font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: .35rem; }
+.engine-segmented { display: flex; gap: .9rem; overflow-x: auto; border-bottom: 1px solid hsl(var(--border) / .5); padding-bottom: .25rem; scrollbar-width: none; }
+.engine-segmented button { min-height: 40px; flex-shrink: 0; font-size: .6875rem; color: hsl(var(--muted-foreground)); border-bottom: 2px solid transparent; }
+.engine-segmented [aria-selected="true"], .engine-segmented [aria-pressed="true"] { border-color: hsl(var(--primary)); color: hsl(var(--primary)); font-weight: 600; }
+.engine-news-row { display: flex; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid hsl(var(--border) / .5); }
+.engine-workbench summary:focus-visible, .engine-workbench button:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
+
+/* The same flat research language inside stock Focus and every expanded view.
+   Scope to research surfaces so the app navigation retains its existing design. */
+.research-detail-header { padding-top: max(.85rem, env(safe-area-inset-top)); }
+.research-detail-header > h2 { font-size: 1.125rem; letter-spacing: -.025em; }
+.research-detail-body { width: 100%; max-width: 1040px; margin-inline: auto; padding-top: .75rem; }
+.research-detail-body h3, .company-focus-research h3 { letter-spacing: -.025em; }
+.fundamental-detail [role="tablist"], .company-focus-research [role="tablist"] { display: flex; overflow-x: auto; gap: .8rem; border-bottom: 1px solid hsl(var(--border) / .5); padding-block: .25rem; }
+.fundamental-detail [role="tab"], .company-focus-research [role="tab"] { flex-shrink: 0; min-height: 40px; padding: .5rem .15rem; border-radius: 0; border-bottom: 2px solid transparent; background: transparent; color: hsl(var(--muted-foreground)); font-size: .6875rem; white-space: nowrap; }
+.fundamental-detail [role="tab"][aria-selected="true"], .company-focus-research [role="tab"][aria-selected="true"] { border-bottom-color: hsl(var(--primary)); color: hsl(var(--primary)); font-weight: 600; box-shadow: none; }
+.fundamental-detail table { font-variant-numeric: tabular-nums; }
+.fundamental-detail th, .fundamental-detail td { padding-block: .75rem; }
+.fundamental-detail dd { font-variant-numeric: tabular-nums; }
+.fundamental-detail button:focus-visible, .company-focus-research button:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
+@media (min-width: 768px) { .research-detail-body { padding-inline: 2rem; } .research-detail-header { padding-left: max(2rem, calc((100vw - 976px) / 2)); } }

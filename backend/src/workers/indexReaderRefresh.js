@@ -5,7 +5,9 @@ import { cache, CacheKeys } from '../storage/cache.js';
 let pending = null, lastAttempt = 0;
 /** Nonblocking reader catch-up, not paid always-on hosting or keep-alive. */
 export function requestIndexCollection() {
-    if (env.COLLECTOR_EXECUTION_MODE === 'actions') return;
+    // Actions owns bulk collection. The already deployed render-light endpoint
+    // is a separate, permission-gated one-page catch-up with a durable 6h quota.
+    // Disabling it here strands indices whenever the free collector sleeps.
     const collector = env.NEWS_SCRAPER_URL ?? (env.NODE_ENV === 'production' ? 'https://continua-scraper.onrender.com' : undefined);
     if (!collector || pending || Date.now() - lastAttempt < 15 * 60_000)
         return;
