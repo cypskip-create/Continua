@@ -80,7 +80,11 @@ def stock_risk(bundle, bars, actions, now):
     position = dict(symbol=symbol,shares=1,price=quote.get('lastPrice') if quote.get('source') != 'mock' else None,cost=0,
                     currency=quote.get('currency') or bundle.get('currency'),sector=bundle.get('sector') or 'Unclassified',
                     asOf=quote.get('timestamp'),volume=quote.get('volume'),change=quote.get('change'))
-    return build_risk_intelligence([position],[dict(symbol=symbol,bars=bars,blocked=blocked)],now)
+    snapshot=build_risk_intelligence([position],[dict(symbol=symbol,bars=bars,blocked=blocked)],now)
+    snapshot['stockDiagnostic']=True
+    snapshot['evidence']['performanceBasis']='Single-stock price history with unit exposure for diagnostics, not an owned holding or realized account return.'
+    snapshot['legacyRisk']['reason']=snapshot['evidence']['performanceBasis']+' '+snapshot['evidence']['annualizationReason']
+    return snapshot
 
 
 def _returns(bars, now):

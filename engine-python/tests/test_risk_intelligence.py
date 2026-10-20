@@ -3,7 +3,7 @@ import datetime
 import math
 import unittest
 from statistics import stdev
-from continua_engine.risk_intelligence import build_risk_intelligence, simulate_risk
+from continua_engine.risk_intelligence import build_risk_intelligence, simulate_risk, stock_risk
 
 
 class RiskIntelligenceTests(unittest.TestCase):
@@ -43,6 +43,12 @@ class RiskIntelligenceTests(unittest.TestCase):
         self.assertEqual(r['pairs'][0]['observations'],len(self.returns)-2)
         self.assertAlmostEqual(r['pairs'][0]['correlation'],-1)
         self.assertTrue(r['pairs'][0]['rolling'])
+
+    def test_stock_diagnostics_never_claim_that_unit_exposure_is_owned(self):
+        result=stock_risk({'symbol':'A','currency':'KES','quote':{'lastPrice':80,'timestamp':self.now,'source':'observed'}},self.histories[0]['bars'],[],self.now)
+        self.assertTrue(result['stockDiagnostic'])
+        self.assertIn('not an owned holding',result['evidence']['performanceBasis'])
+        self.assertAlmostEqual(result['stocks'][0]['dailyVolatility'],stdev(self.returns)*100)
 
     def test_coverage_accounts_for_stale_missing_and_corporate_actions(self):
         self.positions[1]['asOf']='2025-01-01'

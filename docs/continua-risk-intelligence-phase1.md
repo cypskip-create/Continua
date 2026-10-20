@@ -41,7 +41,7 @@ The old index-aligned browser risk hook was removed. Portfolio Analysis now disp
 - Negative contributions are retained. Contributions reconcile to daily volatility within `10⁻⁸` percentage points. Sector contributions aggregate these same components.
 - Diversification ratio compares weighted standalone volatility with portfolio volatility. It is a historical diagnostic.
 - Drawdown uses a wealth curve initialized at 100. The portfolio curve is explicitly a current-holdings, daily-rebalanced simulation. Gaps beyond four calendar days are omitted and disclosed; the curve is not realized account performance.
-- Downside deviation uses `sqrt(mean(min(return, 0)²))`, with zero as its disclosed target. Stock volatility and downside deviation are daily figures.
+- Downside deviation uses `sqrt(mean(min(return, 0)²))`, with zero as its disclosed target. Stock volatility and downside deviation are daily figures. Stock-only evidence explicitly labels its unit exposure as diagnostic, not an owned holding.
 - Existing historical one-day 95% VaR and expected-shortfall fields are retained on the canonical sample when there are at least 60 returns; they are not maximum losses or forecasts.
 - Each snapshot records calculation time, market-data time, quote sessions, sample dates, observation counts, sources, methodology version, every holding's inclusion/exclusion, observed latest volume and fraction of unchanged closes.
 
@@ -116,7 +116,7 @@ Remaining data-dependent work: verified NSE session calendar and matching benchm
 
 ### Executed local verification
 
-- Python: 121 tests passed.
+- Python: 122 tests passed.
 - Compatibility backend: 474 tests passed, 6 skipped, including the real shared risk worker, cache owner isolation and bounded scrypt verification queue.
 - Frontend: 128 tests passed.
 - Native Go: all packages passed; marketdata, HTTP and Engine suites rechecked after final integration changes.
