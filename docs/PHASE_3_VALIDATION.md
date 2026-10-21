@@ -116,6 +116,14 @@ The scheduled collector gains the manual `prepare-institutional` maintenance
 choice. Its news and document cron expressions and enable conditions are
 unchanged: `17 */8 * * *` and `43 6,12,20 * * *` respectively.
 
+The explicit live maintenance run
+[39674709368](https://github.com/cypskip-create/Continua/actions/runs/39674709368)
+completed successfully. It applied the additive schema and found zero eligible
+literal extraction batches, zero pending relationships and zero automatically
+verified relationships. This confirms the graph population blocker rather than
+claiming that an empty network is production relationship coverage. The workflow
+remains active and both news/document enable flags were verified `true`.
+
 ## API and interface integration
 
 The compatibility router and native Go handlers implement model reads,
@@ -155,6 +163,9 @@ simulation, graph, advanced assumptions, constraints and model evidence.
   passed. This is not a claim that unrelated repository-wide lint is clean.
 - Go: all packages passed; `go vet ./...` passed. Native candidate CI also retains
   race, real PostgreSQL, restore and parity checks.
+- GitHub checks on implementation commit `b7367ae`: CodeQL Advanced, Security
+  release checks, API request protection and Native rewrite candidate tests all
+  passed. Code scanning reported zero open alerts.
 - Browser: synthetic-only result harness inspected at 375px and 595px panel
   widths. Charts/tables/evidence fit their panels, graph entity filtering reduced
   the visible relationship table correctly, and reproducibility disclosures
@@ -200,3 +211,19 @@ always-on worker, database pool or subscription cost is introduced.
 No advanced causal macro propagation, guaranteed liquidation, calibrated
 production relationship contagion, ARIMA/GARCH model family, or verified
 institutional accuracy is claimed by this delivery.
+
+## Dependency follow-up
+
+GitHub exposed four further dependency alerts for `@vitest/mocker` across the
+backend and scraper locks during final verification. Both development test
+runtimes were updated to exact Vitest 4.1.12, the patched release for the
+[manual mock registration](https://github.com/vitest-dev/vitest/security/advisories/GHSA-qxg6-89mg-rqv8)
+and [Windows redirect traversal](https://github.com/vitest-dev/vitest/security/advisories/GHSA-xp26-3454-mjgp)
+advisories. Both npm installs reported zero vulnerabilities. The patched backend
+suite passed all 479 enabled tests; the scraper's four R2/storage suites passed
+15 tests. The complete legacy JavaScript scraper suite subsequently passed all
+95 tests using one test worker and the configured Python PDF extraction runtime.
+The initial broad run had missing local PDF configuration/concurrency timeouts
+and obsolete storage expectations; these were resolved without relaxing runtime
+storage protections. Legacy storage expectations now enforce the existing
+private-R2-only policy rather than re-enable Supabase artifact writes.
