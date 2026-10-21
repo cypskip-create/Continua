@@ -11,6 +11,15 @@ spec=importlib.util.spec_from_file_location('scheduled_collect',root/'scheduled_
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 
 class ScheduledTests(unittest.TestCase):
+    def test_run_slice_is_resumable_but_preserves_real_failures(self):
+        receipt={'sources':[{'fetched':4,'failed':0}]}
+        module.pause_at_deadline(receipt)
+        self.assertEqual(receipt['status'],'budget-paused')
+        self.assertEqual(receipt['pauseReason'],'run-time-budget')
+        self.assertEqual(receipt['sources'][0]['fetched'],4)
+        receipt={'sources':[{'failed':1}]}
+        module.pause_at_deadline(receipt)
+        self.assertEqual(receipt['status'],'failed')
     def test_batches_are_configurable_and_bounded(self):
         self.assertEqual(module.source_batch({},'kenyanstocks'),12)
         self.assertEqual(module.source_batch({'COLLECTOR_PRIMARY_BATCH':'24'},'kenyanstocks'),24)

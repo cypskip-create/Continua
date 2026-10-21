@@ -19,6 +19,11 @@ from continua_scraper.runtime import CollectorRuntime
 from continua_scraper.storage import RawStorage
 from continua_scraper.crawler import GenericCrawler
 
+def pause_at_deadline(receipt):
+    receipt['status']='failed' if any(s.get('failed',0) for s in receipt['sources']) else 'budget-paused'
+    receipt['pauseReason']='run-time-budget'
+
+
 def limits(environment):
     result=[]
     for key,default,maximum in (
@@ -185,7 +190,13 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
                         if budget.exhausted:receipt['status']='budget-paused'
                         if receipt['status']=='running':
                             receipt['status']='failed' if any(s.get('failed',0) for s in receipt['sources']) else 'completed'
-                except TimeoutError:receipt['status']='failed'
+                except TimeoutError:
+                    # The enclosing asyncio.timeout is the approved finite run
+                    # slice, not an unhandled provider failure. Completed work
+                    # is already checkpointed; unfinished leases recover on the
+                    # next scheduled run. Individual source timeouts still enter
+                    # the per-source failure path above.
+                    pause_at_deadline(receipt)
                 except transfer_budget.TransferLimitReached:receipt['status']='budget-paused'
                 finally:
                     if process_research:
