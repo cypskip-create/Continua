@@ -11,8 +11,20 @@ export async function investmentEvidence(kind, asOf, symbol) {
       [kind,asOf,symbol ? 'NSE:'+symbol : null]);
     return rows.rows.map(r=>({...r.payload,id:r.id,date:r.date,availableAt:r.availableAt,sourceUrl:r.sourceUrl,retrievedAt:r.retrievedAt,sha256:r.sha256}));
 }
-export async function calculateInvestment(input) {
-    const result = await pythonCalculation('investment_research',[input]);
-    if(result.status!==200) throw new ApiError(422,result.error??'Research inputs require review.');
-    return result.data;
+export async function calculateInvestment(input,owner) {
+    const monitored=owner&&['optimization','factor-model','backtest'].includes(input.kind);
+    const started=Date.now();let result;
+    if(monitored){let model;try{model=(await query("SELECT status FROM market.quantitative_models WHERE id=$1 AND version='investment-intelligence-v1'",[input.kind])).rows[0];}catch{}if(model?.status==='disabled')throw new ApiError(503,'Model disabled pending review.');}
+    try {
+        result=await pythonCalculation('investment_research',[input]);
+        if(result.status!==200) throw new ApiError(422,result.error??'Research inputs require review.');
+        return result.data;
+    } finally {
+        if(monitored){
+            const {createHash}=await import('node:crypto');
+            const hash=result?.data?.snapshotId??createHash('sha256').update(JSON.stringify(input)).digest('hex');
+            const summary={validationStatus:'legacy numerical/evidence guards; not an empirical accuracy certificate',reconciliation:result?.data?.reconciliationError??null,observations:result?.data?.observations??null};
+            try{await query("SELECT market.record_quantitative_run($1,$2,'investment-intelligence-v1',$3,$4,$5::jsonb,$6)",[owner,input.kind,hash,result?.status===200?'success':result?'input-validation':'worker-unavailable',JSON.stringify(summary),Date.now()-started]);}catch{}
+        }
+    }
 }

@@ -1,3 +1,4 @@
+import {ModelGovernanceAdmin} from '@/components/engine/ModelGovernanceAdmin';
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -320,11 +321,12 @@ export default function AdminFinancialsReview() {
     <div className="min-h-screen max-w-lg mx-auto p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-sm font-bold">Financials Review</h1>
-        <Button variant="ghost" size="sm" onClick={() => { clearAdminKey(); setUnlocked(false); }}>
+        <Button variant="ghost" size="sm" onClick={() => { clearAdminKey(); queryClient.removeQueries({queryKey:["admin"]}); setUnlocked(false); }}>
           <LogOut className="h-3.5 w-3.5 mr-1" /> Lock
         </Button>
       </div>
 
+      <ModelGovernanceAdmin/>
       {selectedId ? (
         <>
           <Button variant="ghost" size="sm" onClick={() => setSelectedId(null)}>&larr; Back to list</Button>

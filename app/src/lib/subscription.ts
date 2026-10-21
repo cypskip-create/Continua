@@ -5,6 +5,6 @@ export const PLANS = {
 } as const;
 export const hasResearchAccess = (plan: string | null | undefined) => plan === 'premium' || plan === 'premium_plus';
 export const hasFullEngineAccess = (plan: string | null | undefined) => plan === 'premium_plus';
-export const premiumEngineTools: readonly string[] = ['Briefing', 'Forecast', 'News', 'Earnings & Reports', 'Valuation', 'Ownership', 'Evidence', 'Risk Intelligence', 'Factors', 'Macro', 'Events'];
+export const premiumEngineTools: readonly string[] = ['Briefing', 'Forecast', 'News', 'Earnings & Reports', 'Valuation', 'Ownership', 'Evidence', 'Risk Intelligence', 'Factors', 'Macro', 'Events', 'Liquidity', 'Research case'];
 export const canUseEngineTool = (plan: string | null | undefined, tool: string) =>
-  ['Macro','Events'].includes(tool) || hasFullEngineAccess(plan) || (plan === 'premium' && premiumEngineTools.includes(tool));
+  ['Macro','Events','Liquidity'].includes(tool) || hasFullEngineAccess(plan) || (plan === 'premium' && premiumEngineTools.includes(tool));

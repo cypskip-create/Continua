@@ -5,6 +5,18 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "backend/python/institutional_intelligence.py",
+      "category": "Phase 3 institutional research and governance",
+      "language": "Python numerical kernels, Go native API, existing JavaScript compatibility adapters, PostgreSQL and existing React presentation",
+      "runtime": "Existing bounded single-threaded numerical worker; pinned NumPy/SciPy; no added service",
+      "reason": "Paired/block resampling preserves observed cross-security dependencies without assuming normality. Streaming path updates bound memory. Rolling-origin validation uses availability-filtered history. SQL owns source eligibility, private snapshots and governance receipts. Go remains the native target; production cutover guard remains unchanged. ARIMA/GARCH are deferred until baseline validation and source suitability justify their maintenance cost.",
+      "references": [
+        "https://numpy.org/doc/stable/reference/random/generator.html",
+        "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html",
+        "https://go.dev/doc/database/sql-injection"
+      ]
+    },
+    {
       "file": "backend/python/investment_intelligence.py",
       "category": "Phase 2 investment evidence and numerical research",
       "language": "Python models and collector, Go native API, SQL provenance and existing React frontend",

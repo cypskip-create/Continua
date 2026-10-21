@@ -451,6 +451,16 @@ def run_investment(p):
             result=financial_extensions(p)
         elif kind == 'optimization': result = optimize(p)
         elif kind == 'backtest': result = backtest(p)
+        elif kind=='institutional-profile':
+            from institutional_intelligence import prepare_research_profile
+            return dict(status=200,data=prepare_research_profile(p))
+        elif kind=='institutional-inputs':
+            from institutional_intelligence import prepare_market_inputs
+            return dict(status=200,data=prepare_market_inputs(p))
+        elif kind in ('probabilistic-forecast','monte-carlo','liquidity','exposure-graph','research-case','relationship-draft','portfolio-liquidity'):
+            from institutional_intelligence import run,VERSION as institutional_version
+            result=run(p)
+            return dict(status=200,data=dict(result,kind=kind,version=institutional_version,snapshotId=result['governance']['inputHash']))
         else: raise ValueError('Unsupported research module.')
         digest = hashlib.sha256(json.dumps({'modelVersion':VERSION,'configuration':p}, sort_keys=True, allow_nan=False, separators=(',', ':')).encode()).hexdigest()
         return dict(status=200, data=dict(result, kind=kind, version=VERSION, snapshotId=digest))

@@ -11,6 +11,7 @@ on:
       - 'infra/migration/native-*.py'
       - 'infra/migration/canonical-financial-fixture.mjs'
       - 'infra/migration/investment-evidence-fixture.mjs'
+      - 'infra/migration/institutional-fixture.mjs'
       - 'infra/cloudflare/**'
       - 'infra/security/**'
       - 'supabase/migrations/**'
@@ -25,6 +26,7 @@ on:
       - 'infra/migration/native-*.py'
       - 'infra/migration/canonical-financial-fixture.mjs'
       - 'infra/migration/investment-evidence-fixture.mjs'
+      - 'infra/migration/institutional-fixture.mjs'
       - 'infra/cloudflare/**'
       - 'infra/security/**'
       - 'supabase/migrations/**'
@@ -101,6 +103,7 @@ jobs:
         run: npm install --prefix .qa-artifacts/canonical-fixture --no-save --package-lock=false @electric-sql/pglite@0.5.10
       - run: node infra/migration/canonical-financial-fixture.mjs
       - run: node infra/migration/investment-evidence-fixture.mjs
+      - run: node infra/migration/institutional-fixture.mjs
       - run: node infra/security/session-assurance-fixture.mjs
       - run: node infra/migration/native-bundle-parity.mjs
       - run: node infra/migration/native-valuation-parity.mjs

@@ -8,6 +8,9 @@ const checks = [
   "Review portfolio concentration",
 ];
 interface Entry {
+  assumptions:string;
+  valuationAssumptions:string;
+  monitoringTriggers:string;
   notes: string;
   checked: string[];
   updatedAt: string | null;
@@ -20,6 +23,7 @@ interface Entry {
   nextAction: string;
 }
 const empty: Entry = {
+  assumptions:"",valuationAssumptions:"",monitoringTriggers:"",
   notes: "",
   checked: [],
   updatedAt: null,
@@ -63,6 +67,9 @@ function Journal({
       if (typeof value?.notes === "string" && Array.isArray(value.checked))
         return {
           ...empty,
+          assumptions:typeof value.assumptions==="string"?value.assumptions.slice(0,2000):"",
+          valuationAssumptions:typeof value.valuationAssumptions==="string"?value.valuationAssumptions.slice(0,2000):"",
+          monitoringTriggers:typeof value.monitoringTriggers==="string"?value.monitoringTriggers.slice(0,2000):"",
           counterEvidence:typeof value.counterEvidence==="string"?value.counterEvidence.slice(0,2000):"",
           nextAction:typeof value.nextAction==="string"?value.nextAction.slice(0,1000):"",
           evidence:typeof value.evidence==="string"?value.evidence.slice(0,3000):"",
@@ -201,8 +208,10 @@ function Journal({
         />
       </label>
       <button type="button" className="border border-border rounded-lg px-3 py-2 text-sm" disabled={entry.notes.length>4500} onClick={()=>update({notes:[entry.notes,"Hypothesis:\n\nReported evidence:\n\nAssumptions (not facts):\n\nAlternative explanation:\n\nNext filing or disclosure to check:"].filter(Boolean).join("\n\n").slice(0,5000)})}>Append research template</button>
+      {(['assumptions','valuationAssumptions','monitoringTriggers'] as const).map(field=><label className="block text-sm" key={field}>{field==='assumptions'?'Key assumptions (not observed facts)':field==='valuationAssumptions'?'Valuation assumptions and source links':'Monitoring triggers and evidence conditions'}<textarea aria-label={`Journal ${field}`} maxLength={2000} value={entry[field]} onChange={e=>update({[field]:e.target.value})} className="block mt-2 w-full rounded-lg border border-border bg-background p-3 min-h-24 text-sm"/></label>)}
       <label className="block text-sm">Strongest counter-evidence<textarea aria-label="Journal counter-evidence" maxLength={2000} value={entry.counterEvidence} onChange={e=>update({counterEvidence:e.target.value})} placeholder="Which dated fact challenges your thesis? What alternative explanation fits?" className="block mt-2 w-full border border-border bg-background p-3 min-h-24 text-sm"/></label>
       <label className="block text-sm">Next evidence to collect<textarea aria-label="Journal next evidence" maxLength={1000} value={entry.nextAction} onChange={e=>update({nextAction:e.target.value})} placeholder="Source, reporting period and question to resolve before your next review" className="block mt-2 w-full border border-border bg-background p-3 min-h-20 text-sm"/></label>
+      <p className="text-xs text-muted-foreground">Monitoring triggers here are private notes; they do not automatically create alert rules. Use Monitoring for supported alerts.</p>
       <p className="text-xs text-muted-foreground">Research structure: {[entry.notes.trim(),entry.evidence.trim(),entry.counterEvidence.trim(),entry.invalidation.trim(),entry.nextAction.trim()].filter(Boolean).length}/5 fields recorded. Completeness is not investment conviction or data quality.</p>
       <div className="flex justify-between gap-3 text-xs text-muted-foreground">
         <p role="status">{status}</p>

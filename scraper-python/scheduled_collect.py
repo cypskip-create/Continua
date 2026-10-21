@@ -238,6 +238,10 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
                                 if readiness and readiness[0]['ready']:
                                     from continua_scraper.investment import publish_investment_evidence
                                     receipt['investmentEvidence']=await publish_investment_evidence(database)
+                                graph_ready=await database.query("SELECT to_regclass('market.exposure_relationships') IS NOT NULL AS ready")
+                                if graph_ready and graph_ready[0]['ready']:
+                                    from continua_scraper.relationships import store_relationship_drafts
+                                    receipt['relationshipDrafts']=await store_relationship_drafts(database)
                         except Exception:
                             receipt['processingAfter']={'status':'failed','retryable':True}
                             receipt['status']='failed'
@@ -256,6 +260,14 @@ async def maintenance(operation):
     database=await Database.open(os.environ['DATABASE_URL'])
     storage=None
     try:
+        if operation=='prepare-institutional':
+            path=pathlib.Path(__file__).resolve().parents[1]/'supabase/migrations/20261022010000_institutional_governance.sql'
+            async with database.pool.connection() as connection:
+                async with connection.transaction():
+                    await connection.execute(path.read_text(encoding='utf-8'),prepare=False)
+            from continua_scraper.relationships import store_relationship_drafts
+            drafts=await store_relationship_drafts(database)
+            return {'status':'completed','operation':operation,'destructive':False,'relationships':drafts}
         if operation=='prepare-investment':
             # Explicit maintenance invocation only; no migration during API boot.
             path=pathlib.Path(__file__).resolve().parents[1]/'supabase/migrations/20261021150000_investment_evidence.sql'
@@ -319,7 +331,7 @@ def main():
     parser.add_argument('--issuer')
     parser.add_argument('--fresh',action='store_true')
     parser.add_argument('--apply',action='store_true')
-    parser.add_argument('--maintenance',choices=('prepare','verify-storage','process-research','prepare-investment'))
+    parser.add_argument('--maintenance',choices=('prepare','verify-storage','process-research','prepare-investment','prepare-institutional'))
     args=parser.parse_args()
     if not args.apply:
         print(json.dumps({'mode':'offline-plan','kind':args.kind,'submitted':False}));return 0

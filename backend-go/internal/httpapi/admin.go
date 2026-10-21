@@ -58,6 +58,9 @@ func (s *Server) admin(ctx context.Context, w http.ResponseWriter, r *http.Reque
 		return true
 	}
 	path := strings.TrimPrefix(r.URL.Path, prefix)
+	if s.institutionalAdmin(ctx, w, r, path) {
+		return true
+	}
 	if path == "financials/repair-condensed" {
 		if r.Method != "POST" {
 			failure(w, 405, "Method not allowed")

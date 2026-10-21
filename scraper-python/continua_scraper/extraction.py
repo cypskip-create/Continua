@@ -25,6 +25,14 @@ class ExtractionService:
         self._sweep=None
 
     async def by_content_type(self,content_type,artifact,record=None):
+        result=await self._base_content_type(content_type,artifact,record)
+        if result:
+            from .relationships import relationship_tables
+            drafts=relationship_tables(result.get('tables',[]))
+            if drafts:result=dict(result,tables=result.get('tables',[])+drafts,needsReview=True)
+        return result
+
+    async def _base_content_type(self,content_type,artifact,record=None):
         type=content_type or ''
         if 'csv' in type or 'spreadsheetml.sheet' in type:
             from .tabular import parse_tabular

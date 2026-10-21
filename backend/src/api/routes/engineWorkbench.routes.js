@@ -1,3 +1,4 @@
+import {institutionalRoutes} from './institutional.routes.js';
 import { Router } from "express";
 import { investmentEvidence, calculateInvestment } from '../../services/research/investmentResearch.js';
 import { z } from "zod";
@@ -20,6 +21,7 @@ import { earningsSensitivity, EarningsSensitivitySchema } from '../../services/r
 import { annualRatioAt } from '../../services/technical/valuationHistory.js';
 import { runHealthCheck } from '../../monitoring/healthCheck.js';
 export const engineWorkbenchRoutes = Router();
+engineWorkbenchRoutes.use(institutionalRoutes);
 engineWorkbenchRoutes.post('/engine/labs/intelligence', requirePremiumPlus, asyncHandler(async (req,res) => {
     const owned = await getPortfolioResearch(String(res.locals.engineUserId), 'NSE');
     if (!owned.riskIntelligence) throw new ApiError(503,'Risk calculation unavailable.');
@@ -66,14 +68,14 @@ engineWorkbenchRoutes.post('/engine/investment/calculate', requirePremiumPlus, h
     // Full validation lives in the shared Python model for both API runtimes.
     const input=parse(z.object({kind:z.enum(['macro','factors','factor-model','macro-scenario','event-impact','financial-extension','optimization','backtest'])}).passthrough(),req.body);
     res.setHeader('Cache-Control','no-store');
-    res.json({data:await calculateInvestment(input)});
+    res.json({data:await calculateInvestment(input,user(res))});
 }));
 engineWorkbenchRoutes.post('/engine/investment/optimize-owned', requirePremiumPlus, handle(async(req,res)=>{
     const options=parse(z.object({objective:z.enum(['minimum-variance','risk-parity','maximum-diversification']),turnoverCap:z.number().min(0).max(1),cashMaximum:z.number().min(0).max(1).optional(),maximum:z.record(z.number().min(0).max(1)).optional(),minimum:z.record(z.number().min(0).max(1)).optional(),excluded:z.array(symbolSchema).max(70).optional(),sectorLimits:z.record(z.object({min:z.number().min(0).max(1),max:z.number().min(0).max(1)})).optional()}).strict(),req.body);
     const portfolio=await getPortfolioResearch(user(res),'NSE'),risk=portfolio.riskIntelligence;
     if(!risk?.covariance||risk.coverage.some(r=>!r.included)||risk.overview.riskCoveredValue!==risk.overview.coveredValue) throw new ApiError(422,'Every holding requires eligible aligned history before optimization. Inspect Risk Intelligence coverage.');
     const configuration={...options,kind:'optimization',symbols:risk.symbols,currentWeights:risk.weights,covariance:risk.covariance,observations:risk.evidence.observations,sectors:Object.fromEntries(risk.overview.positions.map(p=>[p.symbol,p.sector]))};
-    const result=await calculateInvestment(configuration);
+    const result=await calculateInvestment(configuration,user(res));
     res.setHeader('Cache-Control','no-store');res.json({data:{...result,configuration,evidence:risk.evidence}});
 }));
 engineWorkbenchRoutes.get('/engine/investment/simulations', requirePremiumPlus, handle(async(_req,res)=>{
@@ -99,7 +101,7 @@ engineWorkbenchRoutes.post('/engine/investment/event-preferences', requirePremiu
 }));
 engineWorkbenchRoutes.post('/engine/investment/simulations', requirePremiumPlus, handle(async(req,res)=>{
     const input=parse(z.object({name:z.string().trim().min(1).max(100),configuration:z.object({kind:z.enum(['optimization','backtest'])}).passthrough()}),req.body);
-    const result=await calculateInvestment(input.configuration);
+    const result=await calculateInvestment(input.configuration,user(res));
     const saved=await query('SELECT market.save_investment_simulation($1,$2,$3,$4,$5::jsonb,$6::jsonb) AS receipt',[user(res),input.name,input.configuration.kind,result.snapshotId,JSON.stringify(input.configuration),JSON.stringify(result)]);
     if(!saved.rows[0]?.receipt)throw new ApiError(422,'Simulation storage limit reached (25 per account), or snapshot too large. Export or remove an old simulation.');
     res.setHeader('Cache-Control','no-store');res.status(201).json({data:saved.rows[0].receipt});

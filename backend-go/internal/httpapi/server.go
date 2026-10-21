@@ -258,6 +258,9 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.advanced(ctx, w, r, identity) {
 		return
 	}
+	if s.institutional(ctx, w, r, identity) {
+		return
+	}
 	if s.investment(ctx, w, r, identity) {
 		return
 	}

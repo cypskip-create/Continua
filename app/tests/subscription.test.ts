@@ -16,7 +16,7 @@ test('Premium retains research but only Plus gets full Engine',()=>{
 
 test('Premium includes all company research and evidence, but not Plus workspaces', () => {
   for (const tool of premiumEngineTools) {
-    assert.equal(canUseEngineTool('free', tool), ['Macro','Events'].includes(tool));
+    assert.equal(canUseEngineTool('free', tool), ['Macro','Events','Liquidity'].includes(tool));
     assert.equal(canUseEngineTool('premium', tool), true);
     assert.equal(canUseEngineTool('premium_plus', tool), true);
   }
@@ -32,3 +32,5 @@ test('Free current macro and events remain accessible while simulations require 
  for(const tool of ['Macro','Events'])assert.equal(canUseEngineTool('free',tool),true);
  for(const tool of ['Optimization','Backtesting']){assert.equal(canUseEngineTool('premium',tool),false);assert.equal(canUseEngineTool('premium_plus',tool),true);}
 });
+
+test('Phase 3 preserves company research and restricts full simulation workspaces',()=>{assert.equal(canUseEngineTool('free','Liquidity'),true);assert.equal(canUseEngineTool('premium','Research case'),true);for(const tool of ['Monte Carlo','Exposure Graph']){assert.equal(canUseEngineTool('premium',tool),false);assert.equal(canUseEngineTool('premium_plus',tool),true);}});

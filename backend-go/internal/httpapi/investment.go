@@ -4,6 +4,8 @@ import (
 	"context"
 	"continua/backend/internal/auth"
 	"continua/backend/internal/engine"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -142,7 +144,7 @@ func (s *Server) investment(ctx context.Context, w http.ResponseWriter, r *http.
 			respond(w, 200, map[string]any{"data": map[string]any{"events": rows, "asOf": cutoff, "methodology": "Verified source-backed revisions available at cutoff. Empty coverage does not establish absence of events."}})
 			return true
 		}
-		s.investmentCalculation(ctx, w, map[string]any{"kind": "macro", "asOf": cutoff, "observations": rows, "basic": basic})
+		s.investmentCalculation(ctx, w, id.UserID, map[string]any{"kind": "macro", "asOf": cutoff, "observations": rows, "basic": basic})
 		return true
 	}
 	if err := auth.RequirePlus(id); err != nil {
@@ -319,6 +321,15 @@ func (s *Server) investment(ctx context.Context, w http.ResponseWriter, r *http.
 		failure(w, 400, "Invalid investment research JSON")
 		return true
 	}
+	if path == "calculate" {
+		var kind string
+		_ = json.Unmarshal(input["kind"], &kind)
+		allowed := map[string]bool{"macro": true, "factors": true, "factor-model": true, "macro-scenario": true, "event-impact": true, "financial-extension": true, "optimization": true, "backtest": true}
+		if !allowed[kind] {
+			failure(w, 400, "Unsupported investment module")
+			return true
+		}
+	}
 	if path == "optimize-owned" {
 		if s.PortfolioResearch == nil {
 			failure(w, 503, "Owned portfolio evidence unavailable")
@@ -381,14 +392,42 @@ func (s *Server) investment(ctx context.Context, w http.ResponseWriter, r *http.
 		options["covariance"] = risk.Covariance
 		options["observations"] = risk.Evidence.Observations
 		options["sectors"] = sectors
-		s.investmentCalculation(ctx, w, options)
+		s.investmentCalculation(ctx, w, id.UserID, options)
 		return true
 	}
-	s.investmentCalculation(ctx, w, json.RawMessage(raw))
+	s.investmentCalculation(ctx, w, id.UserID, json.RawMessage(raw))
 	return true
 }
 
-func (s *Server) investmentCalculation(ctx context.Context, w http.ResponseWriter, input any) {
+func (s *Server) investmentCalculation(ctx context.Context, w http.ResponseWriter, owner string, input any) {
+	rawConfig, _ := json.Marshal(input)
+	var model struct {
+		Kind string `json:"kind"`
+	}
+	_ = json.Unmarshal(rawConfig, &model)
+	monitored := model.Kind == "optimization" || model.Kind == "backtest" || model.Kind == "factor-model"
+	state := "worker-unavailable"
+	inputDigest := sha256.Sum256(rawConfig)
+	hash := hex.EncodeToString(inputDigest[:])
+	began := time.Now()
+	summary := json.RawMessage(`{"validationStatus":"legacy numerical and evidence guards; not empirical accuracy"}`)
+	if store, ok := s.Store.(institutionalStore); ok && monitored {
+		rows, e := store.InstitutionalRead(ctx, "legacy-model", "", model.Kind)
+		if e == nil && len(rows) > 0 {
+			var active struct {
+				Status string `json:"status"`
+			}
+			_ = json.Unmarshal(rows[0], &active)
+			if active.Status == "disabled" {
+				failure(w, 503, "Model disabled pending review")
+				return
+			}
+		}
+		defer func() {
+			_ = store.InstitutionalRecord(ctx, owner, model.Kind, "investment-intelligence-v1", hash, state, summary, time.Since(began).Milliseconds())
+		}()
+	}
+
 	if s.Engine == nil {
 		failure(w, 503, "Numerical worker unavailable")
 		return
@@ -407,9 +446,17 @@ func (s *Server) investmentCalculation(ctx context.Context, w http.ResponseWrite
 		failure(w, 503, "Invalid investment calculation")
 		return
 	}
+	state = "input-validation"
 	if envelope.Status != 200 {
 		failure(w, 422, envelope.Error)
 		return
+	}
+	state = "success"
+	var fingerprint struct {
+		SnapshotID string `json:"snapshotId"`
+	}
+	if json.Unmarshal(envelope.Data, &fingerprint) == nil && len(fingerprint.SnapshotID) == 64 {
+		hash = fingerprint.SnapshotID
 	}
 	if configuration, ok := input.(map[string]any); ok && configuration["kind"] == "optimization" {
 		var data map[string]any

@@ -1,3 +1,5 @@
+import {PortfolioLiquidity} from '@/components/engine/PortfolioLiquidity';
+import {InstitutionalWorkbench} from '@/components/engine/InstitutionalWorkbench';
 import { EvidenceImportLab } from '@/components/engine/EvidenceImportLab';
 import { InvestmentCoverage } from '@/components/engine/InvestmentCoverage';
 import { InvestmentResearch } from '@/components/engine/InvestmentResearch';
@@ -63,6 +65,10 @@ const tools = [
   "Factors",
   "Optimization",
   "Backtesting",
+  "Monte Carlo",
+  "Liquidity",
+  "Exposure Graph",
+  "Research case",
   "Monitoring",
   "Preferences",
   "Evidence",
@@ -81,11 +87,13 @@ const groups: { name: string; tools: Tool[] }[] = [
       "Valuation",
       "Ownership",
       "Events",
+      "Liquidity",
+      "Research case",
     ],
   },
   {
     name: "Analysis",
-    tools: ["Evidence", "Technicals", "Scenario lab", "Risk lab", "Risk Intelligence", "Peers", "Macro", "Factors", "Optimization", "Backtesting"],
+    tools: ["Evidence", "Technicals", "Scenario lab", "Risk lab", "Risk Intelligence", "Peers", "Macro", "Factors", "Optimization", "Backtesting", "Monte Carlo", "Exposure Graph"],
   },
   {
     name: "My workspace",
@@ -93,6 +101,10 @@ const groups: { name: string; tools: Tool[] }[] = [
   },
 ];
 const toolHelp: Record<Tool, string> = {
+  "Monte Carlo": "Simulate source-backed owned portfolio paths, tail losses and explicit stress assumptions.",
+  Liquidity: "Inspect reported trading activity, missing observations and hypothetical position capacity.",
+  "Exposure Graph": "Explore dated verified relationships separately from hypothetical shock propagation.",
+  "Research case": "Connect canonical evidence, contradictory facts, private thesis notes and explicit scenarios.",
   Forecast: "Explore estimates, growth diagnostics, model research and price sensitivity. Separate evidence from assumptions.",
   Briefing: "Start with the reported facts, then open the supporting evidence or risks that matter to you.",
   News: "Read dated issuer stories and check the original publisher before acting.",
@@ -175,7 +187,7 @@ export default function Engine() {
   );
   const fullEngine = profile?.subscription_plan === "premium_plus";
   const toolAllowed = canUseEngineTool(profile?.subscription_plan, tool);
-  const query = useEngineBundle(symbol,exchange,toolAllowed&&group.name!=='My workspace'&&tool!=='Risk lab'&&tool!=='Risk Intelligence'&&!['Macro','Factors','Optimization','Backtesting','Events'].includes(tool),tool==='News');
+  const query = useEngineBundle(symbol,exchange,toolAllowed&&group.name!=='My workspace'&&tool!=='Risk lab'&&tool!=='Risk Intelligence'&&!['Macro','Factors','Optimization','Backtesting','Events','Monte Carlo','Liquidity','Exposure Graph','Research case'].includes(tool),tool==='News');
   const data = query.data;
   const {
     settings: researchPreferences,
@@ -380,7 +392,7 @@ export default function Engine() {
               <p className="font-semibold flex items-center gap-2">{tool}{["Portfolio", "Preferences"].includes(tool) ? "" : ` · ${symbol}`}<ToolHelp tool={tool} description={toolHelp[tool]}/></p>
               <p className="text-sm text-muted-foreground">{toolHelp[tool]}</p>
             </div>
-            {!toolAllowed ? <section className="py-6 space-y-3"><h3 className="text-lg font-semibold">{tool} is included with Premium Plus</h3><p className="text-sm text-muted-foreground">Your Premium company research and all expanded Fundamentals Forecast details remain available.</p><Link to="/upgrade" className="text-primary font-semibold">Explore Premium Plus →</Link></section> : group.name === "My workspace" || (tool==='Risk lab'||tool==='Risk Intelligence'||['Macro','Factors','Optimization','Backtesting','Events'].includes(tool)) ? null : query.isLoading ? (
+            {!toolAllowed ? <section className="py-6 space-y-3"><h3 className="text-lg font-semibold">{tool} is included with Premium Plus</h3><p className="text-sm text-muted-foreground">Your Premium company research and all expanded Fundamentals Forecast details remain available.</p><Link to="/upgrade" className="text-primary font-semibold">Explore Premium Plus →</Link></section> : group.name === "My workspace" || (tool==='Risk lab'||tool==='Risk Intelligence'||['Macro','Factors','Optimization','Backtesting','Events','Monte Carlo','Liquidity','Exposure Graph','Research case'].includes(tool)) ? null : query.isLoading ? (
               <p role="status" className="py-10 text-sm text-muted-foreground">
                 Preparing your analysis…
               </p>
@@ -400,7 +412,7 @@ export default function Engine() {
               data && (
                 <div key={`${exchange}:${symbol}`} className="py-6 space-y-6">
                   {tool==='Evidence'&&<EngineReliabilityDesk data={data} expanded onTool={target=>setTool(toolFromParam(target))}/>}
-                  {tool==='Evidence'&&<><FinancialVersionDesk symbol={symbol}/>{fullEngine&&<><PipelineHealthDesk/><InvestmentCoverage/><EvidenceImportLab title="Industry statement extraction review" kinds={['financial-extension']}/></>}</>}
+                  {tool==='Evidence'&&<><FinancialVersionDesk symbol={symbol}/>{fullEngine&&<><PipelineHealthDesk/><InvestmentCoverage/><InstitutionalWorkbench key={`models:${user?.id}:${profile?.subscription_plan}`} mode="Model evidence" symbol={symbol}/><EvidenceImportLab title="Industry statement extraction review" kinds={['financial-extension']}/></>}</>}
                   {query.isError&&<p role="status" className="text-sm text-muted-foreground">The background update could not connect. Showing your last saved research with its original date. <button className="text-primary" onClick={()=>void query.refetch()}>Retry update</button></p>}
                   <EngineCompanyHero data={data} sector={instruments.find(item=>item.symbol===symbol)?.sector}/>
                   {tool!=='Evidence'&&<details className="engine-source-disclosure"><summary>Evidence & coverage · {data.coverage.annualPeriods} annual observations</summary><EngineReliabilityDesk data={data} onTool={target=>setTool(toolFromParam(target))}/></details>}
@@ -513,7 +525,7 @@ export default function Engine() {
                     </>
                   )}
                   {tool === "News" && <EngineNewsDesk key={symbol} data={data}/>}
-                  {tool === "Forecast" && <EngineForecastDesk key={symbol} symbol={symbol} currency={data.currency}/>}
+                  {tool === "Forecast" && <><EngineForecastDesk key={symbol} symbol={symbol} currency={data.currency}/><InstitutionalWorkbench key={`forecast:${user?.id}:${profile?.subscription_plan}:${symbol}`} mode="Forecast" symbol={symbol}/></>}
                   {tool === "Earnings & Reports" && <><EngineReportsDesk key={symbol} data={data}/><CompanyEvidenceDesk data={data}/></>}
                   {tool === "Valuation" && (
                     <section className="divide-y divide-border/70">
@@ -578,6 +590,10 @@ export default function Engine() {
               "Factors",
               "Optimization",
               "Backtesting",
+              "Monte Carlo",
+              "Liquidity",
+              "Exposure Graph",
+              "Research case",
               "Monitoring",
               "Preferences",
               "Journal",
@@ -600,8 +616,9 @@ export default function Engine() {
                   <EnginePeersPanel symbol={symbol} exchange={exchange} />
                 )}
                 {tool === "Portfolio" && (
-                  <EnginePortfolioPanel exchange={exchange} />
+                  <><EnginePortfolioPanel exchange={exchange} /><PortfolioLiquidity/></>
                 )}
+                {['Monte Carlo','Liquidity','Exposure Graph','Research case'].includes(tool)&&<InstitutionalWorkbench key={`${user?.id}:${profile?.subscription_plan}:${symbol}:${tool}`} mode={tool as 'Monte Carlo'|'Liquidity'|'Exposure Graph'|'Research case'} symbol={symbol}/>}
                 {['Macro','Factors','Optimization','Backtesting','Events'].includes(tool)&&<InvestmentResearch key={`${user?.id}:${symbol}:${tool}`} tool={tool} symbol={symbol}/>}
                 {tool === "Monitoring" && (
                   <EngineMonitoringPanel symbol={symbol} exchange={exchange} />

@@ -1,3 +1,4 @@
+import {PortfolioLiquidity} from './PortfolioLiquidity';
 import { SavedSimulations } from './SavedSimulations';
 import { investmentConfiguration } from '@/lib/investmentConfiguration';
 import type { RiskIntelligence } from '@/api/riskIntelligence';
@@ -103,6 +104,7 @@ export function InvestmentResearch({tool,symbol}:{tool:string;symbol:string}){
    {['Backtesting','Optimization'].includes(tool)&&(config||result?.configuration)&&<div className="flex flex-wrap gap-2"><input aria-label="Simulation name" className={field} placeholder="Name this hypothetical portfolio" maxLength={100} value={name} onChange={e=>setName(e.target.value)}/><button disabled={!name.trim()||save.isPending} className={field} onClick={()=>save.mutate()}>Save private simulation</button>{save.isSuccess&&<p role="status">Hypothetical simulation saved separately from holdings.</p>}</div>}
   </div>}
   {['Optimization','Backtesting'].includes(tool)&&<SavedSimulations/>}
+  {tool==='Optimization'&&<PortfolioLiquidity/>}
   {profile?.subscription_plan==='premium_plus'&&tool==='Macro'&&<MacroScenario/>}
   {profile?.subscription_plan==='premium_plus'&&tool==='Events'&&<EvidenceImportLab title="Retrospective event impact research" kinds={['event-impact']}/>}
   {profile?.subscription_plan==='premium_plus'&&tool==='Factors'&&<EvidenceImportLab title="Return-factor covariance & holdout research" kinds={['factor-model']}/>}
