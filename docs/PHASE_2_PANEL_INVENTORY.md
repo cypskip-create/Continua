@@ -26,13 +26,6 @@ This is a source audit inventory, not a claim of browser testing every issuer an
 | `app/src/components/engine/InvestmentCoverage.tsx:8` | details | Phase 2 source/model inputs, results and unavailable states |
 | `app/src/components/engine/InvestmentCoverage.tsx:8` | details | Phase 2 source/model inputs, results and unavailable states |
 | `app/src/components/engine/InvestmentCoverage.tsx:8` | details | Phase 2 source/model inputs, results and unavailable states |
-| `app/src/components/engine/InvestmentResearch.tsx:67` | details | Phase 2 source/model inputs, results and unavailable states |
-| `app/src/components/engine/InvestmentResearch.tsx:74` | details | Phase 2 source/model inputs, results and unavailable states |
-| `app/src/components/engine/InvestmentResearch.tsx:96` | details | Phase 2 source/model inputs, results and unavailable states |
-| `app/src/components/engine/InvestmentResearch.tsx:97` | details | Phase 2 source/model inputs, results and unavailable states |
-| `app/src/components/engine/InvestmentResearch.tsx:98` | details | Phase 2 source/model inputs, results and unavailable states |
-| `app/src/components/engine/InvestmentResearch.tsx:99` | details | Phase 2 source/model inputs, results and unavailable states |
-| `app/src/components/engine/InvestmentResearch.tsx:100` | details | Phase 2 source/model inputs, results and unavailable states |
 | `app/src/components/engine/LearningResearchDesk.tsx:59` | details | Source inputs or explicit unavailable state repaired |
 | `app/src/components/engine/MacroScenario.tsx:10` | details | Phase 2 source/model inputs, results and unavailable states |
 | `app/src/components/engine/PipelineHealthDesk.tsx:14` | details | Existing evidence-gated expansion retained |
@@ -72,3 +65,10 @@ This is a source audit inventory, not a claim of browser testing every issuer an
 | `app/src/components/stock/ValueSignal.tsx:18` | PremiumDetail | Existing evidence-gated expansion retained |
 | `app/src/components/stock/ValueSignal.tsx:34` | PremiumDetail | Existing evidence-gated expansion retained |
 | `app/src/components/stock/ValueSignal.tsx:55` | details | Existing evidence-gated expansion retained |
+| `app/src/components/engine/InvestmentResearch.tsx:67` | details | Phase 2 source/model inputs, results and unavailable states |
+| `app/src/components/engine/InvestmentResearch.tsx:74` | details | Phase 2 source/model inputs, results and unavailable states |
+| `app/src/components/engine/InvestmentResearch.tsx:97` | details | Phase 2 source/model inputs, results and unavailable states |
+| `app/src/components/engine/InvestmentResearch.tsx:98` | details | Phase 2 source/model inputs, results and unavailable states |
+| `app/src/components/engine/InvestmentResearch.tsx:99` | details | Phase 2 source/model inputs, results and unavailable states |
+| `app/src/components/engine/InvestmentResearch.tsx:100` | details | Phase 2 source/model inputs, results and unavailable states |
+| `app/src/components/engine/InvestmentResearch.tsx:101` | details | Phase 2 source/model inputs, results and unavailable states |

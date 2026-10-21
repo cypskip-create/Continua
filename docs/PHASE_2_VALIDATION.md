@@ -119,8 +119,8 @@ Ubuntu runner warnings for this workflow.
 
 ## Validation and practical limits
 
-The embedded PostgreSQL fixture applies the actual migration twice and passed
-43 checks covering source revocation, vintages, reviewed report publication,
+The embedded PostgreSQL fixture applies the actual migrations twice and passed
+48 checks covering source revocation, vintages, reviewed report publication,
 owner isolation, RLS, quotas, immutable corrections and notification deduplication.
 Engine tests passed 140 cases. Final frontend, backend, native scraper and Go
 results are recorded in the release verification below.
@@ -144,7 +144,7 @@ Local final checks: production build and 26 edge security tests passed; browser
 artifact secret audit found zero findings across 171 files; frontend 131 tests
 passed; compatibility backend 462 passed with 18 opt-in/database skips, followed
 by all 12 opt-in Python worker parity tests passing; Engine 140 tests passed;
-native scraper 188 tests ran successfully with six external PostgreSQL fixture
+native scraper 190 tests ran successfully with six external PostgreSQL fixture
 skips; native Go packages passed. The CI job exercises those PostgreSQL fixtures
 against its disposable service. Source audit inventoried 66 expansion entrypoints.
 An unauthenticated browser correctly redirected protected Engine navigation to
@@ -177,3 +177,107 @@ without deleting originals. Publisher completeness now compares stored rows with
 extracted observation counts so partial historical artifacts are backfilled from
 existing evidence, without another source download. A multi-year, same-artifact
 publisher regression fixture validates both idempotence and partial recovery.
+
+## Main implementation files
+
+| Area | Files |
+|---|---|
+| Shared numerical models | `backend/python/investment_intelligence.py`, `financial_extensions.py`, `continua_risk.py`; `engine-python/continua_engine/investment.py` |
+| Compatibility API | `backend/src/api/routes/engineWorkbench.routes.js`, `services/research/investmentResearch.js`, `services/research/stockRisk.js`, `workers/engineMonitorWorker.js` |
+| Native candidate | `backend-go/internal/httpapi/investment.go`, `internal/marketdata/investment.go`, `internal/engine/worker.go` and existing workbench/history handlers |
+| Research views | `app/src/components/engine/InvestmentResearch.tsx`, `EvidenceImportLab.tsx`, `MacroScenario.tsx`, `EventPreferences.tsx`, `SavedSimulations.tsx`, `InvestmentCoverage.tsx`; `app/src/pages/Engine.tsx` |
+| Expanded details | `app/src/components/stock/DetailEvidence.tsx`, `FundamentalDetail.tsx`, `FinancialStatementExplorer.tsx`, `PublisherFinancialTables.tsx`; evidence/reliability/portfolio desks |
+| Collection | `scraper-python/continua_scraper/investment.py`, `cbk_macro.py`, `tabular.py`, `download.py`, `adapter_io.py`, `crawler.py`, `runner.py`, `registry.py`, `default_sources.json`; `scraper-python/scheduled_collect.py` |
+| Schema and fixture | `supabase/migrations/20261021150000_investment_evidence.sql`, `20261021200000_investment_history_identity.sql`; `infra/migration/investment-evidence-fixture.mjs` |
+
+## Recommended next development phase
+
+Prioritize verified historical coverage and empirical validation: resolve official
+CBK/KNBS and issuer publication permissions; review industry/segment extractions;
+complete issuer/year/action and historical-constituent matrices; obtain compatible
+benchmark total-return histories and dated fundamental releases. Then measure
+factor stability and holdout errors across regimes, validate portfolio outcomes
+with independent reference implementations, and enable additional historical
+strategy templates only as their evidence gates pass. Native production cutover
+remains a separate release after the complete migration ledger and resource,
+recovery and behavioral gates pass.
+
+## Changed backend and frontend paths
+
+- `app/src/api/engineAdvancedApi.ts`
+- `app/src/api/riskIntelligence.ts`
+- `app/src/components/engine/CompanyEvidenceDesk.tsx`
+- `app/src/components/engine/CompanyFocus.tsx`
+- `app/src/components/engine/EngineReliabilityDesk.tsx`
+- `app/src/components/engine/EngineWorkspace.tsx`
+- `app/src/components/engine/EventPreferences.tsx`
+- `app/src/components/engine/EvidenceImportLab.tsx`
+- `app/src/components/engine/InvestmentCoverage.tsx`
+- `app/src/components/engine/InvestmentResearch.tsx`
+- `app/src/components/engine/LearningResearchDesk.tsx`
+- `app/src/components/engine/MacroScenario.tsx`
+- `app/src/components/engine/PortfolioReviewDesk.tsx`
+- `app/src/components/engine/SavedSimulations.tsx`
+- `app/src/components/stock/DetailEvidence.tsx`
+- `app/src/components/stock/EarningsDetail.tsx`
+- `app/src/components/stock/FinancialStatementExplorer.tsx`
+- `app/src/components/stock/FundamentalDetail.tsx`
+- `app/src/components/stock/PublisherFinancialTables.tsx`
+- `app/src/lib/financialPresentation.ts`
+- `app/src/lib/investmentConfiguration.ts`
+- `app/src/lib/subscription.ts`
+- `app/src/pages/Engine.tsx`
+- `app/tests/investmentConfiguration.test.ts`
+- `app/tests/subscription.test.ts`
+- `backend-go/Dockerfile`
+- `backend-go/go.mod`
+- `backend-go/internal/engine/monitor_worker.go`
+- `backend-go/internal/engine/worker.go`
+- `backend-go/internal/httpapi/investment.go`
+- `backend-go/internal/httpapi/investment_test.go`
+- `backend-go/internal/httpapi/server.go`
+- `backend-go/internal/httpapi/stock_risk.go`
+- `backend-go/internal/httpapi/workbench_reads.go`
+- `backend-go/internal/marketdata/investment.go`
+- `backend-go/internal/marketdata/market_research.go`
+- `backend/Dockerfile`
+- `backend/package-lock.json`
+- `backend/python/continua_risk.py`
+- `backend/python/engine_calculations.py`
+- `backend/python/financial_extensions.py`
+- `backend/python/investment_intelligence.py`
+- `backend/python/requirements.txt`
+- `backend/src/api/routes/engineWorkbench.routes.js`
+- `backend/src/services/research/investmentResearch.js`
+- `backend/src/services/research/pythonCalculations.d.ts`
+- `backend/src/services/research/pythonCalculations.js`
+- `backend/src/services/research/stockRisk.js`
+- `backend/src/workers/engineMonitorWorker.js`
+- `backend/tests/enginePortfolioAccess.test.ts`
+- `engine-python/continua_engine/investment.py`
+- `engine-python/tests/test_financial_extensions.py`
+- `engine-python/tests/test_investment_intelligence.py`
+- `engine-python/tests/test_risk_intelligence.py`
+- `engine-python/worker.py`
+
+## Live rollout outcome
+
+The corrected setup/backfill completed in [Actions run 39658884194](https://github.com/cypskip-create/Continua/actions/runs/39658884194).
+It published 254 additional historical WDI observations from the four existing
+private artifacts. Together with the original four rows, that is 258 sourced
+observations across GDP growth, CPI inflation, official annual-average FX and
+reserves. No additional source download was needed for this correction.
+
+The [bounded source run](https://github.com/cypskip-create/Continua/actions/runs/39656735867)
+and the earlier [news](https://github.com/cypskip-create/Continua/actions/runs/39612690078)
+and [document](https://github.com/cypskip-create/Continua/actions/runs/39614765180)
+verification runs succeeded. The workflow and both enable variables remain active.
+In Africa/Nairobi time, the preserved news schedule is 03:17, 11:17 and 19:17;
+documents run at 09:43, 15:43 and 23:43. GitHub schedule dispatch timing may vary.
+The existing daily allowance still applies, so a budget pause is resumable work,
+not permission to exceed the allowance.
+
+Final local source-publication fixture: 48 checks passed. Full native scraper
+suite: 190 tests ran successfully, six external PostgreSQL fixtures skipped
+locally; the CI candidate job runs those against disposable PostgreSQL. No
+production native cutover, paid AI service or trade execution was performed.
