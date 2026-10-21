@@ -39,7 +39,7 @@ export function observedEarningsMoves(events:StockEarningsEvent[],candles:Candle
   return releaseWindowResearch(events,candles,1).filter(r=>r.move!=null&&r.from&&r.to&&(Date.parse(r.to)-Date.parse(r.from))/86400000<=7).map(r=>({period:financialPeriod(r.event),move:r.move,date:r.event.reportedDate!.slice(0,10)})).slice(-5);
 }
 export function EarningsMovePreview({symbol,currency,events}: {symbol:string;currency:string;events:StockEarningsEvent[]}) {
-  return <section className="border-t border-border py-4 space-y-3"><h3 className="text-lg font-semibold">Earnings move & volatility</h3><p className="text-xs text-muted-foreground">${events.filter(e=>e.reportedDate).length} dated releases on file. Premium adds event windows, observed reactions and a share-position stress lab.</p><PremiumDetail title="Earnings move & volatility" symbol={symbol} currency={currency}><EarningsMoveWorkbench symbol={symbol} currency={currency} events={events}/></PremiumDetail></section>;
+  return <section className="border-t border-border py-4 space-y-3"><h3 className="text-lg font-semibold">Earnings move & volatility</h3><p className="text-xs text-muted-foreground">{events.filter(e=>e.reportedDate).length} dated releases on file. Premium adds event windows, observed reactions and a share-position stress lab.</p><PremiumDetail title="Earnings move & volatility" symbol={symbol} currency={currency}><EarningsMoveWorkbench symbol={symbol} currency={currency} events={events}/></PremiumDetail></section>;
 }
 function EarningsMoveWorkbench({symbol,currency,events}: {symbol:string;currency:string;events:StockEarningsEvent[]}) {
   const [direction,setDirection]=useState("flat"),[change,setChange]=useState(0),[amount,setAmount]=useState(10000);

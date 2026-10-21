@@ -1,10 +1,12 @@
+import { EvidenceImportLab } from '@/components/engine/EvidenceImportLab';
+import { InvestmentCoverage } from '@/components/engine/InvestmentCoverage';
+import { InvestmentResearch } from '@/components/engine/InvestmentResearch';
 import {RiskIntelligence} from '@/components/engine/RiskIntelligence';
 import { EngineCompanyHero, EngineHeadlineMetrics } from "@/components/engine/EngineCompanyHero";
 import { EngineNewsDesk } from "@/components/engine/EngineNewsDesk";
 import {
   EngineInsights,
   EnginePreferencesPanel,
-  EngineAssistantPanel,
   EngineMonitoringPanel,
   EnginePortfolioPanel,
   EnginePeersPanel,
@@ -56,7 +58,11 @@ const tools = [
   "Risk Intelligence",
   "Peers",
   "Portfolio",
-  "Ask Engine",
+  "Events",
+  "Macro",
+  "Factors",
+  "Optimization",
+  "Backtesting",
   "Monitoring",
   "Preferences",
   "Evidence",
@@ -74,15 +80,16 @@ const groups: { name: string; tools: Tool[] }[] = [
       "Earnings & Reports",
       "Valuation",
       "Ownership",
+      "Events",
     ],
   },
   {
     name: "Analysis",
-    tools: ["Evidence", "Technicals", "Scenario lab", "Risk lab", "Risk Intelligence", "Peers"],
+    tools: ["Evidence", "Technicals", "Scenario lab", "Risk lab", "Risk Intelligence", "Peers", "Macro", "Factors", "Optimization", "Backtesting"],
   },
   {
     name: "My workspace",
-    tools: ["Portfolio", "Monitoring", "Journal", "Research questions", "Ask Engine", "Preferences"],
+    tools: ["Portfolio", "Monitoring", "Journal", "Research questions", "Preferences"],
   },
 ];
 const toolHelp: Record<Tool, string> = {
@@ -101,11 +108,16 @@ const toolHelp: Record<Tool, string> = {
   Portfolio: "Review holdings, allocation and observed income together, with coverage limits visible.",
   Monitoring: "Track a research question, inspect check results and review triggered alerts.",
   Journal: "Record your thesis, evidence and next review so you can revisit your decisions.",
-  "Ask Engine": "Ask a focused question about the selected company and inspect the evidence in the answer.",
+  Events: "Inspect verified announcements, corporate action dates and original evidence.",
+  Macro: "Compare released economic observations and their vintage dates.",
+  Factors: "Inspect sourced company descriptors and aligned return-factor models.",
+  Optimization: "Compare constrained hypothetical allocations without changing holdings.",
+  Backtesting: "Replay a dated historical basket with explicit action coverage and costs.",
   Preferences: "Set your research focus and notification preferences.",
   'Research questions':'Record private probabilities, fixed resolution rules and evidence. Review calibration without betting, rewards or rankings.',
 };
 function toolFromParam(value: string | null): Tool {
+  if (value === "Ask Engine") return "Events";
   if (value === "Focus") return "Forecast";
   if (value === "Earnings & forecasts") return "Earnings & Reports";
   return tools.includes(value as Tool) ? (value as Tool) : "Briefing";
@@ -163,7 +175,7 @@ export default function Engine() {
   );
   const fullEngine = profile?.subscription_plan === "premium_plus";
   const toolAllowed = canUseEngineTool(profile?.subscription_plan, tool);
-  const query = useEngineBundle(symbol,exchange,toolAllowed&&group.name!=='My workspace'&&tool!=='Risk lab'&&tool!=='Risk Intelligence',tool==='News');
+  const query = useEngineBundle(symbol,exchange,toolAllowed&&group.name!=='My workspace'&&tool!=='Risk lab'&&tool!=='Risk Intelligence'&&!['Macro','Factors','Optimization','Backtesting','Events'].includes(tool),tool==='News');
   const data = query.data;
   const {
     settings: researchPreferences,
@@ -184,7 +196,7 @@ export default function Engine() {
       lastVisit.current = key;
       void engineWorkspaceApi.visit(symbol, exchange).then(()=>queryClient.invalidateQueries({queryKey:['continua','engine-recommendations',user?.id]})).catch(() => {});
     }
-  }, [fullEngine, user?.id, exchange, symbol, researchPreferences.learnInterests]);
+  }, [fullEngine, user?.id, exchange, symbol, researchPreferences.learnInterests, queryClient]);
   return (
     <div
       ref={stickyRef}
@@ -240,8 +252,8 @@ export default function Engine() {
           </p>
         ) : user && !profile && profileError ? (
           <section className="py-6"><p>Your account could not be loaded. Your subscription has not been changed.</p><button className="mt-3 text-primary" onClick={()=>void retryProfile()}>Retry account connection</button></section>
-        ) : !paid ? (
-          <section className="py-6 space-y-5">
+        ) : !paid && !["Macro","Events"].includes(tool) ? (
+          <section className="py-6 space-y-5"><div className="flex flex-wrap gap-3"><Link className="text-primary font-semibold" to="/engine?tool=Macro">Free macro overview →</Link><Link className="text-primary font-semibold" to="/engine?tool=Events">Free event calendar →</Link></div>
             <h3 className="text-lg font-semibold">
               Full Engine is included with Premium Plus
             </h3>
@@ -368,7 +380,7 @@ export default function Engine() {
               <p className="font-semibold flex items-center gap-2">{tool}{["Portfolio", "Preferences"].includes(tool) ? "" : ` · ${symbol}`}<ToolHelp tool={tool} description={toolHelp[tool]}/></p>
               <p className="text-sm text-muted-foreground">{toolHelp[tool]}</p>
             </div>
-            {!toolAllowed ? <section className="py-6 space-y-3"><h3 className="text-lg font-semibold">{tool} is included with Premium Plus</h3><p className="text-sm text-muted-foreground">Your Premium company research and all expanded Fundamentals Forecast details remain available.</p><Link to="/upgrade" className="text-primary font-semibold">Explore Premium Plus →</Link></section> : group.name === "My workspace" || (tool==='Risk lab'||tool==='Risk Intelligence') ? null : query.isLoading ? (
+            {!toolAllowed ? <section className="py-6 space-y-3"><h3 className="text-lg font-semibold">{tool} is included with Premium Plus</h3><p className="text-sm text-muted-foreground">Your Premium company research and all expanded Fundamentals Forecast details remain available.</p><Link to="/upgrade" className="text-primary font-semibold">Explore Premium Plus →</Link></section> : group.name === "My workspace" || (tool==='Risk lab'||tool==='Risk Intelligence'||['Macro','Factors','Optimization','Backtesting','Events'].includes(tool)) ? null : query.isLoading ? (
               <p role="status" className="py-10 text-sm text-muted-foreground">
                 Preparing your analysis…
               </p>
@@ -388,7 +400,7 @@ export default function Engine() {
               data && (
                 <div key={`${exchange}:${symbol}`} className="py-6 space-y-6">
                   {tool==='Evidence'&&<EngineReliabilityDesk data={data} expanded onTool={target=>setTool(toolFromParam(target))}/>}
-                  {tool==='Evidence'&&<><FinancialVersionDesk symbol={symbol}/>{fullEngine&&<PipelineHealthDesk/>}</>}
+                  {tool==='Evidence'&&<><FinancialVersionDesk symbol={symbol}/>{fullEngine&&<><PipelineHealthDesk/><InvestmentCoverage/><EvidenceImportLab title="Industry statement extraction review" kinds={['financial-extension']}/></>}</>}
                   {query.isError&&<p role="status" className="text-sm text-muted-foreground">The background update could not connect. Showing your last saved research with its original date. <button className="text-primary" onClick={()=>void query.refetch()}>Retry update</button></p>}
                   <EngineCompanyHero data={data} sector={instruments.find(item=>item.symbol===symbol)?.sector}/>
                   {tool!=='Evidence'&&<details className="engine-source-disclosure"><summary>Evidence & coverage · {data.coverage.annualPeriods} annual observations</summary><EngineReliabilityDesk data={data} onTool={target=>setTool(toolFromParam(target))}/></details>}
@@ -561,7 +573,11 @@ export default function Engine() {
             {[
               "Peers",
               "Portfolio",
-              "Ask Engine",
+              "Events",
+              "Macro",
+              "Factors",
+              "Optimization",
+              "Backtesting",
               "Monitoring",
               "Preferences",
               "Journal",
@@ -586,13 +602,7 @@ export default function Engine() {
                 {tool === "Portfolio" && (
                   <EnginePortfolioPanel exchange={exchange} />
                 )}
-                {tool === "Ask Engine" && (
-                  <EngineAssistantPanel
-                    key={user?.id + ":" + exchange + ":" + symbol}
-                    symbol={symbol}
-                    exchange={exchange}
-                  />
-                )}
+                {['Macro','Factors','Optimization','Backtesting','Events'].includes(tool)&&<InvestmentResearch key={`${user?.id}:${symbol}:${tool}`} tool={tool} symbol={symbol}/>}
                 {tool === "Monitoring" && (
                   <EngineMonitoringPanel symbol={symbol} exchange={exchange} />
                 )}

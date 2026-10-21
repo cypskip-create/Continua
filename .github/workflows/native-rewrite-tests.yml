@@ -10,6 +10,7 @@ on:
       - 'infra/migration/native-*.mjs'
       - 'infra/migration/native-*.py'
       - 'infra/migration/canonical-financial-fixture.mjs'
+      - 'infra/migration/investment-evidence-fixture.mjs'
       - 'infra/cloudflare/**'
       - 'infra/security/**'
       - 'supabase/migrations/**'
@@ -23,6 +24,7 @@ on:
       - 'infra/migration/native-*.mjs'
       - 'infra/migration/native-*.py'
       - 'infra/migration/canonical-financial-fixture.mjs'
+      - 'infra/migration/investment-evidence-fixture.mjs'
       - 'infra/cloudflare/**'
       - 'infra/security/**'
       - 'supabase/migrations/**'
@@ -98,6 +100,7 @@ jobs:
       - name: Install pinned disposable PostgreSQL fixture
         run: npm install --prefix .qa-artifacts/canonical-fixture --no-save --package-lock=false @electric-sql/pglite@0.5.10
       - run: node infra/migration/canonical-financial-fixture.mjs
+      - run: node infra/migration/investment-evidence-fixture.mjs
       - run: node infra/security/session-assurance-fixture.mjs
       - run: node infra/migration/native-bundle-parity.mjs
       - run: node infra/migration/native-valuation-parity.mjs

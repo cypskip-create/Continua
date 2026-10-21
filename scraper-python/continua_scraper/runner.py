@@ -5,6 +5,7 @@ File-backed fetch results are disposed in finally, including skipped reprocessin
 """
 import asyncio
 import re
+from .download import SourceNotModified
 
 def _pdf(fetched,document):
     return 'application/pdf' in (fetched.get('contentType') or '') or bool(re.search(r'\.pdf(?:[?#]|$)',document['url'],re.I))
@@ -96,6 +97,9 @@ class AdapterRunner:
                     summary['extracted']+=1
                     if parsed['needsReview']:summary['needsReview']+=1
                     if job:await self.jobs.finish(job['id'],job['attempts'])
+                except SourceNotModified:
+                    summary['skipped']+=1
+                    if job:await self.jobs.finish(job['id'],job['attempts'])
                 except Exception as error:
                     summary['failed']+=1
                     errors=summary.setdefault('errorClasses',{})
@@ -117,8 +121,14 @@ class AdapterRunner:
                     if job:await self.jobs.finish(job['id'],job['attempts'],reason)
                 finally:
                     await _dispose(fetched)
-        async with asyncio.TaskGroup() as group:
-            for _ in range(min(concurrency,remaining)):group.create_task(worker())
+        try:
+            async with asyncio.TaskGroup() as group:
+                for _ in range(min(concurrency,remaining)):group.create_task(worker())
+        except asyncio.CancelledError as error:
+            # Preserve already-recorded errors/progress when the caller's finite
+            # work slice expires. Cancellation still propagates and cleans files.
+            error.collector_summary=summary
+            raise
         if issuer:
             complete=summary['failed']==0 and summary['fetched']==len(documents)
             summary['targetCoverage']={'issuer':issuer,'tab':'Financials','plannedViews':len(documents),'complete':complete}

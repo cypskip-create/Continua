@@ -4,7 +4,7 @@ Daily risk is authoritative. Annual risk is withheld without a verified exchange
 session calendar. No expected returns, fabricated adjustments or trading writes.
 """
 import math
-from statistics import covariance, stdev, correlation
+from statistics import covariance, stdev, correlation, median
 import datetime
 
 def finite(value):
@@ -74,7 +74,7 @@ MINIMUM = 20
 def stock_risk(bundle, bars, actions, now):
     quote = bundle.get('quote') or {}
     symbol = bundle['symbol']
-    start = (parse(now)-datetime.timedelta(days=365)).date().isoformat()
+    start = (parse(now)-datetime.timedelta(days=400)).date().isoformat()
     blocked = any(a.get('type') in ('split','bonus_issue') and a.get('status') != 'cancelled'
                   and (a.get('effectiveDate') or a.get('exDate') or '') >= start for a in actions)
     position = dict(symbol=symbol,shares=1,price=quote.get('lastPrice') if quote.get('source') != 'mock' else None,cost=0,
@@ -84,6 +84,31 @@ def stock_risk(bundle, bars, actions, now):
     snapshot['stockDiagnostic']=True
     snapshot['evidence']['performanceBasis']='Single-stock price history with unit exposure for diagnostics, not an owned holding or realized account return.'
     snapshot['legacyRisk']['reason']=snapshot['evidence']['performanceBasis']+' '+snapshot['evidence']['annualizationReason']
+    descriptors={'momentum12mEx1m':None,'volatility60d':None,'medianTradedValue60d':None,'momentumStart':None,'momentumEnd':None,
+        'methodology':'Price momentum uses the closest preceding observed closes within seven calendar days of 365-day and 30-day anchors; excludes the most recent 30 days and dividends. Volatility uses 60 aligned daily price returns with gaps at most four days. Liquidity is median raw close × reported share volume over 60 observed sessions, in the security currency. Missing source links/volume are not imputed. Known split/bonus uncertainty blocks these descriptors.'}
+    if snapshot['coverage'] and snapshot['coverage'][0]['included'] and not blocked:
+        cutoff=parse(quote.get('timestamp'))
+        valid=[b for b in bars if cutoff and parse(b.get('timestamp')) and parse(b['timestamp'])<=cutoff and str(b.get('sourceUrl','')).startswith('https://')]
+        closes,returns=_returns(valid,now)
+        dates=sorted(closes)
+        if len(returns)>=60:descriptors['volatility60d']=stdev(list(returns.values())[-60:])
+        if cutoff:
+            anchors=[]
+            for days in (365,30):
+                target=(cutoff-datetime.timedelta(days=days)).date().isoformat()
+                before=[d for d in dates if d<=target]
+                anchor=before[-1] if before and (parse(target)-parse(before[-1])).days<=7 else None
+                anchors.append(anchor)
+            if all(anchors) and anchors[0]<anchors[1]:
+                descriptors.update(momentum12mEx1m=closes[anchors[1]]/closes[anchors[0]]-1,momentumStart=anchors[0],momentumEnd=anchors[1])
+        daily={}
+        for bar in sorted(valid,key=lambda b:b['timestamp']):
+            key=bar['timestamp'][:10]
+            if key in closes and bar.get('close')==closes[key]:daily[key]=bar
+        sample=[daily.get(d,{}) for d in dates[-60:]]
+        if len(sample)==60 and all(finite(b.get('volume')) and b['volume']>=0 for b in sample):
+            descriptors['medianTradedValue60d']=median(b['close']*b['volume'] for b in sample)
+    snapshot['factorDescriptors']=descriptors
     return snapshot
 
 

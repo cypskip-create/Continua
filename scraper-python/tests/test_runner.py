@@ -32,6 +32,20 @@ class Adapter:
     async def parse(self,fetched):return {'method':'native_pdf_text','text':self.text,'confidence':.8,'tables':[],'entity':{},'needsReview':True}
 
 class RunnerTests(unittest.IsolatedAsyncioTestCase):
+    async def test_deadline_keeps_errors_already_recorded_in_unfinished_source(self):
+        adapter=Adapter();adapter.document_concurrency=1
+        reached=asyncio.Event()
+        async def fetch(document):
+            if document['url'].endswith('0.pdf'):raise ValueError('Invalid fixture evidence')
+            reached.set();await asyncio.Event().wait()
+        adapter.fetch=fetch
+        runner=AdapterRunner(Jobs(),Evidence(),Dead())
+        task=asyncio.create_task(runner.run(adapter))
+        await asyncio.wait_for(reached.wait(),1)
+        task.cancel()
+        with self.assertRaises(asyncio.CancelledError) as cancelled:await task
+        self.assertEqual(cancelled.exception.collector_summary['failed'],1)
+        self.assertEqual(cancelled.exception.collector_summary['errorClasses'],{'fetch:ValueError':1})
     async def test_fresh_issuer_batch_does_not_discover_or_claim_other_stocks(self):
         class TargetJobs(Jobs):
             async def refresh_documents(self,source,docs):self.refreshed=docs

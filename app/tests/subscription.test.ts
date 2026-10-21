@@ -16,7 +16,7 @@ test('Premium retains research but only Plus gets full Engine',()=>{
 
 test('Premium includes all company research and evidence, but not Plus workspaces', () => {
   for (const tool of premiumEngineTools) {
-    assert.equal(canUseEngineTool('free', tool), false);
+    assert.equal(canUseEngineTool('free', tool), ['Macro','Events'].includes(tool));
     assert.equal(canUseEngineTool('premium', tool), true);
     assert.equal(canUseEngineTool('premium_plus', tool), true);
   }
@@ -26,4 +26,9 @@ test('Premium includes all company research and evidence, but not Plus workspace
   }
   assert.equal(canUseEngineTool(undefined, 'Forecast'), false);
   assert.equal(PLANS.premium_plus.annual / 12, 830);
+});
+
+test('Free current macro and events remain accessible while simulations require Plus',()=>{
+ for(const tool of ['Macro','Events'])assert.equal(canUseEngineTool('free',tool),true);
+ for(const tool of ['Optimization','Backtesting']){assert.equal(canUseEngineTool('premium',tool),false);assert.equal(canUseEngineTool('premium_plus',tool),true);}
 });

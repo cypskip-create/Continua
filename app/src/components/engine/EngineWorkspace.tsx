@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { RiskIntelligence } from './RiskIntelligence';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -34,7 +35,7 @@ function Notice({ value }: { value: unknown }) {
   ) : null;
 }
 export function EngineInsights({ data }: { data: EngineBundle }) {
-  if (!data.quality) return null;
+  if (!data.quality) return <p className="py-4 text-sm text-muted-foreground">Evidence quality metadata is unavailable for {data.symbol}. Refresh the company response and inspect Earnings & Reports for source dates. No freshness or financial quality conclusion is inferred.</p>;
   return (
     <section className="space-y-6" aria-label="Engine evidence and changes">
       <div>
@@ -667,7 +668,7 @@ export function EnginePortfolioPanel({ exchange }: { exchange: string }) {
             </p>
           ))}
           <PortfolioReviewDesk data={p} />
-          <RiskIntelligence exchange={exchange}/>
+          <RiskIntelligence exchange={exchange}/><nav className="flex flex-wrap gap-4 py-3 text-sm font-semibold text-primary" aria-label="Portfolio research tools"><Link to="/engine?tool=Optimization">Optimize a hypothetical allocation →</Link><Link to="/engine?tool=Backtesting">Backtest a historical basket →</Link><Link to="/engine?tool=Events">Review portfolio events →</Link></nav>
           {p.snapshots && p.snapshots.length > 1 && (
             <div>
               <h4 className="text-sm">Recorded invested value</h4>

@@ -24,6 +24,16 @@ def pause_at_deadline(receipt):
     receipt['pauseReason']='run-time-budget'
 
 
+def copy_partial_receipt(entry,error):
+    for _ in range(3):
+        partial=getattr(error,'collector_summary',None)
+        if isinstance(partial,dict):
+            entry.update({k:v for k,v in partial.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','errorClasses','visited','stored','notModified')})
+            return
+        error=getattr(error,'__cause__',None)
+        if error is None:return
+
+
 def limits(environment):
     result=[]
     for key,default,maximum in (
@@ -165,20 +175,28 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
                             before=budget.snapshot();source_started=time.monotonic()
                             entry={};receipt['sources'].append(entry)
                             try:
-                                adapter=await runtime.registry.build(source['id'])
-                                if isinstance(adapter,GenericCrawler):
-                                    if kind=='drain':raise ValueError('Generic crawler has separate crawl checkpoints')
-                                    result=await adapter.run(2)
-                                else:
-                                    # Queue RSS and other lightweight discoveries too:
-                                    # a two-document batch must not silently drop
-                                    # the remainder or repeatedly select only the
-                                    # newest two feed entries on fresh runners.
-                                    batch=source_batch(os.environ,source['adapter'])
-                                    if os.environ.get('COLLECTOR_VERIFY_ONE')=='true':batch=1
-                                    adapter.persistent_batch_size=batch
-                                    result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=batch,issuer=issuer,fresh=fresh)
-                                entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','errorClasses','discoveryCoverage','targetCoverage')})
+                                async with asyncio.timeout(240 if source['adapter']=='kenyanstocks' else 75):
+                                    adapter=await runtime.registry.build(source['id'])
+                                    if isinstance(adapter,GenericCrawler):
+                                        if kind=='drain':raise ValueError('Generic crawler has separate crawl checkpoints')
+                                        result=await adapter.run(2)
+                                    else:
+                                        # Queue RSS and other lightweight discoveries too:
+                                        # a two-document batch must not silently drop
+                                        # the remainder or repeatedly select only the
+                                        # newest two feed entries on fresh runners.
+                                        batch=source_batch(os.environ,source['adapter'])
+                                        if os.environ.get('COLLECTOR_VERIFY_ONE')=='true':batch=1
+                                        adapter.persistent_batch_size=batch
+                                        result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=batch,issuer=issuer,fresh=fresh)
+                                    entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','errorClasses','discoveryCoverage','targetCoverage','visited','stored','notModified')})
+                            except asyncio.CancelledError as error:
+                                copy_partial_receipt(entry,error)
+                                raise
+                            except TimeoutError as error:
+                                copy_partial_receipt(entry,error)
+                                entry['paused']=True
+                                entry['pauseReason']='source-time-budget'
                             except transfer_budget.TransferLimitReached:
                                 receipt['status']='budget-paused';break
                             except Exception:
@@ -188,8 +206,9 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
                                 entry.update(sourceId=source['id'],durationSeconds=round(time.monotonic()-source_started,3),
                                     **{key:after[key]-before[key] for key in ('downloadBytes','uploadBytes','retryCount')})
                         if budget.exhausted:receipt['status']='budget-paused'
+                        if any(s.get('failed',0) for s in receipt['sources']):receipt['status']='failed'
                         if receipt['status']=='running':
-                            receipt['status']='failed' if any(s.get('failed',0) for s in receipt['sources']) else 'completed'
+                            receipt['status']='failed' if any(s.get('failed',0) for s in receipt['sources']) else 'budget-paused' if any(s.get('paused') for s in receipt['sources']) else 'completed'
                 except TimeoutError:
                     # The enclosing asyncio.timeout is the approved finite run
                     # slice, not an unhandled provider failure. Completed work
@@ -207,6 +226,10 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
                                     from continua_scraper.processed_archive import ProcessedArchive
                                     receipt['processedCloudExport']=await ProcessedArchive(database,storage.r2,retire_payloads=True).run(25)
                                 receipt['availableFinancials']=await ResearchProcessor(database).available_financials()
+                                readiness=await database.query("SELECT to_regclass('market.investment_observations') IS NOT NULL AS ready")
+                                if readiness and readiness[0]['ready']:
+                                    from continua_scraper.investment import publish_investment_evidence
+                                    receipt['investmentEvidence']=await publish_investment_evidence(database)
                         except Exception:
                             receipt['processingAfter']={'status':'failed','retryable':True}
                             receipt['status']='failed'
@@ -225,6 +248,17 @@ async def maintenance(operation):
     database=await Database.open(os.environ['DATABASE_URL'])
     storage=None
     try:
+        if operation=='prepare-investment':
+            # Explicit maintenance invocation only; no migration during API boot.
+            path=pathlib.Path(__file__).resolve().parents[1]/'supabase/migrations/20261021150000_investment_evidence.sql'
+            async with database.pool.connection() as connection:
+                async with connection.transaction():
+                    await connection.execute(path.read_text(encoding='utf-8'),prepare=False)
+            from continua_scraper.sources import Sources
+            defaults=json.loads((pathlib.Path(__file__).parent/'continua_scraper/default_sources.json').read_text(encoding='utf-8'))
+            selected=[s for s in defaults if s['id'] in ('worldbank-kenya-macro','cbk-macro-history','cbk-policy-history','knbs-economic-releases')]
+            for source in selected:await Sources(database).save(source,only_if_missing=True)
+            return {'status':'completed','operation':operation,'registered':len(selected),'existingDisablesPreserved':True,'destructive':False}
         if operation=='process-research':
             path=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261016170000 processed research.sql'
             async with database.pool.connection() as connection:
@@ -273,7 +307,7 @@ def main():
     parser.add_argument('--issuer')
     parser.add_argument('--fresh',action='store_true')
     parser.add_argument('--apply',action='store_true')
-    parser.add_argument('--maintenance',choices=('prepare','verify-storage','process-research'))
+    parser.add_argument('--maintenance',choices=('prepare','verify-storage','process-research','prepare-investment'))
     args=parser.parse_args()
     if not args.apply:
         print(json.dumps({'mode':'offline-plan','kind':args.kind,'submitted':False}));return 0

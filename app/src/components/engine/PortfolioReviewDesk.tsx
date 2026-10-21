@@ -43,7 +43,7 @@ export function PortfolioReviewDesk({ data: p }: { data: EnginePortfolio }) {
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
-  if (!p.available || !p.positions.length) return null;
+  if (!p.available || !p.positions.length) return <section className="border-y py-4"><h3 className="font-semibold">Portfolio review</h3><p className="text-sm text-muted-foreground">{p.reason ?? "No priced holdings are available for allocation review. Add holdings in your portfolio and check quote coverage before simulating."}</p></section>;
   return (
     <section
       className="space-y-4 border-y border-border py-4"

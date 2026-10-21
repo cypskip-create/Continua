@@ -86,8 +86,8 @@ class InvestmentTests(unittest.TestCase):
         self.assertEqual(run_investment(altered)['status'],422)
 
     def basket(self):
-        return dict(kind='backtest',start='2020-01-01',end='2020-01-03',capital=1000,
-            actionCoverageConfirmed=True,assets=[dict(symbol='A',basis='raw',availableAt='2019-01-01',sourceUrl=SOURCE,
+        return dict(kind='backtest',currency='KES',start='2020-01-01',end='2020-01-03',capital=1000,
+            actionCoverageConfirmed=True,assets=[dict(symbol='A',currency='KES',basis='raw',availableAt='2019-01-01',sourceUrl=SOURCE,
             prices=[dict(date='2020-01-01',close=10),dict(date='2020-01-02',close=5),dict(date='2020-01-03',close=5)],
             actions=[dict(type='split',value=2,date='2020-01-02',availableAt='2020-01-01',sourceUrl=SOURCE),
                      dict(type='dividend',value=1,date='2020-01-03',exDate='2020-01-03',payDate='2020-01-03',availableAt='2020-01-01',sourceUrl=SOURCE)])])
@@ -99,6 +99,8 @@ class InvestmentTests(unittest.TestCase):
         self.assertEqual(r['data']['holdings'][-1]['cash'],200)
         self.assertEqual(r['data']['snapshotId'],run_investment(copy.deepcopy(p))['data']['snapshotId'])
         self.assertEqual(r['data']['maxDrawdown'],0)
+        self.assertAlmostEqual(r['data']['attribution'][0]['pnl'],200)
+        self.assertAlmostEqual(r['data']['attributionResidual'],0)
 
     def test_costs_reconcile_and_no_lookahead(self):
         p=self.basket();p['costBps']=100
@@ -123,7 +125,7 @@ class InvestmentTests(unittest.TestCase):
         self.assertEqual(result['data']['holdings'][-1]['dividendReceivable'],200)
 
     def test_benchmark_alignment_and_ratio_basis(self):
-        p=self.basket();p['benchmark']=dict(sourceUrl=SOURCE,availableAt='2019-01-01',basis='total-return',points=[dict(date=d,value=v) for d,v in [('2020-01-01',100),('2020-01-02',100),('2020-01-03',120)]])
+        p=self.basket();p['benchmark']=dict(currency='KES',sourceUrl=SOURCE,availableAt='2019-01-01',basis='total-return',points=[dict(date=d,value=v) for d,v in [('2020-01-01',100),('2020-01-02',100),('2020-01-03',120)]])
         p['annualization']=dict(sourceUrl=SOURCE,availableAt='2019-01-01',sessionsPerYear=252,riskFreeAnnual=.05)
         result=run_investment(p)
         self.assertEqual(result['status'],200,result)

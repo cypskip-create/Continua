@@ -3,7 +3,7 @@ import {ToolHelp} from '@/components/shared/ToolHelp';
 import {ExportResearch} from './EngineResearchTools';
 const number=(v:number|null,percent=false)=>v==null?'—':(v*(percent?100:1)).toLocaleString(undefined,{maximumFractionDigits:2})+(percent?'%':'');
 export function CompanyEvidenceDesk({data}:{data:EngineBundle}){
- const d=data.diagnostics;if(!d)return null;
+ const d=data.diagnostics;if(!d)return <section className="border-t py-4 space-y-2"><h3 className="font-semibold">Financial evidence checks · {data.symbol}</h3><p className="text-sm text-muted-foreground">Diagnostics are absent from this response. Reported earnings, equity, assets and cash-flow observations with source dates are needed. Open Earnings & Reports to inspect available statements; refresh Evidence to retry the model.</p>{data.unavailable?.map(item=><p className="text-xs" key={item}>{item}</p>)}</section>;
  return <section className="space-y-4 border-t pt-5">
   <div className="flex gap-2 items-center"><h3 className="text-lg font-semibold">Financial evidence checks</h3><ToolHelp tool="Financial evidence checks" description="Check whether reported profit is supported by cash, and whether margins or debt changed. Unknown means a figure is missing; these checks are not a buy or sell rating."/></div>
   <p className="text-sm text-muted-foreground">{d.knownChecks} of {d.totalChecks} checks have enough inputs. Check results do not establish investment suitability.</p>

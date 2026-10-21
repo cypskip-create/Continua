@@ -75,6 +75,12 @@ func (s *MonitorWorker) Run(ctx context.Context, userID, symbol, exchange *strin
 			stop()
 		}
 	}
+	var eventReady bool
+	if s.DB.QueryRowContext(ctx, "SELECT to_regprocedure('market.deliver_investment_events(uuid)') IS NOT NULL").Scan(&eventReady) == nil && eventReady {
+		if _, err := s.DB.ExecContext(ctx, "SELECT market.deliver_investment_events($1::uuid)", userID); err != nil {
+			summary.Failed++
+		}
+	}
 	return summary, nil
 }
 func (s *MonitorWorker) evaluate(ctx context.Context, id monitorIdentity, bundle json.RawMessage) error {

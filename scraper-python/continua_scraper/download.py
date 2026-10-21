@@ -19,6 +19,12 @@ from .transfer_budget import MeteredReader,account
 class SourceHTTPError(ValueError):
     def __init__(self,status):self.status=status;super().__init__('Source HTTP failure')
 
+class SourceNotModified(SourceHTTPError):
+    def __init__(self):super().__init__(304)
+
+def cache_validator(value):
+    return value if isinstance(value,str) and 0<len(value)<=512 and all(32<=ord(c)<=126 for c in value) else None
+
 def transient_source_error(error):
     if isinstance(error,(ssl.SSLCertVerificationError,PermissionError)):return False
     if isinstance(error,SourceHTTPError):return error.status in (500,502,503,504)
@@ -34,6 +40,8 @@ class Artifact:
     size: int
     sha256: str
     content_encoding: str | None = None
+    http_etag: str | None = None
+    http_last_modified: str | None = None
 
 class DecodedWriter:
     """Bound allocation on decompressed bytes, including gzip bomb inputs."""
@@ -141,7 +149,7 @@ class Downloader:
         if request_headers is not None:
             if not isinstance(request_headers,dict) or len(request_headers)>3:raise ValueError('Source header budget')
             for name,value in request_headers.items():
-                if name not in ('Accept','Referer','X-MSL-Chart') or not isinstance(value,str) or len(value)>4096 or any(ord(c)<32 or ord(c)>126 for c in value):raise ValueError('Invalid source request header')
+                if name not in ('Accept','Referer','X-MSL-Chart','If-None-Match','If-Modified-Since') or not isinstance(value,str) or len(value)>4096 or any(ord(c)<32 or ord(c)>126 for c in value):raise ValueError('Invalid source request header')
                 if name=='Referer':self.policy.check_url(value)
                 header_lines+=name+': '+value+'\r\n'
         host=parsed.hostname
@@ -250,6 +258,8 @@ class Downloader:
                             if previous.hostname!=destination.hostname:request_headers=None
                             self.policy.check_url(url)
                             continue
+                        if status==304 and request_headers and any(k in request_headers for k in ('If-None-Match','If-Modified-Since')):
+                            raise SourceNotModified()
                         if status!=200:
                             raise SourceHTTPError(status)
                         if getattr(self,'light_workload',False) and 'text/html' not in headers.get('content-type',''):
@@ -258,7 +268,7 @@ class Downloader:
                         try:
                             with file:
                                 size,digest=await copy_decoded_body(reader,headers,file,self.max_bytes)
-                            return Artifact(pathlib.Path(file.name),url,headers.get("content-type","application/octet-stream"),size,digest)
+                            return Artifact(pathlib.Path(file.name),url,headers.get("content-type","application/octet-stream"),size,digest,http_etag=cache_validator(headers.get('etag')),http_last_modified=cache_validator(headers.get('last-modified')))
                         except BaseException:
                             pathlib.Path(file.name).unlink(missing_ok=True)
                             raise

@@ -16,7 +16,7 @@ export function growthPercent(value: unknown, prior: unknown): number | null {
 }
 export const financialPercent = (n: number | null) => n == null ? "—" : `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
 export const financialPeriod = (row: {fiscalYear: number; fiscalQuarter?: number | null}) => `${row.fiscalYear}/${row.fiscalQuarter ? `Q${row.fiscalQuarter}` : "FY"}`;
-export type FinancialMetric = { label: string; get: (r: FinancialHistoryEntry) => unknown; kind?: "percent" | "ratio" | "perShare"; description?: string };
+export type FinancialMetric = { label: string; get: (r: FinancialHistoryEntry) => unknown; kind?: "percent" | "ratio" | "perShare"; description?: string; inputs?: (keyof FinancialHistoryEntry)[] };
 const ratio = (a: unknown, b: unknown, multiplier = 1) => {
   const n = finiteFinancial(a), d = finiteFinancial(b);
   return n == null || d == null || d <= 0 ? null : n / d * multiplier;
@@ -26,7 +26,7 @@ export const statementMetrics: Record<string, FinancialMetric[]> = {
     {label:"Revenue",get:r=>r.revenue}, {label:"Cost of revenue",get:r=>r.costOfRevenue},
     {label:"Gross profit",get:r=>r.grossProfit}, {label:"Operating expenses",get:r=>r.operatingExpenses},
     {label:"Operating profit",get:r=>r.operatingIncome}, {label:"Net income",get:r=>r.netIncome},
-    {label:"EBITDA",get:r=>r.ebitda}, {label:"EPS",get:r=>r.eps,kind:"perShare"},
+    {label:"EBITDA",get:r=>r.ebitda}, {label:"EPS",inputs:["eps"],get:r=>r.eps,kind:"perShare"},
   ],
   "Balance sheet": [
     {label:"Assets",get:r=>r.totalAssets}, {label:"Current assets",get:r=>r.currentAssets},
@@ -40,14 +40,14 @@ export const statementMetrics: Record<string, FinancialMetric[]> = {
     {label:"Capex",get:r=>r.capex},
   ],
   "Financial indicators": [
-    {label:"EPS",get:r=>r.eps,kind:"perShare",description:"Reported earnings per share. Use comparable periods and share bases."},
-    {label:"FCF",get:r=>r.freeCashFlow,description:"Reported free cash flow; not reconstructed when the filing omits it."},
-    {label:"Current ratio",get:r=>ratio(r.currentAssets,r.currentLiabilities),kind:"ratio",description:"Current assets ÷ current liabilities. Not comparable across all sectors, especially banks."},
-    {label:"Equity ratio",get:r=>ratio(r.totalEquity,r.totalAssets,100),kind:"percent",description:"Total equity ÷ total assets."},
-    {label:"ROE",get:r=>ratio(r.netIncome,r.totalEquity,100),kind:"percent",description:"Period net income ÷ closing equity. Quarterly values are not annualised."},
-    {label:"ROA",get:r=>ratio(r.netIncome,r.totalAssets,100),kind:"percent",description:"Period net income ÷ closing assets. Quarterly values are not annualised."},
-    {label:"Gross margin",get:r=>ratio(r.grossProfit,r.revenue,100),kind:"percent",description:"Gross profit ÷ revenue; only available where both are reported."},
-    {label:"Net margin",get:r=>ratio(r.netIncome,r.revenue,100),kind:"percent",description:"Net income ÷ revenue for the same reported period."},
+    {label:"EPS",inputs:["eps"],get:r=>r.eps,kind:"perShare",description:"Reported earnings per share. Use comparable periods and share bases."},
+    {label:"FCF",inputs:["freeCashFlow"],get:r=>r.freeCashFlow,description:"Reported free cash flow; not reconstructed when the filing omits it."},
+    {label:"Current ratio",inputs:["currentAssets", "currentLiabilities"],get:r=>ratio(r.currentAssets,r.currentLiabilities),kind:"ratio",description:"Current assets ÷ current liabilities. Not comparable across all sectors, especially banks."},
+    {label:"Equity ratio",inputs:["totalEquity", "totalAssets"],get:r=>ratio(r.totalEquity,r.totalAssets,100),kind:"percent",description:"Total equity ÷ total assets."},
+    {label:"ROE",inputs:["netIncome", "totalEquity"],get:r=>ratio(r.netIncome,r.totalEquity,100),kind:"percent",description:"Period net income ÷ closing equity. Quarterly values are not annualised."},
+    {label:"ROA",inputs:["netIncome", "totalAssets"],get:r=>ratio(r.netIncome,r.totalAssets,100),kind:"percent",description:"Period net income ÷ closing assets. Quarterly values are not annualised."},
+    {label:"Gross margin",inputs:["grossProfit", "revenue"],get:r=>ratio(r.grossProfit,r.revenue,100),kind:"percent",description:"Gross profit ÷ revenue; only available where both are reported."},
+    {label:"Net margin",inputs:["netIncome", "revenue"],get:r=>ratio(r.netIncome,r.revenue,100),kind:"percent",description:"Net income ÷ revenue for the same reported period."},
   ],
 };
 export function metricNumber(value: unknown, metric: FinancialMetric): string {

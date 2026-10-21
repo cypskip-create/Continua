@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { DetailEvidence } from './DetailEvidence';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 
 export function FundamentalDetail({title,symbol,currency,open,onOpenChange,children}: {title:string;symbol:string;currency:string;open:boolean;onOpenChange:(open:boolean)=>void;children:ReactNode}) {
@@ -7,7 +8,7 @@ export function FundamentalDetail({title,symbol,currency,open,onOpenChange,child
       <p className="mb-1 text-xs font-semibold text-primary">Continua Engine · Company research</p>
       <DialogTitle>{title}</DialogTitle><DialogDescription className="mt-1">{symbol} · {currency} · Sourced company research</DialogDescription>
       <DialogClose aria-label="Close" className="absolute right-3 top-2 grid h-11 w-11 place-items-center rounded-full bg-muted text-xl">×</DialogClose>
-    </header><div className="research-detail-body px-4 pb-12 space-y-0">{children}</div>
+    </header><div className="research-detail-body px-4 pb-12 space-y-0">{children}{open&&<DetailEvidence key={symbol} symbol={symbol} title={title}/>}</div>
   </DialogContent></Dialog>;
 }
 export function FundamentalHeading({title,onOpen,label}: {title:string;onOpen?:()=>void;label?:string}) {

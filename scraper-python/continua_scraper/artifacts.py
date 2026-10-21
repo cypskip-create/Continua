@@ -59,6 +59,13 @@ class EvidenceRepository:
                 await database.query("INSERT INTO scraping.artifact_urls(artifact_id,url) VALUES(%s,%s) ON CONFLICT(artifact_id,url) DO NOTHING",(row["id"],artifact["documentUrl"]))
             return {"artifact":mapped(row,ARTIFACT_FIELDS),"isNew":row.get("is_new",True)}
 
+    async def latest_artifact_by_url(self,source_id,url):
+        rows=await self.database.query("""SELECT metadata FROM scraping.raw_artifacts
+          WHERE source_id=%s AND (document_url=%s OR metadata->>'requestedUrl'=%s)
+            AND storage_path LIKE 'r2://continua-financial-documents/%%' AND sha256 ~ '^[a-f0-9]{64}$'
+          ORDER BY retrieved_at DESC,id DESC LIMIT 1""",(source_id,url,url))
+        return rows[0] if rows else None
+
     async def insert_extraction(self,extraction):
         rows=await self.database.query("""INSERT INTO scraping.extractions
           (artifact_id,method,confidence,parser_version,text,tables,entity,needs_review)

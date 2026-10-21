@@ -30,6 +30,6 @@ export function PublisherFinancialTables({symbol}:{symbol:string}) {
  const data=usePublisherFinancialCharts(symbol);
  if(data.isPending)return <p role="status" className="py-4 text-sm text-muted-foreground">Loading financial charts…</p>;
  if(data.isError)return <div role="alert" className="py-4 text-sm">Financial charts could not load. <button className="underline" onClick={()=>void data.refetch()}>Try again</button></div>;
- if(!data.data?.length)return null;
+ if(!data.data?.length)return <p className="py-4 text-sm text-muted-foreground">No permitted publisher chart series are currently mapped for {symbol}. Check the reported statement history for available filing values; missing publisher coverage is not a zero financial result.</p>;
  return <div className="min-w-0" aria-label="Engine financial charts"><p className="py-3 text-xs text-muted-foreground">Engine-prepared publisher financials. Original rounding is retained; missing values are not estimated. Separate from verified filing-based valuations.</p>{data.data.map(g=><CategoryChart key={`${symbol}-${g.category}`} {...g}/>)}</div>;
 }

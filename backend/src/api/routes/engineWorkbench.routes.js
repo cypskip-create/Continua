@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { investmentEvidence, calculateInvestment } from '../../services/research/investmentResearch.js';
 import { z } from "zod";
 import { StressSchema, BondLabSchema, FuturesLabSchema } from '../../services/research/engineLabSchemas.js';
 import { stressPortfolio, bondRisk, futuresRisk } from '../../services/research/engineRiskLab.js';
@@ -41,6 +42,78 @@ catch (error) {
 } });
 const parse = (schema, value) => { const result = schema.safeParse(value); if (!result.success)
     throw new ApiError(400, "Invalid Engine request: " + result.error.issues.map(i => i.message).join(", ")); return result.data; };
+engineWorkbenchRoutes.get('/engine/investment/evidence', requireEngineUser, handle(async(req,res)=>{
+    const input=parse(z.object({kind:z.enum(['macro','event','financial_extension']),asOf:CalendarDate,symbol:symbolSchema.optional(),scope:z.enum(['all','held','watched']).optional()}),req.query);
+    if(input.asOf>new Date().toISOString().slice(0,10)) throw new ApiError(400,'Use a historical or current cutoff.');
+    const basic=!['premium','premium_plus'].includes(res.locals.enginePlan);
+    if(basic&&input.kind==='financial_extension')throw new ApiError(403,'Detailed financial evidence requires Premium.');
+    if(basic&&input.asOf!==new Date().toISOString().slice(0,10))throw new ApiError(403,'Historical macro and event research requires Premium.');
+    let observations=await investmentEvidence(input.kind,input.asOf,input.symbol);
+    if(input.scope&&input.scope!=='all'){
+        if(input.kind!=='event'||res.locals.enginePlan!=='premium_plus')throw new ApiError(403,'Portfolio and watchlist event research requires Premium Plus.');
+        const rows=await query(input.scope==='held'?'SELECT upper(symbol) AS symbol FROM public.portfolios WHERE user_id=$1 GROUP BY upper(symbol) HAVING sum(shares)>0':'SELECT DISTINCT upper(symbol) AS symbol FROM public.watchlists WHERE user_id=$1',[user(res)]);
+        const symbols=new Set(rows.rows.map(row=>row.symbol));observations=observations.filter(event=>symbols.has(event.symbol));
+    }
+    if(basic&&input.kind==='event'){
+        const from=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
+        observations=observations.filter(e=>e.date>=from||e.effectiveDate>=input.asOf).map(e=>Object.fromEntries(['id','date','availableAt','sourceUrl','title','type','effectiveDate','status'].map(k=>[k,e[k]])));
+    }
+    res.setHeader('Cache-Control','no-store');
+    if(input.kind==='financial_extension'){res.json({data:{observations,asOf:input.asOf,methodology:'Verified source-linked industry and segment observations. Missing fields are not inferred from sector membership.'}});return;}
+    res.json({data:input.kind==='macro'?await calculateInvestment({kind:'macro',asOf:input.asOf,observations,basic}):{events:observations,asOf:input.asOf,methodology:'Verified source-backed revisions available at cutoff. An empty calendar means no eligible evidence was stored, not that no event occurred.'}});
+}));
+engineWorkbenchRoutes.post('/engine/investment/calculate', requirePremiumPlus, handle(async(req,res)=>{
+    // Full validation lives in the shared Python model for both API runtimes.
+    const input=parse(z.object({kind:z.enum(['macro','factors','factor-model','macro-scenario','event-impact','financial-extension','optimization','backtest'])}).passthrough(),req.body);
+    res.setHeader('Cache-Control','no-store');
+    res.json({data:await calculateInvestment(input)});
+}));
+engineWorkbenchRoutes.post('/engine/investment/optimize-owned', requirePremiumPlus, handle(async(req,res)=>{
+    const options=parse(z.object({objective:z.enum(['minimum-variance','risk-parity','maximum-diversification']),turnoverCap:z.number().min(0).max(1),cashMaximum:z.number().min(0).max(1).optional(),maximum:z.record(z.number().min(0).max(1)).optional(),minimum:z.record(z.number().min(0).max(1)).optional(),excluded:z.array(symbolSchema).max(70).optional(),sectorLimits:z.record(z.object({min:z.number().min(0).max(1),max:z.number().min(0).max(1)})).optional()}),req.body);
+    const portfolio=await getPortfolioResearch(user(res),'NSE'),risk=portfolio.riskIntelligence;
+    if(!risk?.covariance||risk.coverage.some(r=>!r.included)||risk.overview.riskCoveredValue!==risk.overview.coveredValue) throw new ApiError(422,'Every holding requires eligible aligned history before optimization. Inspect Risk Intelligence coverage.');
+    const configuration={...options,kind:'optimization',symbols:risk.symbols,currentWeights:risk.weights,covariance:risk.covariance,observations:risk.evidence.observations,sectors:Object.fromEntries(risk.overview.positions.map(p=>[p.symbol,p.sector]))};
+    const result=await calculateInvestment(configuration);
+    res.setHeader('Cache-Control','no-store');res.json({data:{...result,configuration,evidence:risk.evidence}});
+}));
+engineWorkbenchRoutes.get('/engine/investment/simulations', requirePremiumPlus, handle(async(_req,res)=>{
+    res.setHeader('Cache-Control','no-store');
+    res.json({data:(await query('SELECT id,name,kind,snapshot_id,created_at FROM market.investment_simulations WHERE user_id=$1 ORDER BY created_at DESC LIMIT 25',[user(res)])).rows});
+}));
+engineWorkbenchRoutes.get('/engine/investment/coverage', requirePremiumPlus, handle(async(_req,res)=>{
+    const securities=(await query('SELECT payload FROM market.investment_coverage_rows() payload')).rows.map(r=>r.payload);
+    const sources=(await query(`SELECT s.id,s.enabled,s.redistribution_allowed AS "redistributionAllowed",max(a.retrieved_at) AS "lastRetrieved",
+      (SELECT count(*)::int FROM scraping.dead_letters d WHERE d.source_id=s.id) AS "recordedFailures"
+      FROM scraping.sources s LEFT JOIN scraping.raw_artifacts a ON a.source_id=s.id GROUP BY s.id ORDER BY s.id`)).rows;
+    res.setHeader('Cache-Control','no-store');res.json({data:{securities,sources,checkedAt:new Date().toISOString(),methodology:'All registered NSE securities, including suspended and delisted names. Counts are stored coverage, not a declaration of complete corporate actions or historical universe. Unobserved fiscal years use known listing dates; unknown listing dates do not produce invented gaps. Publication dates and mapped publisher observations remain distinct.'}});
+}));
+engineWorkbenchRoutes.get('/engine/investment/event-preferences', requirePremiumPlus, handle(async(_req,res)=>{
+    res.setHeader('Cache-Control','no-store');res.json({data:(await query('SELECT enabled,held,watched,macro FROM market.investment_event_preferences WHERE user_id=$1',[user(res)])).rows[0]??{enabled:false,held:true,watched:true,macro:false}});
+}));
+engineWorkbenchRoutes.post('/engine/investment/event-preferences', requirePremiumPlus, handle(async(req,res)=>{
+    const input=parse(z.object({enabled:z.boolean(),held:z.boolean(),watched:z.boolean(),macro:z.boolean()}).strict(),req.body);
+    await query(`INSERT INTO market.investment_event_preferences(user_id,enabled,held,watched,macro) VALUES($1,$2,$3,$4,$5)
+      ON CONFLICT(user_id) DO UPDATE SET enabled=EXCLUDED.enabled,held=EXCLUDED.held,watched=EXCLUDED.watched,macro=EXCLUDED.macro,
+      enabled_at=CASE WHEN EXCLUDED.enabled AND NOT investment_event_preferences.enabled THEN now() ELSE investment_event_preferences.enabled_at END`,[user(res),input.enabled,input.held,input.watched,input.macro]);
+    res.setHeader('Cache-Control','no-store');res.json({data:input});
+}));
+engineWorkbenchRoutes.post('/engine/investment/simulations', requirePremiumPlus, handle(async(req,res)=>{
+    const input=parse(z.object({name:z.string().trim().min(1).max(100),configuration:z.object({kind:z.enum(['optimization','backtest'])}).passthrough()}),req.body);
+    const result=await calculateInvestment(input.configuration);
+    const saved=await query('SELECT market.save_investment_simulation($1,$2,$3,$4,$5::jsonb,$6::jsonb) AS receipt',[user(res),input.name,input.configuration.kind,result.snapshotId,JSON.stringify(input.configuration),JSON.stringify(result)]);
+    if(!saved.rows[0]?.receipt)throw new ApiError(422,'Simulation storage limit reached (25 per account), or snapshot too large. Export or remove an old simulation.');
+    res.setHeader('Cache-Control','no-store');res.status(201).json({data:saved.rows[0].receipt});
+}));
+engineWorkbenchRoutes.get('/engine/investment/simulations/:id',requirePremiumPlus,handle(async(req,res)=>{
+    const id=parse(z.string().uuid(),req.params.id);
+    const row=(await query('SELECT id,name,kind,snapshot_id,configuration,result,created_at FROM market.investment_simulations WHERE user_id=$1 AND id=$2',[user(res),id])).rows[0];
+    if(!row)throw new ApiError(404,'Simulation not found.');res.setHeader('Cache-Control','no-store');res.json({data:row});
+}));
+engineWorkbenchRoutes.delete('/engine/investment/simulations/:id',requirePremiumPlus,handle(async(req,res)=>{
+    const id=parse(z.string().uuid(),req.params.id);
+    const rows=await query('DELETE FROM market.investment_simulations WHERE user_id=$1 AND id=$2 RETURNING id',[user(res),id]);
+    if(!rows.rows.length)throw new ApiError(404,'Simulation not found.');res.setHeader('Cache-Control','no-store');res.json({data:{deleted:true}});
+}));
 engineWorkbenchRoutes.post('/engine/labs/advanced', requirePremiumPlus, handle(async (req, res) => {
     const input = parse(AdvancedResearchSchema, req.body);
     try {
@@ -52,12 +125,12 @@ engineWorkbenchRoutes.post('/engine/labs/advanced', requirePremiumPlus, handle(a
 }));
 engineWorkbenchRoutes.get('/engine/labs/history-inputs', requirePremiumPlus, handle(async (req, res) => {
     const b = parse(z.object({ symbol: symbolSchema, start: CalendarDate, end: CalendarDate }).refine(v => v.start < v.end && v.end <= new Date().toISOString().slice(0, 10) && Date.parse(v.end) - Date.parse(v.start) <= 6 * 366 * 86400000, 'Use an ordered past window of at most six years'), req.query);
-    const rows = await query(`SELECT DISTINCT ON(bar_time::date) bar_time::date::text AS date,close,source_url AS "sourceUrl" FROM market.candles WHERE security_id=$1 AND interval='1d' AND bar_time>=$2::date AND bar_time<$3::date+interval '1 day' AND close>0 AND source_url LIKE 'https://%' ORDER BY bar_time::date,bar_time DESC LIMIT 1501`, ['NSE:' + b.symbol, b.start, b.end]);
+    const rows = await query(`SELECT DISTINCT ON(bar_time::date) bar_time::date::text AS date,close,source_url AS "sourceUrl",(SELECT currency FROM market.securities WHERE id=$1) AS currency FROM market.candles WHERE security_id=$1 AND interval='1d' AND bar_time>=$2::date AND bar_time<$3::date+interval '1 day' AND close>0 AND source_url LIKE 'https://%' ORDER BY bar_time::date,bar_time DESC LIMIT 1501`, ['NSE:' + b.symbol, b.start, b.end]);
     if (rows.rows.length > 1500)
         throw new ApiError(400, 'Reduce the window to at most 1500 observed sessions.');
     if (rows.rows.length < 2)
         throw new ApiError(422, 'Fewer than two source-backed price observations are stored for this window. Missing sessions are not invented.');
-    res.json({ data: { symbol: b.symbol, points: rows.rows.map(({ date, close }) => ({ date, close })), sourceUrls: [...new Set(rows.rows.map(r => r.sourceUrl))], basis: 'Stored source-linked raw price closes; corporate-action completeness and benchmark compatibility require separate verification.' } });
+    res.json({ data: { symbol: b.symbol, points: rows.rows.map(({ date, close }) => ({ date, close })), observations:rows.rows.map(({date,close,sourceUrl,currency})=>({date,close,sourceUrl,currency:currency??null})),currency:rows.rows[0]?.currency??null, sourceUrls: [...new Set(rows.rows.map(r => r.sourceUrl))], basis: 'Stored source-linked raw price closes; corporate-action completeness and benchmark compatibility require separate verification.' } });
 }));
 engineWorkbenchRoutes.get('/engine/recommendations', requirePremiumPlus, handle(async (_req, res) => { res.json({ data: researchRecommendations(await engineRepository.preferences(user(res))) }); }));
 engineWorkbenchRoutes.get('/engine/financial-versions', requireSubscriber, handle(async (req, res) => {

@@ -981,5 +981,135 @@
     "allowedUsage": "Public company-page intelligence for analysis candidates; browser-rendered extractions always require review.",
     "redistributionAllowed": null,
     "attributionRequired": true
+  },
+  {
+    "id": "worldbank-kenya-macro",
+    "name": "The World Bank: Kenya World Development Indicators",
+    "adapter": "worldbank",
+    "enabled": true,
+    "config": {
+      "allowedDomains": [
+        "api.worldbank.org"
+      ],
+      "schedule": "23 5 * * 1",
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "permissionReference": "https://data.worldbank.org/summary-terms-of-use",
+      "investmentPublicationApproved": true,
+      "conditionalRequests": true
+    },
+    "termsUrl": "https://data.worldbank.org/summary-terms-of-use",
+    "robotsUrl": "https://api.worldbank.org/robots.txt",
+    "license": "World Bank data terms; CC BY 4.0 unless indicator metadata specifies otherwise",
+    "allowedUsage": "Attributed WDI indicators with originating provider metadata; no endorsement. Current retrieval is not an historical release vintage.",
+    "redistributionAllowed": true,
+    "attributionRequired": true
+  },
+  {
+    "id": "cbk-macro-history",
+    "name": "Cbk Macro History",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.centralbank.go.ke/monthly-economic-indicators/",
+        "https://www.centralbank.go.ke/inflation-rates/"
+      ],
+      "allowedDomains": [
+        "www.centralbank.go.ke"
+      ],
+      "maxDepth": 1,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "23 5 * * 1",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      },
+      "conditionalRequests": true,
+      "discoveryPaths": [
+        "/uploads/monthly_economic_indicators/",
+        "/monthly-economic-indicators/",
+        "/inflation-rates/"
+      ]
+    },
+    "termsUrl": "https://www.centralbank.go.ke/",
+    "robotsUrl": "https://www.centralbank.go.ke/robots.txt",
+    "license": null,
+    "allowedUsage": "Private official evidence collection respecting robots. Publication requires source permission and verified dated observations.",
+    "redistributionAllowed": null,
+    "attributionRequired": true
+  },
+  {
+    "id": "cbk-policy-history",
+    "name": "Cbk Policy History",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.centralbank.go.ke/monetary-policy/"
+      ],
+      "allowedDomains": [
+        "www.centralbank.go.ke"
+      ],
+      "maxDepth": 1,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "23 5 * * 1",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      },
+      "conditionalRequests": true,
+      "discoveryPaths": [
+        "/monetary-policy/",
+        "/uploads/press_releases/"
+      ]
+    },
+    "termsUrl": "https://www.centralbank.go.ke/",
+    "robotsUrl": "https://www.centralbank.go.ke/robots.txt",
+    "license": null,
+    "allowedUsage": "Private official evidence collection respecting robots. Publication requires source permission and verified dated observations.",
+    "redistributionAllowed": null,
+    "attributionRequired": true
+  },
+  {
+    "id": "knbs-economic-releases",
+    "name": "Knbs Economic Releases",
+    "adapter": "web",
+    "enabled": true,
+    "config": {
+      "seeds": [
+        "https://www.knbs.or.ke/reports_category/cpi-and-inflation-rates/",
+        "https://www.knbs.or.ke/reports_category/quarterly-gdp-reports/"
+      ],
+      "allowedDomains": [
+        "www.knbs.or.ke"
+      ],
+      "maxDepth": 2,
+      "requestsPerSecond": 0.2,
+      "concurrency": 1,
+      "schedule": "23 5 * * 1",
+      "documents": {
+        "pdf": true,
+        "ocr": true,
+        "tables": true
+      },
+      "conditionalRequests": true,
+      "discoveryPaths": [
+        "/reports/",
+        "/reports_category/cpi-and-inflation-rates/",
+        "/wp-content/uploads/",
+        "/reports_category/quarterly-gdp-reports/"
+      ]
+    },
+    "termsUrl": "https://www.knbs.or.ke/",
+    "robotsUrl": "https://www.knbs.or.ke/robots.txt",
+    "license": null,
+    "allowedUsage": "Private official evidence collection respecting robots. Publication requires source permission and verified dated observations.",
+    "redistributionAllowed": null,
+    "attributionRequired": true
   }
 ]

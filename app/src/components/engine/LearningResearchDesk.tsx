@@ -23,7 +23,7 @@ export function LearningResearchDesk({
         unaffected.
       </p>
     );
-  if (!q.data) return null;
+  if (!q.data) return <p role="status" className="text-xs text-muted-foreground">{q.isLoading ? "Loading your research preferences…" : "No research shortcuts are available. Set your focus in Preferences; company research does not depend on personalization."}</p>;
   return (
     <section
       aria-label="Personal research shortcuts"

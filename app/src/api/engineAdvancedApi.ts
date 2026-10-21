@@ -45,6 +45,8 @@ export const engineAdvancedApi = {
     continuaFetch<{
       symbol: string;
       points: { date: string; close: number }[];
+      observations?: {date:string;close:number;sourceUrl:string;currency:string|null}[];
+      currency?:string|null;
       sourceUrls: string[];
       basis: string;
     }>("/engine/labs/history-inputs", { params: { symbol, start, end } }),

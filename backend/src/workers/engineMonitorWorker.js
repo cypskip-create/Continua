@@ -41,6 +41,10 @@ export async function runEngineMonitoringOnce(userId = null, symbol = null, exch
             await query("UPDATE market.engine_monitor_rules SET last_state=COALESCE(last_state,'{}'::jsonb)||$2::jsonb WHERE id=$1", [rule.id, JSON.stringify({ checkedAt: new Date().toISOString(), error: "Research inputs could not load. Previous state retained." })]).catch(() => { });
         }
     }
+    try {
+        const ready=await query("SELECT to_regprocedure('market.deliver_investment_events(uuid)') IS NOT NULL AS ready");
+        if(ready.rows[0]?.ready) await query('SELECT market.deliver_investment_events($1::uuid)',[userId]);
+    } catch { logger.warn('Investment event notification pass unavailable; existing research alerts retained.'); }
 }
 export function startEngineMonitorWorker() { let running = false; const task = cron.schedule("*/10 * * * *", () => { if (running || !env.ENGINE_MONITOR_ENABLED)
     return; running = true; void runEngineMonitoringOnce().catch(error => logger.warn({ error: error instanceof Error ? error.message : "monitoring failed" }, "Engine monitoring unavailable")).finally(() => { running = false; }); }); return task; }

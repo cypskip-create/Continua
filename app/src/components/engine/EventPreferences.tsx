@@ -1,0 +1,10 @@
+import {useMutation,useQuery,useQueryClient} from '@tanstack/react-query';
+import {continuaFetch} from '@/api/client';
+import {useAuth} from '@/hooks/useAuth';
+type Preferences={enabled:boolean;held:boolean;watched:boolean;macro:boolean};
+export function EventPreferences(){
+ const {user}=useAuth();const client=useQueryClient();const key=['continua','event-preferences',user?.id];
+ const query=useQuery({queryKey:key,enabled:!!user,staleTime:60000,retry:1,queryFn:()=>continuaFetch<Preferences>('/engine/investment/event-preferences')});
+ const save=useMutation({mutationFn:(body:Preferences)=>continuaFetch<Preferences>('/engine/investment/event-preferences',{method:'POST',body}),onSuccess:data=>client.setQueryData(key,data)});
+ return <details className="border rounded-xl p-3"><summary className="font-semibold cursor-pointer">Event notification preferences</summary><div className="space-y-2 pt-3 text-sm">{query.isLoading&&<p>Loading notification preferences…</p>}{(query.error||save.error)&&<p role="alert">Event preferences could not update. <button className="text-primary" onClick={()=>void query.refetch()}>Retry</button></p>}{query.data&&(['enabled','held','watched','macro'] as const).map(field=><label className="flex items-center gap-2" key={field}><input type="checkbox" disabled={save.isPending} checked={query.data![field]} onChange={event=>save.mutate({...query.data!,[field]:event.target.checked})}/>{{enabled:'Enable new verified event notifications',held:'Events for held securities',watched:'Events for watchlisted securities',macro:'Market-wide policy and economic events'}[field]}</label>)}<p className="text-xs text-muted-foreground">Opt-in delivery uses existing notifications and respects your global notification preference. Receipts prevent repeat delivery of the same event revision. New notifications start after activation; old events are not replayed. Processing follows the existing monitor schedule and can be delayed by a sleeping instance.</p></div></details>;
+}

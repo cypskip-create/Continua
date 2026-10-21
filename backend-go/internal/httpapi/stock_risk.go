@@ -43,7 +43,7 @@ func (s *Server) stockRisk(ctx context.Context, w http.ResponseWriter, r *http.R
 		return true
 	}
 	now := time.Now().UTC()
-	bars, err := store.Candles(ctx, "NSE:"+symbol, "1d", now.Add(-365*24*time.Hour), now)
+	bars, err := store.Candles(ctx, "NSE:"+symbol, "1d", now.Add(-400*24*time.Hour), now)
 	if err != nil {
 		failure(w, 503, "Price history unavailable")
 		return true

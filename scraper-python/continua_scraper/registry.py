@@ -10,8 +10,9 @@ from .kenyanstocks import KenyanStocksAdapter
 from .browser import BrowserRenderer
 from .crawler import GenericCrawler
 from .mystocks import MyStocksAdapter,MyStocksHistoryAdapter
+from .investment import WorldBankAdapter
 
-REGISTERED={'nse','rss','kenyanstocks','afx','mystocks'}
+REGISTERED={'nse','rss','kenyanstocks','afx','mystocks','worldbank'}
 
 class AdapterRegistry:
     def __init__(self,sources,storage,evidence,jobs,checkpoints,runner,state,dead_letters,pdf,heavy_queue,database):
@@ -58,11 +59,13 @@ class AdapterRegistry:
             if mode not in ('quotes','history'):raise ValueError('Unknown MyStocks collection mode')
             if mode=='history':return MyStocksHistoryAdapter(io,[row['symbol'] for row in universe])
             return MyStocksAdapter(io,[row['symbol'] for row in universe])
+        if adapter=='worldbank':return WorldBankAdapter(io)
         if adapter=='kenyanstocks':
             universe=await self.database.query("SELECT symbol FROM market.securities WHERE exchange='NSE' AND status<>'delisted' ORDER BY symbol")
             renderer=BrowserRenderer(self.heavy_queue,downloader)
             return KenyanStocksAdapter(io,self.jobs,renderer,self.pdf,universe=[row['symbol'] for row in universe])
-        return GenericCrawler(io,self.state,self.dead_letters)
+        from .extraction import ExtractionService
+        return GenericCrawler(io,self.state,self.dead_letters,parser=ExtractionService(self.evidence,self.storage,self.pdf,self.dead_letters))
 
     async def run(self,source_id,*,drain_only=False,batch_size=None):
         adapter=await self.build(source_id)

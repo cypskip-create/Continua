@@ -26,6 +26,9 @@ class ExtractionService:
 
     async def by_content_type(self,content_type,artifact,record=None):
         type=content_type or ''
+        if 'csv' in type or 'spreadsheetml.sheet' in type:
+            from .tabular import parse_tabular
+            return await asyncio.to_thread(parse_tabular,artifact.path,type)
         if 'application/pdf' in type:
             result=await self.pdf.extract(artifact.path)
             if record and (record.get('metadata') or {}).get('ticker'):
@@ -36,6 +39,11 @@ class ExtractionService:
                 from .kenyanstocks import parse_publisher_view
                 return parse_publisher_view(AdapterIO.text(artifact),record['metadata'],record['documentUrl'])
             html=AdapterIO.text(artifact);tables=html_financial_tables(html);indices=nse_index_summary(html);text=article_body_text(html);usable=len(text)>=100
+            from .cbk_macro import cbk_observations
+            from datetime import datetime,timezone
+            macro=cbk_observations(html,artifact.url,datetime.now(timezone.utc).date().isoformat())
+            if macro:return {'method':'html','parserVersion':'cbk-rates-v1','confidence':None,'text':text or None,
+                'tables':tables+[{'kind':'investment_observations','observations':macro}],'entity':{},'needsReview':True}
             return {'method':'html','confidence':.6 if usable else .1,'text':text if usable else None,'tables':tables+indices,
                 'needsReview':bool(tables) or (not usable and not indices)}
         return None

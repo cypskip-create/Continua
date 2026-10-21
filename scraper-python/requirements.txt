@@ -9,3 +9,7 @@ pdfplumber==0.11.9
 selenium==4.51.0
 aiohttp==3.14.5
 croniter==6.2.4
+
+# Explicit security floors for PDF/image processing and TLS trust roots.
+pillow==13.0.0
+certifi==2026.10.19

@@ -211,7 +211,7 @@ def optimize(p):
     if 'covariance' in p:
         sample = np.asarray(p['covariance'],dtype=float)
         observations = p['observations']
-        if sample.shape != (n,n) or not np.isfinite(sample).all() or not np.allclose(sample,sample.T,atol=1e-12) or np.linalg.eigvalsh(sample).min() < -1e-12 or observations < max(60,n*3):
+        if sample.shape != (n,n) or not np.isfinite(sample).all() or not np.allclose(sample,sample.T,atol=1e-12,rtol=0) or np.linalg.eigvalsh(sample).min() < -1e-12 or observations < max(60,n*3):
             raise ValueError('A symmetric positive semidefinite covariance with sufficient common observations is required.')
         scale = float(np.trace(sample)/n)
         if scale <= 1e-18: raise ValueError('History has no measurable risk.')
@@ -299,6 +299,9 @@ def backtest(p):
     if start >= end or p.get('actionCoverageConfirmed') is not True:
         raise ValueError('Ordered dates and verified complete corporate-action coverage are required.')
     assets = p['assets']
+    currency=p['currency']
+    if currency not in ('KES','USD','EUR','GBP') or any(a.get('currency')!=currency for a in assets):
+        raise ValueError('Every basket member requires the same explicit measurement currency; FX conversion is not inferred.')
     if not 1 <= len(assets) <= 70:
         raise ValueError('Select one to 70 historical basket members.')
     symbols = [a['symbol'] for a in assets]
@@ -339,11 +342,12 @@ def backtest(p):
             seen_actions.add(key)
             actions.setdefault(d, []).append((asset['symbol'], action))
     cash, units, trades, curve, history = capital, dict.fromkeys(symbols, 0.), [], [], []
-    fees = turnover = 0.;receivables=[]
+    fees = turnover = 0.;receivables=[];net_invested=dict.fromkeys(symbols,0.);dividend_income=dict.fromkeys(symbols,0.)
     for index, d in enumerate(sessions):
         for s, action in sorted(actions.get(d, []),key=lambda pair:0 if pair[1]['type']=='split' else 1) if index else []:
             if action['type'] == 'split': units[s] *= action['value']
-            else: receivables.append((action['payDate'],units[s]*action['value']))
+            else:
+                entitlement=units[s]*action['value'];receivables.append((action['payDate'],entitlement));dividend_income[s]+=entitlement
         cash+=sum(v for due,v in receivables if due<=d)
         receivables=[(due,v) for due,v in receivables if due>d]
         pending=sum(v for _,v in receivables)
@@ -365,6 +369,7 @@ def backtest(p):
                 delta = nav*w-units[s]*prices[s][d]
                 fee = abs(delta)*cost
                 units[s] += delta/prices[s][d]; cash -= delta+fee
+                net_invested[s]+=delta+fee
                 fees += fee; turnover += abs(delta)/before
                 trades.append(dict(date=d, symbol=s, value=delta, fee=fee))
         nav = cash+pending+sum(units[s]*prices[s][d] for s in symbols)
@@ -395,6 +400,7 @@ def backtest(p):
     benchmark=p.get('benchmark')
     if benchmark:
         evidence(benchmark,start)
+        if benchmark.get('currency')!=currency:raise ValueError('Benchmark and portfolio measurement currencies must match.')
         if benchmark.get('basis')!='total-return':raise ValueError('Basket includes cash dividends; benchmark must be a compatible total-return series.')
         points=benchmark['points']
         if [day(x['date']) for x in points]!=sessions:raise ValueError('Benchmark must match every basket session exactly.')
@@ -412,7 +418,12 @@ def backtest(p):
         yearly.setdefault(year,dict(year=year,startValue=prior,firstObserved=row['date']))
         yearly[year].update(endValue=row['value'],lastObserved=row['date'],returnPercent=(row['value']/yearly[year]['startValue']-1)*100)
         prior=row['value']
-    return dict(curve=curve, drawdowns=drawdowns, holdings=history, trades=trades,annualObservedReturns=list(yearly.values()),metrics=metrics,
+    attribution=[dict(symbol=s,endingHoldingValue=units[s]*prices[s][end],dividendIncome=dividend_income[s],netCashInvested=net_invested[s],pnl=units[s]*prices[s][end]+dividend_income[s]-net_invested[s]) for s in symbols]
+    residual=sum(row['pnl'] for row in attribution)-(curve[-1]['value']-capital)
+    if abs(residual)>max(1e-6,capital*1e-8):raise ValueError('Cash/holdings attribution did not reconcile; result withheld.')
+    return dict(currency=currency,attribution=attribution,attributionResidual=residual,
+        positiveSessions=sum(r>0 for r in returns),negativeSessions=sum(r<0 for r in returns),unchangedSessions=sum(r==0 for r in returns),
+        curve=curve, drawdowns=drawdowns, holdings=history, trades=trades,annualObservedReturns=list(yearly.values()),metrics=metrics,
         cumulativeReturn=curve[-1]['value']/capital-1, annualizedReturn=annual,
         dailyVolatility=statistics.stdev(returns), maxDrawdown=min(x['value'] for x in drawdowns),
         costs=fees, grossTradedNotionalOverNAV=turnover,
@@ -441,7 +452,7 @@ def run_investment(p):
         elif kind == 'optimization': result = optimize(p)
         elif kind == 'backtest': result = backtest(p)
         else: raise ValueError('Unsupported research module.')
-        digest = hashlib.sha256(json.dumps(p, sort_keys=True, allow_nan=False, separators=(',', ':')).encode()).hexdigest()
+        digest = hashlib.sha256(json.dumps({'modelVersion':VERSION,'configuration':p}, sort_keys=True, allow_nan=False, separators=(',', ':')).encode()).hexdigest()
         return dict(status=200, data=dict(result, kind=kind, version=VERSION, snapshotId=digest))
-    except (ValueError, KeyError, TypeError, OverflowError, ZeroDivisionError) as error:
+    except (ValueError, KeyError, TypeError, OverflowError, ZeroDivisionError, IndexError, AttributeError) as error:
         return dict(status=422, error=str(error) if isinstance(error, ValueError) else 'Required research fields are missing or invalid.')

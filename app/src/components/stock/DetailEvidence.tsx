@@ -1,0 +1,24 @@
+import { useStockFinancials } from '@/hooks/useStockFinancials';
+import { financialNumber } from '@/lib/financialPresentation';
+import {useQuery} from '@tanstack/react-query';
+import {useProfile} from '@/hooks/useProfile';
+import {useAuth} from '@/hooks/useAuth';
+import {continuaFetch} from '@/api/client';
+
+/** Public canonical statement read model, shared by summary and expanded view. */
+export function DetailEvidence({symbol,title}:{symbol:string;title:string}) {
+ const {user}=useAuth();const {profile}=useProfile();const paid=['premium','premium_plus'].includes(profile?.subscription_plan??'');
+ const extensions=useQuery({queryKey:['continua','industry-evidence',user?.id,profile?.subscription_plan,symbol],enabled:paid&&!!user,staleTime:60000,retry:false,
+  queryFn:()=>continuaFetch<{observations:{id:string;field:string;value:number|null;unit:string;availableAt:string;sourceUrl:string;basis?:string;segment?:string}[]}>('/engine/investment/evidence',{params:{kind:'financial_extension',symbol,asOf:new Date().toISOString().slice(0,10)}})});
+ const {history,isLoading,historyError,refetchHistory}=useStockFinancials(symbol,{periodType:'annual',limit:10,publisherObservations:true});
+ const rows=[...history].sort((a,b)=>a.fiscalYear-b.fiscalYear);
+ const fields=/health|debt|risk|balance/i.test(title)?(['totalAssets','totalLiabilities','totalEquity','totalDebt','cash'] as const):/cash|dividend/i.test(title)?(['netIncome','operatingCashFlow','freeCashFlow','capex'] as const):(['revenue','netIncome','eps','totalEquity','operatingCashFlow'] as const);
+ return <details className="border-t py-4"><summary className="cursor-pointer font-semibold">{symbol} · Reported inputs & source coverage</summary><div className="space-y-3 pt-3 text-sm">
+  {isLoading&&<p role="status">Loading reported statement inputs…</p>}
+  {historyError&&<p role="alert">Statement inputs could not refresh. <button className="text-primary" onClick={()=>void refetchHistory()}>Retry</button></p>}
+  {!isLoading&&!rows.length&&<p>No published annual statements are available for {symbol}. Revenue, earnings, equity and cash-flow evidence are required for this analysis. Review Earnings & Reports or issuer disclosures; no zero values are substituted.</p>}
+  {!!rows.length&&<div className="overflow-x-auto"><table className="w-full text-xs"><caption className="text-left pb-2">Source values in each period’s reported currency. Mixed currencies are not aggregated.</caption><thead><tr><th className="p-2 text-left">Year · currency</th>{fields.map(f=><th className="p-2 text-right" key={f}>{f.replace(/([A-Z])/g,' $1')}</th>)}<th>Evidence</th></tr></thead><tbody>{rows.map(r=><tr className="border-t" key={`${r.fiscalYear}:${r.fiscalQuarter??'annual'}`}><th className="p-2 text-left">{r.fiscalYear} · {r.currency??'Unknown'}</th>{fields.map(f=><td className="p-2 text-right whitespace-nowrap" key={f}>{r[f]==null?'Not disclosed / not mapped':financialNumber(r[f])}</td>)}<td className="p-2">{r.reportedAt?.slice(0,10)??'Publication date unknown'}{r.sourceUrls?.filter(url=>url.startsWith('https://')).map((url,i)=><a key={url} className="block text-primary" href={url} target="_blank" rel="noreferrer">Source {i+1}</a>)}{!r.sourceUrls?.length&&<span className="block">Source link unavailable</span>}</td></tr>)}</tbody></table></div>}
+  <p className="text-xs text-muted-foreground">These are reported historical inputs, separate from forecast assumptions. Income is a period flow; balance-sheet values are closing balances. ROE uses net income ÷ closing equity; average-equity ROE requires both opening and closing comparable equity. Unknown publication dates cannot support point-in-time fundamental strategies. Bank and insurer funding ratios require industry-specific disclosures.</p>
+  {paid&&<div className="space-y-2 border-t pt-3"><h4 className="font-semibold">Industry & segment evidence</h4>{extensions.isLoading?<p>Loading reviewed disclosures…</p>:extensions.error?<p>Detailed disclosure coverage could not load. <button className="text-primary" onClick={()=>void extensions.refetch()}>Retry</button></p>:!extensions.data?.observations.length?<p className="text-xs text-muted-foreground">No verified industry or segment observations are stored for {symbol}. Bank NPL/capital/liquidity, insurer solvency/contract liabilities, geographic revenue and foreign-currency debt require explicit issuer disclosures with units and dates; they are not reconstructed from generic financial ratios.</p>:extensions.data.observations.map(row=><p className="text-xs" key={row.id}>{row.field} {row.segment?`· ${row.segment}`:''}: {row.value==null?'Missing / under review':financialNumber(row.value)} {row.unit} · available {row.availableAt} · {row.basis} · <a className="text-primary" href={row.sourceUrl} target="_blank" rel="noreferrer">Disclosure</a></p>)}</div>}
+ </div></details>;
+}

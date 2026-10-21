@@ -3,6 +3,7 @@ import pathlib
 import subprocess
 import sys
 import unittest
+import asyncio
 from contextlib import asynccontextmanager
 
 root=pathlib.Path(__file__).resolve().parents[1]
@@ -51,6 +52,19 @@ class ScheduledTests(unittest.TestCase):
         self.assertNotIn('vars.CONTINUA_SCHEDULED_SCRAPER_ENABLED',workflow)
 
 class SlotTests(unittest.IsolatedAsyncioTestCase):
+    async def test_source_timeout_keeps_partial_failures_after_timeout_translation(self):
+        async def work():
+            try:await asyncio.Event().wait()
+            except asyncio.CancelledError as error:
+                error.collector_summary={'failed':2,'fetched':3,'privateCredential':'never copied'}
+                raise
+        entry={}
+        try:
+            async with asyncio.timeout(.01):await work()
+        except TimeoutError as error:module.copy_partial_receipt(entry,error)
+        self.assertEqual(entry,{'failed':2,'fetched':3})
+        receipt={'sources':[entry]};module.pause_at_deadline(receipt)
+        self.assertEqual(receipt['status'],'failed')
     async def test_slot_uses_transaction_guard_and_cleans_failed_exit(self):
         class DB:
             def __init__(self):self.calls=[];self.results=[[{'acquired':True}],[],[],[],[{'day':'fixture'}],[]]

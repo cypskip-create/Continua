@@ -69,17 +69,21 @@ def financial_extensions(p):
     for period in periods:
         date.fromisoformat(period['periodEnd'])
         if period.get('availableAt'):date.fromisoformat(period['availableAt'])
-    output=[];seen=set();conflicts=[]
+    output=[];seen=set();conflicts=[];unmapped=[]
     for index,row in enumerate(rows):
         normalized=label(row['label'])
         field=next((key for key,names in FIELDS.items() if normalized in names),None)
         segment=row.get('segment')
         if field is None and segment and normalized in ('segment revenue','segment operating profit'):
             field='segmentRevenue' if normalized=='segment revenue' else 'segmentOperatingProfit'
-        if not field:continue
+        if not field:unmapped.append(dict(row=index,label=row['label'],reason='No unambiguous exact-label mapping'));continue
+        if (field.startswith('bank') and metadata.get('industry')!='bank') or (field.startswith('insurance') and metadata.get('industry')!='insurance'):
+            unmapped.append(dict(row=index,label=row['label'],reason='Explicit bank/insurance industry metadata required'));continue
         for column,period in enumerate(periods):
             raw=row['values'][column] if column<len(row['values']) else None
             unit=row.get('unit','currency')
+            row_currency=row.get('currency',currency);row_scale=row.get('scale',scale)
+            if not isinstance(row_currency,str) or not re.fullmatch('[A-Z]{3}',row_currency) or isinstance(row_scale,bool) or row_scale not in (1,1000,1000000,1000000000):raise ValueError('Explicit row currency/scale is invalid.')
             if field in RATIOS:
                 percent=isinstance(raw,str) and raw.strip().endswith('%')
                 value=literal_number(raw.strip()[:-1] if percent else raw)
@@ -89,24 +93,28 @@ def financial_extensions(p):
                 value=literal_number(raw)
                 if field=='eps':
                     if unit!='currency_per_share':value=None
-                    observed_unit=currency+' per share'
+                    observed_unit=row_currency+' per share'
                 else:
-                    value=value*scale if value is not None else None
-                    observed_unit=currency
+                    value=value*row_scale if value is not None and unit=='currency' else None
+                    if value is not None and not math.isfinite(value):value=None
+                    observed_unit=row_currency
             key=(field,column,segment)
             if key in seen:conflicts.append(dict(field=field,column=column,reason='Multiple source rows; neither is selected as canonical.'))
             seen.add(key)
             output.append(dict(field=field,column=column,period=period,value=value,raw=raw,unit=observed_unit,
-                currency=currency,scale=scale,basis=basis,segment=segment,
+                currency=row_currency,scale=row_scale,basis=basis,segment=segment,
                 lineage=dict(sourceUrl=metadata['sourceUrl'],documentId=metadata['documentId'],page=row.get('page'),
                     table=metadata['tableId'],row=index,column=column,parserVersion='financial-extension-v1'),
                 missingReason='Ambiguous source cell/unit; requires review' if value is None else None))
     reconciliations=[]
     for column in range(len(periods)):
         values={r['field']:r['value'] for r in output if r['column']==column and r['segment'] is None}
-        if all(values.get(k) is not None for k in ('totalAssets','totalLiabilities','equity')):
+        balance=[r for r in output if r['column']==column and r['field'] in ('totalAssets','totalLiabilities','equity')]
+        if any(c['column']==column and c['field'] in ('totalAssets','totalLiabilities','equity') for c in conflicts) or len({r['currency'] for r in balance})>1:
+            reconciliations.append(dict(column=column,identity='assets = liabilities + equity',residual=None,reconciled=None,reason='Conflicting or mixed-currency inputs; reconciliation withheld'))
+        elif all(values.get(k) is not None for k in ('totalAssets','totalLiabilities','equity')):
             residual=values['totalAssets']-values['totalLiabilities']-values['equity']
             reconciliations.append(dict(column=column,identity='assets = liabilities + equity',residual=residual,
                 reconciled=abs(residual)<=max(scale,abs(values['totalAssets'])*1e-6)))
-    return dict(observations=output,conflicts=conflicts,reconciliations=reconciliations,status='requires-review',
+    return dict(observations=output,conflicts=conflicts,unmappedRows=unmapped,reconciliations=reconciliations,status='requires-review',
         methodology='Literal exact-label mapping with explicit fiscal columns, currency, scale and consolidation basis. Parentheses preserve negatives. Source cells and conflicting rows remain separate. EPS is never multiplied by statement scale; ratio units must be explicit. Banking deposits are not mapped to industrial debt; IFRS 17 insurance service results are distinct from premiums. No canonical statement, publication date, segment category or foreign-currency exposure is guessed.')

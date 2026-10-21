@@ -7,6 +7,22 @@ from continua_engine.risk_intelligence import build_risk_intelligence, simulate_
 
 
 class RiskIntelligenceTests(unittest.TestCase):
+    def test_factor_descriptors_use_source_linked_calendar_anchors_and_real_volume(self):
+        now='2026-10-20T15:00:00Z';bars=[];day=datetime.date(2025,9,15)
+        while day<=datetime.date(2026,10,20):
+            if day.weekday()<5:bars.append(dict(timestamp=day.isoformat()+'T12:00:00Z',close=100+len(bars),volume=1000,sourceUrl='https://source.example/observed'))
+            day+=datetime.timedelta(days=1)
+        bundle=dict(symbol='A',currency='KES',quote=dict(lastPrice=bars[-1]['close'],timestamp=now,volume=1000,source='fixture'))
+        result=stock_risk(bundle,bars,[],now);f=result['factorDescriptors']
+        self.assertIsNotNone(f['momentum12mEx1m'])
+        close={b['timestamp'][:10]:b['close'] for b in bars}
+        self.assertAlmostEqual(f['momentum12mEx1m'],close[f['momentumEnd']]/close[f['momentumStart']]-1)
+        from statistics import median
+        self.assertEqual(f['medianTradedValue60d'],median(b['close']*1000 for b in bars[-60:]))
+        bars[-1]['volume']=None
+        self.assertIsNone(stock_risk(bundle,bars,[],now)['factorDescriptors']['medianTradedValue60d'])
+        blocked=stock_risk(bundle,bars,[dict(type='split',status='confirmed',effectiveDate='2025-10-01')],now)
+        self.assertIsNone(blocked['factorDescriptors']['momentum12mEx1m'])
     def setUp(self):
         self.now='2026-10-20T15:00:00Z'
         dates=[]; day=datetime.date(2026,7,1)

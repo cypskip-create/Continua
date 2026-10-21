@@ -22,7 +22,7 @@ on:
       maintenance:
         description: Explicit additive schema setup or one tiny private storage verification
         type: choice
-        options: [none, prepare, verify-storage, process-research]
+        options: [none, prepare, verify-storage, process-research, prepare-investment]
         default: none
       apply:
         description: Run approved collection (otherwise offline plan only)

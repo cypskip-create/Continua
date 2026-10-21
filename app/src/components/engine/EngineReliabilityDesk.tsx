@@ -2,7 +2,7 @@ import type {EngineBundle} from '@/api/engineApi';
 import {ExportResearch} from './ResearchExport';
 import {ToolHelp} from '@/components/shared/ToolHelp';
 export function EngineReliabilityDesk({data,onTool,expanded=false}:{data:EngineBundle;onTool:(tool:string)=>void;expanded?:boolean}) {
- const r=data.reliability;if(!r)return null;
+ const r=data.reliability;if(!r)return <section className="border-y py-4 space-y-2"><h3 className="font-semibold">Evidence readiness</h3><p className="text-sm text-muted-foreground">The response has no readiness model. Source dates, coverage and quote freshness have not been evaluated.</p><button className="text-primary text-sm" onClick={()=>onTool('Evidence')}>Inspect available evidence →</button></section>;
  return <section aria-label="Research reliability" className="border-y border-border py-4 space-y-3">
   <div className="flex flex-wrap gap-2 items-center justify-between"><h3 className="font-semibold flex gap-2 items-center">Evidence readiness<ToolHelp tool="Evidence readiness" description="This shows which inputs the Engine has, how old they are and what is missing. It is not a company rating or a promise that an investment is safe."/></h3><span className="text-xs rounded-full border px-3 py-1">{r.status==='supported'?'Source-backed inputs':r.status==='limited'?'Limited coverage':'Inputs need attention'}</span></div>
   <p className="text-xs text-muted-foreground">Research retrieved {new Date(data.generatedAt).toLocaleString()} · quote {r.quoteAsOf?new Date(r.quoteAsOf).toLocaleDateString():'unavailable'}. Refresh time and market-data time are different.</p>

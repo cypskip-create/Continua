@@ -126,6 +126,8 @@ func (s *Server) workbenchReads(ctx context.Context, w http.ResponseWriter, r *h
 		return true
 	}
 	points := []map[string]any{}
+ observations:=[]map[string]any{}
+ var currency *string
 	sources := []string{}
 	seen := map[string]bool{}
 	for _, raw := range rows {
@@ -133,17 +135,19 @@ func (s *Server) workbenchReads(ctx context.Context, w http.ResponseWriter, r *h
 			Date  string  `json:"date"`
 			Close float64 `json:"close"`
 			URL   string  `json:"sourceUrl"`
+ Currency *string `json:"currency"`
 		}
 		if json.Unmarshal(raw, &row) != nil {
 			failure(w, 503, "Invalid stored history")
 			return true
 		}
 		points = append(points, map[string]any{"date": row.Date, "close": row.Close})
+ observations=append(observations,map[string]any{"date":row.Date,"close":row.Close,"sourceUrl":row.URL,"currency":row.Currency});currency=row.Currency
 		if !seen[row.URL] {
 			sources = append(sources, row.URL)
 			seen[row.URL] = true
 		}
 	}
-	respond(w, 200, map[string]any{"data": map[string]any{"symbol": symbol, "points": points, "sourceUrls": sources, "basis": "Stored source-linked raw price closes; corporate-action completeness and benchmark compatibility require separate verification."}})
+	respond(w, 200, map[string]any{"data": map[string]any{"symbol": symbol, "points": points, "observations":observations,"currency":currency,"sourceUrls": sources, "basis": "Stored source-linked raw price closes; corporate-action completeness and benchmark compatibility require separate verification."}})
 	return true
 }

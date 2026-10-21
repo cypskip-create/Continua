@@ -37,5 +37,5 @@ func (s *Store) FinancialVersions(ctx context.Context, id string) ([]json.RawMes
 	return s.JSONRows(ctx, `SELECT row_to_json(result) FROM (SELECT id,table_name,period_id,operation,before_payload,after_payload,recorded_at,transaction_id FROM market.financial_version_audit WHERE security_id=$1 ORDER BY recorded_at DESC,id DESC LIMIT 100) result`, id)
 }
 func (s *Store) LabHistory(ctx context.Context, id, start, end string) ([]json.RawMessage, error) {
-	return s.JSONRows(ctx, `SELECT row_to_json(result) FROM (SELECT DISTINCT ON(bar_time::date) bar_time::date::text AS date,close,source_url AS "sourceUrl" FROM market.candles WHERE security_id=$1 AND interval='1d' AND bar_time>=$2::date AND bar_time<$3::date+interval '1 day' AND close>0 AND source_url LIKE 'https://%' ORDER BY bar_time::date,bar_time DESC LIMIT 1501) result`, id, start, end)
+	return s.JSONRows(ctx, `SELECT row_to_json(result) FROM (SELECT DISTINCT ON(bar_time::date) bar_time::date::text AS date,close,source_url AS "sourceUrl",(SELECT currency FROM market.securities WHERE id=$1) AS currency FROM market.candles WHERE security_id=$1 AND interval='1d' AND bar_time>=$2::date AND bar_time<$3::date+interval '1 day' AND close>0 AND source_url LIKE 'https://%' ORDER BY bar_time::date,bar_time DESC LIMIT 1501) result`, id, start, end)
 }
