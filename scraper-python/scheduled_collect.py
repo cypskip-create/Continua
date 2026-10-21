@@ -53,7 +53,13 @@ def ordered_sources(sources,kind,hour):
     rotated=sources[offset:]+sources[:offset]
     return sorted(rotated,key=lambda s:0 if kind!='news' and s['adapter']=='kenyanstocks' else 1)
 
+def source_reservation(source_id,ceiling):
+    # Four bounded public JSON responses need no document-sized reservation.
+    return min(ceiling,1024**2) if source_id=='worldbank-kenya-macro' else ceiling
+
+
 def source_batch(environment,adapter):
+    if adapter=='worldbank':return 4
     key,default=('COLLECTOR_PRIMARY_BATCH',12) if adapter=='kenyanstocks' else ('COLLECTOR_FALLBACK_BATCH',2)
     value=int(environment.get(key,str(default)))
     if not 1<=value<=100:raise ValueError('Invalid source batch configuration')
@@ -125,6 +131,8 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
     if os.environ.get('R2_DUAL_WRITE','false').lower() not in ('false','0','no',''):
         raise ValueError('Scheduled collector forbids legacy duplicate uploads')
     ceiling,daily,seconds,source_limit=limits(os.environ)
+    ceiling=source_reservation(source_id,ceiling)
+    macro_only=source_id=='worldbank-kenya-macro'
     database=await Database.open(os.environ['DATABASE_URL'])
     runtime=None
     budget=transfer_budget.TransferBudget(ceiling)
@@ -147,7 +155,7 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
                 receipt['processingBefore']=await ResearchProcessor(database).run(25)
                 receipt['availableFinancialsBefore']=await ResearchProcessor(database).available_financials()
         async with scheduled_slot(database,run_id,kind,ceiling,daily) as skipped:
-            if skipped:return dict(receipt,status=skipped)
+            if skipped:return dict(receipt,status=skipped,pauseReason='daily-reservation-limit' if skipped=='budget-paused' else skipped,reservationBytes=ceiling,durationSeconds=round(time.monotonic()-started,3))
             try:
                 transfer_budget.active=budget
                 storage=RawStorage.from_environment()
@@ -157,7 +165,7 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
                     receipt['queueRecovery']={'requeuedMissingPrivateEvidence':await runtime.jobs.recover_unarchived('kenyanstocks')}
                 try:
                     async with asyncio.timeout(seconds):
-                        if process_research:
+                        if process_research and not macro_only:
                             from continua_scraper.research_processing import reparse_archived_views
                             receipt['archiveReprocessing']=await reparse_archived_views(runtime,2)
                         sources=await runtime.sources.enabled()
@@ -222,7 +230,7 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
                         try:
                             async with asyncio.timeout(120):
                                 receipt['processingAfter']=await ResearchProcessor(database,processed_storage=storage.r2).run(100)
-                                if os.environ.get('PROCESSED_PAYLOAD_MODE')=='r2':
+                                if os.environ.get('PROCESSED_PAYLOAD_MODE')=='r2' and not macro_only:
                                     from continua_scraper.processed_archive import ProcessedArchive
                                     receipt['processedCloudExport']=await ProcessedArchive(database,storage.r2,retire_payloads=True).run(25)
                                 receipt['availableFinancials']=await ResearchProcessor(database).available_financials()

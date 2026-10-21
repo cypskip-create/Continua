@@ -155,3 +155,15 @@ certifi 2026.10.19, and Go 1.27.3. CI identified the newly published
 GO-2026-6809 in Go 1.27.2; both go.mod and the verified official Docker digest
 were updated. See https://go.dev/dl/ and
 https://pkg.go.dev/vuln/GO-2026-6809 . No alerts were dismissed or scanners disabled.
+
+The explicit additive setup succeeded in Actions run 39655954206, registering
+four missing sources while preserving existing disables. CodeQL and all three
+security release jobs passed at commit 3685828; GitHub reported zero open code
+scanning and zero open dependency alerts after refreshing its graph. The first
+macro attempt correctly paused at the daily reservation limit, before network
+collection. Explicit World Bank batches now reserve at most 1 MiB, fetch only
+four bounded responses and skip unrelated archive reprocessing/export; the daily
+ceiling is unchanged. This budget rule passed 11 collector regression tests.
+Focused compatibility API tests passed all 34 cases, including new plan, owner,
+consent, historical-cutoff and forged allocation-input checks. Sector limits and
+exclusions are available directly in the allocation view as well as imports.

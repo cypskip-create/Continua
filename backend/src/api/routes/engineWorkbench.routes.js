@@ -48,9 +48,9 @@ engineWorkbenchRoutes.get('/engine/investment/evidence', requireEngineUser, hand
     const basic=!['premium','premium_plus'].includes(res.locals.enginePlan);
     if(basic&&input.kind==='financial_extension')throw new ApiError(403,'Detailed financial evidence requires Premium.');
     if(basic&&input.asOf!==new Date().toISOString().slice(0,10))throw new ApiError(403,'Historical macro and event research requires Premium.');
+    if(input.scope&&input.scope!=='all'&&(input.kind!=='event'||res.locals.enginePlan!=='premium_plus'))throw new ApiError(403,'Portfolio and watchlist event research requires Premium Plus.');
     let observations=await investmentEvidence(input.kind,input.asOf,input.symbol);
     if(input.scope&&input.scope!=='all'){
-        if(input.kind!=='event'||res.locals.enginePlan!=='premium_plus')throw new ApiError(403,'Portfolio and watchlist event research requires Premium Plus.');
         const rows=await query(input.scope==='held'?'SELECT upper(symbol) AS symbol FROM public.portfolios WHERE user_id=$1 GROUP BY upper(symbol) HAVING sum(shares)>0':'SELECT DISTINCT upper(symbol) AS symbol FROM public.watchlists WHERE user_id=$1',[user(res)]);
         const symbols=new Set(rows.rows.map(row=>row.symbol));observations=observations.filter(event=>symbols.has(event.symbol));
     }
@@ -69,7 +69,7 @@ engineWorkbenchRoutes.post('/engine/investment/calculate', requirePremiumPlus, h
     res.json({data:await calculateInvestment(input)});
 }));
 engineWorkbenchRoutes.post('/engine/investment/optimize-owned', requirePremiumPlus, handle(async(req,res)=>{
-    const options=parse(z.object({objective:z.enum(['minimum-variance','risk-parity','maximum-diversification']),turnoverCap:z.number().min(0).max(1),cashMaximum:z.number().min(0).max(1).optional(),maximum:z.record(z.number().min(0).max(1)).optional(),minimum:z.record(z.number().min(0).max(1)).optional(),excluded:z.array(symbolSchema).max(70).optional(),sectorLimits:z.record(z.object({min:z.number().min(0).max(1),max:z.number().min(0).max(1)})).optional()}),req.body);
+    const options=parse(z.object({objective:z.enum(['minimum-variance','risk-parity','maximum-diversification']),turnoverCap:z.number().min(0).max(1),cashMaximum:z.number().min(0).max(1).optional(),maximum:z.record(z.number().min(0).max(1)).optional(),minimum:z.record(z.number().min(0).max(1)).optional(),excluded:z.array(symbolSchema).max(70).optional(),sectorLimits:z.record(z.object({min:z.number().min(0).max(1),max:z.number().min(0).max(1)})).optional()}).strict(),req.body);
     const portfolio=await getPortfolioResearch(user(res),'NSE'),risk=portfolio.riskIntelligence;
     if(!risk?.covariance||risk.coverage.some(r=>!r.included)||risk.overview.riskCoveredValue!==risk.overview.coveredValue) throw new ApiError(422,'Every holding requires eligible aligned history before optimization. Inspect Risk Intelligence coverage.');
     const configuration={...options,kind:'optimization',symbols:risk.symbols,currentWeights:risk.weights,covariance:risk.covariance,observations:risk.evidence.observations,sectors:Object.fromEntries(risk.overview.positions.map(p=>[p.symbol,p.sector]))};

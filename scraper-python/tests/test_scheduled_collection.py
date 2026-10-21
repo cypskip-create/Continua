@@ -21,6 +21,12 @@ class ScheduledTests(unittest.TestCase):
         receipt={'sources':[{'failed':1}]}
         module.pause_at_deadline(receipt)
         self.assertEqual(receipt['status'],'failed')
+    def test_explicit_macro_batch_reserves_only_its_bounded_json_budget(self):
+        self.assertEqual(module.source_reservation('worldbank-kenya-macro',48*1024**2),1024**2)
+        self.assertEqual(module.source_reservation('worldbank-kenya-macro',1000),1000)
+        self.assertEqual(module.source_reservation('kenyanstocks',48*1024**2),48*1024**2)
+        self.assertEqual(module.source_reservation(None,48*1024**2),48*1024**2)
+        self.assertEqual(module.source_batch({},'worldbank'),4)
     def test_batches_are_configurable_and_bounded(self):
         self.assertEqual(module.source_batch({},'kenyanstocks'),12)
         self.assertEqual(module.source_batch({'COLLECTOR_PRIMARY_BATCH':'24'},'kenyanstocks'),24)

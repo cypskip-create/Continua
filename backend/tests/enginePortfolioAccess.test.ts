@@ -91,3 +91,27 @@ it.each(['free','premium','premium_plus'])('enforces %s stock risk access on the
  const result=await request(plan,'/engine/risk/KCB');expect(result.status).toBe(plan==='free'?403:200);
  if(plan==='free')expect(mocks.stockRisk).not.toHaveBeenCalled();else expect(mocks.stockRisk).toHaveBeenCalledWith('KCB');
 });
+
+it.each(['free','premium'])('investment simulations and owned scopes remain Plus-only for %s',async plan=>{
+ for(const path of ['/engine/investment/simulations','/engine/investment/event-preferences','/engine/investment/coverage'])expect((await request(plan,path)).status).toBe(403);
+ expect((await request(plan,'/engine/investment/calculate','POST',true,{kind:'optimization',userId:'forged'})).status).toBe(403);
+ expect((await request(plan,'/engine/investment/evidence?kind=event&scope=held&asOf='+new Date().toISOString().slice(0,10))).status).toBe(403);
+ expect(mocks.portfolio).not.toHaveBeenCalled();expect(mocks.calculate).not.toHaveBeenCalled();
+});
+it('rejects malformed and historical basic evidence requests before querying the ledger',async()=>{
+ expect((await request('free','/engine/investment/evidence?kind=macro&asOf=2020-01-01')).status).toBe(403);
+ expect((await request('free','/engine/investment/evidence?kind=macro&asOf=invalid')).status).toBe(400);
+ expect(mocks.query.mock.calls.every(([sql])=>sql.includes('effective_subscription_plan'))).toBe(true);
+});
+it('scopes simulation reads and deletes to the authenticated owner',async()=>{
+ const path='/engine/investment/simulations/22222222-2222-4222-8222-222222222222?userId=forged';
+ await request('premium_plus',path);
+ expect(mocks.query).toHaveBeenLastCalledWith(expect.stringContaining('WHERE user_id=$1 AND id=$2'),[verifiedId,'22222222-2222-4222-8222-222222222222']);
+ await request('premium_plus',path,'DELETE');
+ expect(mocks.query).toHaveBeenLastCalledWith(expect.stringContaining('DELETE FROM market.investment_simulations WHERE user_id=$1 AND id=$2'),[verifiedId,'22222222-2222-4222-8222-222222222222']);
+});
+it('rejects null event consent and client-owned allocation inputs',async()=>{
+ expect((await request('premium_plus','/engine/investment/event-preferences','POST',true,{enabled:null,held:true,watched:true,macro:false})).status).toBe(400);
+ expect((await request('premium_plus','/engine/investment/optimize-owned','POST',true,{objective:'minimum-variance',turnoverCap:1,symbols:['FORGED'],covariance:[[1]]})).status).toBe(400);
+ expect(mocks.portfolio).not.toHaveBeenCalled();
+});
