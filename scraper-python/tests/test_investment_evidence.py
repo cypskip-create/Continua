@@ -20,3 +20,11 @@ class MacroParserTests(unittest.TestCase):
   with self.assertRaises(ValueError):worldbank_observations(data,'2026-10-21')
   data=self.response();data[1][0]['countryiso3code']='USA'
   with self.assertRaises(ValueError):worldbank_observations(data,'2026-10-21')
+
+ def test_many_observation_years_survive_one_artifact_vintage(self):
+  data=self.response()
+  data[1].append({**data[1][0],'date':'2023','value':3})
+  rows=worldbank_observations(data,'2026-10-21')
+  self.assertEqual([r['date'] for r in rows],['2024-12-31','2023-12-31'])
+  self.assertEqual(len({r['naturalKey'] for r in rows}),1)
+  self.assertEqual(len({r['availableAt'] for r in rows}),1)

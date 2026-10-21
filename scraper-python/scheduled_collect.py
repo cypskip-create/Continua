@@ -262,11 +262,15 @@ async def maintenance(operation):
             async with database.pool.connection() as connection:
                 async with connection.transaction():
                     await connection.execute(path.read_text(encoding='utf-8'),prepare=False)
+                    history_identity=path.with_name('20261021200000_investment_history_identity.sql')
+                    await connection.execute(history_identity.read_text(encoding='utf-8'),prepare=False)
             from continua_scraper.sources import Sources
             defaults=json.loads((pathlib.Path(__file__).parent/'continua_scraper/default_sources.json').read_text(encoding='utf-8'))
             selected=[s for s in defaults if s['id'] in ('worldbank-kenya-macro','cbk-macro-history','cbk-policy-history','knbs-economic-releases')]
             for source in selected:await Sources(database).save(source,only_if_missing=True)
-            return {'status':'completed','operation':operation,'registered':len(selected),'existingDisablesPreserved':True,'destructive':False}
+            from continua_scraper.investment import publish_investment_evidence
+            published=await publish_investment_evidence(database)
+            return {'status':'completed','operation':operation,'registered':len(selected),'existingDisablesPreserved':True,'destructive':False,'investmentEvidence':published}
         if operation=='process-research':
             path=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261016170000 processed research.sql'
             async with database.pool.connection() as connection:

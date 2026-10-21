@@ -69,7 +69,8 @@ async def publish_investment_evidence(database,limit=10):
         AND length(trim(s.config->>'permissionReference')) BETWEEN 1 AND 200
         AND s.config->>'investmentPublicationApproved'='true'
         AND a.storage_path LIKE 'r2://continua-financial-documents/%%' AND a.sha256 ~ '^[a-f0-9]{64}$'
-        AND NOT EXISTS(SELECT 1 FROM market.investment_observations o WHERE o.artifact_id=a.id AND o.parser_version=e.parser_version)
+        AND (SELECT count(*) FROM market.investment_observations o WHERE o.artifact_id=a.id AND o.parser_version=e.parser_version)
+          < (SELECT coalesce(sum(jsonb_array_length(t->'observations')),0) FROM jsonb_array_elements(e.tables) t WHERE t->>'kind'='investment_observations')
       ORDER BY e.id LIMIT %s""",(VERSION,limit))
     count=0
     for row in rows:

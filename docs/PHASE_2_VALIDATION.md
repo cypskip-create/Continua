@@ -167,3 +167,13 @@ ceiling is unchanged. This budget rule passed 11 collector regression tests.
 Focused compatibility API tests passed all 34 cases, including new plan, owner,
 consent, historical-cutoff and forged allocation-input checks. Sector limits and
 exclusions are available directly in the allocation view as well as imports.
+
+Live macro collection run 39656735867 fetched, privately archived and extracted
+all four WDI responses with zero failures (14,343 download bytes; 18,755 upload
+bytes). Its publication counters exposed a revision-identity defect: the initial
+unique key omitted observation date, retaining only one year per series/artifact.
+The additive `20261021200000_investment_history_identity.sql` corrects that key
+without deleting originals. Publisher completeness now compares stored rows with
+extracted observation counts so partial historical artifacts are backfilled from
+existing evidence, without another source download. A multi-year, same-artifact
+publisher regression fixture validates both idempotence and partial recovery.

@@ -41,6 +41,8 @@ try {
  CREATE FUNCTION public.effective_subscription_plan(uuid) RETURNS text LANGUAGE sql AS 'SELECT ''premium_plus''::text';`);
  const migration=await readFile(new URL('supabase/migrations/20261021150000_investment_evidence.sql',root),'utf8');
  await db.exec(migration);await db.exec(migration);
+ const historyIdentity=await readFile(new URL('supabase/migrations/20261021200000_investment_history_identity.sql',root),'utf8');
+ await db.exec(historyIdentity);await db.exec(historyIdentity);
  for(const table of ['investment_observations','investment_simulations','investment_event_preferences','investment_event_deliveries']) {
   check((await db.query("SELECT has_table_privilege('authenticated',$1,'SELECT') AS allowed",['market.'+table])).rows[0].allowed,false);
  }
@@ -93,5 +95,25 @@ db=DB();asyncio.run(publish_investment_evidence(db));print(json.dumps(db.calls))
  await db.query("INSERT INTO market.filing_history_reviews(candidate_id,period_id,column_index,statement_type,source_url,source_page,review_note,reviewed_values) VALUES($1,'fixture-period',0,'income','https://fixture.invalid/report',1,'Synthetic fixture only','{}')",[candidate]);
  for(const statement of statements){let parameter=0;const sql=statement.sql.replace(/%s/g,()=>'$'+(++parameter)).replaceAll('%%','%');await db.query(sql,statement.params);checks++;}
  check((await db.query("SELECT count(*)::integer AS n FROM market.investment_observations WHERE natural_key='report:fixture-period'")).rows[0].n,1);
+ const historyCapture=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',`
+import asyncio,json,sys
+from datetime import datetime,timezone
+sys.path.insert(0,'scraper-python')
+from continua_scraper.investment import _publish_artifact
+class DB:
+ def __init__(self):self.calls=[]
+ async def query(self,sql,params=()):self.calls.append({'sql':sql,'params':params});return [{'id':'fixture'}]
+rows=[{'kind':'macro','naturalKey':'history-fixture','date':str(year)+'-12-31','payload':{'series':'history-fixture','value':year}} for year in (2023,2024)]
+db=DB();asyncio.run(_publish_artifact(db,{'artifact_id':int(sys.argv[1]),'retrieved_at':datetime(2026,10,21,tzinfo=timezone.utc),'parser_version':'history-fixture-v1','tables':[{'kind':'investment_observations','observations':rows}]}));print(json.dumps(db.calls))
+`,String(artifact)],{encoding:'utf8',cwd:new URL('../../',import.meta.url),windowsHide:true});
+ assert.equal(historyCapture.status,0,historyCapture.stderr);
+ for(const statement of JSON.parse(historyCapture.stdout)){let parameter=0;const sql=statement.sql.replace(/%s/g,()=>'$'+(++parameter)).replaceAll('%%','%');await db.query(sql,statement.params);checks++;await db.query(sql,statement.params);}
+ check((await db.query("SELECT count(*)::integer AS n FROM market.investment_observations WHERE natural_key='history-fixture'")).rows[0].n,2);
+ await db.query(`UPDATE scraping.sources SET config=config || '{"investmentPublicationApproved":true}'::jsonb WHERE id='fixture'`);
+ await db.query(`INSERT INTO scraping.extractions(artifact_id,method,parser_version,tables) VALUES($1,'html','history-fixture-v1',$2::jsonb)`,[artifact,JSON.stringify([{kind:'investment_observations',observations:[{date:'2023-12-31'},{date:'2024-12-31'}]}])]);
+ let parameter=0;const pendingSQL=statements[0].sql.replace(/%s/g,()=>'$'+(++parameter)).replaceAll('%%','%');
+ check((await db.query(pendingSQL,['history-fixture-v1',10])).rows.length,0);
+ await db.query("DELETE FROM market.investment_observations WHERE parser_version='history-fixture-v1' AND observed_date='2023-12-31'");
+ check((await db.query(pendingSQL,['history-fixture-v1',10])).rows.length,1);
  console.log(JSON.stringify({fixture:'investment evidence, source revocation, release vintages, RLS and notification deduplication',checks,productionAccess:false}));
 } finally {await db.close();}
