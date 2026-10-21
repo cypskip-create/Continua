@@ -1,9 +1,21 @@
 {
-  "reviewDate": "2026-10-19",
+  "reviewDate": "2026-10-21",
   "scope": "Every backend/Engine/scraper runtime module, operator script, Edge entrypoint and existing SQL migration",
   "method": "Workload-specific rationale, supported tooling and feature-preserving tests; not a universal fastest-language claim.",
   "runtimeImplementationsUseTypeScript": false,
   "features": [
+    {
+      "file": "backend/python/investment_intelligence.py",
+      "category": "Phase 2 investment evidence and numerical research",
+      "language": "Python models and collector, Go native API, SQL provenance and existing React frontend",
+      "runtime": "Existing bounded workers; NumPy 2.4.4 and SciPy 1.18.1 numerical wheels; no extra service",
+      "reason": "SciPy provides established HiGHS feasibility and SLSQP constrained optimization. Python keeps deterministic models shared between compatibility and native runtimes. Single-threaded numerical workers retain the two-process admission and deadline; no provider secrets or generative API. SQL preserves immutable revisions and read-time source permissions. Go remains the native API target; compatibility adapters preserve the deployed API without a production cutover.",
+      "references": [
+        "https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html",
+        "https://datahelpdesk.worldbank.org/knowledgebase/articles/889392-about-the-indicators-api",
+        "https://data.worldbank.org/summary-terms-of-use"
+      ]
+    },
     {
       "file": "backend/python/continua_risk.py",
       "category": "Risk Intelligence and manual simulations",

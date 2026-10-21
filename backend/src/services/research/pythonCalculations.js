@@ -4,7 +4,7 @@ import { env } from '../../config/index.js';
 import { ApiError } from '../../api/middleware/errorHandler.js';
 let active = 0;
 export function pythonCalculation(operation, args) {
-    const riskOperation=operation.startsWith('risk_')||operation==='stock_risk';
+    const riskOperation=operation.startsWith('risk_')||operation==='stock_risk'||operation==='investment_research';
     const payload = JSON.stringify({ operation, args });
     if (Buffer.byteLength(payload) > (riskOperation ? 2097152 : 131072))
         return Promise.reject(new ApiError(413, 'Calculation inputs are too large.'));
@@ -16,7 +16,7 @@ export function pythonCalculation(operation, args) {
         try { child = spawn(env.ENGINE_PYTHON_BIN, [fileURLToPath(new URL('../../../python/engine_calculations.py', import.meta.url))], {
             windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'],
             // A calculator has no need for payment, database or provider secrets.
-            env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, WINDIR: process.env.WINDIR, PYTHONUTF8: '1' },
+            env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, WINDIR: process.env.WINDIR, PYTHONUTF8: '1', OPENBLAS_NUM_THREADS:'1', OMP_NUM_THREADS:'1' },
         });
         } catch { active--; reject(new ApiError(503,'Calculation worker is unavailable.')); return; }
         const chunks = [];

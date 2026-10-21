@@ -103,6 +103,9 @@ def value_rating(valuation, now):
 
 
 def calculate(operation, a):
+    if operation == 'investment_research':
+        from investment_intelligence import run_investment
+        return run_investment(*a)
     if operation == 'stock_risk':
         from continua_risk import stock_risk
         return stock_risk(*a)

@@ -45,6 +45,7 @@ func init() {
 func init() { allowed["analyse_market"] = true }
 
 func init() { allowed["risk_simulation"] = true; allowed["lab_calculation"] = true }
+func init() { allowed["investment_research"] = true }
 func init() { allowed["earnings_lab"] = true }
 func init() { allowed["snapshot_plan"] = true }
 func init() { allowed["stress_workspace"] = true }
@@ -149,7 +150,7 @@ func (w *Worker) Calculate(ctx context.Context, request Request) (json.RawMessag
 			cmd.Env = append(cmd.Env, key+"="+value)
 		}
 	}
-	cmd.Env = append(cmd.Env, "PYTHONUTF8=1")
+	cmd.Env = append(cmd.Env, "PYTHONUTF8=1", "OPENBLAS_NUM_THREADS=1", "OMP_NUM_THREADS=1")
 	output := &limitedBuffer{max: outputLimit}
 	cmd.Stdout = output
 	cmd.Stderr = io.Discard

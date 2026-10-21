@@ -8,11 +8,13 @@ COPY src ./src
 COPY scripts ./scripts
 RUN npm run build
 
-FROM node:24-slim AS runtime
+FROM node:24-trixie-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-RUN apt-get update && apt-get install -y --no-install-recommends python3 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-venv && rm -rf /var/lib/apt/lists/*
 COPY python ./python
+RUN python3 -m venv /opt/numerics && /opt/numerics/bin/pip install --no-cache-dir -r python/requirements.txt
+ENV PATH="/opt/numerics/bin:$PATH" OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 COPY package.json package-lock.json* ./
 RUN npm install --omit=dev
 COPY --from=build /app/dist ./dist
