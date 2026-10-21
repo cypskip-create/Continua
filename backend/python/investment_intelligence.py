@@ -167,6 +167,40 @@ def macro_scenario(p):
     return dict(exposures=result,methodology='Direct exposure × hypothetical proportional shock, in each exposure currency. No equity-price prediction, pass-through, hedging, tax or second-order effect is inferred. Rate exposures must be entered as repricing notional and a decimal rate change; FX exposures as verified net currency amounts. Results in different currencies are not aggregated.')
 
 
+def event_impact(p):
+    if p.get('actionCoverageConfirmed') is not True:raise ValueError('Event windows require verified action-adjustment coverage.')
+    as_of=day(p['asOf']);bars=p['prices'];dates=[day(b['date']) for b in bars]
+    if len(bars)>1500 or dates!=sorted(set(dates)) or any(d>as_of for d in dates):raise ValueError('Chronological observed price sessions at/before cutoff required (maximum 1500).')
+    prices=[number(b['close']) for b in bars]
+    if not prices or min(prices)<=0:raise ValueError('Positive source-backed closes required.')
+    for bar in bars:evidence(bar,as_of)
+    windows=[];used=set();excluded=[]
+    for event in sorted(p['events'],key=lambda e:e['availableAt']):
+        evidence(event,as_of)
+        release=day(event['availableAt'])
+        # Publication time is unknown: anchor strictly after the release date.
+        index=next((i for i,d in enumerate(dates) if d>release),None)
+        if index is None or index<20 or index+4>=len(dates):
+            excluded.append(dict(id=event['id'],reason='Needs 20 preceding and five subsequent observed sessions.'));continue
+        sessions=set(range(index-1,index+5))
+        if sessions&used:
+            excluded.append(dict(id=event['id'],reason='Overlapping event window excluded.'));continue
+        used.update(sessions)
+        before=[number(b['volume']) for b in bars[index-20:index] if b.get('volume') is not None]
+        after=[number(b['volume']) for b in bars[index:index+5] if b.get('volume') is not None]
+        volume_change=statistics.mean(after)/statistics.mean(before)-1 if len(before)==20 and len(after)==5 and min(before+after)>=0 and statistics.mean(before)>0 else None
+        windows.append(dict(id=event['id'],type=event['type'],releaseDate=release,start=dates[index-1],end=dates[index+4],
+            fiveSessionReturn=prices[index+4]/prices[index-1]-1,volumeChange=volume_change,sourceUrl=event['sourceUrl']))
+    groups=[]
+    for kind in sorted({r['type'] for r in windows}):
+        sample=[r for r in windows if r['type']==kind]
+        values=[r['fiveSessionReturn'] for r in sample]
+        groups.append(dict(type=kind,samples=len(sample),meanReturn=statistics.mean(values) if len(values)>=10 else None,
+            medianReturn=statistics.median(values) if len(values)>=10 else None,
+            reason=None if len(values)>=10 else 'At least ten non-overlapping matched events of the same type required.'))
+    return dict(windows=windows,groups=groups,excluded=excluded,methodology='Retrospective five-session price change beginning strictly after the dated release (intraday publication time unknown). Volume compares 20 preceding with five following observed sessions. At least ten same-type non-overlapping events required for grouped statistics. No forward filling, causal attribution, probability or future price prediction. Corporate-action coverage must be explicitly verified; raw returns still exclude dividend income.')
+
+
 def optimize(p):
     import numpy as np
     from scipy.optimize import linprog, minimize
@@ -224,6 +258,14 @@ def optimize(p):
     if not 0 <= cap <= 1:
         raise ValueError('Turnover cap must be between zero and one.')
     constraints.append({'type': 'ineq', 'fun': lambda w: cap-np.abs(w-current).sum()/2})
+    # HiGHS often returns a vertex. Risk-parity has stationary boundary points;
+    # project toward the center of the feasible set before optimizing risk.
+    # This is an initialization solve, never a substituted output portfolio.
+    center=np.ones(n)/n
+    initial=minimize(lambda w:float(((w-center)**2).sum()),feasible.x,method='SLSQP',bounds=bounds,
+        constraints=constraints,options={'maxiter':300,'ftol':1e-11})
+    if not initial.success:
+        raise ValueError('Turnover and allocation limits do not admit a converged feasible initialization. Relax the constraints.')
     objective = p.get('objective', 'minimum-variance')
     scaled = c / np.trace(c)
     vol = np.sqrt(np.diag(scaled))
@@ -237,7 +279,7 @@ def optimize(p):
             return float(((shares-target)**2).sum())
         if objective == 'maximum-diversification': return -(w@vol)/math.sqrt(variance)
         raise ValueError('Select minimum-variance, risk-parity or maximum-diversification.')
-    solved = minimize(loss, feasible.x, method='SLSQP', bounds=bounds, constraints=constraints,
+    solved = minimize(loss, initial.x, method='SLSQP', bounds=bounds, constraints=constraints,
                       options={'maxiter': 400, 'ftol': 1e-10})
     w = solved.x
     if not solved.success or any(abs(k['fun'](w)) > 1e-6 if k['type'] == 'eq' else np.min(k['fun'](w)) < -1e-6 for k in constraints):
@@ -381,12 +423,21 @@ def run_investment(p):
     try:
         kind = p['kind']
         if 'asOf' in p and day(p['asOf'])>date.today().isoformat():raise ValueError('Future evidence cutoffs are not supported.')
-        if len(p.get('observations',[]))>5000:raise ValueError('Observation budget exceeded.')
+        if isinstance(p.get('observations'),list) and len(p['observations'])>5000:raise ValueError('Observation budget exceeded.')
         if kind=='backtest' and day(p['end'])>date.today().isoformat():raise ValueError('Backtests cannot use future sessions.')
-        if kind == 'macro': result = macro(p['observations'], p['asOf'])
+        if kind == 'macro':
+            result = macro(p['observations'], p['asOf'])
+            if p.get('basic') is True:
+                for series in result['series']:
+                    series['history']=[series['latest']];series['change']=None
+                result['access']='Current basic observations; historical trends require Premium.'
         elif kind == 'factors': result = factor_profiles(p['observations'], p['asOf'])
         elif kind == 'factor-model': result = factor_model(p)
         elif kind == 'macro-scenario': result = macro_scenario(p)
+        elif kind == 'event-impact': result = event_impact(p)
+        elif kind == 'financial-extension':
+            from financial_extensions import financial_extensions
+            result=financial_extensions(p)
         elif kind == 'optimization': result = optimize(p)
         elif kind == 'backtest': result = backtest(p)
         else: raise ValueError('Unsupported research module.')

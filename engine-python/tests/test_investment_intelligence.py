@@ -2,6 +2,7 @@
 import copy
 import math
 import unittest
+from datetime import date,timedelta
 from continua_engine.investment import run_investment
 
 SOURCE='https://example.org/fixture'
@@ -57,6 +58,32 @@ class InvestmentTests(unittest.TestCase):
         self.assertAlmostEqual(result['data']['proposedWeights'][0],.77,places=5)
         p['covariance']=[[.0001,.2],[0,.0004]]
         self.assertEqual(run_investment(p)['status'],422)
+
+    def test_optional_cash_and_unknown_constraints(self):
+        p=self.optimizer();p['cashMaximum']=.2
+        result=run_investment(p)
+        self.assertEqual(result['status'],200,result)
+        self.assertEqual(result['data']['symbols'][-1],'CASH')
+        self.assertAlmostEqual(result['data']['proposedWeights'][-1],.2,places=5)
+        self.assertEqual(result['data']['proposed']['contributions'][-1],0)
+        p['maximum']={'UNKNOWN':.5}
+        self.assertEqual(run_investment(p)['status'],422)
+
+    def test_factor_covariance_reconciles_and_holdout_cannot_change_training(self):
+        rows=[]
+        for i in range(180):
+            d=(date(2020,1,1)+timedelta(days=i)).isoformat();factor=math.sin(i)*.01
+            rows.append(dict(date=d,availableAt=d,sourceUrl=SOURCE,factors={'market':factor},returns={'A':2*factor+.001*math.cos(i)}))
+        p=dict(kind='factor-model',asOf='2021-01-01',factors=['market'],symbols=['A'],weights=[1],observations=rows)
+        result=run_investment(p)
+        self.assertEqual(result['status'],200,result)
+        self.assertAlmostEqual(result['data']['loadings'][0][0],2,delta=.03)
+        self.assertAlmostEqual(result['data']['reconciliationError'],0,places=15)
+        altered=copy.deepcopy(p)
+        for row in altered['observations'][120:]:row['returns']['A']+=.5
+        self.assertEqual(result['data']['loadings'],run_investment(altered)['data']['loadings'])
+        altered['observations'][10]['availableAt']='2022-01-01'
+        self.assertEqual(run_investment(altered)['status'],422)
 
     def basket(self):
         return dict(kind='backtest',start='2020-01-01',end='2020-01-03',capital=1000,

@@ -23,6 +23,7 @@ COPY engine-python/continua_engine/ engine-python/continua_engine/
 COPY backend/python/engine_calculations.py backend/python/engine_calculations.py
 COPY backend/python/continua_risk.py backend/python/continua_risk.py
 COPY backend/python/investment_intelligence.py backend/python/investment_intelligence.py
+COPY backend/python/financial_extensions.py backend/python/financial_extensions.py
 COPY backend/python/requirements.txt backend/python/requirements.txt
 RUN pip install --no-cache-dir -r backend/python/requirements.txt
 COPY backend/migration/ backend/migration/
