@@ -137,3 +137,21 @@ are verified. Imported snapshots are structure/numerically validated, not
 independently authenticated. Cash scenarios are explicit direct exposures, not
 stock-price predictions. Old archived artifacts require explicit reprocessing
 if their original collection did not parse them.
+
+## Release verification
+
+Local final checks: production build and 26 edge security tests passed; browser
+artifact secret audit found zero findings across 171 files; frontend 131 tests
+passed; compatibility backend 462 passed with 18 opt-in/database skips, followed
+by all 12 opt-in Python worker parity tests passing; Engine 140 tests passed;
+native scraper 188 tests ran successfully with six external PostgreSQL fixture
+skips; native Go packages passed. The CI job exercises those PostgreSQL fixtures
+against its disposable service. Source audit inventoried 66 expansion entrypoints.
+An unauthenticated browser correctly redirected protected Engine navigation to
+sign-in; this is not an authenticated end-to-end UI certification.
+
+Security patches include Vite 8.3.5 in all three lockfiles, Pillow 13.0.0,
+certifi 2026.10.19, and Go 1.27.3. CI identified the newly published
+GO-2026-6809 in Go 1.27.2; both go.mod and the verified official Docker digest
+were updated. See https://go.dev/dl/ and
+https://pkg.go.dev/vuln/GO-2026-6809 . No alerts were dismissed or scanners disabled.
