@@ -40,13 +40,13 @@ concurrency:
 jobs:
   collect:
     if: github.event_name == 'workflow_dispatch' || (github.event.schedule == '17 */8 * * *' && vars.CONTINUA_SCHEDULED_NEWS_ENABLED == 'true') || (github.event.schedule == '43 6,12,20 * * *' && vars.CONTINUA_SCHEDULED_DOCUMENTS_ENABLED == 'true')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
           cache: pip

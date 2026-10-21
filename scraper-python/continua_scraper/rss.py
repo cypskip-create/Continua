@@ -3,7 +3,7 @@ import hashlib
 import pathlib
 import tempfile
 from datetime import datetime,timezone
-from .download import Artifact
+from .download import Artifact, SourceHTTPError
 from .html import normalize_feed_summary,article_body_text,article_image
 
 def feed_documents(text,feed_url,max_items=50):
@@ -47,14 +47,30 @@ class RssAdapter:
     async def fetch(self,document):
         context=document.get('context') or {}
         if not await self.io.downloader.robots_allowed(document['url']):
-            summary=(context.get('feedSummary') or '').strip()
-            if not summary:raise PermissionError('Article robots disallows collection and no feed summary exists')
-            data=summary.encode('utf-8')
-            file=tempfile.NamedTemporaryFile(prefix='continua-rss-summary-',suffix='.raw',delete=False)
-            with file:file.write(data)
-            artifact=Artifact(pathlib.Path(file.name),document['url'],'text/plain; charset=utf-8',len(data),hashlib.sha256(data).hexdigest())
-            return await self.io.persist(document,artifact,'rss','scraper-phase7-0.1.0',published_at=context.get('publishedAt'),metadata=dict(context,contentSource='rss_summary',articleRobotsAllowed=False))
-        return await self.io.fetch_document(document,'rss','scraper-phase7-0.1.0',published_at=context.get('publishedAt'))
+            return await self.feed_summary(document,articleRobotsAllowed=False)
+        try:
+            return await self.io.fetch_document(document,'rss','scraper-phase7-0.1.0',published_at=context.get('publishedAt'))
+        except SourceHTTPError as error:
+            # A publisher feed is independently obtained evidence. Never bypass
+            # article access controls or retry deleted/forbidden articles forever.
+            # Infrastructure/transient errors still fail and retain their retry path.
+            if error.status not in (403,404,410):raise
+            if not (context.get('feedSummary') or '').strip():raise
+            return await self.feed_summary(document,articleRobotsAllowed=True,articleHTTPStatus=error.status)
+
+    async def feed_summary(self,document,**availability):
+        context=document.get('context') or {}
+        summary=(context.get('feedSummary') or '').strip()
+        if not summary:raise PermissionError('Article unavailable and no public feed summary exists')
+        data=summary.encode('utf-8')
+        file=tempfile.NamedTemporaryFile(prefix='continua-rss-summary-',suffix='.raw',delete=False)
+        with file:file.write(data)
+        artifact=Artifact(pathlib.Path(file.name),document['url'],'text/plain; charset=utf-8',len(data),hashlib.sha256(data).hexdigest())
+        try:
+            return await self.io.persist(document,artifact,'rss','scraper-phase7-0.1.0',published_at=context.get('publishedAt'),metadata=dict(context,contentSource='rss_summary',evidenceUrl=self.feed_url,**availability))
+        except BaseException:
+            artifact.path.unlink(missing_ok=True)
+            raise
 
     async def parse(self,fetched):
         content_type=fetched.get('contentType') or ''

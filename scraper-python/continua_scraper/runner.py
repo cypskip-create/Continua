@@ -100,6 +100,9 @@ class AdapterRunner:
                     summary['failed']+=1
                     errors=summary.setdefault('errorClasses',{})
                     category=f'{stage}:{type(error).__name__}'
+                    from .download import SourceHTTPError
+                    if isinstance(error,SourceHTTPError) and type(error.status) is int:
+                        category=f'{category}:{error.status}'
                     safe_code=getattr(error,'safe_code',None)
                     if safe_code in {*(f'browser_exit_{i}' for i in range(1,20)),'browser_exit_other'}:
                         category=f'{stage}:{safe_code}'
