@@ -27,7 +27,7 @@ class CollectorRuntime:
         self.registry=AdapterRegistry(self.sources,storage,self.evidence,self.jobs,self.checkpoints,self.runner,self.state,self.dead_letters,self.pdf,self.heavy_queue,database)
         self.registry.workload_role=self.workload_role
         self.extraction=ExtractionService(self.evidence,storage,self.pdf,self.dead_letters)
-        self.archive=R2Archive(database,storage.r2,storage.materialize)
+        self.archive=R2Archive(database,storage.r2,storage.materialize,include_legacy=storage.rollback is not None)
         self.market_source=MarketSource(self)
         def batch(name,default):
             value=int(os.environ.get(name,str(default)))

@@ -1,3 +1,6 @@
+import {ownedIdentity} from './identity.mjs';
+import {scheduledMaintenance} from './maintenance.mjs';
+import {privateEvents} from './private-events.mjs';
 import {session} from './session.mjs';
 import {reportPolicy,cspReport} from './browser-security.mjs';
 const security={"X-Content-Type-Options":"nosniff","X-Frame-Options":"DENY","Referrer-Policy":"no-referrer","Strict-Transport-Security":"max-age=31536000","Permissions-Policy":"camera=(self), microphone=(self), geolocation=()","Content-Security-Policy":"frame-ancestors 'none'; base-uri 'self'; object-src 'none'"};
@@ -16,7 +19,7 @@ export function upstreamUrl(requestUrl,origin){
  const input=new URL(requestUrl),upstream=new URL(origin);
  if(upstream.protocol!=='https:'||upstream.username||upstream.password||upstream.pathname!=='/'||upstream.search||upstream.hash)throw new Error('Invalid upstream origin');
  let decoded;try{decoded=decodeURIComponent(input.pathname);}catch{throw new Error('Invalid route encoding');}
- if(!input.pathname.startsWith('/api/v1/')||/%(?:2f|5c|25|00)/i.test(input.pathname)||/\/admin(?:\/|$)|\/billing\/paystack\/webhook/i.test(decoded))throw new Error('Restricted gateway route');
+ if(!input.pathname.startsWith('/api/v1/')||/%(?:2f|5c|25|00)/i.test(input.pathname)||/\/(?:admin|internal)(?:\/|$)|\/billing\/paystack\/webhook/i.test(decoded))throw new Error('Restricted gateway route');
  upstream.pathname=input.pathname;upstream.search=input.search;return upstream;
 }
 export async function boundedBody(request,max=512*1024){
@@ -27,8 +30,12 @@ export async function boundedBody(request,max=512*1024){
 }
 function reply(body,status=200){return new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store',...security}});}
 import {media} from './media.mjs';
-export default {async fetch(request,env,ctx){
+export default {scheduled:scheduledMaintenance,async fetch(request,env,ctx){
+ if(env.MIGRATION_WRITE_FREEZE==='true'&&new URL(request.url).pathname.startsWith('/api/'))return new Response(JSON.stringify({error:'Continua is completing a database migration. Please retry shortly.',code:'MIGRATION_MAINTENANCE'}),{status:503,headers:{'Content-Type':'application/json','Cache-Control':'no-store','Retry-After':'60',...security}});
  const url=new URL(request.url),id=crypto.randomUUID();
+ const eventsResponse=await privateEvents(request,env);if(eventsResponse)return eventsResponse;
+ const identityResponse=await ownedIdentity(request,env);if(identityResponse)return identityResponse;
+ if(env.AUTH_PROVIDER==='better-auth'&&url.pathname.startsWith('/api/session/'))return reply({error:'Legacy identity route unavailable'},410);
  const sessionResponse=await session(request,env);if(sessionResponse)return sessionResponse;
  const reportResponse=await cspReport(request,env);if(reportResponse)return reportResponse;
  const mediaResponse=await media(request,env,security);if(mediaResponse)return mediaResponse;
@@ -50,7 +57,7 @@ export default {async fetch(request,env,ctx){
  const limiter=url.pathname.startsWith('/api/v1/billing/')?env.PAYMENT_RATE_LIMIT:env.EDGE_RATE_LIMIT;
  if(limiter){const key=request.headers.get('CF-Connecting-IP');if(!key)return reply({error:'Client identity unavailable'},403);const result=await limiter.limit({key});if(!result.success)return new Response(JSON.stringify({error:'Too many requests'}),{status:429,headers:{'Content-Type':'application/json','Retry-After':'60','Cache-Control':'no-store',...security}});}
  const headers=new Headers();
- for(const name of ['Content-Type','Accept','X-User-Token','X-Supabase-Key','If-None-Match']){const value=request.headers.get(name);if(value)headers.set(name,value);}
+ for(const name of ['Content-Type','Accept','X-User-Token','X-Supabase-Key','If-None-Match','Prefer']){const value=request.headers.get(name);if(value)headers.set(name,value);}
  if(env.BACKEND_API_KEY)headers.set('X-API-Key',env.BACKEND_API_KEY);else return reply({error:'Gateway credentials not configured'},503);
  if(env.EDGE_ORIGIN_SECRET){
   const ip=request.headers.get('CF-Connecting-IP');

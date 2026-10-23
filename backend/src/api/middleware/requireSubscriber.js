@@ -1,3 +1,4 @@
+import {getIdentityRuntime} from '../../auth/runtime.js';
 import { env } from "../../config/index.js";
 import { query } from "../../storage/db.js";
 import { ApiError } from "./errorHandler.js";
@@ -9,26 +10,27 @@ export async function requireEngineUser(req, res, next) {
         return next();
     try {
         const token = req.header("x-user-token");
-        const publicKey = req.header("x-supabase-key");
-        if (!token || !publicKey)
-            throw new ApiError(401, "Sign in to use Continua Engine");
-        const response = await fetch(`${env.SUPABASE_URL.replace(/\/$/, "")}/auth/v1/user`, {
-            headers: { Authorization: `Bearer ${token}`, apikey: publicKey },
-            signal: AbortSignal.timeout(10_000),
-        });
-        if (response.status === 401 || response.status === 403)
-            throw new ApiError(401, "Your session expired. Sign in again.");
-        if (!response.ok)
-            throw new ApiError(503, "Unable to verify Engine access. Please retry.");
-        const user = await response.json();
-        if (!user.id || !/^[0-9a-f-]{36}$/i.test(user.id))
-            throw new ApiError(401, "Invalid user session");
+        if(!token)throw new ApiError(401,"Sign in to use Continua Engine");
+        let user;
+        const identity=getIdentityRuntime();
+        if(identity){
+            try{user=(await identity.verifyAccess(token)).user;}
+            catch{throw new ApiError(401,"Your session expired or requires verification. Sign in again.");}
+        }else{
+            const publicKey=req.header("x-supabase-key");
+            if(!publicKey)throw new ApiError(401,"Sign in to use Continua Engine");
+            const response=await fetch(`${env.SUPABASE_URL.replace(/\/$/, "")}/auth/v1/user`,{headers:{Authorization:`Bearer ${token}`,apikey:publicKey},signal:AbortSignal.timeout(10000)});
+            if(response.status===401||response.status===403)throw new ApiError(401,"Your session expired. Sign in again.");
+            if(!response.ok)throw new ApiError(503,"Unable to verify Engine access. Please retry.");
+            user=await response.json();
+        }
+        if(!user.id||!/^[0-9a-f-]{36}$/i.test(user.id))throw new ApiError(401,"Invalid user session");
         const profile = await query("SELECT public.effective_subscription_plan($1) AS subscription_plan", [user.id]);
         res.locals ??= {};
         res.locals.engineUserId = user.id;
         res.locals.engineUserEmail = user.email;
         res.locals.enginePlan = profile.rows[0]?.subscription_plan ?? "free";
-        if(Array.isArray(user.factors)&&user.factors.some(f=>f.status==='verified')) {
+        if(!identity&&Array.isArray(user.factors)&&user.factors.some(f=>f.status==='verified')) {
             let claims;try{claims=JSON.parse(Buffer.from(token.split('.')[1]??'','base64url').toString('utf8'));}catch{}
             if(claims?.aal!=='aal2'||claims?.sub!==user.id)throw new ApiError(403,'Complete two-step verification to continue.');
         }

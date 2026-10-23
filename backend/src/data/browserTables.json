@@ -1,0 +1,256 @@
+{
+  "blocked_users": [
+    "id",
+    "blocker_id",
+    "blocked_id",
+    "created_at"
+  ],
+  "comment_likes": [
+    "id",
+    "comment_id",
+    "user_id",
+    "created_at"
+  ],
+  "comment_reactions": [
+    "id",
+    "comment_id",
+    "user_id",
+    "reaction",
+    "created_at",
+    "updated_at"
+  ],
+  "comment_reposts": [
+    "id",
+    "comment_id",
+    "user_id",
+    "created_at"
+  ],
+  "hidden_posts": [
+    "id",
+    "post_id",
+    "user_id",
+    "created_at"
+  ],
+  "muted_keywords": [
+    "id",
+    "user_id",
+    "keyword",
+    "created_at"
+  ],
+  "muted_users": [
+    "id",
+    "muter_id",
+    "muted_id",
+    "created_at"
+  ],
+  "notifications": [
+    "id",
+    "user_id",
+    "actor_id",
+    "type",
+    "feature",
+    "title",
+    "message",
+    "action_url",
+    "entity_id",
+    "entity_type",
+    "read",
+    "created_at"
+  ],
+  "payment_methods": [
+    "id",
+    "user_id",
+    "method_type",
+    "label",
+    "detail",
+    "is_default",
+    "created_at"
+  ],
+  "portfolios": [
+    "id",
+    "user_id",
+    "symbol",
+    "name",
+    "shares",
+    "avg_cost",
+    "sector",
+    "created_at",
+    "updated_at"
+  ],
+  "post_bookmarks": [
+    "id",
+    "post_id",
+    "user_id",
+    "created_at"
+  ],
+  "post_comments": [
+    "id",
+    "post_id",
+    "user_id",
+    "content",
+    "created_at",
+    "updated_at",
+    "parent_comment_id",
+    "edited_at"
+  ],
+  "post_likes": [
+    "id",
+    "post_id",
+    "user_id",
+    "created_at"
+  ],
+  "post_reactions": [
+    "id",
+    "post_id",
+    "user_id",
+    "reaction",
+    "created_at",
+    "updated_at"
+  ],
+  "post_reposts": [
+    "id",
+    "post_id",
+    "user_id",
+    "created_at"
+  ],
+  "posts": [
+    "id",
+    "user_id",
+    "content",
+    "image_url",
+    "stock_mentions",
+    "created_at",
+    "updated_at",
+    "edited_at",
+    "quoted_post_id",
+    "quoted_comment_id",
+    "image_urls",
+    "poll"
+  ],
+  "price_alerts": [
+    "id",
+    "user_id",
+    "symbol",
+    "alert_type",
+    "target_value",
+    "is_active",
+    "triggered_at",
+    "created_at",
+    "updated_at",
+    "exchange",
+    "currency",
+    "indicator",
+    "indicator_params"
+  ],
+  "profiles": [
+    "id",
+    "user_id",
+    "full_name",
+    "email",
+    "avatar_url",
+    "subscription_plan",
+    "created_at",
+    "updated_at",
+    "bio",
+    "portfolio_public",
+    "followers_count",
+    "following_count",
+    "banner_url",
+    "handle",
+    "tradershub_onboarded",
+    "portfolio_hide_amounts",
+    "portfolio_hide_gains",
+    "portfolio_top_holdings_only",
+    "portfolio_followers_only",
+    "interests",
+    "trading_experience",
+    "gender",
+    "subscription_expires_at"
+  ],
+  "profiles_public": [
+    "id",
+    "user_id",
+    "full_name",
+    "avatar_url",
+    "banner_url",
+    "bio",
+    "subscription_plan",
+    "portfolio_public",
+    "portfolio_hide_amounts",
+    "portfolio_hide_gains",
+    "portfolio_top_holdings_only",
+    "portfolio_followers_only",
+    "followers_count",
+    "following_count",
+    "handle",
+    "tradershub_onboarded",
+    "trading_experience",
+    "created_at",
+    "updated_at"
+  ],
+  "room_members": [
+    "id",
+    "room_id",
+    "user_id",
+    "role",
+    "joined_at"
+  ],
+  "room_messages": [
+    "id",
+    "room_id",
+    "user_id",
+    "content",
+    "created_at"
+  ],
+  "rooms": [
+    "id",
+    "creator_id",
+    "name",
+    "description",
+    "category",
+    "room_type",
+    "is_private",
+    "is_live",
+    "scheduled_at",
+    "topic",
+    "cover_url",
+    "member_count",
+    "online_count",
+    "created_at",
+    "updated_at",
+    "stock_symbol"
+  ],
+  "user_follows": [
+    "id",
+    "follower_id",
+    "following_id",
+    "created_at"
+  ],
+  "user_preferences": [
+    "id",
+    "user_id",
+    "show_sensitive_content",
+    "font_size",
+    "notif_comments",
+    "notif_follows",
+    "created_at",
+    "updated_at"
+  ],
+  "watchlist_folders": [
+    "id",
+    "user_id",
+    "name",
+    "is_default",
+    "sort_order",
+    "created_at",
+    "updated_at"
+  ],
+  "watchlists": [
+    "id",
+    "user_id",
+    "symbol",
+    "name",
+    "created_at",
+    "folder_id"
+  ]
+}

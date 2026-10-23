@@ -1,4 +1,11 @@
 import express from "express";
+import {getIdentityRuntime} from '../auth/runtime.js';
+import {createIdentityRouter} from '../auth/identityRoutes.js';
+import {createBrowserDataRouter} from '../data/browserDataRoutes.js';
+import {createOwnedFunctionRouter} from '../data/functionRoutes.js';
+import {createMaintenanceRouter} from '../data/maintenanceRoutes.js';
+import {runOwnedApplicationJobs} from '../workers/ownedApplicationWorker.js';
+import {migrationFreeze} from './middleware/migrationFreeze.js';
 import cors from "cors";
 import helmet from "helmet";
 import {rateLimit, ipKeyGenerator} from 'express-rate-limit';
@@ -51,6 +58,7 @@ export function createServer() {
     // number of hops so per-client rate limits use the actual visitor address.
     app.set("trust proxy", env.NODE_ENV === "production" ? env.TRUST_PROXY_HOPS : 0);
     app.use(helmet());
+    app.use(migrationFreeze(env.MIGRATION_WRITE_FREEZE));
     app.use(cors(corsOptions));
     app.use(edgeClientIdentity());
     app.use('/api/v1', preAuthenticationRateLimit());
@@ -58,6 +66,15 @@ export function createServer() {
         keyGenerator: (req, res) => ipKeyGenerator(rateLimitClientIP(req, res)),
         standardHeaders: true, legacyHeaders: false,
     }), express.raw({ type: "application/json", limit: "64kb" }), paystackWebhook);
+    const identity=getIdentityRuntime();
+    if(identity){
+        app.use('/api/v1/internal',createMaintenanceRouter({secret:env.AUTH_MAINTENANCE_SECRET,run:runOwnedApplicationJobs,database:identity.database}));
+        // Recovery and OAuth callback paths contain credentials. Mount before
+        // requestLogger, and expose only the owned bridge, never raw auth.handler.
+        app.use('/api/v1/identity',apiKeyAuth(),createIdentityRouter({...identity,publicOrigin:env.AUTH_PUBLIC_ORIGIN}));
+        app.use('/api/v1/data',apiKeyAuth(),express.json({limit:'64kb'}),createBrowserDataRouter(identity));
+        app.use('/api/v1/functions',apiKeyAuth(),express.json({limit:'64kb'}),createOwnedFunctionRouter(identity));
+    }
     app.use(express.json({ limit: '512kb' }));
     app.use(requestLogger);
     // Health stays open and unmetered — infra probes shouldn't need a key or

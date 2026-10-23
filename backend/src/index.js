@@ -21,10 +21,10 @@ async function main() {
     });
     startWebSocketServer(httpServer);
     const stopDiagnostics = startRuntimeDiagnostics();
-    const renewalTask = startCardRenewalWorker();
+    const renewalTask = env.WORKERS_ENABLED ? startCardRenewalWorker() : {stop(){}};
     let stopWorkers = () => { };
     try {
-        stopWorkers = await startAllWorkers();
+        if(env.WORKERS_ENABLED)stopWorkers = await startAllWorkers();
     }
     catch (err) {
         // A transient upstream/database failure must not take the health endpoint

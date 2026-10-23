@@ -47,7 +47,7 @@ const policies: Record<
       ],
       [
         "Processors and storage",
-        "Infrastructure providers include Supabase, Render and Vercel; Paystack handles hosted payment checkout. We do not ask for full card numbers, PINs or CVVs in Settings. Some infrastructure can process data outside Kenya; contact support for provider/transfer information. Applicable transfer safeguards must be assessed by the operator.",
+        (import.meta.env.VITE_AUTH_PROVIDER==='better-auth'?"Infrastructure providers include Neon for database storage, Render for backend and authentication, Cloudflare for hosting and file storage, Brevo for account emails, and Google for optional sign-in; Paystack handles hosted payment checkout. ":"Infrastructure providers include Supabase, Render and Vercel; Paystack handles hosted payment checkout. ")+"We do not ask for full card numbers, PINs or CVVs in Settings. Some infrastructure can process data outside Kenya; contact support for provider/transfer information. Applicable transfer safeguards must be assessed by the operator.",
       ],
       [
         "Browser storage and tracking",

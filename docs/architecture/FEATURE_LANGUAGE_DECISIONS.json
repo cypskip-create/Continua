@@ -1,9 +1,83 @@
 {
-  "reviewDate": "2026-10-21",
+  "reviewDate": "2026-10-23",
   "scope": "Every backend/Engine/scraper runtime module, operator script, Edge entrypoint and existing SQL migration",
   "method": "Workload-specific rationale, supported tooling and feature-preserving tests; not a universal fastest-language claim.",
   "runtimeImplementationsUseTypeScript": false,
   "features": [
+    {
+      "file": "infra/neon/restore-empty-production.mjs",
+      "category": "Controlled production database migration operators",
+      "language": "JavaScript ESM orchestration, existing pg_dump/pg_restore and PostgreSQL SQL",
+      "runtime": "Local operator only; no new application service",
+      "reason": "Reuse the rehearsed PostgreSQL archive/DDL transformations and exact SQL row hashes. Fixed project/branch/endpoint guards, explicit approval, empty-target checks, preserved source grants, stable UUID/bcrypt import and a final source-identity stability gate prevent silent overwrite or credential loss. These operators have not yet executed a production restore. Optional pinned Neon HTTPS driver is confined to a read-only artifact verification query when local TCP is unavailable; transactional production import stays on the existing PostgreSQL tooling.",
+      "references": [
+        "https://www.postgresql.org/docs/current/app-pgdump.html",
+        "https://www.postgresql.org/docs/current/app-pgrestore.html",
+        "https://github.com/neondatabase/serverless"
+      ]
+    },
+    {
+      "file": "backend/src/data/deleteAccount.js",
+      "category": "Preserved account deletion during authentication migration",
+      "language": "Existing JavaScript ESM and transactional PostgreSQL SQL",
+      "runtime": "Existing Render process and existing Cloudflare public-media binding",
+      "reason": "Preserve explicit confirmation, live identity/step-up/MFA checks and original ownership rules. One database transaction deletes the owned identity/application rows and durably queues media-prefix cleanup, so a network failure cannot leave database deletion half-applied. Bounded existing Worker cleanup retries only exact owner prefixes; it never deletes private historical financial originals. The isolated staging fixture verified revocation, non-FK cleanup, queue durability and wrong-owner rejection without deleting original users.",
+      "references": [
+        "https://www.postgresql.org/docs/current/tutorial-transactions.html",
+        "https://developers.cloudflare.com/r2/api/workers/workers-api-reference/"
+      ]
+    },
+    {
+      "file": "backend/src/data/alertSweep.js",
+      "category": "Scheduled application jobs after Supabase removal",
+      "language": "Existing JavaScript ESM and node-cron; PostgreSQL NUMERIC and transaction locks",
+      "runtime": "Existing Render backend with existing Cloudflare Worker scheduled wake-up; no added service",
+      "reason": "Retain the existing indicator service and atomic SQL notification delivery rather than translate numerical formulas or add another runtime. Exact price comparison stays in PostgreSQL, advisory transaction locks prevent concurrent sweeps, and bounded transactions roll back partial delivery. Preserve five-minute alerts and minute membership expiry; a dedicated secret protects the external wake-up because free Render timers do not run while the service sleeps. Production scheduling remains opt-in pending deployment approval and resource checks.",
+      "references": [
+        "https://www.nodecron.com/scheduling-options.html",
+        "https://www.postgresql.org/docs/18/explicit-locking.html",
+        "https://developers.cloudflare.com/workers/configuration/cron-triggers/"
+      ]
+    },
+    {
+      "file": "backend/src/streaming/privateSnapshotFeed.js",
+      "category": "Private subscription replacement during Neon migration",
+      "language": "Existing JavaScript ESM WebSocket server and browser transport; PostgreSQL SQL for live session and row authorization",
+      "runtime": "Existing Render listener and owned Cloudflare upgrade; no Neon Realtime service or extra process",
+      "reason": "Reuse the deployed socket infrastructure and the audited SQL query/RLS boundary. A bounded five-second latest-100-row reconciliation feed avoids an always-on CDC service or replication slot on the free compute budget. Tokens stay in frames, user authority remains separate from market API keys, and owner checks, reconnect snapshots, cleanup, admission limits and backpressure are tested. Snapshot semantics and resource limits are explicit; production capacity and deployed upgrade behavior remain validation gates.",
+      "references": [
+        "https://github.com/websockets/ws",
+        "https://developers.cloudflare.com/workers/runtime-apis/websockets/",
+        "https://www.postgresql.org/docs/current/transaction-iso.html"
+      ]
+    },
+    {
+      "file": "backend/src/data/priceAlerts.js",
+      "category": "Owned alert function during Neon migration",
+      "language": "PostgreSQL SQL for exact prices, owner predicates and atomic delivery; JavaScript ESM for the existing Render route",
+      "runtime": "Existing Render process and bounded Neon connection pool; no extra service or paid AI activation",
+      "reason": "Reuse the current market.live_quotes authority and existing atomic deliver_alert_notification function. Keep decimal comparison and JSON serialization in PostgreSQL rather than converting financial values through JavaScript. Recheck the live session in the transaction, bind the verified owner, ignore browser prices and user IDs, bound each check to 1,000 alerts and eight-second statements, and roll back all notifications on failure. Synthetic staging concurrent checks proved one triggered notification and no other-owner changes.",
+      "references": [
+        "https://www.postgresql.org/docs/current/datatype-numeric.html",
+        "https://www.postgresql.org/docs/current/transaction-iso.html"
+      ]
+    },
+    {
+      "file": "backend/src/auth/continuaAuth.js",
+      "category": "Supabase to Neon authentication migration",
+      "language": "Existing JavaScript ESM backend and PostgreSQL SQL",
+      "runtime": "Better Auth 1.7.12 on the existing Render Node/Express service; pg pool bounded to two connections during staging; bcrypt 6.0.0; no added service or ORM; Nodemailer 10.2.0 uses send-only SMTP with required TLS and no persistent SMTP pool",
+      "reason": "The user explicitly approved self-hosted Better Auth after managed Neon Auth staging rejected email changes and lacked TOTP. Its supported PostgreSQL adapter and documented Supabase bcrypt migration preserve original UUIDs and password digests. TOTP, email-change confirmation and database-backed revocable sessions run in the existing service. Go remains the separately gated native target; this compatibility migration does not authorize a native production cutover. Production activation requires route, ownership, email transport, resource and rollback validation. The private transactional adapter is disabled until approved, bounds daily attempts in PostgreSQL, and avoids an account-wide email API key. Production bot verification uses the supported Better Auth Turnstile plugin with hostname/action checks; test bypass is limited to invalid/loopback fixture origins.",
+      "references": [
+        "https://better-auth.com/docs/guides/supabase-migration-guide",
+        "https://better-auth.com/docs/plugins/2fa",
+        "https://better-auth.com/docs/integrations/express",
+        "https://better-auth.com/docs/concepts/database",
+        "https://nodemailer.com/smtp",
+        "https://better-auth.com/docs/plugins/captcha",
+        "https://render.com/docs/free"
+      ]
+    },
     {
       "file": "backend/python/institutional_intelligence.py",
       "category": "Phase 3 institutional research and governance",

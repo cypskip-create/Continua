@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase,restoreBrowserSession,clearBrowserSessionCookie } from '@/integrations/supabase/client';
+import { supabase,restoreBrowserSession,clearBrowserSessionCookie,observeSessionSecurity } from '@/integrations/supabase/client';
 import {queryClient} from '@/lib/queryClient';
 import {clearPrivateSessionCache} from '@/lib/privateSessionCache';
 import {signupAcknowledgement} from '@/lib/legalPolicy';
@@ -10,6 +10,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   recoveryMode: boolean;
+  mfaPending: boolean;
   signUp: (email: string, password: string, fullName: string, acknowledgement:{adult:boolean;terms:boolean},captchaToken?:string) => Promise<{ error: any; session: Session | null }>;
   signIn: (email: string, password: string,captchaToken?:string) => Promise<{ error: any; session: Session | null }>;
   signOut: () => Promise<void>;
@@ -23,10 +24,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [recoveryMode,setRecoveryMode]=useState(false);
+  const [mfaPending,setMfaPending]=useState(false);
   const owner=useRef<string|null>(null);
 
   useEffect(() => {
     let bootstrapping=true,active=true;
+    const stopSecurity=observeSessionSecurity(state=>{if(active){setMfaPending(state.mfaPending);setRecoveryMode(state.recoveryMode);}});
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -48,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void restoreBrowserSession().then(()=>supabase.auth.getSession()).then(({data})=>{
       if(!active)return;setSession(data.session);setUser(data.session?.user??null);owner.current=data.session?.user.id??null;
     }).catch(()=>{/* Auth screen offers retry; never fabricate a session. */}).finally(()=>{bootstrapping=false;if(active)setLoading(false);});
-    return () => {active=false;subscription.unsubscribe();};
+    return () => {active=false;stopSecurity();subscription.unsubscribe();};
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string, acknowledgement:{adult:boolean;terms:boolean},captchaToken?:string) => {
@@ -105,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     recoveryMode,
+    mfaPending,
     signUp,
     signIn,
     signOut,

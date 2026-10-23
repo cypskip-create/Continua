@@ -98,14 +98,19 @@ class EvidenceRepository:
     async def unextracted(self,limit=50,driver="r2",rollback_bucket="scraper-raw"):
         if type(limit) is not int or not 1<=limit<=100:
             raise ValueError("invalid extraction batch")
+        if driver not in ('r2','supabase'):raise ValueError('Invalid extraction storage driver')
+        # PostgreSQL resolves relation names even in a false boolean branch.
+        # Neon has no managed storage schema; never mention it in an R2 query.
+        availability="a.storage_path LIKE 'r2://%%'" if driver=='r2' else "EXISTS(SELECT 1 FROM storage.objects o WHERE o.bucket_id=%s AND o.name=replace(a.storage_path,chr(92),'/'))"
+        parameters=(limit,) if driver=='r2' else (rollback_bucket,limit)
         rows=await self.database.query("""SELECT a.id AS artifact_id,a.source_id,a.adapter,a.content_type,a.storage_path,a.document_url,a.sha256,a.size_bytes,a.metadata
           FROM scraping.raw_artifacts a LEFT JOIN LATERAL (
             SELECT e.id,e.text FROM scraping.extractions e WHERE e.artifact_id=a.id ORDER BY e.extracted_at DESC,e.id DESC LIMIT 1) e ON true
           WHERE (e.id IS NULL OR (a.content_type ILIKE '%%pdf%%' AND length(trim(coalesce(e.text,'')))<50))
             AND (a.content_type ILIKE '%%pdf%%' OR a.content_type ILIKE '%%html%%')
-            AND (%s::boolean=false OR EXISTS(SELECT 1 FROM storage.objects o WHERE o.bucket_id=%s AND o.name=replace(a.storage_path,chr(92),'/')))
+            AND ("""+availability+""")
             AND NOT EXISTS(SELECT 1 FROM scraping.dead_letters d WHERE d.source_id=a.source_id AND d.url=a.document_url
               AND d.stage='parse' AND d.last_failed>now()-interval '1 hour')
-          ORDER BY (a.content_type ILIKE '%%pdf%%') DESC,a.discovered_at ASC LIMIT %s""",(driver=="supabase",rollback_bucket,limit))
+          ORDER BY (a.content_type ILIKE '%%pdf%%') DESC,a.discovered_at ASC LIMIT %s""",parameters)
         fields={"artifact_id":"artifactId","source_id":"sourceId","adapter":"adapter","content_type":"contentType","storage_path":"storagePath","document_url":"documentUrl","sha256":"sha256","size_bytes":"sizeBytes","metadata":"metadata"}
         return [mapped(row,fields) for row in rows]

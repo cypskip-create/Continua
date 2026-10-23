@@ -4,13 +4,14 @@
   "main": "worker.mjs",
   "compatibility_date": "2026-10-12",
   "workers_dev": true,
+  "triggers": { "crons": ["* * * * *"] },
   "assets": {
     "directory": "../../app/dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
     "run_worker_first": true
   },
-  "vars": { "BACKEND_ORIGIN": "https://continua-backend.onrender.com", "PUBLIC_EDGE_CACHE": "true", "MEDIA_STORAGE_ENABLED": "true" },
+  "vars": { "BACKEND_ORIGIN": "https://continua-backend.onrender.com", "PUBLIC_EDGE_CACHE": "true", "MEDIA_STORAGE_ENABLED": "true", "APPLICATION_SCHEDULE_ENABLED": "false" },
   "r2_buckets": [{"binding":"MEDIA_BUCKET","bucket_name":"continua-public-media"}],
   "ratelimits": [
     {"name":"AUTH_RATE_LIMIT","namespace_id":"42004","simple":{"limit":20,"period":60}},
@@ -18,5 +19,5 @@
     {"name":"PAYMENT_RATE_LIMIT","namespace_id":"42002","simple":{"limit":10,"period":60}},
     {"name":"MEDIA_RATE_LIMIT","namespace_id":"42003","simple":{"limit":10,"period":60}}
   ],
-  "observability": { "enabled": true }
+  "observability": { "enabled": true, "redact_query_string": true }
 }

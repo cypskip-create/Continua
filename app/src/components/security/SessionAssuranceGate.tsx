@@ -4,9 +4,10 @@ import {useAuth} from '@/hooks/useAuth';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {queryClient} from '@/lib/queryClient';
+import {PendingAuthenticator} from './PendingAuthenticator.jsx';
 
 export function SessionAssuranceGate({children}:{children:React.ReactNode}){
- const {user,session,loading,signOut}=useAuth();
+ const {user,session,loading,signOut,mfaPending}=useAuth();
  const [state,setState]=useState<{token:string;owner:string;factor?:string;error?:string}|null>(null);
  const [code,setCode]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const token=session?.access_token??'';
@@ -17,6 +18,7 @@ export function SessionAssuranceGate({children}:{children:React.ReactNode}){
   })().catch(()=>{if(active)setState({token,owner:user.id,error:'Account verification could not load. Please sign in again.'});});
   return()=>{active=false;};
  },[user?.id,token]);
+ if(mfaPending)return <PendingAuthenticator/>;
  if(!user)return <>{children}</>;
  if(loading||state?.owner!==user.id)return <div role="status" className="min-h-screen grid place-items-center">Verifying your session…</div>;
  if(!state.factor&&!state.error)return <>{children}</>;

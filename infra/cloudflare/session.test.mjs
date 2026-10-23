@@ -4,6 +4,12 @@ import {session,marker,stepUpAllowed} from './session.mjs';
 const env={SUPABASE_PUBLISHABLE_KEY:'fixture-publishable'};
 const refresh='refresh_fixture_0123456789';
 const request=(path='/auth/v1/token?grant_type=password',body={email:'fixture@example.com',password:'fixture-only'},headers={})=>new Request('https://site.workers.dev/api/session'+path,{method:'POST',headers:{Origin:'https://site.workers.dev','X-Continua-Session':'1','Content-Type':'application/json',...headers},body:JSON.stringify(body)});
+
+test('owned identity selection never falls back to Supabase even before old keys are removed',async()=>{
+ let calls=0;const response=await session(request(),{...env,AUTH_PROVIDER:'better-auth'},async()=>{calls++;throw Error('Supabase must not be called');});
+ assert.equal(response.status,410);assert.equal((await response.json()).code,'IDENTITY_MIGRATED');assert.equal(calls,0);
+ assert.ok(response.headers.getSetCookie().every(cookie=>cookie.includes('Max-Age=0')));
+});
 test('login keeps refresh credentials out of JSON and sets private host-only cookies',async()=>{
  const result=await session(request(),env,async(url,options)=>{assert.equal(url.origin,'https://jjsetogmnumoudrovpzn.supabase.co');assert.equal(options.headers.get('apikey'),env.SUPABASE_PUBLISHABLE_KEY);return Response.json({access_token:'fixture-access',refresh_token:refresh});});
  assert.equal((await result.json()).refresh_token,marker);

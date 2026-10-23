@@ -1,0 +1,6374 @@
+[
+  {
+    "file": ".github/workflows/cloud-reconciliation.yml",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 56,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 57,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY"
+      },
+      {
+        "line": 58,
+        "dependency": "SUPABASE_STORAGE_BUCKET"
+      },
+      {
+        "line": 87,
+        "dependency": ""
+      },
+      {
+        "line": 88,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY,SUPABASE_STORAGE_BUCKET,SUPABASE_URL"
+      }
+    ]
+  },
+  {
+    "file": ".github/workflows/deploy-supabase-functions.yml",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 1,
+        "dependency": ""
+      },
+      {
+        "line": 4,
+        "dependency": ""
+      },
+      {
+        "line": 6,
+        "dependency": ""
+      },
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 13,
+        "dependency": ""
+      },
+      {
+        "line": 23,
+        "dependency": "SUPABASE_ACCESS_TOKEN"
+      },
+      {
+        "line": 24,
+        "dependency": "SUPABASE_PROJECT_ID"
+      },
+      {
+        "line": 28,
+        "dependency": ""
+      },
+      {
+        "line": 36,
+        "dependency": ""
+      },
+      {
+        "line": 39,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": ".github/workflows/native-rewrite-tests.yml",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 17,
+        "dependency": ""
+      },
+      {
+        "line": 32,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": ".github/workflows/operational-alerts.yml",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "AGENTS.md",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 14,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "CONTINUA_ENGINE_IMPLEMENTATION.md",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": ""
+      },
+      {
+        "line": 13,
+        "dependency": ""
+      },
+      {
+        "line": 43,
+        "dependency": ""
+      },
+      {
+        "line": 72,
+        "dependency": ""
+      },
+      {
+        "line": 148,
+        "dependency": ""
+      },
+      {
+        "line": 156,
+        "dependency": ""
+      },
+      {
+        "line": 169,
+        "dependency": ""
+      },
+      {
+        "line": 270,
+        "dependency": ""
+      },
+      {
+        "line": 279,
+        "dependency": ""
+      },
+      {
+        "line": 301,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "README.md",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 9,
+        "dependency": ""
+      },
+      {
+        "line": 14,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/package.json",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 46,
+        "dependency": "@supabase/supabase-js"
+      }
+    ]
+  },
+  {
+    "file": "app/src/api/client.ts",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 8,
+        "dependency": ""
+      },
+      {
+        "line": 44,
+        "dependency": ""
+      },
+      {
+        "line": 100,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 102,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY"
+      }
+    ]
+  },
+  {
+    "file": "app/src/components/profile/EditProfileDialog.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 13,
+        "dependency": ""
+      },
+      {
+        "line": 63,
+        "dependency": ""
+      },
+      {
+        "line": 75,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/src/components/rooms/RoomChatDialog.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 8,
+        "dependency": ""
+      },
+      {
+        "line": 32,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 37,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 46,
+        "dependency": ""
+      },
+      {
+        "line": 50,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 55,
+        "dependency": ""
+      },
+      {
+        "line": 61,
+        "dependency": "supabase.from"
+      }
+    ]
+  },
+  {
+    "file": "app/src/components/security/AccountSecurity.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": ""
+      },
+      {
+        "line": 12,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 15,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 16,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 17,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 18,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 19,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 20,
+        "dependency": "supabase.auth"
+      }
+    ]
+  },
+  {
+    "file": "app/src/components/security/AuthBotCheck.tsx",
+    "category": "Authentication and identity",
+    "matches": [
+      {
+        "line": 44,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/src/components/security/RecoveryPassword.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": ""
+      },
+      {
+        "line": 9,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 12,
+        "dependency": "supabase.auth"
+      }
+    ]
+  },
+  {
+    "file": "app/src/components/security/SessionAssuranceGate.tsx",
+    "category": "Authentication and identity",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": ""
+      },
+      {
+        "line": 14,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 15,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 24,
+        "dependency": "supabase.auth"
+      }
+    ]
+  },
+  {
+    "file": "app/src/components/social/PostAttachments.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 31,
+        "dependency": "supabase.rpc"
+      },
+      {
+        "line": 44,
+        "dependency": "supabase.rpc"
+      }
+    ]
+  },
+  {
+    "file": "app/src/components/social/SafetyMenuItems.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": ""
+      },
+      {
+        "line": 19,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 20,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 27,
+        "dependency": "supabase.rpc"
+      },
+      {
+        "line": 48,
+        "dependency": "supabase.rpc"
+      }
+    ]
+  },
+  {
+    "file": "app/src/components/social/SuggestedForYou.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": ""
+      },
+      {
+        "line": 52,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/src/components/social/TradersHubOnboarding.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 10,
+        "dependency": ""
+      },
+      {
+        "line": 134,
+        "dependency": ""
+      },
+      {
+        "line": 166,
+        "dependency": ""
+      },
+      {
+        "line": 230,
+        "dependency": ""
+      },
+      {
+        "line": 270,
+        "dependency": "supabase.from"
+      }
+    ]
+  },
+  {
+    "file": "app/src/components/social/XPostCard.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 14,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/src/components/stock/AIThesisCard.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 5,
+        "dependency": ""
+      },
+      {
+        "line": 31,
+        "dependency": "supabase.functions"
+      }
+    ]
+  },
+  {
+    "file": "app/src/components/stock/CompanyProcessingStatus.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": ""
+      },
+      {
+        "line": 6,
+        "dependency": "supabase.rpc"
+      }
+    ]
+  },
+  {
+    "file": "app/src/hooks/useAccountBlock.ts",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": ""
+      },
+      {
+        "line": 8,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 10,
+        "dependency": "supabase.rpc"
+      }
+    ]
+  },
+  {
+    "file": "app/src/hooks/useAlertsWatcher.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 5,
+        "dependency": ""
+      },
+      {
+        "line": 11,
+        "dependency": ""
+      },
+      {
+        "line": 58,
+        "dependency": "supabase.functions"
+      }
+    ]
+  },
+  {
+    "file": "app/src/hooks/useAuth.tsx",
+    "category": "Authentication and identity",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": "@supabase/supabase-js"
+      },
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 31,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 48,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 58,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 74,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 89,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 96,
+        "dependency": "supabase.auth"
+      }
+    ]
+  },
+  {
+    "file": "app/src/hooks/useFollows.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": ""
+      },
+      {
+        "line": 26,
+        "dependency": ""
+      },
+      {
+        "line": 36,
+        "dependency": ""
+      },
+      {
+        "line": 48,
+        "dependency": ""
+      },
+      {
+        "line": 58,
+        "dependency": ""
+      },
+      {
+        "line": 69,
+        "dependency": ""
+      },
+      {
+        "line": 119,
+        "dependency": ""
+      },
+      {
+        "line": 133,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/src/hooks/useNotifications.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": ""
+      },
+      {
+        "line": 37,
+        "dependency": ""
+      },
+      {
+        "line": 53,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 65,
+        "dependency": "supabase.channel"
+      },
+      {
+        "line": 68,
+        "dependency": ""
+      },
+      {
+        "line": 85,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 90,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 95,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 100,
+        "dependency": "supabase.from"
+      }
+    ]
+  },
+  {
+    "file": "app/src/hooks/usePaymentMethods.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": ""
+      },
+      {
+        "line": 23,
+        "dependency": ""
+      },
+      {
+        "line": 41,
+        "dependency": ""
+      },
+      {
+        "line": 54,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 68,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 69,
+        "dependency": "supabase.from"
+      }
+    ]
+  },
+  {
+    "file": "app/src/hooks/usePortfolio.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": ""
+      },
+      {
+        "line": 50,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 78,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 89,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 103,
+        "dependency": "supabase.from"
+      }
+    ]
+  },
+  {
+    "file": "app/src/hooks/usePosts.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 133,
+        "dependency": ""
+      },
+      {
+        "line": 144,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 145,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 146,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 147,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 186,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 187,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 188,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 189,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 190,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 191,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 192,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 193,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 228,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 231,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 241,
+        "dependency": ""
+      },
+      {
+        "line": 309,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 323,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 333,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 337,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 348,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 352,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 362,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 366,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 374,
+        "dependency": "supabase.rpc"
+      },
+      {
+        "line": 380,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 390,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 391,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 404,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 405,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 411,
+        "dependency": ""
+      },
+      {
+        "line": 417,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 418,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 419,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 420,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 421,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 422,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 464,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 466,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 472,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 474,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 479,
+        "dependency": ""
+      },
+      {
+        "line": 492,
+        "dependency": ""
+      },
+      {
+        "line": 504,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 512,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 523,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/src/hooks/usePriceAlerts.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": ""
+      },
+      {
+        "line": 14,
+        "dependency": ""
+      },
+      {
+        "line": 33,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 51,
+        "dependency": ""
+      },
+      {
+        "line": 77,
+        "dependency": ""
+      },
+      {
+        "line": 100,
+        "dependency": ""
+      },
+      {
+        "line": 125,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/src/hooks/useProfile.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 66,
+        "dependency": ""
+      },
+      {
+        "line": 108,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/src/hooks/useResearchQuota.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": ""
+      },
+      {
+        "line": 30,
+        "dependency": "supabase.rpc"
+      },
+      {
+        "line": 41,
+        "dependency": "supabase.rpc"
+      }
+    ]
+  },
+  {
+    "file": "app/src/hooks/useRooms.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 34,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 36,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 59,
+        "dependency": ""
+      },
+      {
+        "line": 76,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 83,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 92,
+        "dependency": "supabase.from"
+      }
+    ]
+  },
+  {
+    "file": "app/src/hooks/useWatchlist.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 48,
+        "dependency": ""
+      },
+      {
+        "line": 65,
+        "dependency": ""
+      },
+      {
+        "line": 84,
+        "dependency": ""
+      },
+      {
+        "line": 126,
+        "dependency": ""
+      },
+      {
+        "line": 147,
+        "dependency": ""
+      },
+      {
+        "line": 169,
+        "dependency": ""
+      },
+      {
+        "line": 195,
+        "dependency": ""
+      },
+      {
+        "line": 221,
+        "dependency": "supabase.from"
+      }
+    ]
+  },
+  {
+    "file": "app/src/integrations/lovable/index.ts",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": ""
+      },
+      {
+        "line": 31,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 33,
+        "dependency": "supabase.auth"
+      }
+    ]
+  },
+  {
+    "file": "app/src/integrations/supabase/client.ts",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": "@supabase/supabase-js"
+      },
+      {
+        "line": 6,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 7,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY"
+      },
+      {
+        "line": 9,
+        "dependency": ""
+      },
+      {
+        "line": 10,
+        "dependency": ""
+      },
+      {
+        "line": 14,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY,SUPABASE_URL"
+      },
+      {
+        "line": 15,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 28,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 31,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 35,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 38,
+        "dependency": "supabase.auth"
+      }
+    ]
+  },
+  {
+    "file": "app/src/integrations/supabase/types.ts",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 1011,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/src/lib/cloudMedia.js",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 1,
+        "dependency": ""
+      },
+      {
+        "line": 6,
+        "dependency": "supabase.auth"
+      }
+    ]
+  },
+  {
+    "file": "app/src/lib/postImage.ts",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/src/pages/Discover.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 14,
+        "dependency": ""
+      },
+      {
+        "line": 81,
+        "dependency": ""
+      },
+      {
+        "line": 89,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/src/pages/LegalPolicies.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 50,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/src/pages/Notifications.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 20,
+        "dependency": ""
+      },
+      {
+        "line": 102,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 110,
+        "dependency": "supabase.from"
+      }
+    ]
+  },
+  {
+    "file": "app/src/pages/PostDetail.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 11,
+        "dependency": ""
+      },
+      {
+        "line": 46,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 49,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 50,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 51,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 52,
+        "dependency": "supabase.from"
+      }
+    ]
+  },
+  {
+    "file": "app/src/pages/Settings.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 17,
+        "dependency": ""
+      },
+      {
+        "line": 76,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 78,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 80,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 81,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 86,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 100,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 113,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 140,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 146,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 153,
+        "dependency": "supabase.rpc"
+      },
+      {
+        "line": 160,
+        "dependency": "supabase.rpc"
+      },
+      {
+        "line": 184,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 185,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 186,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 197,
+        "dependency": ""
+      },
+      {
+        "line": 204,
+        "dependency": "supabase.functions"
+      }
+    ]
+  },
+  {
+    "file": "app/src/pages/TradersHub.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 23,
+        "dependency": ""
+      },
+      {
+        "line": 129,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/src/pages/UserProfile.tsx",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 13,
+        "dependency": ""
+      },
+      {
+        "line": 106,
+        "dependency": ""
+      },
+      {
+        "line": 119,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 122,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 125,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 129,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 130,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 131,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 150,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 171,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 176,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 180,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 181,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 182,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 183,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 184,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 185,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 195,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 198,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 201,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 205,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 206,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 207,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 219,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 222,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 225,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 229,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 230,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 231,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 256,
+        "dependency": "supabase.from"
+      }
+    ]
+  },
+  {
+    "file": "app/tests/alertFunctions.test.ts",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 8,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/tests/browser-smoke.mjs",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 10,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 11,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY"
+      },
+      {
+        "line": 53,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/tests/communitySafety.test.ts",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 22,
+        "dependency": ""
+      },
+      {
+        "line": 23,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 24,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "app/tests/edgeMigration.test.ts",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 7,
+        "dependency": ""
+      },
+      {
+        "line": 10,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 25,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "app/tests/landing-smoke.mjs",
+    "category": "Frontend data access",
+    "matches": [
+      {
+        "line": 8,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 9,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY"
+      }
+    ]
+  },
+  {
+    "file": "app/tests/sessionSecurity.test.ts",
+    "category": "Authentication and identity",
+    "matches": [
+      {
+        "line": 11,
+        "dependency": ""
+      },
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 14,
+        "dependency": ""
+      },
+      {
+        "line": 24,
+        "dependency": ""
+      },
+      {
+        "line": 25,
+        "dependency": ""
+      },
+      {
+        "line": 27,
+        "dependency": ""
+      },
+      {
+        "line": 28,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/cmd/continua-admin/main_test.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 8,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/cmd/continua/main.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 183,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 184,
+        "dependency": ""
+      },
+      {
+        "line": 185,
+        "dependency": ""
+      },
+      {
+        "line": 187,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/auth/user.go",
+    "category": "Authentication and identity",
+    "matches": [
+      {
+        "line": 38,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/auth/user_test.go",
+    "category": "Authentication and identity",
+    "matches": [
+      {
+        "line": 33,
+        "dependency": ""
+      },
+      {
+        "line": 46,
+        "dependency": ""
+      },
+      {
+        "line": 64,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/billing/http.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/httpapi/public_transfer.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 107,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/httpapi/server.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 116,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/httpapi/server_test.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 76,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/maintenance/behavior.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 104,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 223,
+        "dependency": "auth.users"
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/maintenance/migration.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 37,
+        "dependency": ""
+      },
+      {
+        "line": 274,
+        "dependency": ""
+      },
+      {
+        "line": 295,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/maintenance/transaction_test.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 18,
+        "dependency": ""
+      },
+      {
+        "line": 20,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/maintenance/workflows.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 8,
+        "dependency": ""
+      },
+      {
+        "line": 9,
+        "dependency": ""
+      },
+      {
+        "line": 10,
+        "dependency": ""
+      },
+      {
+        "line": 11,
+        "dependency": ""
+      },
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 14,
+        "dependency": ""
+      },
+      {
+        "line": 15,
+        "dependency": ""
+      },
+      {
+        "line": 17,
+        "dependency": ""
+      },
+      {
+        "line": 18,
+        "dependency": ""
+      },
+      {
+        "line": 19,
+        "dependency": ""
+      },
+      {
+        "line": 20,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/marketdata/database_tls.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 10,
+        "dependency": ""
+      },
+      {
+        "line": 11,
+        "dependency": ""
+      },
+      {
+        "line": 14,
+        "dependency": ""
+      },
+      {
+        "line": 15,
+        "dependency": ""
+      },
+      {
+        "line": 17,
+        "dependency": ""
+      },
+      {
+        "line": 18,
+        "dependency": ""
+      },
+      {
+        "line": 19,
+        "dependency": ""
+      },
+      {
+        "line": 23,
+        "dependency": ""
+      },
+      {
+        "line": 30,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/marketdata/database_tls_test.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 11,
+        "dependency": ""
+      },
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 24,
+        "dependency": ""
+      },
+      {
+        "line": 30,
+        "dependency": ""
+      },
+      {
+        "line": 37,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/marketdata/postgres_financial_fixture_test.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 19,
+        "dependency": ""
+      },
+      {
+        "line": 20,
+        "dependency": ""
+      },
+      {
+        "line": 21,
+        "dependency": ""
+      },
+      {
+        "line": 23,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/marketdata/postgres_fixture_test.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": ""
+      },
+      {
+        "line": 34,
+        "dependency": ""
+      },
+      {
+        "line": 37,
+        "dependency": ""
+      },
+      {
+        "line": 44,
+        "dependency": ""
+      },
+      {
+        "line": 78,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend-go/internal/marketdata/postgres_import_fixture_test.go",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 26,
+        "dependency": ""
+      },
+      {
+        "line": 27,
+        "dependency": ""
+      },
+      {
+        "line": 28,
+        "dependency": ""
+      },
+      {
+        "line": 29,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/README.md",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 21,
+        "dependency": ""
+      },
+      {
+        "line": 31,
+        "dependency": ""
+      },
+      {
+        "line": 32,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/docker-compose.yml",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 22,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/migration/20260828120000 company announcements bridge.sql",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/migration/20260901090000 financial statement candidates bridge.sql",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 22,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/migration/20260912090000 news bridge.sql",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 25,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/scripts/applyCandleProvenanceMigration.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": ""
+      },
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 15,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/scripts/applyCheckoutPolicyMigration.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 19,
+        "dependency": ""
+      },
+      {
+        "line": 21,
+        "dependency": ""
+      },
+      {
+        "line": 23,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/scripts/applyCommunitySafety.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 24,
+        "dependency": ""
+      },
+      {
+        "line": 26,
+        "dependency": ""
+      },
+      {
+        "line": 28,
+        "dependency": ""
+      },
+      {
+        "line": 34,
+        "dependency": "auth.users"
+      }
+    ]
+  },
+  {
+    "file": "backend/scripts/applyDocumentValidationMigration.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": ""
+      },
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 15,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/scripts/applyEngineResearchExpansion.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 17,
+        "dependency": ""
+      },
+      {
+        "line": 19,
+        "dependency": ""
+      },
+      {
+        "line": 21,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/scripts/applyHistoryMigration.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": ""
+      },
+      {
+        "line": 16,
+        "dependency": ""
+      },
+      {
+        "line": 19,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/scripts/applyInvalidFilingArchiveMigration.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": ""
+      },
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 15,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/scripts/applyKakuziArchiveIdentity.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 5,
+        "dependency": ""
+      },
+      {
+        "line": 16,
+        "dependency": ""
+      },
+      {
+        "line": 19,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/scripts/applyNativePaymentsMigration.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": ""
+      },
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 15,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/scripts/applyPartialStatementsMigration.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": ""
+      },
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 14,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/scripts/applyPaystackLiveMigration.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 7,
+        "dependency": ""
+      },
+      {
+        "line": 23,
+        "dependency": ""
+      },
+      {
+        "line": 29,
+        "dependency": ""
+      },
+      {
+        "line": 42,
+        "dependency": "auth.users"
+      }
+    ]
+  },
+  {
+    "file": "backend/scripts/recoverMissingArchive.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 9,
+        "dependency": "storage.objects"
+      }
+    ]
+  },
+  {
+    "file": "backend/scripts/serveNativeCheckoutSandbox.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/src/api/middleware/preAuthenticationRateLimit.d.ts",
+    "category": "Authentication and identity",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/src/api/middleware/preAuthenticationRateLimit.js",
+    "category": "Authentication and identity",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/src/api/middleware/requireSubscriber.js",
+    "category": "Authentication and identity",
+    "matches": [
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 15,
+        "dependency": "SUPABASE_URL"
+      }
+    ]
+  },
+  {
+    "file": "backend/src/config/env.d.ts",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 37,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 91,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 149,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 199,
+        "dependency": "SUPABASE_URL"
+      }
+    ]
+  },
+  {
+    "file": "backend/src/config/env.js",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 45,
+        "dependency": "SUPABASE_URL"
+      }
+    ]
+  },
+  {
+    "file": "backend/src/storage/db.d.ts",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 6,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/src/storage/db.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 6,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/src/storage/repositories/publisherCandleQuery.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 1,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/tests/engineAccess.test.ts",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 11,
+        "dependency": ""
+      },
+      {
+        "line": 25,
+        "dependency": ""
+      },
+      {
+        "line": 34,
+        "dependency": ""
+      },
+      {
+        "line": 45,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/tests/enginePortfolioAccess.test.ts",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 5,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 37,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/tests/engineRateLimit.test.ts",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 40,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/tests/institutionalAccess.test.ts",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 5,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 16,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "backend/tests/integration/pipeline.integration.test.ts",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 9,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/IMPLEMENTATION_ORDER.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 78,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/PHASE_2_VALIDATION.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 92,
+        "dependency": ""
+      },
+      {
+        "line": 191,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/PHASE_3_VALIDATION.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 229,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/architecture/ARCHITECTURE.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 102,
+        "dependency": ""
+      },
+      {
+        "line": 109,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/architecture/BACKEND_LANGUAGE_MIGRATION.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": ""
+      },
+      {
+        "line": 222,
+        "dependency": ""
+      },
+      {
+        "line": 291,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/architecture/FEATURE_LANGUAGE_DECISIONS.json",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 47,
+        "dependency": ""
+      },
+      {
+        "line": 49,
+        "dependency": ""
+      },
+      {
+        "line": 113,
+        "dependency": ""
+      },
+      {
+        "line": 116,
+        "dependency": ""
+      },
+      {
+        "line": 210,
+        "dependency": ""
+      },
+      {
+        "line": 211,
+        "dependency": ""
+      },
+      {
+        "line": 225,
+        "dependency": ""
+      },
+      {
+        "line": 229,
+        "dependency": ""
+      },
+      {
+        "line": 237,
+        "dependency": ""
+      },
+      {
+        "line": 241,
+        "dependency": ""
+      },
+      {
+        "line": 304,
+        "dependency": ""
+      },
+      {
+        "line": 307,
+        "dependency": ""
+      },
+      {
+        "line": 321,
+        "dependency": ""
+      },
+      {
+        "line": 4016,
+        "dependency": ""
+      },
+      {
+        "line": 4019,
+        "dependency": ""
+      },
+      {
+        "line": 4022,
+        "dependency": ""
+      },
+      {
+        "line": 4023,
+        "dependency": ""
+      },
+      {
+        "line": 4028,
+        "dependency": ""
+      },
+      {
+        "line": 4031,
+        "dependency": ""
+      },
+      {
+        "line": 4034,
+        "dependency": ""
+      },
+      {
+        "line": 4035,
+        "dependency": ""
+      },
+      {
+        "line": 4040,
+        "dependency": ""
+      },
+      {
+        "line": 4043,
+        "dependency": ""
+      },
+      {
+        "line": 4046,
+        "dependency": ""
+      },
+      {
+        "line": 4047,
+        "dependency": ""
+      },
+      {
+        "line": 4052,
+        "dependency": ""
+      },
+      {
+        "line": 4055,
+        "dependency": ""
+      },
+      {
+        "line": 4058,
+        "dependency": ""
+      },
+      {
+        "line": 4059,
+        "dependency": ""
+      },
+      {
+        "line": 4064,
+        "dependency": ""
+      },
+      {
+        "line": 4067,
+        "dependency": ""
+      },
+      {
+        "line": 4070,
+        "dependency": ""
+      },
+      {
+        "line": 4071,
+        "dependency": ""
+      },
+      {
+        "line": 4076,
+        "dependency": ""
+      },
+      {
+        "line": 4079,
+        "dependency": ""
+      },
+      {
+        "line": 4082,
+        "dependency": ""
+      },
+      {
+        "line": 4083,
+        "dependency": ""
+      },
+      {
+        "line": 4088,
+        "dependency": ""
+      },
+      {
+        "line": 4091,
+        "dependency": ""
+      },
+      {
+        "line": 4094,
+        "dependency": ""
+      },
+      {
+        "line": 4095,
+        "dependency": ""
+      },
+      {
+        "line": 4100,
+        "dependency": ""
+      },
+      {
+        "line": 4103,
+        "dependency": ""
+      },
+      {
+        "line": 4112,
+        "dependency": ""
+      },
+      {
+        "line": 4115,
+        "dependency": ""
+      },
+      {
+        "line": 4124,
+        "dependency": ""
+      },
+      {
+        "line": 4127,
+        "dependency": ""
+      },
+      {
+        "line": 4136,
+        "dependency": ""
+      },
+      {
+        "line": 4139,
+        "dependency": ""
+      },
+      {
+        "line": 4148,
+        "dependency": ""
+      },
+      {
+        "line": 4151,
+        "dependency": ""
+      },
+      {
+        "line": 4160,
+        "dependency": ""
+      },
+      {
+        "line": 4163,
+        "dependency": ""
+      },
+      {
+        "line": 4172,
+        "dependency": ""
+      },
+      {
+        "line": 4175,
+        "dependency": ""
+      },
+      {
+        "line": 4184,
+        "dependency": ""
+      },
+      {
+        "line": 4187,
+        "dependency": ""
+      },
+      {
+        "line": 4196,
+        "dependency": ""
+      },
+      {
+        "line": 4199,
+        "dependency": ""
+      },
+      {
+        "line": 4208,
+        "dependency": ""
+      },
+      {
+        "line": 4211,
+        "dependency": ""
+      },
+      {
+        "line": 4220,
+        "dependency": ""
+      },
+      {
+        "line": 4223,
+        "dependency": ""
+      },
+      {
+        "line": 4232,
+        "dependency": ""
+      },
+      {
+        "line": 4235,
+        "dependency": ""
+      },
+      {
+        "line": 4244,
+        "dependency": ""
+      },
+      {
+        "line": 4247,
+        "dependency": ""
+      },
+      {
+        "line": 4256,
+        "dependency": ""
+      },
+      {
+        "line": 4259,
+        "dependency": ""
+      },
+      {
+        "line": 4268,
+        "dependency": ""
+      },
+      {
+        "line": 4271,
+        "dependency": ""
+      },
+      {
+        "line": 4280,
+        "dependency": ""
+      },
+      {
+        "line": 4283,
+        "dependency": ""
+      },
+      {
+        "line": 4292,
+        "dependency": ""
+      },
+      {
+        "line": 4295,
+        "dependency": ""
+      },
+      {
+        "line": 4304,
+        "dependency": ""
+      },
+      {
+        "line": 4307,
+        "dependency": ""
+      },
+      {
+        "line": 4316,
+        "dependency": ""
+      },
+      {
+        "line": 4319,
+        "dependency": ""
+      },
+      {
+        "line": 4328,
+        "dependency": ""
+      },
+      {
+        "line": 4331,
+        "dependency": ""
+      },
+      {
+        "line": 4340,
+        "dependency": ""
+      },
+      {
+        "line": 4343,
+        "dependency": ""
+      },
+      {
+        "line": 4352,
+        "dependency": ""
+      },
+      {
+        "line": 4355,
+        "dependency": ""
+      },
+      {
+        "line": 4364,
+        "dependency": ""
+      },
+      {
+        "line": 4367,
+        "dependency": ""
+      },
+      {
+        "line": 4376,
+        "dependency": ""
+      },
+      {
+        "line": 4379,
+        "dependency": ""
+      },
+      {
+        "line": 4388,
+        "dependency": ""
+      },
+      {
+        "line": 4391,
+        "dependency": ""
+      },
+      {
+        "line": 4400,
+        "dependency": ""
+      },
+      {
+        "line": 4403,
+        "dependency": ""
+      },
+      {
+        "line": 4412,
+        "dependency": ""
+      },
+      {
+        "line": 4415,
+        "dependency": ""
+      },
+      {
+        "line": 4424,
+        "dependency": ""
+      },
+      {
+        "line": 4427,
+        "dependency": ""
+      },
+      {
+        "line": 4436,
+        "dependency": ""
+      },
+      {
+        "line": 4439,
+        "dependency": ""
+      },
+      {
+        "line": 4448,
+        "dependency": ""
+      },
+      {
+        "line": 4451,
+        "dependency": ""
+      },
+      {
+        "line": 4460,
+        "dependency": ""
+      },
+      {
+        "line": 4463,
+        "dependency": ""
+      },
+      {
+        "line": 4472,
+        "dependency": ""
+      },
+      {
+        "line": 4475,
+        "dependency": ""
+      },
+      {
+        "line": 4484,
+        "dependency": ""
+      },
+      {
+        "line": 4487,
+        "dependency": ""
+      },
+      {
+        "line": 4496,
+        "dependency": ""
+      },
+      {
+        "line": 4499,
+        "dependency": ""
+      },
+      {
+        "line": 4508,
+        "dependency": ""
+      },
+      {
+        "line": 4511,
+        "dependency": ""
+      },
+      {
+        "line": 4520,
+        "dependency": ""
+      },
+      {
+        "line": 4523,
+        "dependency": ""
+      },
+      {
+        "line": 4532,
+        "dependency": ""
+      },
+      {
+        "line": 4535,
+        "dependency": ""
+      },
+      {
+        "line": 4544,
+        "dependency": ""
+      },
+      {
+        "line": 4547,
+        "dependency": ""
+      },
+      {
+        "line": 4556,
+        "dependency": ""
+      },
+      {
+        "line": 4559,
+        "dependency": ""
+      },
+      {
+        "line": 4568,
+        "dependency": ""
+      },
+      {
+        "line": 4571,
+        "dependency": ""
+      },
+      {
+        "line": 4580,
+        "dependency": ""
+      },
+      {
+        "line": 4583,
+        "dependency": ""
+      },
+      {
+        "line": 4592,
+        "dependency": ""
+      },
+      {
+        "line": 4595,
+        "dependency": ""
+      },
+      {
+        "line": 4604,
+        "dependency": ""
+      },
+      {
+        "line": 4607,
+        "dependency": ""
+      },
+      {
+        "line": 4616,
+        "dependency": ""
+      },
+      {
+        "line": 4619,
+        "dependency": ""
+      },
+      {
+        "line": 4628,
+        "dependency": ""
+      },
+      {
+        "line": 4631,
+        "dependency": ""
+      },
+      {
+        "line": 4640,
+        "dependency": ""
+      },
+      {
+        "line": 4643,
+        "dependency": ""
+      },
+      {
+        "line": 4652,
+        "dependency": ""
+      },
+      {
+        "line": 4655,
+        "dependency": ""
+      },
+      {
+        "line": 4664,
+        "dependency": ""
+      },
+      {
+        "line": 4667,
+        "dependency": ""
+      },
+      {
+        "line": 4676,
+        "dependency": ""
+      },
+      {
+        "line": 4679,
+        "dependency": ""
+      },
+      {
+        "line": 4688,
+        "dependency": ""
+      },
+      {
+        "line": 4691,
+        "dependency": ""
+      },
+      {
+        "line": 4700,
+        "dependency": ""
+      },
+      {
+        "line": 4703,
+        "dependency": ""
+      },
+      {
+        "line": 4712,
+        "dependency": ""
+      },
+      {
+        "line": 4715,
+        "dependency": ""
+      },
+      {
+        "line": 4724,
+        "dependency": ""
+      },
+      {
+        "line": 4727,
+        "dependency": ""
+      },
+      {
+        "line": 4736,
+        "dependency": ""
+      },
+      {
+        "line": 4739,
+        "dependency": ""
+      },
+      {
+        "line": 4748,
+        "dependency": ""
+      },
+      {
+        "line": 4751,
+        "dependency": ""
+      },
+      {
+        "line": 4760,
+        "dependency": ""
+      },
+      {
+        "line": 4763,
+        "dependency": ""
+      },
+      {
+        "line": 4772,
+        "dependency": ""
+      },
+      {
+        "line": 4775,
+        "dependency": ""
+      },
+      {
+        "line": 4784,
+        "dependency": ""
+      },
+      {
+        "line": 4787,
+        "dependency": ""
+      },
+      {
+        "line": 4796,
+        "dependency": ""
+      },
+      {
+        "line": 4799,
+        "dependency": ""
+      },
+      {
+        "line": 4808,
+        "dependency": ""
+      },
+      {
+        "line": 4811,
+        "dependency": ""
+      },
+      {
+        "line": 4820,
+        "dependency": ""
+      },
+      {
+        "line": 4823,
+        "dependency": ""
+      },
+      {
+        "line": 4832,
+        "dependency": ""
+      },
+      {
+        "line": 4835,
+        "dependency": ""
+      },
+      {
+        "line": 4844,
+        "dependency": ""
+      },
+      {
+        "line": 4847,
+        "dependency": ""
+      },
+      {
+        "line": 4856,
+        "dependency": ""
+      },
+      {
+        "line": 4859,
+        "dependency": ""
+      },
+      {
+        "line": 4868,
+        "dependency": ""
+      },
+      {
+        "line": 4871,
+        "dependency": ""
+      },
+      {
+        "line": 4880,
+        "dependency": ""
+      },
+      {
+        "line": 4883,
+        "dependency": ""
+      },
+      {
+        "line": 4892,
+        "dependency": ""
+      },
+      {
+        "line": 4895,
+        "dependency": ""
+      },
+      {
+        "line": 4904,
+        "dependency": ""
+      },
+      {
+        "line": 4907,
+        "dependency": ""
+      },
+      {
+        "line": 4916,
+        "dependency": ""
+      },
+      {
+        "line": 4919,
+        "dependency": ""
+      },
+      {
+        "line": 4928,
+        "dependency": ""
+      },
+      {
+        "line": 4931,
+        "dependency": ""
+      },
+      {
+        "line": 4940,
+        "dependency": ""
+      },
+      {
+        "line": 4943,
+        "dependency": ""
+      },
+      {
+        "line": 5029,
+        "dependency": ""
+      },
+      {
+        "line": 5036,
+        "dependency": ""
+      },
+      {
+        "line": 5047,
+        "dependency": ""
+      },
+      {
+        "line": 5475,
+        "dependency": ""
+      },
+      {
+        "line": 5476,
+        "dependency": ""
+      },
+      {
+        "line": 5477,
+        "dependency": ""
+      },
+      {
+        "line": 5490,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/architecture/FRONTEND_INTEGRATION.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 200,
+        "dependency": ""
+      },
+      {
+        "line": 225,
+        "dependency": ""
+      },
+      {
+        "line": 245,
+        "dependency": ""
+      },
+      {
+        "line": 254,
+        "dependency": ""
+      },
+      {
+        "line": 255,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/architecture/FULL_NATIVE_REWRITE.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 21,
+        "dependency": ""
+      },
+      {
+        "line": 43,
+        "dependency": ""
+      },
+      {
+        "line": 199,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/architecture/NATIVE_REWRITE_LEDGER.json",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 115,
+        "dependency": ""
+      },
+      {
+        "line": 173,
+        "dependency": ""
+      },
+      {
+        "line": 2852,
+        "dependency": ""
+      },
+      {
+        "line": 2859,
+        "dependency": ""
+      },
+      {
+        "line": 2866,
+        "dependency": ""
+      },
+      {
+        "line": 2873,
+        "dependency": ""
+      },
+      {
+        "line": 2880,
+        "dependency": ""
+      },
+      {
+        "line": 2887,
+        "dependency": ""
+      },
+      {
+        "line": 2894,
+        "dependency": ""
+      },
+      {
+        "line": 2901,
+        "dependency": ""
+      },
+      {
+        "line": 2908,
+        "dependency": ""
+      },
+      {
+        "line": 2915,
+        "dependency": ""
+      },
+      {
+        "line": 2922,
+        "dependency": ""
+      },
+      {
+        "line": 2929,
+        "dependency": ""
+      },
+      {
+        "line": 2936,
+        "dependency": ""
+      },
+      {
+        "line": 2943,
+        "dependency": ""
+      },
+      {
+        "line": 2950,
+        "dependency": ""
+      },
+      {
+        "line": 2957,
+        "dependency": ""
+      },
+      {
+        "line": 2964,
+        "dependency": ""
+      },
+      {
+        "line": 2971,
+        "dependency": ""
+      },
+      {
+        "line": 2978,
+        "dependency": ""
+      },
+      {
+        "line": 2985,
+        "dependency": ""
+      },
+      {
+        "line": 2992,
+        "dependency": ""
+      },
+      {
+        "line": 2999,
+        "dependency": ""
+      },
+      {
+        "line": 3006,
+        "dependency": ""
+      },
+      {
+        "line": 3013,
+        "dependency": ""
+      },
+      {
+        "line": 3020,
+        "dependency": ""
+      },
+      {
+        "line": 3027,
+        "dependency": ""
+      },
+      {
+        "line": 3034,
+        "dependency": ""
+      },
+      {
+        "line": 3041,
+        "dependency": ""
+      },
+      {
+        "line": 3048,
+        "dependency": ""
+      },
+      {
+        "line": 3055,
+        "dependency": ""
+      },
+      {
+        "line": 3062,
+        "dependency": ""
+      },
+      {
+        "line": 3069,
+        "dependency": ""
+      },
+      {
+        "line": 3076,
+        "dependency": ""
+      },
+      {
+        "line": 3083,
+        "dependency": ""
+      },
+      {
+        "line": 3090,
+        "dependency": ""
+      },
+      {
+        "line": 3097,
+        "dependency": ""
+      },
+      {
+        "line": 3104,
+        "dependency": ""
+      },
+      {
+        "line": 3111,
+        "dependency": ""
+      },
+      {
+        "line": 3118,
+        "dependency": ""
+      },
+      {
+        "line": 3125,
+        "dependency": ""
+      },
+      {
+        "line": 3132,
+        "dependency": ""
+      },
+      {
+        "line": 3139,
+        "dependency": ""
+      },
+      {
+        "line": 3146,
+        "dependency": ""
+      },
+      {
+        "line": 3153,
+        "dependency": ""
+      },
+      {
+        "line": 3160,
+        "dependency": ""
+      },
+      {
+        "line": 3167,
+        "dependency": ""
+      },
+      {
+        "line": 3174,
+        "dependency": ""
+      },
+      {
+        "line": 3181,
+        "dependency": ""
+      },
+      {
+        "line": 3188,
+        "dependency": ""
+      },
+      {
+        "line": 3195,
+        "dependency": ""
+      },
+      {
+        "line": 3202,
+        "dependency": ""
+      },
+      {
+        "line": 3209,
+        "dependency": ""
+      },
+      {
+        "line": 3216,
+        "dependency": ""
+      },
+      {
+        "line": 3223,
+        "dependency": ""
+      },
+      {
+        "line": 3230,
+        "dependency": ""
+      },
+      {
+        "line": 3237,
+        "dependency": ""
+      },
+      {
+        "line": 3244,
+        "dependency": ""
+      },
+      {
+        "line": 3251,
+        "dependency": ""
+      },
+      {
+        "line": 3258,
+        "dependency": ""
+      },
+      {
+        "line": 3265,
+        "dependency": ""
+      },
+      {
+        "line": 3272,
+        "dependency": ""
+      },
+      {
+        "line": 3279,
+        "dependency": ""
+      },
+      {
+        "line": 3286,
+        "dependency": ""
+      },
+      {
+        "line": 3293,
+        "dependency": ""
+      },
+      {
+        "line": 3300,
+        "dependency": ""
+      },
+      {
+        "line": 3307,
+        "dependency": ""
+      },
+      {
+        "line": 3314,
+        "dependency": ""
+      },
+      {
+        "line": 3321,
+        "dependency": ""
+      },
+      {
+        "line": 3328,
+        "dependency": ""
+      },
+      {
+        "line": 3335,
+        "dependency": ""
+      },
+      {
+        "line": 3342,
+        "dependency": ""
+      },
+      {
+        "line": 3349,
+        "dependency": ""
+      },
+      {
+        "line": 3356,
+        "dependency": ""
+      },
+      {
+        "line": 3363,
+        "dependency": ""
+      },
+      {
+        "line": 3370,
+        "dependency": ""
+      },
+      {
+        "line": 3377,
+        "dependency": ""
+      },
+      {
+        "line": 3384,
+        "dependency": ""
+      },
+      {
+        "line": 3391,
+        "dependency": ""
+      },
+      {
+        "line": 3455,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/compact-market-engine-release.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 18,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/continua-risk-intelligence-phase1.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 21,
+        "dependency": ""
+      },
+      {
+        "line": 124,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/data-model/DATABASE_SCHEMA.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": ""
+      },
+      {
+        "line": 5,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/data/history-ingestion.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY,SUPABASE_STORAGE_BUCKET,SUPABASE_URL"
+      },
+      {
+        "line": 31,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/2026-10-10-paystack-live.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 54,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/2026-10-10-paystack-release.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 9,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/ACTIONS_COLLECTOR.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 56,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/API_REQUEST_PROTECTION.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 51,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/AUTOMATIC_COMPANY_RESEARCH.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/BANDWIDTH_AND_STORAGE.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 9,
+        "dependency": ""
+      },
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 20,
+        "dependency": ""
+      },
+      {
+        "line": 22,
+        "dependency": ""
+      },
+      {
+        "line": 51,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/BROWSER_DATA_BOUNDARIES.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 6,
+        "dependency": ""
+      },
+      {
+        "line": 7,
+        "dependency": ""
+      },
+      {
+        "line": 9,
+        "dependency": ""
+      },
+      {
+        "line": 26,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/CLOUDFLARE_HOSTNAME_RECOVERY.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 5,
+        "dependency": ""
+      },
+      {
+        "line": 11,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/CLOUDFLARE_MEDIA.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 9,
+        "dependency": ""
+      },
+      {
+        "line": 11,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY"
+      },
+      {
+        "line": 20,
+        "dependency": ""
+      },
+      {
+        "line": 40,
+        "dependency": ""
+      },
+      {
+        "line": 52,
+        "dependency": ""
+      },
+      {
+        "line": 57,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 66,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/COOP_FRESH_BATCH_20261016.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 8,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/LEGACY_RAW_RETIREMENT.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 14,
+        "dependency": ""
+      },
+      {
+        "line": 33,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/NATIVE_DATABASE_TLS.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 7,
+        "dependency": ""
+      },
+      {
+        "line": 8,
+        "dependency": ""
+      },
+      {
+        "line": 11,
+        "dependency": ""
+      },
+      {
+        "line": 13,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/NATIVE_OPERATOR_TOOLS.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": ""
+      },
+      {
+        "line": 47,
+        "dependency": ""
+      },
+      {
+        "line": 71,
+        "dependency": ""
+      },
+      {
+        "line": 123,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/NATIVE_PAYMENTS_AND_DOCUMENT_CATCHUP.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 33,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/POST_COLLECTION_PUBLICATION.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/RENDER_DEPLOY.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 17,
+        "dependency": ""
+      },
+      {
+        "line": 28,
+        "dependency": ""
+      },
+      {
+        "line": 29,
+        "dependency": ""
+      },
+      {
+        "line": 32,
+        "dependency": ""
+      },
+      {
+        "line": 33,
+        "dependency": ""
+      },
+      {
+        "line": 38,
+        "dependency": ""
+      },
+      {
+        "line": 170,
+        "dependency": "SUPABASE_PROJECT_ID"
+      },
+      {
+        "line": 171,
+        "dependency": ""
+      },
+      {
+        "line": 172,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/RENDER_R2_ONLY.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 5,
+        "dependency": ""
+      },
+      {
+        "line": 9,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY,SUPABASE_URL"
+      },
+      {
+        "line": 10,
+        "dependency": "SUPABASE_STORAGE_BUCKET"
+      },
+      {
+        "line": 14,
+        "dependency": ""
+      },
+      {
+        "line": 24,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/RESEARCH_DELIVERY_20261016.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 41,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/deployment/paystack-test-setup.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 76,
+        "dependency": ""
+      },
+      {
+        "line": 79,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/engine-intelligence.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 39,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/engine-ui-news-freshness.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 38,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/legal-security-review-20261012.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": ""
+      },
+      {
+        "line": 32,
+        "dependency": ""
+      },
+      {
+        "line": 33,
+        "dependency": ""
+      },
+      {
+        "line": 44,
+        "dependency": ""
+      },
+      {
+        "line": 58,
+        "dependency": ""
+      },
+      {
+        "line": 59,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/markets-research.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/quality/2026-10-04-continuation-audit.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 26,
+        "dependency": ""
+      },
+      {
+        "line": 34,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/quality/2026-10-07-engine-news-follow-up.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 5,
+        "dependency": ""
+      },
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 14,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "docs/tradershub-safety-20261012.md",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 31,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "infra/cloudflare/browser-security.mjs",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "infra/cloudflare/build.env.example",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 5,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY"
+      }
+    ]
+  },
+  {
+    "file": "infra/cloudflare/media.mjs",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 50,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY"
+      },
+      {
+        "line": 58,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY"
+      }
+    ]
+  },
+  {
+    "file": "infra/cloudflare/media.test.mjs",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 10,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY"
+      },
+      {
+        "line": 23,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "infra/cloudflare/session.mjs",
+    "category": "Authentication and identity",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 47,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY"
+      },
+      {
+        "line": 65,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY"
+      }
+    ]
+  },
+  {
+    "file": "infra/cloudflare/session.test.mjs",
+    "category": "Authentication and identity",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY"
+      },
+      {
+        "line": 8,
+        "dependency": "SUPABASE_PUBLISHABLE_KEY"
+      }
+    ]
+  },
+  {
+    "file": "infra/cloudflare/worker.mjs",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 8,
+        "dependency": ""
+      },
+      {
+        "line": 48,
+        "dependency": ""
+      },
+      {
+        "line": 53,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "infra/cloudflare/worker.test.mjs",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 38,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "infra/migration/build-native-ledger.mjs",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 326,
+        "dependency": ""
+      },
+      {
+        "line": 388,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "infra/migration/canonical-financial-fixture.mjs",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 18,
+        "dependency": ""
+      },
+      {
+        "line": 19,
+        "dependency": ""
+      },
+      {
+        "line": 20,
+        "dependency": ""
+      },
+      {
+        "line": 22,
+        "dependency": ""
+      },
+      {
+        "line": 23,
+        "dependency": ""
+      },
+      {
+        "line": 25,
+        "dependency": ""
+      },
+      {
+        "line": 26,
+        "dependency": ""
+      },
+      {
+        "line": 30,
+        "dependency": ""
+      },
+      {
+        "line": 31,
+        "dependency": ""
+      },
+      {
+        "line": 32,
+        "dependency": ""
+      },
+      {
+        "line": 33,
+        "dependency": ""
+      },
+      {
+        "line": 36,
+        "dependency": ""
+      },
+      {
+        "line": 103,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 107,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 119,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 120,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 125,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 133,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 288,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 299,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 301,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 302,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 304,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 305,
+        "dependency": ""
+      },
+      {
+        "line": 308,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 309,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 310,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 313,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 314,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 315,
+        "dependency": "storage.objects"
+      }
+    ]
+  },
+  {
+    "file": "infra/migration/convert-edge-source.mjs",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 7,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "infra/migration/feature-language-decisions.mjs",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": ""
+      },
+      {
+        "line": 19,
+        "dependency": ""
+      },
+      {
+        "line": 23,
+        "dependency": ""
+      },
+      {
+        "line": 33,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "infra/migration/institutional-fixture.mjs",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 18,
+        "dependency": ""
+      },
+      {
+        "line": 19,
+        "dependency": ""
+      },
+      {
+        "line": 20,
+        "dependency": ""
+      },
+      {
+        "line": 22,
+        "dependency": ""
+      },
+      {
+        "line": 23,
+        "dependency": ""
+      },
+      {
+        "line": 25,
+        "dependency": ""
+      },
+      {
+        "line": 26,
+        "dependency": ""
+      },
+      {
+        "line": 30,
+        "dependency": ""
+      },
+      {
+        "line": 31,
+        "dependency": ""
+      },
+      {
+        "line": 32,
+        "dependency": ""
+      },
+      {
+        "line": 33,
+        "dependency": ""
+      },
+      {
+        "line": 36,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 42,
+        "dependency": ""
+      },
+      {
+        "line": 44,
+        "dependency": ""
+      },
+      {
+        "line": 62,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 118,
+        "dependency": ""
+      },
+      {
+        "line": 119,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "infra/migration/investment-evidence-fixture.mjs",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 18,
+        "dependency": ""
+      },
+      {
+        "line": 19,
+        "dependency": ""
+      },
+      {
+        "line": 20,
+        "dependency": ""
+      },
+      {
+        "line": 22,
+        "dependency": ""
+      },
+      {
+        "line": 23,
+        "dependency": ""
+      },
+      {
+        "line": 25,
+        "dependency": ""
+      },
+      {
+        "line": 26,
+        "dependency": ""
+      },
+      {
+        "line": 30,
+        "dependency": ""
+      },
+      {
+        "line": 31,
+        "dependency": ""
+      },
+      {
+        "line": 32,
+        "dependency": ""
+      },
+      {
+        "line": 33,
+        "dependency": ""
+      },
+      {
+        "line": 36,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 42,
+        "dependency": ""
+      },
+      {
+        "line": 44,
+        "dependency": ""
+      },
+      {
+        "line": 62,
+        "dependency": "auth.users"
+      }
+    ]
+  },
+  {
+    "file": "infra/security/browser-secret-audit.mjs",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 32,
+        "dependency": ""
+      },
+      {
+        "line": 38,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "infra/security/session-assurance-fixture.mjs",
+    "category": "Authentication and identity",
+    "matches": [
+      {
+        "line": 13,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 14,
+        "dependency": "auth.jwt"
+      },
+      {
+        "line": 17,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 20,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "package-lock.json",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 23,
+        "dependency": ""
+      },
+      {
+        "line": 62,
+        "dependency": "@supabase/supabase-js"
+      },
+      {
+        "line": 3775,
+        "dependency": "@supabase/auth-js"
+      },
+      {
+        "line": 3777,
+        "dependency": "@supabase/auth-js"
+      },
+      {
+        "line": 3787,
+        "dependency": "@supabase/cli-darwin-arm64"
+      },
+      {
+        "line": 3789,
+        "dependency": "@supabase/cli-darwin-arm64"
+      },
+      {
+        "line": 3801,
+        "dependency": "@supabase/cli-darwin-x64"
+      },
+      {
+        "line": 3803,
+        "dependency": "@supabase/cli-darwin-x64"
+      },
+      {
+        "line": 3815,
+        "dependency": "@supabase/cli-linux-arm64"
+      },
+      {
+        "line": 3817,
+        "dependency": "@supabase/cli-linux-arm64"
+      },
+      {
+        "line": 3829,
+        "dependency": "@supabase/cli-linux-arm64-musl"
+      },
+      {
+        "line": 3831,
+        "dependency": "@supabase/cli-linux-arm64-musl"
+      },
+      {
+        "line": 3843,
+        "dependency": "@supabase/cli-linux-x64"
+      },
+      {
+        "line": 3845,
+        "dependency": "@supabase/cli-linux-x64"
+      },
+      {
+        "line": 3857,
+        "dependency": "@supabase/cli-linux-x64-musl"
+      },
+      {
+        "line": 3859,
+        "dependency": "@supabase/cli-linux-x64-musl"
+      },
+      {
+        "line": 3871,
+        "dependency": "@supabase/cli-windows-arm64"
+      },
+      {
+        "line": 3873,
+        "dependency": "@supabase/cli-windows-arm64"
+      },
+      {
+        "line": 3885,
+        "dependency": "@supabase/cli-windows-x64"
+      },
+      {
+        "line": 3887,
+        "dependency": "@supabase/cli-windows-x64"
+      },
+      {
+        "line": 3899,
+        "dependency": "@supabase/functions-js"
+      },
+      {
+        "line": 3901,
+        "dependency": "@supabase/functions-js"
+      },
+      {
+        "line": 3911,
+        "dependency": "@supabase/phoenix"
+      },
+      {
+        "line": 3913,
+        "dependency": "@supabase/phoenix"
+      },
+      {
+        "line": 3917,
+        "dependency": "@supabase/postgrest-js"
+      },
+      {
+        "line": 3919,
+        "dependency": "@supabase/postgrest-js"
+      },
+      {
+        "line": 3929,
+        "dependency": "@supabase/realtime-js"
+      },
+      {
+        "line": 3931,
+        "dependency": "@supabase/realtime-js"
+      },
+      {
+        "line": 3935,
+        "dependency": "@supabase/phoenix"
+      },
+      {
+        "line": 3942,
+        "dependency": "@supabase/storage-js"
+      },
+      {
+        "line": 3944,
+        "dependency": "@supabase/storage-js"
+      },
+      {
+        "line": 3955,
+        "dependency": "@supabase/supabase-js"
+      },
+      {
+        "line": 3957,
+        "dependency": "@supabase/supabase-js"
+      },
+      {
+        "line": 3961,
+        "dependency": "@supabase/auth-js"
+      },
+      {
+        "line": 3962,
+        "dependency": "@supabase/functions-js"
+      },
+      {
+        "line": 3963,
+        "dependency": "@supabase/postgrest-js"
+      },
+      {
+        "line": 3964,
+        "dependency": "@supabase/realtime-js"
+      },
+      {
+        "line": 3965,
+        "dependency": "@supabase/storage-js"
+      },
+      {
+        "line": 8665,
+        "dependency": ""
+      },
+      {
+        "line": 8667,
+        "dependency": ""
+      },
+      {
+        "line": 8676,
+        "dependency": ""
+      },
+      {
+        "line": 8679,
+        "dependency": "@supabase/cli-darwin-arm64"
+      },
+      {
+        "line": 8680,
+        "dependency": "@supabase/cli-darwin-x64"
+      },
+      {
+        "line": 8681,
+        "dependency": "@supabase/cli-linux-arm64"
+      },
+      {
+        "line": 8682,
+        "dependency": "@supabase/cli-linux-arm64-musl"
+      },
+      {
+        "line": 8683,
+        "dependency": "@supabase/cli-linux-x64"
+      },
+      {
+        "line": 8684,
+        "dependency": "@supabase/cli-linux-x64-musl"
+      },
+      {
+        "line": 8685,
+        "dependency": "@supabase/cli-windows-arm64"
+      },
+      {
+        "line": 8686,
+        "dependency": "@supabase/cli-windows-x64"
+      }
+    ]
+  },
+  {
+    "file": "package.json",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 26,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "render.yaml",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 40,
+        "dependency": ""
+      },
+      {
+        "line": 42,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/continua_scraper/archive.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 74,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 76,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 132,
+        "dependency": "storage.objects"
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/continua_scraper/artifacts.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 106,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 109,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/continua_scraper/config.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 29,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/continua_scraper/database_tls.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 15,
+        "dependency": ""
+      },
+      {
+        "line": 16,
+        "dependency": ""
+      },
+      {
+        "line": 17,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/continua_scraper/legacy_cleanup.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 23,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 101,
+        "dependency": "storage.objects"
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/continua_scraper/storage.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": ""
+      },
+      {
+        "line": 21,
+        "dependency": ""
+      },
+      {
+        "line": 81,
+        "dependency": ""
+      },
+      {
+        "line": 82,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY"
+      },
+      {
+        "line": 83,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY,SUPABASE_STORAGE_BUCKET,SUPABASE_URL"
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/continua_scraper/uncatalogued_archive.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 85,
+        "dependency": "storage.objects"
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/migrate_media.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 17,
+        "dependency": ""
+      },
+      {
+        "line": 22,
+        "dependency": ""
+      },
+      {
+        "line": 37,
+        "dependency": ""
+      },
+      {
+        "line": 53,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 57,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY"
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/scheduled_collect.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 264,
+        "dependency": ""
+      },
+      {
+        "line": 273,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/tests/test_archive.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 136,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/tests/test_database_tls.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 11,
+        "dependency": ""
+      },
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 21,
+        "dependency": ""
+      },
+      {
+        "line": 25,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/tests/test_evidence_repository.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 68,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/tests/test_legacy_cleanup.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 48,
+        "dependency": "storage.objects"
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/tests/test_media_migration.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 14,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/tests/test_storage_driver.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 8,
+        "dependency": ""
+      },
+      {
+        "line": 40,
+        "dependency": ""
+      },
+      {
+        "line": 43,
+        "dependency": ""
+      },
+      {
+        "line": 45,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/tests/test_storage_policy.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 17,
+        "dependency": ""
+      },
+      {
+        "line": 21,
+        "dependency": ""
+      },
+      {
+        "line": 26,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY,SUPABASE_URL"
+      }
+    ]
+  },
+  {
+    "file": "scraper-python/tests/test_uncatalogued_archive.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 36,
+        "dependency": "storage.objects"
+      }
+    ]
+  },
+  {
+    "file": "scraper/.env.example",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 31,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper/migrations/20260827090000 scraping engine foundation schema.sql",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 15,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper/scripts/collectKakuziRecord.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper/src/config/env.d.ts",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 22,
+        "dependency": ""
+      },
+      {
+        "line": 31,
+        "dependency": "SUPABASE_STORAGE_BUCKET"
+      },
+      {
+        "line": 53,
+        "dependency": ""
+      },
+      {
+        "line": 58,
+        "dependency": "SUPABASE_STORAGE_BUCKET"
+      },
+      {
+        "line": 86,
+        "dependency": ""
+      },
+      {
+        "line": 95,
+        "dependency": "SUPABASE_STORAGE_BUCKET"
+      },
+      {
+        "line": 119,
+        "dependency": ""
+      },
+      {
+        "line": 124,
+        "dependency": "SUPABASE_STORAGE_BUCKET"
+      }
+    ]
+  },
+  {
+    "file": "scraper/src/config/env.js",
+    "category": "Provider and deployment configuration",
+    "matches": [
+      {
+        "line": 30,
+        "dependency": ""
+      },
+      {
+        "line": 34,
+        "dependency": ""
+      },
+      {
+        "line": 43,
+        "dependency": "SUPABASE_STORAGE_BUCKET"
+      }
+    ]
+  },
+  {
+    "file": "scraper/src/storage/db.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 5,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper/src/storage/extractionsRepository.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 60,
+        "dependency": "storage.objects"
+      }
+    ]
+  },
+  {
+    "file": "scraper/src/storage/rawStorage.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 5,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper/src/storage/storagePolicy.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 4,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper/tests/storage/extractionBacklog.test.ts",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 11,
+        "dependency": "storage.objects"
+      }
+    ]
+  },
+  {
+    "file": "scraper/tests/storage/privateRawStorage.test.ts",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 2,
+        "dependency": ""
+      },
+      {
+        "line": 6,
+        "dependency": ""
+      },
+      {
+        "line": 7,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper/tests/storage/r2Archive.test.ts",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 24,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper/tests/storage/sourceCompression.test.ts",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 10,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "scraper/tests/storage/storagePolicy.test.ts",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 4,
+        "dependency": ""
+      },
+      {
+        "line": 9,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "supabase/config.toml",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 39,
+        "dependency": ""
+      },
+      {
+        "line": 45,
+        "dependency": ""
+      },
+      {
+        "line": 47,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "supabase/functions/ai-stock-analysis/index.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 1,
+        "dependency": "@supabase/supabase-js"
+      },
+      {
+        "line": 13,
+        "dependency": "SUPABASE_ANON_KEY,SUPABASE_URL"
+      },
+      {
+        "line": 14,
+        "dependency": "supabase.auth"
+      },
+      {
+        "line": 82,
+        "dependency": "supabase.from"
+      }
+    ]
+  },
+  {
+    "file": "supabase/functions/check-indicator-alerts/index.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": "@supabase/supabase-js"
+      },
+      {
+        "line": 62,
+        "dependency": "SUPABASE_ANON_KEY,SUPABASE_URL"
+      },
+      {
+        "line": 63,
+        "dependency": ""
+      },
+      {
+        "line": 74,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY,SUPABASE_URL"
+      },
+      {
+        "line": 75,
+        "dependency": ""
+      },
+      {
+        "line": 120,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "supabase/functions/check-price-alerts/index.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 1,
+        "dependency": "@supabase/supabase-js"
+      },
+      {
+        "line": 17,
+        "dependency": "SUPABASE_ANON_KEY,SUPABASE_URL"
+      },
+      {
+        "line": 20,
+        "dependency": ""
+      },
+      {
+        "line": 54,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY,SUPABASE_URL"
+      },
+      {
+        "line": 59,
+        "dependency": ""
+      },
+      {
+        "line": 84,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "supabase/functions/delete-account/index.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 1,
+        "dependency": "@supabase/supabase-js"
+      },
+      {
+        "line": 27,
+        "dependency": "SUPABASE_ANON_KEY,SUPABASE_URL"
+      },
+      {
+        "line": 29,
+        "dependency": ""
+      },
+      {
+        "line": 42,
+        "dependency": ""
+      },
+      {
+        "line": 50,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY,SUPABASE_URL"
+      },
+      {
+        "line": 87,
+        "dependency": ""
+      },
+      {
+        "line": 95,
+        "dependency": ""
+      },
+      {
+        "line": 97,
+        "dependency": ""
+      },
+      {
+        "line": 99,
+        "dependency": ""
+      },
+      {
+        "line": 103,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "supabase/functions/run-price-alerts/README.md",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 5,
+        "dependency": ""
+      },
+      {
+        "line": 16,
+        "dependency": ""
+      },
+      {
+        "line": 18,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "supabase/functions/run-price-alerts/index.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 17,
+        "dependency": ""
+      },
+      {
+        "line": 19,
+        "dependency": "@supabase/supabase-js"
+      },
+      {
+        "line": 86,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY,SUPABASE_URL"
+      },
+      {
+        "line": 88,
+        "dependency": ""
+      },
+      {
+        "line": 121,
+        "dependency": ""
+      },
+      {
+        "line": 178,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "supabase/functions/stock-thesis/index.js",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 36,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 37,
+        "dependency": "SUPABASE_ANON_KEY"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20250930031246_96eed1f7-ea9b-4616-89f1-380eacc896fe.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 16,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 30,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 40,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 57,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 60,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 63,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 67,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 70,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 73,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 76,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 80,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 83,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 86,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 90,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 93,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 96,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 99,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 137,
+        "dependency": "auth.users"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20251105022831_05cd2654-4328-45eb-aee8-a6e722f8fc43.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 21,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 26,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 31,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 36,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 63,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 68,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 89,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 94,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260119151357_2a2ab93d-d885-4faf-a19c-dfac2f9fc397.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 8,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 11,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 15,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 18,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 22,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 25,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 29,
+        "dependency": "storage.objects"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260128104216_8c9ee4fc-6a29-4c79-8ee2-f702ba69ecf9.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 16,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 25,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 34,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 43,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 52,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 53,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 76,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 77,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 78,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 82,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 83,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 87,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 88,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 91,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 92,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 93,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 97,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 98,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 99,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 103,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 104,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260202104644_75e47209-e0ff-4ba0-b9ca-e83d6e859b42.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 36,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 38,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260204093449_f4b5ed62-6a4a-4738-af3a-e767644e7b35.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 9,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260205105603_330bbd61-d60a-4fda-86a1-2fd982b93546.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 10,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260205110727_f7a9e00e-5a51-4dfb-8324-097e285875d4.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 12,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 13,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 17,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 22,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 23,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 27,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 28,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260508180946_09ac227a-df02-4e4e-ac5a-2d75cfe1c728.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 28,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 29,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 30,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 101,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260509144405_d932c9b5-5bcc-4603-8967-7b8342809d5a.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 12,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 13,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 25,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 26,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260514171128_7a10de03-5b98-4a1a-b456-dbbda0ab1efb.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 53,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 54,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 55,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 56,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 71,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 72,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 73,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 83,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 84,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 85,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 94,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 95,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 96,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 118,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 119,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 120,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 134,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 135,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 147,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 149,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260803082543_9eb683f3-fdb7-493d-86a3-c7e5198e45fa.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 32,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 37,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 42,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260805061205_5fbb1436-550f-4794-aa5a-9aacaf43160f.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 15,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 16,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 17,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 34,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 35,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 36,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260808060000_c7e4f281-9a3d-4b6e-8f12-5d9a6c2e1b47.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 11,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 12,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 24,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 25,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 26,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260809090000_a1c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 17,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 18,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 19,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260813090000_d4e8f2a7-6b1c-4a3d-9e5f-7c8b2a4d6e91.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 15,
+        "dependency": ""
+      },
+      {
+        "line": 22,
+        "dependency": "supabase.from"
+      },
+      {
+        "line": 23,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 120,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 129,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 133,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 137,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 140,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 146,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260817210000 watchlist folders.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 27,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 30,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 33,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 36,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260824090000 tradershub gate and onboarding fields.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 184,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260911184206 schedule alert sweeps.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 12,
+        "dependency": ""
+      },
+      {
+        "line": 14,
+        "dependency": ""
+      },
+      {
+        "line": 15,
+        "dependency": ""
+      },
+      {
+        "line": 38,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260912190000 news items bridge output table.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 26,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20260913120000 research usage quota.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 16,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 28,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 40,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 99,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20261004130000_post_gallery_and_polls.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 33,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 39,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 45,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 51,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 57,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 66,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 67,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 68,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 69,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20261007120000_atomic_fundamentals_quota.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 6,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 36,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20261007200000_engine_intelligence.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 9,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 23,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 43,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 53,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 73,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 82,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20261010180000_paystack_test_checkout.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": "auth.users"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20261010210000_paystack_live_checkout.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 7,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 110,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20261012010000_engine_forecast_notebook.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": "auth.users"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20261012030000_community_safety.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 5,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 16,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 23,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 25,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 36,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 39,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 65,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 71,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 90,
+        "dependency": "auth.uid"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20261012220000_native_payment_attempts.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 5,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 27,
+        "dependency": "auth.users"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20261018160000_cloudflare_only_file_writes.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 3,
+        "dependency": ""
+      },
+      {
+        "line": 7,
+        "dependency": "storage.objects"
+      },
+      {
+        "line": 11,
+        "dependency": "storage.objects"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20261019120000_session_assurance.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 4,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 5,
+        "dependency": "auth.jwt"
+      },
+      {
+        "line": 6,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 13,
+        "dependency": "auth.jwt"
+      },
+      {
+        "line": 47,
+        "dependency": "auth.uid"
+      },
+      {
+        "line": 50,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20261021150000_investment_evidence.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 47,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 88,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 96,
+        "dependency": "auth.users"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/20261022010000_institutional_governance.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 8,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 17,
+        "dependency": "auth.users"
+      },
+      {
+        "line": 23,
+        "dependency": "auth.users"
+      }
+    ]
+  },
+  {
+    "file": "supabase/migrations/Migration news items image url.sql",
+    "category": "Historical SQL/evidence",
+    "matches": [
+      {
+        "line": 10,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "tools/storage_migration/README.md",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 7,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY,SUPABASE_STORAGE_BUCKET,SUPABASE_URL"
+      },
+      {
+        "line": 18,
+        "dependency": ""
+      },
+      {
+        "line": 20,
+        "dependency": ""
+      }
+    ]
+  },
+  {
+    "file": "tools/storage_migration/migrate_financial_documents.py",
+    "category": "Backend/ingestion data access",
+    "matches": [
+      {
+        "line": 1,
+        "dependency": ""
+      },
+      {
+        "line": 51,
+        "dependency": "SUPABASE_STORAGE_BUCKET"
+      },
+      {
+        "line": 71,
+        "dependency": "SUPABASE_URL"
+      },
+      {
+        "line": 89,
+        "dependency": "SUPABASE_SERVICE_ROLE_KEY"
+      }
+    ]
+  }
+]

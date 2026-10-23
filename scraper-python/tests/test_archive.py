@@ -137,6 +137,7 @@ class ArchiveTests(unittest.IsolatedAsyncioTestCase):
         db=DB(row);archive=R2Archive(db,R2Storage(MemoryClient(),'private-fixture'),forbidden_legacy_reader,include_legacy=False)
         self.assertEqual((await archive.run(1))['copied'],1)
         self.assertEqual(db.calls[0][1],(False,1))
+        self.assertNotIn('storage.objects',db.calls[0][0])
         with self.assertRaisesRegex(ValueError,'Legacy file reads are disabled'):
             archive._copy_raw(dict(row,storage_path=key))
         await archive.close()

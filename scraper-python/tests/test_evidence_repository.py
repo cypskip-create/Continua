@@ -69,7 +69,9 @@ class EvidenceTests(unittest.IsolatedAsyncioTestCase):
         database=EvidenceDatabase()
         await EvidenceRepository(database).unextracted(driver="r2")
         sql,params=database.calls[0]
-        self.assertEqual(params,(False,"scraper-raw",50))
+        self.assertEqual(params,(50,))
+        self.assertNotIn('storage.objects',sql)
+        self.assertIn("a.storage_path LIKE 'r2://%%'",sql)
         self.assertIn("last_failed>now()-interval '1 hour'",sql)
         self.assertIn("ORDER BY e.extracted_at DESC,e.id DESC LIMIT 1",sql)
 

@@ -35,3 +35,4 @@ scraper/data/*
 .qa-artifacts/
 __pycache__/
 *.pyc
+.neon

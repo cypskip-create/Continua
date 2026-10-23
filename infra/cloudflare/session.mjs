@@ -44,6 +44,7 @@ export async function session(request,env,fetcher=fetch){
  // navigation, cross-origin form, CORS permission or client API key grants access.
  if((request.headers.get('Origin')!==url.origin&&!(request.headers.get('Origin')===null&&request.headers.get('Sec-Fetch-Site')==='same-origin'))||request.headers.get('X-Continua-Session')!=='1'||request.headers.get('Sec-Fetch-Site')==='cross-site')return reply({error:'Origin not allowed'},403);
  if(path==='/clear')return attach(reply({cleared:true}),'',true);
+ if(env.AUTH_PROVIDER==='better-auth')return attach(reply({error:'Continua sign-in has moved. Reload the page and sign in again.',code:'IDENTITY_MIGRATED'},410),'',true);
  if(!env.SUPABASE_PUBLISHABLE_KEY)return reply({error:'Session service unavailable'},503);
  if(env.AUTH_RATE_LIMIT){const ip=request.headers.get('CF-Connecting-IP');if(!ip)return reply({error:'Client identity unavailable'},403);if(!(await env.AUTH_RATE_LIMIT.limit({key:ip})).success){const r=reply({error:'Too many attempts. Please retry shortly.'},429);r.headers.set('Retry-After','60');return r;}}
  const target=new URL(origin+path);

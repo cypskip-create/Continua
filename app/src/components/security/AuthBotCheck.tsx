@@ -41,8 +41,8 @@ function load() {
     });
   return scriptLoad;
 }
-/** Token is verified by Supabase Auth when CAPTCHA is enabled in its dashboard.
- * A widget alone does not protect the direct provider endpoint. */
+/** The selected auth provider verifies this token server-side. The owned
+ * identity provider additionally requires the matching action and hostname. */
 export function AuthBotCheck({
   onToken,
 }: {
@@ -60,6 +60,7 @@ export function AuthBotCheck({
         if (cancelled || !ref.current || !window.turnstile) return;
         id = window.turnstile.render(ref.current, {
           sitekey: AUTH_SITE_KEY,
+          action: 'continua-auth',
           size: "flexible",
           retry: 'auto',
           'retry-interval': 8000,

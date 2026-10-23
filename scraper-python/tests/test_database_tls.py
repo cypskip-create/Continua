@@ -8,6 +8,11 @@ from continua_scraper.database_tls import secure_connection
 from psycopg.conninfo import conninfo_to_dict
 
 class DatabaseTLSTests(unittest.TestCase):
+    def test_neon_verifies_hostname_with_maintained_public_roots(self):
+        import certifi
+        actual=conninfo_to_dict(secure_connection('postgresql://fixture:fixture@ep-fixture.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require'))
+        self.assertEqual(actual['sslmode'],'verify-full')
+        self.assertEqual(actual['sslrootcert'],certifi.where())
     def test_supabase_verifies_hostname_using_official_bundled_root(self):
         actual=conninfo_to_dict(secure_connection('postgresql://fixture:fixture@aws-1-eu-west-2.pooler.supabase.com/postgres?sslmode=require'))
         self.assertEqual(actual['sslmode'],'verify-full')

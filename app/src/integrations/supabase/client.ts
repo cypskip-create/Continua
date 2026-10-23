@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import {createSessionStorage,createSessionFetch,COOKIE_SESSION} from '@/lib/sessionTransport';
+import {createContinuaClient} from '../continua/client.js';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -11,7 +12,11 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 const gateway=typeof window!=='undefined'&&window.location.protocol==='https:'&&(['continua.cypriankiprop41.workers.dev','continua-preview.cypriankiprop41.workers.dev'].includes(window.location.hostname)||import.meta.env.VITE_SESSION_GATEWAY_ENABLED==='true');
 let verifierStorage:Storage|undefined;try{if(typeof window!=='undefined')verifierStorage=window.sessionStorage;}catch{/* Browser storage may be disabled. */}
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const OWNED_IDENTITY_ENABLED=import.meta.env.VITE_AUTH_PROVIDER==='better-auth';
+const ownedClient=OWNED_IDENTITY_ENABLED?createContinuaClient({origin:window.location.origin,channel:typeof BroadcastChannel==='function'?new BroadcastChannel('continua-session'):undefined}):null;
+// Retain the legacy export while migrating audited callers. The selected owned
+// transport establishes no Supabase client and needs no Supabase environment.
+export const supabase = (ownedClient??createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   global: gateway?{fetch:createSessionFetch(SUPABASE_URL,window.location.origin)}:undefined,
   auth: {
     storage: createSessionStorage(verifierStorage),
@@ -19,10 +24,23 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     autoRefreshToken: true,
   }
-});
+})) as ReturnType<typeof createClient<Database>>;
+
+export function observeSessionSecurity(listener:(state:{mfaPending:boolean;recoveryMode:boolean})=>void){
+ return ownedClient?ownedClient.auth.onSecurityStateChange(listener):()=>{};
+}
+export function startOwnedGoogleSignIn(options:Record<string,unknown>){
+ if(!ownedClient)throw Error('Owned identity is not enabled');
+ return ownedClient.auth.signInWithGoogle(options);
+}
+export function subscribeOwnedSnapshots(name:string,options:Record<string,unknown>,callback:(snapshot:{rows:any[]})=>void,status?:(value:string)=>void){
+ if(!ownedClient)throw Error('Owned identity is not enabled');
+ return ownedClient.channel(name).on('snapshot',options,callback).subscribe(status);
+}
 
 let restoring:Promise<void>|undefined;
 export function restoreBrowserSession():Promise<void> {
+ if(ownedClient)return ownedClient.auth.restoreSession().then(({error})=>{if(error)throw error;});
  if(restoring)return restoring;
  restoring=(async()=>{
   const {data}=await supabase.auth.getSession();
@@ -43,6 +61,7 @@ export function restoreBrowserSession():Promise<void> {
  return restoring;
 }
 export async function clearBrowserSessionCookie(){
+ if(ownedClient)return; // Its signOut revokes the owned session and challenge.
  if(!gateway)return;
  const response=await fetch('/api/session/clear',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Continua-Session':'1'},body:'{}'});
  if(!response.ok)throw Error('Session could not be closed. Please retry.');

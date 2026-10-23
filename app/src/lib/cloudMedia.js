@@ -1,5 +1,5 @@
-import {supabase} from '@/integrations/supabase/client';
-const MEDIA_ORIGIN='https://continua.cypriankiprop41.workers.dev';
+import {supabase,OWNED_IDENTITY_ENABLED} from '@/integrations/supabase/client';
+const MEDIA_ORIGIN=OWNED_IDENTITY_ENABLED?window.location.origin:'https://continua.cypriankiprop41.workers.dev';
 const MEDIA_ORIGINS=new Set([MEDIA_ORIGIN,'https://continua-preview.cypriankiprop41.workers.dev']);
 
 async function mediaHeaders(){

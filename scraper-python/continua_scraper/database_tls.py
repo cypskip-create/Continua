@@ -15,4 +15,7 @@ def secure_connection(connection):
     supabase=host.endswith('.pooler.supabase.com') or (host.startswith('db.') and host.endswith('.supabase.co'))
     if supabase and not settings.get('sslrootcert'):
         settings['sslrootcert']=str(Path(__file__).with_name('supabase-root-2021.crt'))
+    if host.endswith('.neon.tech') and not settings.get('sslrootcert'):
+        import certifi
+        settings['sslrootcert']=certifi.where()
     return make_conninfo(**settings)

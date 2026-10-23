@@ -9,6 +9,7 @@ import pg from "pg";
 import { registerDateTypes } from "./dateTypes.js";
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
+import {observePoolErrors} from './poolErrors.js';
 // node-postgres returns NUMERIC and BIGINT columns as STRINGS by default —
 // a well-known pg gotcha, because a numeric/bigint value can exceed what a
 // JS number can represent exactly. Every price, ratio, market cap, and
@@ -33,9 +34,7 @@ export const pool = new pg.Pool({
     connectionTimeoutMillis: 5_000,
     statement_timeout: 12_000,
 });
-pool.on("error", (err) => {
-    logger.error({ err }, "Unexpected Postgres pool error");
-});
+observePoolErrors(pool,{component:'application-database',report:(fields,message)=>logger.error(fields,message)});
 export async function query(text, params) {
     const start = Date.now();
     const res = await pool.query(text, params);

@@ -1,3 +1,4 @@
+import {ownedIdentity} from './identity.mjs';
 // Public application images only. Financial evidence has no binding here.
 const MAX_BYTES=5*1024*1024;
 const UUID='[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
@@ -47,7 +48,7 @@ export async function media(request,env,security){
  const token=request.headers.get('X-User-Token');
  if(!token||token.length>8192)return respond('Sign in required',401);
  const ip=request.headers.get('CF-Connecting-IP');
- if(!ip||ip.length>64||!env.MEDIA_RATE_LIMIT||!env.SUPABASE_PUBLISHABLE_KEY)return respond('Media storage unavailable',503);
+ if(!ip||ip.length>64||!env.MEDIA_RATE_LIMIT||(env.AUTH_PROVIDER!=='better-auth'&&!env.SUPABASE_PUBLISHABLE_KEY))return respond('Media storage unavailable',503);
  try{if(!(await env.MEDIA_RATE_LIMIT.limit({key:ip})).success)return new Response(JSON.stringify({error:'Too many uploads'}),{status:429,headers:{...responseSecurity,'Content-Type':'application/json','Cache-Control':'no-store','Retry-After':'60'}});}
  catch{return respond('Media storage unavailable',503);}
  const declared=request.headers.get('Content-Length');
@@ -55,10 +56,12 @@ export async function media(request,env,security){
  let owner;
  try{
   // Never trust a decoded browser JWT or a user-supplied issuer/owner/path.
-  const auth=await fetch('https://jjsetogmnumoudrovpzn.supabase.co/auth/v1/user',{headers:{apikey:env.SUPABASE_PUBLISHABLE_KEY,Authorization:'Bearer '+token},redirect:'error',signal:AbortSignal.timeout(5000)});
+  const owned=env.AUTH_PROVIDER==='better-auth';
+  const auth=owned?await ownedIdentity(new Request(url.origin+'/api/v1/identity/verify',{headers:{Origin:url.origin,'X-Continua-Session':'1','X-User-Token':token,'CF-Connecting-IP':ip}}),env):await fetch('https://jjsetogmnumoudrovpzn.supabase.co/auth/v1/user',{headers:{apikey:env.SUPABASE_PUBLISHABLE_KEY,Authorization:'Bearer '+token},redirect:'error',signal:AbortSignal.timeout(5000)});
   if(!auth.ok){await auth.body?.cancel();return respond(auth.status>=500?'Authentication unavailable':'Sign in required',auth.status>=500?503:401);}
-  const user=JSON.parse(new TextDecoder().decode(await bounded(auth.body,65536)));
-  if(typeof user.id!=='string'||!new RegExp('^'+UUID+'$').test(user.id)||user.aud!=='authenticated'||user.is_anonymous===true)return respond('Sign in required',401);
+  const result=JSON.parse(new TextDecoder().decode(await bounded(auth.body,65536))),user=owned?result.user:result;
+  if(typeof user?.id!=='string'||!new RegExp('^'+UUID+'$').test(user.id)||user.is_anonymous===true)return respond('Sign in required',401);
+  if(owned?(result.claims?.sub!==user.id||result.claims?.role!=='authenticated'||result.claims?.aud!=='continua'):user.aud!=='authenticated')return respond('Sign in required',401);
   owner=user.id;
  }catch{return respond('Authentication unavailable',503);}
  if(deletion){

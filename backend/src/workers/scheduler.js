@@ -1,4 +1,5 @@
 import { startEngineMonitorWorker } from "./engineMonitorWorker.js";
+import {startOwnedApplicationWorker} from './ownedApplicationWorker.js';
 import { startDocumentPublicationWorker } from './documentPublicationWorker.js';
 import { serialBootstrap } from './serialBootstrap.js';
 import {startResearchRefreshWorker, runResearchRefreshOnce} from './researchRefreshWorker.js';
@@ -19,6 +20,7 @@ import { runFinancialCandidatesBridgeOnce, startFinancialCandidatesWorker } from
 import { runNewsBridgeOnce, startNewsWorker } from "./newsWorker.js";
 import { logger } from "../monitoring/logger.js";
 export async function startAllWorkers() {
+    const ownedApplicationTask = startOwnedApplicationWorker();
     const researchRefreshTask = startResearchRefreshWorker();
     const engineMonitorTask = startEngineMonitorWorker();
     const stopPriceWorker = startPriceWorker();
@@ -67,6 +69,7 @@ export async function startAllWorkers() {
     })().catch((err) => logger.error({ err }, "Background bootstrap failed"));
     logger.info("All recurring workers started; enrichment continuing in background");
     return () => {
+        ownedApplicationTask.stop();
         researchRefreshTask.stop();
         engineMonitorTask.stop();
         stopPriceWorker();

@@ -27,6 +27,9 @@ export const pool = new pg.Pool({
 pool.on("error", (err) => {
     logger.error({ err }, "Unexpected Postgres pool error");
 });
+// Leased clients can disconnect between statements as well as while idle in
+// the pool. Observe that event without retrying an ambiguous evidence write.
+pool.on('connect',client=>client.on('error',()=>logger.error({component:'collector-database'},'Database connection interrupted')));
 export async function query(text, params) {
     const start = Date.now();
     const res = await pool.query(text, params);

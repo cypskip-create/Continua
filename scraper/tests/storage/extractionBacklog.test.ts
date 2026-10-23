@@ -7,8 +7,8 @@ import {requeueIncompleteDocuments} from '../../src/storage/documentJobsReposito
 it('restricts extraction to retained private R2 bytes and applies retry backoff',async()=>{
   await findUnextracted(5);
   const [sql,params]=mocks.query.mock.calls[0]!;
-  expect(params).toEqual([5,false,'scraper-raw','r2://private-documents/%']);
-  expect(sql).toContain('FROM storage.objects');expect(sql).toContain("interval '1 hour'");
+  expect(params).toEqual([5,'r2://private-documents/%']);
+  expect(sql).not.toContain('storage.objects');expect(sql).toContain("interval '1 hour'");
   expect(sql).toContain("(a.content_type ILIKE '%pdf%') DESC");
   expect(sql).toContain('ORDER BY e.extracted_at DESC,e.id DESC LIMIT 1');
   expect(sql).toContain("length(trim(coalesce(e.text,'')))<50");

@@ -64,3 +64,11 @@ test('unconfigured media is unavailable and all accepted raster signatures are e
  assert.equal(imageFormat(new TextEncoder().encode('RIFF0000WEBP')),'webp');
  assert.equal(imageFormat(new TextEncoder().encode('GIF89a')),'gif');assert.equal(imageFormat(new TextEncoder().encode('<html>')),null);
 });
+
+test('Neon uploads use the owned live-session verifier and need no Supabase key',async t=>{
+ const {env,objects,upload}=fixture(t);delete env.SUPABASE_PUBLISHABLE_KEY;Object.assign(env,{AUTH_PROVIDER:'better-auth',BACKEND_ORIGIN:'https://backend.onrender.com',BACKEND_API_KEY:'server-key',EDGE_ORIGIN_SECRET:'s'.repeat(32),AUTH_RATE_LIMIT:{limit:async()=>({success:true})}});
+ let target,headers;globalThis.fetch=async(url,options)=>{target=url;headers=options.headers;return Response.json({user:{id:owner},claims:{sub:owner,role:'authenticated',aud:'continua'}});};
+ assert.equal((await worker.fetch(upload(),env)).status,201);assert.equal(target.href,'https://backend.onrender.com/api/v1/identity/verify');assert.equal(headers.get('x-api-key'),'server-key');assert.equal(headers.get('x-user-token'),'fixture-user');assert.equal(objects.size,1);
+ globalThis.fetch=async()=>Response.json({user:{id:owner},claims:{sub:'another-owner',role:'authenticated',aud:'continua'}});assert.equal((await worker.fetch(upload(),env)).status,401);assert.equal(objects.size,1);
+ globalThis.fetch=async()=>new Response('{"error":"revoked"}',{status:401,headers:{'Content-Type':'application/json'}});assert.equal((await worker.fetch(upload(),env)).status,401);assert.equal(objects.size,1);
+});
