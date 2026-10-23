@@ -1,4 +1,7 @@
 import {Router} from 'express';
+import {rateLimit,ipKeyGenerator} from 'express-rate-limit';
+import {BoundedMemoryRateStore} from '../middleware/sharedRateStore.js';
+import {rateLimitClientIP} from '../middleware/edgeClientIdentity.js';
 import {z} from 'zod';
 import {requireEngineUser,requireSubscriber,requirePremiumPlus} from '../middleware/requireSubscriber.js';
 import {asyncHandler,ApiError} from '../middleware/errorHandler.js';
@@ -8,6 +11,7 @@ import {calculateInvestment} from '../../services/research/investmentResearch.js
 import {ownedCalculation,preparedCompany,ownedSimulation,ownedLiquidity,exposureEdges,institutionalKinds} from '../../services/research/institutionalResearch.js';
 
 export const institutionalRoutes=Router();
+institutionalRoutes.use(rateLimit({windowMs:60000,limit:120,standardHeaders:false,legacyHeaders:false,store:new BoundedMemoryRateStore(),keyGenerator:(req,res)=>ipKeyGenerator(rateLimitClientIP(req,res))}));
 const owner=res=>String(res.locals.engineUserId);
 function parse(schema,value){const result=schema.safeParse(value);if(!result.success)throw new ApiError(400,'Invalid institutional research request.');return result.data;}
 const symbol=z.string().trim().toUpperCase().regex(/^[A-Z0-9.\-]{1,20}$/);

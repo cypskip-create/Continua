@@ -5,6 +5,18 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "backend/src/data/browserData.js",
+      "category": "Neon startup and page-read latency",
+      "language": "Existing JavaScript compatibility backend, PostgreSQL, and existing React integration",
+      "runtime": "Existing bounded connection pools and services; no new runtime or always-on workload",
+      "reason": "Remove unrequested exact counts and HEAD row serialization, overlap independent live session-envelope reads, and remove the post-verification splash delay. Preserve transactional SET LOCAL roles, live session/MFA verification and certificate validation. Measured production warm session reads were 1219–2028 ms and profile reads 1079–1163 ms before this change; free Render wake-up latency remains a separate hosting limit. No native rewrite or frontend redesign is claimed.",
+      "references": [
+        "https://node-postgres.com/features/pooling",
+        "https://render.com/docs/free",
+        "https://neon.com/docs/introduction/scale-to-zero"
+      ]
+    },
+    {
       "file": "app/src/api/apiEndpoint.ts",
       "category": "Production market/news gateway continuity during Neon cutover",
       "language": "Existing frontend integration module and Cloudflare JavaScript ESM; existing PostgreSQL data and refresh workers",

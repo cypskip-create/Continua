@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import express from "express";
+import {rateLimit} from 'express-rate-limit';
 import type { Server } from "node:http";
 const mocks=vi.hoisted(()=>({query:vi.fn()}));
 vi.mock("../src/storage/db.js",()=>({query:mocks.query}));
@@ -31,7 +32,7 @@ it("public traffic and other users cannot exhaust a verified user's Engine allow
   vi.stubGlobal("fetch",authFetch);mocks.query.mockResolvedValue({rows:[{subscription_plan:"premium"}]});
   const app=express();
   app.use((req,_res,next)=>{req.apiKey={id:"shared-browser-key",name:"browser",active:true,rateLimitPerMin:2};next();});
-  app.use("/api/v1",verifyEngineRateLimitIdentity,apiRateLimit());
+  app.use("/api/v1",rateLimit({windowMs:60000,limit:1000,standardHeaders:false,legacyHeaders:false}),verifyEngineRateLimitIdentity,apiRateLimit());
   app.get("/api/v1/instruments",(_req,res)=>res.json({data:[]}));
   app.get("/api/v1/engine/portfolio",requireSubscriber,(_req,res)=>res.json({data:{user:res.locals.engineUserId}}));
   app.use(errorHandler);

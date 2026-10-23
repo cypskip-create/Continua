@@ -1,5 +1,8 @@
 import {requireAccountSecurityProof} from './accountSecurityAssurance.js';
 import express from 'express';
+import {rateLimit,ipKeyGenerator} from 'express-rate-limit';
+import {BoundedMemoryRateStore} from '../api/middleware/sharedRateStore.js';
+import {rateLimitClientIP} from '../api/middleware/edgeClientIdentity.js';
 import QRCode from 'qrcode';
 import {reauthenticateSession} from './reauthenticate.js';
 
@@ -7,6 +10,7 @@ import {reauthenticateSession} from './reauthenticate.js';
 // host-only HttpOnly cookie; only a short-lived JWT is returned to JavaScript.
 export function createIdentityRouter({auth,database,verifyAccess,publicOrigin}){
  const origin=new URL(publicOrigin).origin,router=express.Router();
+ router.use(rateLimit({windowMs:60000,limit:120,standardHeaders:false,legacyHeaders:false,store:new BoundedMemoryRateStore(),keyGenerator:(req,res)=>ipKeyGenerator(rateLimitClientIP(req,res))}));
  const methods=new Set(['signin','google','signup','signout','recover','verify-password','mfa-enable','mfa-verify','mfa-disable','email','recovery-begin','reset-password']);
  router.use(express.json({limit:'64kb'}));
  router.use((req,res,next)=>{res.set('Cache-Control','private, no-store');res.set('Pragma','no-cache');res.set('Referrer-Policy','no-referrer');next();});
@@ -25,10 +29,17 @@ export function createIdentityRouter({auth,database,verifyAccess,publicOrigin}){
   }
   async function envelope(){
    const current=(await call('get-session')).data;if(!current?.session||!current?.user)return null;
-   const access=(await call('token')).data?.token;if(typeof access!=='string')throw Error('Access token unavailable');
+   // These reads depend on the live provider session, but not on one another.
+   // No session/security result is cached between requests.
+   const [tokenResult,identityResult,factorResult]=await Promise.all([
+    call('token'),
+    database.query('SELECT raw_user_meta_data,created_at::text,updated_at::text,email_confirmed_at::text FROM app_identity.users WHERE id=$1 AND deleted_at IS NULL',[current.user.id]),
+    database.query('SELECT id::text,verified FROM app_identity.continua_auth_two_factor WHERE "userId"=$1',[current.user.id])
+   ]);
+   const access=tokenResult.data?.token;if(typeof access!=='string')throw Error('Access token unavailable');
    const claims=JSON.parse(Buffer.from(access.split('.')[1],'base64url').toString('utf8'));
-   const identity=(await database.query('SELECT raw_user_meta_data,created_at::text,updated_at::text,email_confirmed_at::text FROM app_identity.users WHERE id=$1 AND deleted_at IS NULL',[current.user.id])).rows[0];if(!identity)throw Error('Application identity unavailable');
-   const factors=(await database.query('SELECT id::text,verified FROM app_identity.continua_auth_two_factor WHERE "userId"=$1',[current.user.id])).rows.map(f=>({id:f.id,factor_type:'totp',status:f.verified?'verified':'unverified',friendly_name:'Continua authenticator'}));
+   const identity=identityResult.rows[0];if(!identity)throw Error('Application identity unavailable');
+   const factors=factorResult.rows.map(f=>({id:f.id,factor_type:'totp',status:f.verified?'verified':'unverified',friendly_name:'Continua authenticator'}));
    return {access_token:access,refresh_token:'cookie-session',token_type:'bearer',expires_in:Math.max(0,claims.exp-Math.floor(Date.now()/1000)),expires_at:claims.exp,user:{id:current.user.id,email:current.user.email,aud:'authenticated',role:'authenticated',created_at:identity.created_at,updated_at:identity.updated_at,email_confirmed_at:identity.email_confirmed_at,user_metadata:identity.raw_user_meta_data,app_metadata:{provider:'email',providers:['email']},factors}};
   }
   async function assured(recent=false){const access=(await call('token')).data?.token;const identity=await verifyAccess(access);if(recent)await requireAccountSecurityProof({database,sessionId:identity.claims.session_id,userId:identity.user.id});return identity;}

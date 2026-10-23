@@ -1,8 +1,12 @@
 import express from 'express';
+import {rateLimit,ipKeyGenerator} from 'express-rate-limit';
+import {BoundedMemoryRateStore} from '../api/middleware/sharedRateStore.js';
+import {rateLimitClientIP} from '../api/middleware/edgeClientIdentity.js';
 import {timingSafeEqual} from 'node:crypto';
 
 export function createMaintenanceRouter({secret,run,database}){
  const router=express.Router();let busy=false;
+ router.use(rateLimit({windowMs:60000,limit:120,standardHeaders:false,legacyHeaders:false,store:new BoundedMemoryRateStore(),keyGenerator:(req,res)=>ipKeyGenerator(rateLimitClientIP(req,res))}));
  router.use((req,res,next)=>{
   res.set('Cache-Control','no-store');
   const supplied=req.header('x-continua-maintenance-key');

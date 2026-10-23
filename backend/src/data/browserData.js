@@ -19,7 +19,8 @@ export function compileDataRequest({table,method,search=new URLSearchParams(),bo
  if(method==='GET'||method==='HEAD'){
   let order='';if(search.has('order')){const terms=search.get('order').split(',');if(terms.length>8)throw new DataRequestError('Too many sort columns');order=' ORDER BY '+terms.map(term=>{const pieces=term.split('.');if(pieces.length>3)throw new DataRequestError('Invalid sort');const [name,direction='asc',nulls]=pieces;if(!['asc','desc'].includes(direction)||(nulls&&!['nullsfirst','nullslast'].includes(nulls)))throw new DataRequestError('Invalid sort');return column(name)+' '+direction.toUpperCase()+(nulls?' NULLS '+(nulls==='nullsfirst'?'FIRST':'LAST'):'');}).join(',');}
   const limit=Number(search.get('limit')??maximumRows),offset=Number(search.get('offset')??0);if(!Number.isSafeInteger(limit)||limit<0||limit>maximumRows||!Number.isSafeInteger(offset)||offset<0||offset>1000000)throw new DataRequestError('Invalid pagination');
-  sql=`SELECT ${selected} FROM ${relation}${where}${order} LIMIT ${bind(limit)} OFFSET ${bind(offset)}`;countSql=`SELECT count(*)::text count FROM ${relation}${where}`;
+  sql=`SELECT ${selected} FROM ${relation}${where}${order} LIMIT ${bind(limit)} OFFSET ${bind(offset)}`;
+  if(prefer.split(',').some(value=>value.trim()==='count=exact'))countSql=`SELECT count(*)::text count FROM ${relation}${where}`;
  }else if(method==='POST'){
   if(filters.length)throw new DataRequestError('Insert filters are not supported');
   const rows=Array.isArray(body)?body:[body];if(!rows.length||rows.length>100)throw new DataRequestError('Invalid insert batch');const keys=Object.keys(rows[0]??{});if(!keys.length)throw new DataRequestError('Empty insert');keys.forEach(column);for(const row of rows)if(!row||Array.isArray(row)||typeof row!=='object'||Object.keys(row).length!==keys.length||keys.some(key=>!Object.hasOwn(row,key)))throw new DataRequestError('Inconsistent insert fields');
@@ -44,6 +45,7 @@ export function compileDataRequest({table,method,search=new URLSearchParams(),bo
 export async function executeDataRequest(pool,compiled,verifiedClaims){
  const client=await pool.connect();try{await client.query('BEGIN');await client.query("SET LOCAL statement_timeout='8000ms'");await client.query(verifiedClaims?'SET LOCAL ROLE authenticated':'SET LOCAL ROLE anon');await client.query("SELECT set_config('request.jwt.claims',$1,true)",[JSON.stringify(verifiedClaims??{})]);if(verifiedClaims)await client.query('SELECT public.continua_session_guard()');
  const count=compiled.countSql?(await client.query(compiled.countSql,compiled.countParams)).rows[0].count:undefined;
- const result=await client.query(compiled.sql,compiled.params);const payload='['+result.rows.map(row=>row.payload).join(',')+']';if(Buffer.byteLength(payload)>4*1024*1024)throw new DataRequestError('Result too large; paginate this request',413);await client.query('COMMIT');return {json:payload,count,rows:result.rows.length};
+ // HEAD needs headers only; do not fetch and serialize rows after its count.
+ const result=compiled.head?{rows:[]}:await client.query(compiled.sql,compiled.params);const payload='['+result.rows.map(row=>row.payload).join(',')+']';if(Buffer.byteLength(payload)>4*1024*1024)throw new DataRequestError('Result too large; paginate this request',413);await client.query('COMMIT');return {json:payload,count,rows:result.rows.length};
  }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
 }

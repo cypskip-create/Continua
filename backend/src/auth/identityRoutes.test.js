@@ -8,6 +8,15 @@ async function fixture(handler=async()=>Response.json({})){
 }
 const headers={'Content-Type':'application/json',Origin:'https://continua.example','X-Continua-Session':'1'};
 describe('owned identity browser boundary',()=>{
+ it('starts independent envelope reads together and waits for token verification before returning',async()=>{
+  let releaseToken,readsStarted;const started=new Promise(resolve=>{readsStarted=resolve;});const tokenReady=new Promise(resolve=>{releaseToken=resolve;});
+  const token='header.'+Buffer.from(JSON.stringify({exp:Math.floor(Date.now()/1000)+300})).toString('base64url')+'.signature';
+  const f=await fixture(async request=>request.url.endsWith('/get-session')?Response.json({session:{id:'session'},user:{id:'owner',email:'fixture@example.invalid'}}):request.url.endsWith('/token')?tokenReady:Response.json({}));
+  let reads=0;f.database.query.mockImplementation(async sql=>{if(++reads===2)readsStarted();return {rows:sql.includes('raw_user_meta_data')?[{raw_user_meta_data:{}}]:[]};});
+  let completed=false;const pending=fetch(f.url+'/session',{headers}).then(response=>{completed=true;return response;});
+  await started;expect(reads).toBe(2);expect(completed).toBe(false);
+  releaseToken(Response.json({token}));const response=await pending;expect(response.status).toBe(200);expect((await response.json()).session.user.id).toBe('owner');
+ });
  it('does not turn a database or provider outage into a signed-out session',async()=>{const f=await fixture(async()=>{throw Error('private database diagnostic');});const response=await fetch(f.url+'/session',{headers});expect(response.status).toBe(503);expect(response.headers.get('set-cookie')).toBe(null);expect(JSON.stringify(await response.json())).not.toContain('private database');});
  it('requires an exact trusted origin and explicit session header before calling the provider',async()=>{const f=await fixture();for(const h of [{},{...headers,Origin:'https://attacker.example'},{Origin:headers.Origin}])expect((await fetch(f.url+'/signin',{method:'POST',headers:{'Content-Type':'application/json',...h},body:'{}'})).status).toBe(403);expect(f.auth.handler).not.toHaveBeenCalled();});
  it('does not expose opaque password-signin tokens to browser JavaScript',async()=>{const f=await fixture(async request=>request.url.endsWith('/sign-in/email')?Response.json({token:'opaque-provider-token'}):Response.json(null));const response=await fetch(f.url+'/signin',{method:'POST',headers,body:JSON.stringify({email:'fixture@example.invalid',password:'fixture-password'})});expect(response.status).toBe(200);expect(await response.json()).toEqual({session:null});});

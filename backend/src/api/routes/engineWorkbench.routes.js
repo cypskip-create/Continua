@@ -1,5 +1,8 @@
 import {institutionalRoutes} from './institutional.routes.js';
 import { Router } from "express";
+import {rateLimit,ipKeyGenerator} from 'express-rate-limit';
+import {BoundedMemoryRateStore} from '../middleware/sharedRateStore.js';
+import {rateLimitClientIP} from '../middleware/edgeClientIdentity.js';
 import { investmentEvidence, calculateInvestment } from '../../services/research/investmentResearch.js';
 import { z } from "zod";
 import { StressSchema, BondLabSchema, FuturesLabSchema } from '../../services/research/engineLabSchemas.js';
@@ -21,6 +24,7 @@ import { earningsSensitivity, EarningsSensitivitySchema } from '../../services/r
 import { annualRatioAt } from '../../services/technical/valuationHistory.js';
 import { runHealthCheck } from '../../monitoring/healthCheck.js';
 export const engineWorkbenchRoutes = Router();
+engineWorkbenchRoutes.use(rateLimit({windowMs:60000,limit:120,standardHeaders:false,legacyHeaders:false,store:new BoundedMemoryRateStore(),keyGenerator:(req,res)=>ipKeyGenerator(rateLimitClientIP(req,res))}));
 engineWorkbenchRoutes.use(institutionalRoutes);
 engineWorkbenchRoutes.post('/engine/labs/intelligence', requirePremiumPlus, asyncHandler(async (req,res) => {
     const owned = await getPortfolioResearch(String(res.locals.engineUserId), 'NSE');

@@ -1,9 +1,13 @@
 import express from 'express';
+import {rateLimit,ipKeyGenerator} from 'express-rate-limit';
+import {BoundedMemoryRateStore} from '../api/middleware/sharedRateStore.js';
+import {rateLimitClientIP} from '../api/middleware/edgeClientIdentity.js';
 import {checkOwnedPriceAlerts} from './priceAlerts.js';
 import {deleteOwnedAccount} from './deleteAccount.js';
 
 export function createOwnedFunctionRouter({database,verifyAccess}){
  const router=express.Router();
+ router.use(rateLimit({windowMs:60000,limit:120,standardHeaders:false,legacyHeaders:false,store:new BoundedMemoryRateStore(),keyGenerator:(req,res)=>ipKeyGenerator(rateLimitClientIP(req,res))}));
  router.use((req,res,next)=>{res.set('Cache-Control','private, no-store');next();});
  router.use(async(req,res,next)=>{
   const token=req.header('x-user-token')??req.header('authorization')?.replace(/^Bearer /,'');
