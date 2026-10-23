@@ -20,9 +20,9 @@ const authDatabase=new pg.Pool({connectionString:url.href,ssl:{rejectUnauthorize
 for(const client of [source,target])client.on('error',()=>{});authDatabase.on('error',()=>{});
 const bin='C:/Program Files/PostgreSQL/17/bin/pg_restore.exe';
 function restore(args,options={}){const result=spawnSync(bin,args,{windowsHide:true,encoding:'utf8',maxBuffer:10000000,timeout:1800000,...options});if(result.status!==0){fs.writeFileSync(path.join(directory,'production-restore-diagnostic.log'),String(result.stderr??result.error??''));throw Error('Restore failed; private diagnostic retained. No automatic deletion or overwrite is permitted.');}return result.stdout;}
-let phase='preflight';
+let phase='preflight',targetConnected=false;
 try{
- await source.connect();await target.connect();
+ await source.connect();await target.connect();targetConnected=true;
  if((await source.query("SELECT count(*)::int count FROM auth.mfa_factors WHERE status='verified'")).rows[0].count!==0)throw Error('New source MFA factors require a reviewed import; refusing security loss');
  if((await target.query("SELECT count(*)::int count FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN('public','market','scraping','app_identity') AND c.relkind IN('r','p')")).rows[0].count!==0)throw Error('Production application target is not empty; refusing overwrite');
  const toc=restore(['--list',archive]),list=path.join(directory,'application.list');fs.writeFileSync(list,applicationRestoreList(toc));
@@ -54,5 +54,5 @@ try{
  await target.query(acl);await target.query(permissionBody);
  const receipt={existingProject:'orange-bird-13151544',productionBranch:'br-noisy-block-b4z5yxup',sourceSnapshot:manifest.snapshot,applicationTables:results.length,exactPostgresRowHashesMatched:true,originalUsers:users.length,syntheticStagingUsersImported:false,legacySessionsImported:false,sourceDataDeleted:false,providerConfigurationSwitched:false,results};
  fs.writeFileSync(path.join(directory,'production-import-receipt.json'),JSON.stringify(receipt,null,2),{mode:0o600});console.log(JSON.stringify({...receipt,results:undefined}));
-}catch(error){await target.query('ROLLBACK').catch(()=>{});console.error(JSON.stringify({productionImportFailed:true,phase,keepMaintenanceEnabled:true,errorClass:error.name,code:error.code??null}));process.exitCode=1;}
+}catch(error){console.error(JSON.stringify({productionImportFailed:true,phase,keepMaintenanceEnabled:true,errorClass:error.name,code:error.code??null}));if(targetConnected)await target.query('ROLLBACK').catch(()=>{});process.exitCode=1;}
 finally{await source.end();await target.end();await authDatabase.end();}

@@ -23,6 +23,12 @@ test('identity references change only in the schema transformation stage',()=>{
  assert.throws(()=>applicationDDL('COPY public.money FROM stdin;\n1\t9999999999999999.001\n\\.','data'));
  assert.throws(()=>applicationDDL('COPY public.money FROM stdin;','pre-data'));
 });
+
+test('portable restore retains separately archived unvalidated check constraints',()=>{
+ const toc='4711; 2606 35950 CHECK CONSTRAINT public blocked_users no_self_block postgres';
+ assert.equal(applicationRestoreList(toc),toc);
+ assert.equal(applicationRestoreList(toc.replace('public blocked_users','auth users')),'');
+});
 test('storage paths are encoded once and reject traversal and cross-bucket reads',()=>{
  assert.equal(storagePath('scraper-raw','issuer/2026/report name.pdf'),'scraper-raw/issuer/2026/report%20name.pdf');
  for(const value of ['../private','issuer/../private','issuer\\private','issuer//private','issuer/\0private'])assert.throws(()=>storagePath('scraper-raw',value));

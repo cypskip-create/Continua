@@ -30,7 +30,7 @@ export function applicationRestoreList(toc){
   if(value.startsWith('EXTENSION - '))return extensions.has(value.split(' ')[2]);
   if(value.startsWith('COMMENT - EXTENSION '))return / (pgcrypto|uuid-ossp) /.test(value);
   if(value.startsWith('COMMENT - SCHEMA '))return applicationSchemas.has(value.split(' ')[3]);
-  const object=/^(SEQUENCE OWNED BY|SEQUENCE SET|MATERIALIZED VIEW DATA|MATERIALIZED VIEW|TABLE DATA|TABLE ATTACH|INDEX ATTACH|FK CONSTRAINT|ROW SECURITY|FUNCTION|TYPE|DOMAIN|TABLE|SEQUENCE|VIEW|CONSTRAINT|INDEX|TRIGGER|RULE|POLICY|DEFAULT|COMMENT) (\S+) /.exec(value);
+  const object=/^(SEQUENCE OWNED BY|SEQUENCE SET|MATERIALIZED VIEW DATA|MATERIALIZED VIEW|TABLE DATA|TABLE ATTACH|INDEX ATTACH|CHECK CONSTRAINT|FK CONSTRAINT|ROW SECURITY|FUNCTION|TYPE|DOMAIN|TABLE|SEQUENCE|VIEW|CONSTRAINT|INDEX|TRIGGER|RULE|POLICY|DEFAULT|COMMENT) (\S+) /.exec(value);
   return !!object&&applicationSchemas.has(object[2]);
  }).join('\n');
 }
