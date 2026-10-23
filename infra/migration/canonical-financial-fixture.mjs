@@ -279,8 +279,25 @@ print(json.dumps([read_projection(row['payload']) for row in json.load(sys.stdin
  check(access,{public:false,user:false});
  // An older large PDF must not monopolize migration ahead of collected issuer
  // views. The issuer with fewer completed financial categories advances first.
+ // Capture the actual generated SQL: archive queries now select their storage
+ // predicate at runtime, so extracting the first string literal truncates it.
+ const archiveQueries=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',`
+import asyncio,json,sys
+sys.path.insert(0,'scraper-python')
+from continua_scraper.archive import R2Archive
+class DB:
+ def __init__(self,rows):self.rows=rows
+ async def query(self,sql,params=()):
+  print(json.dumps(sql));return self.rows
+async def run():
+ await R2Archive(DB([{}]),None,None,include_legacy=True).inventory()
+ await R2Archive(DB([]),None,None,include_legacy=True)._run(20)
+asyncio.run(run())
+ `],{cwd:new URL('../../',import.meta.url),encoding:'utf8'});
+ if(archiveQueries.status!==0)throw new Error('Python archive SQL fixture unavailable');
+ const [inventorySQL,selectionSQL]=archiveQueries.stdout.trim().split(/\r?\n/).map(line=>JSON.parse(line).replaceAll('%%','%'));
  let archiveSelectionParam=0;
- const archiveSelection=archiveSource.match(/pending=await self.database.query\("""([\s\S]*?)"""/)[1].replaceAll('%%','%').replace(/%s/g,()=>'$'+(++archiveSelectionParam));
+ const archiveSelection=selectionSQL.replace(/%s/g,()=>'$'+(++archiveSelectionParam));
  for(const [index,ticker]of ['PDF','CGEN','COOP','MISSING'].entries())await db.query(`INSERT INTO scraping.raw_artifacts
   (source_id,adapter,sha256,document_url,storage_path,crawler_version,content_type,metadata)
   VALUES('kenyanstocks','fixture',$1,$2,$3,'fixture',$4,$5::jsonb)`,[(9000+index).toString(16).padStart(64,'0'),
@@ -293,7 +310,6 @@ print(json.dumps([read_projection(row['payload']) for row in json.load(sys.stdin
  check(ordered.map(row=>row.metadata.ticker??'PDF'),['COOP','CGEN','PDF']);
  // A restrictive storage policy blocks old-client uploads/upserts without
  // granting reads or deletions that the existing owner policies disallow.
- const inventorySQL=archiveSource.match(/async def inventory\(self\):[\s\S]*?query\("""([\s\S]*?)"""/)[1].replaceAll('%%','%');
  const archiveInventory=(await db.query(inventorySQL)).rows[0];
  check(archiveInventory.legacy_missing_records,1);check(archiveInventory.legacy_retained_records,3);
  await db.exec(`ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
