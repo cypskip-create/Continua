@@ -43,7 +43,9 @@ export function compileDataRequest({table,method,search=new URLSearchParams(),bo
 // Caller supplies only claims returned by server-side access verification.
 // Each operation sets LOCAL role/claims and releases a clean connection.
 export async function executeDataRequest(pool,compiled,verifiedClaims){
- const client=await pool.connect();try{await client.query('BEGIN');await client.query("SET LOCAL statement_timeout='8000ms'");await client.query(verifiedClaims?'SET LOCAL ROLE authenticated':'SET LOCAL ROLE anon');await client.query("SELECT set_config('request.jwt.claims',$1,true)",[JSON.stringify(verifiedClaims??{})]);if(verifiedClaims)await client.query('SELECT public.continua_session_guard()');
+ // Send constant transaction setup together, avoiding two cross-region trips.
+ // Claims remain parameter-bound, and the live guard still precedes every read.
+ const client=await pool.connect();try{await client.query(verifiedClaims?"BEGIN; SET LOCAL statement_timeout='8000ms'; SET LOCAL ROLE authenticated":"BEGIN; SET LOCAL statement_timeout='8000ms'; SET LOCAL ROLE anon");await client.query("SELECT set_config('request.jwt.claims',$1,true)",[JSON.stringify(verifiedClaims??{})]);if(verifiedClaims)await client.query('SELECT public.continua_session_guard()');
  const count=compiled.countSql?(await client.query(compiled.countSql,compiled.countParams)).rows[0].count:undefined;
  // HEAD needs headers only; do not fetch and serialize rows after its count.
  const result=compiled.head?{rows:[]}:await client.query(compiled.sql,compiled.params);const payload='['+result.rows.map(row=>row.payload).join(',')+']';if(Buffer.byteLength(payload)>4*1024*1024)throw new DataRequestError('Result too large; paginate this request',413);await client.query('COMMIT');return {json:payload,count,rows:result.rows.length};

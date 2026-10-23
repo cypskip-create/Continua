@@ -9,7 +9,7 @@
       "category": "Neon startup and page-read latency",
       "language": "Existing JavaScript compatibility backend, PostgreSQL, and existing React integration",
       "runtime": "Existing bounded connection pools and services; no new runtime or always-on workload",
-      "reason": "Remove unrequested exact counts and HEAD row serialization, overlap independent live session-envelope reads, and remove the post-verification splash delay. Preserve transactional SET LOCAL roles, live session/MFA verification and certificate validation. Measured production warm session reads were 1219–2028 ms and profile reads 1079–1163 ms before this change; free Render wake-up latency remains a separate hosting limit. No native rewrite or frontend redesign is claimed.",
+      "reason": "Remove unrequested exact counts and HEAD row serialization, overlap independent live session-envelope reads, and remove the post-verification splash delay. Preserve transactional SET LOCAL roles, live session/MFA verification and certificate validation. Measured production warm session reads were 1219–2028 ms and profile reads 1079–1163 ms before this change; free Render wake-up latency remains a separate hosting limit. No native rewrite or frontend redesign is claimed. Bundle only constant transaction setup statements to remove two cross-region trips; claim binding and the live guard remain ordered before reads. Real staging isolation/role restoration passed. Initial post-deployment timings varied upward, so no latency speedup is claimed without fresh deployed measurements.",
       "references": [
         "https://node-postgres.com/features/pooling",
         "https://render.com/docs/free",
