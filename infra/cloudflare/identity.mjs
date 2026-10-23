@@ -19,8 +19,9 @@ export async function ownedIdentity(request,env,fetcher=fetch){
  if(!callback&&((request.headers.get('Origin')!==url.origin&&!(request.headers.get('Origin')===null&&request.headers.get('Sec-Fetch-Site')==='same-origin'))||request.headers.get('Sec-Fetch-Site')==='cross-site'||request.headers.get('X-Continua-Session')!=='1'))return reply({error:'Origin not allowed'},403);
  if(request.url.length>16384)return reply({error:'Identity request too large'},413);
  if(!callback&&request.method==='POST'&&!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')??''))return reply({error:'JSON content type required'},415);
- const allowedQuery=callback?new Set(['token','callbackURL','callbackUrl','redirectTo','code','state','scope','authuser','prompt','error','error_description']):new Set(path==='verify'?['recent']:[]);
+ const allowedQuery=callback?new Set(['token','callbackURL','callbackUrl','redirectTo','code','state','scope','authuser','prompt','error','error_description',...(path==='callback/google'?['iss']:[])]):new Set(path==='verify'?['recent']:[]);
  for(const name of url.searchParams.keys())if(!allowedQuery.has(name)||url.searchParams.getAll(name).length!==1)return reply({error:'Invalid identity query'},400);
+ if(url.searchParams.has('iss')&&url.searchParams.get('iss')!=='https://accounts.google.com')return reply({error:'Invalid identity issuer'},400);
  const ip=request.headers.get('CF-Connecting-IP');if(!ip||ip.length>64||!env.AUTH_RATE_LIMIT)return reply({error:'Identity unavailable'},503);
  try{if(!(await env.AUTH_RATE_LIMIT.limit({key:ip})).success){const response=reply({error:'Too many attempts'},429);response.headers.set('Retry-After','60');return response;}}catch{return reply({error:'Identity unavailable'},503);}
  let target;try{target=ownedIdentityTarget(url.origin,env,callback?'provider/'+path:path,url.search);}catch{return reply({error:'Identity unavailable'},503);}

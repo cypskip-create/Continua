@@ -8,3 +8,12 @@ test('only owned cookies and server credentials reach the fixed backend',async()
 test('broadened or script-readable upstream cookies fail closed',async()=>{for(const cookie of ['__Secure-continua.session_token=x; Domain=workers.dev; Path=/; HttpOnly; Secure; SameSite=Lax','__Secure-continua.session_token=x; Path=/; Secure; SameSite=Lax','unrelated=x; Path=/; HttpOnly; Secure; SameSite=Lax']){const result=await ownedIdentity(request('/api/v1/identity/session'),env,async()=>new Response('{}',{headers:{'Content-Type':'application/json','Set-Cookie':cookie}}));assert.equal(result.status,502);assert.equal(result.headers.get('set-cookie'),null);}});
 test('verification callbacks permit navigation but restrict redirects to the same site',async()=>{for(const [location,status]of [['/auth?verified=true',302],['https://attacker.example',502]]){const result=await ownedIdentity(request('/api/auth/verify-email?token=fixture',{'Sec-Fetch-Site':'cross-site'}),env,async()=>new Response(null,{status:302,headers:{Location:location}}));assert.equal(result.status,status);}assert.equal((await ownedIdentity(request('/api/auth/verify-email?token=one&token=two'),env,async()=>{throw Error('must not fetch');})).status,400);});
 test('HTML challenges and excessive JSON responses do not become auth data',async()=>{for(const response of [new Response('<html>challenge</html>',{headers:{'Content-Type':'text/html'}}),new Response(JSON.stringify({data:'x'.repeat(131072)}),{headers:{'Content-Type':'application/json'}})])assert.equal((await ownedIdentity(request('/api/v1/identity/session'),env,async()=>response)).status,502);});
+
+test('Google callback forwards its exact issuer and rejects substitution or duplicate issuer parameters',async()=>{
+ let target,calls=0;const fetcher=async url=>{calls++;target=url;return new Response(null,{status:302,headers:{Location:'/auth'}});};
+ const callback='/api/auth/callback/google?code=synthetic-code&state=synthetic-state&iss=https%3A%2F%2Faccounts.google.com';
+ assert.equal((await ownedIdentity(request(callback),env,fetcher)).status,302);
+ assert.equal(target.searchParams.get('iss'),'https://accounts.google.com');assert.equal(calls,1);
+ for(const path of [callback.replace('accounts.google.com','attacker.invalid'),callback+'&iss=https%3A%2F%2Faccounts.google.com','/api/auth/verify-email?token=synthetic&iss=https%3A%2F%2Faccounts.google.com'])assert.equal((await ownedIdentity(request(path),env,fetcher)).status,400);
+ assert.equal(calls,1);
+});
