@@ -32,7 +32,7 @@
       "category": "Scheduled application jobs after Supabase removal",
       "language": "Existing JavaScript ESM and node-cron; PostgreSQL NUMERIC and transaction locks",
       "runtime": "Existing Render backend with existing Cloudflare Worker scheduled wake-up; no added service",
-      "reason": "Retain the existing indicator service and atomic SQL notification delivery rather than translate numerical formulas or add another runtime. Exact price comparison stays in PostgreSQL, advisory transaction locks prevent concurrent sweeps, and bounded transactions roll back partial delivery. Preserve five-minute alerts and minute membership expiry; a dedicated secret protects the external wake-up because free Render timers do not run while the service sleeps. Production scheduling remains opt-in pending deployment approval and resource checks.",
+      "reason": "Retain the existing indicator service and atomic SQL notification delivery rather than translate numerical formulas or add another runtime. Exact price comparison stays in PostgreSQL, advisory transaction locks prevent concurrent sweeps, and bounded transactions roll back partial delivery. The user approved hourly idle expiry cleanup and alert sweeps on 23 October 2026 to avoid continuous Neon Free compute usage; request-time expiry remains enforced in SQL. A dedicated secret protects the external wake-up because free Render timers do not run while the service sleeps. Existing collection schedules remain unchanged.",
       "references": [
         "https://www.nodecron.com/scheduling-options.html",
         "https://www.postgresql.org/docs/18/explicit-locking.html",

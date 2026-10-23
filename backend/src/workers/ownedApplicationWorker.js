@@ -12,8 +12,8 @@ export async function runOwnedApplicationJobs({sweep=true}={}){
 }
 export function startOwnedApplicationWorker(){
  if(!getIdentityRuntime())return {stop(){}};
- const task=cron.schedule('* * * * *',async()=>{
-  try{const result=await runOwnedApplicationJobs({sweep:new Date().getUTCMinutes()%5===0});logger.info({component:'owned-application-jobs',...result},'Application maintenance completed');}
+ const task=cron.schedule('0 * * * *',async()=>{
+  try{const result=await runOwnedApplicationJobs({sweep:true});logger.info({component:'owned-application-jobs',...result},'Application maintenance completed');}
   catch{logger.error({component:'owned-application-jobs'},'Application maintenance failed; retry on next scheduled tick');}
  },{timezone:'UTC',noOverlap:true});
  return task;

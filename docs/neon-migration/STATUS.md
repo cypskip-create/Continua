@@ -1,6 +1,8 @@
 # Production migration status — 23 October 2026
 
-Production remains on Supabase. The candidate is recorded on `codex/neon-migration`; no Render/Cloudflare provider selection or production database import has occurred. Existing services and both collection workflow schedules are retained. Production cutover and email activation require the user's explicit approval.
+The user approved production cutover and authentication email activation. Main contains d5eb965 plus the 1ae50f7 financial-fixture correction. Production is in maintenance: Render workers, scraper and GitHub collection opt-ins are paused; source application writes and two source cron jobs are frozen. The final 152-table archive is 45,997,001 bytes with SHA-256 51b7d403de498b263137994ce9b1d6d4d4a176b462836ba73cceeba6bd0b9dc8; its AES-256-GCM round-trip passed. The approved empty-target import is running. Provider configuration has not yet switched. Do not describe this as complete.
+
+The existing Neon project is connected to cypskip-create/Continua, with the matching NEON_PROJECT_ID variable and existing NEON_API_KEY secret verified. The user approved hourly idle housekeeping while retaining request-time expiry; existing news/document schedules remain unchanged.
 
 ## Verified staging evidence
 

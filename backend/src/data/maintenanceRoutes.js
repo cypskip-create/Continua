@@ -1,7 +1,7 @@
 import express from 'express';
 import {timingSafeEqual} from 'node:crypto';
 
-export function createMaintenanceRouter({secret,run,database,now=()=>Date.now()}){
+export function createMaintenanceRouter({secret,run,database}){
  const router=express.Router();let busy=false;
  router.use((req,res,next)=>{
   res.set('Cache-Control','no-store');
@@ -24,7 +24,7 @@ export function createMaintenanceRouter({secret,run,database,now=()=>Date.now()}
  router.post('/application-jobs',async(req,res)=>{
   if(busy)return res.status(409).json({error:'Maintenance is already running'});
   busy=true;
-  try{const result=await run({sweep:Math.floor(now()/60000)%5===0});return res.json(result);}
+  try{const result=await run({sweep:true});return res.json(result);}
   catch{return res.status(503).json({error:'Maintenance failed; retry on the next tick'});}
   finally{busy=false;}
  });
