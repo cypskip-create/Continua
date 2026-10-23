@@ -15,6 +15,9 @@ on:
       issuer:
         description: Optional exact KenyanStocks ticker for a Financials-only batch
         type: string
+      history_issuers:
+        description: Up to twelve exact registered tickers for historical-price recollection
+        type: string
       fresh:
         description: Re-fetch the selected issuer financials without deleting evidence
         type: boolean
@@ -87,6 +90,7 @@ jobs:
           INPUT_KIND: ${{ inputs.kind }}
           INPUT_SOURCE: ${{ inputs.source }}
           INPUT_ISSUER: ${{ inputs.issuer }}
+          INPUT_HISTORY_ISSUERS: ${{ inputs.history_issuers }}
           INPUT_FRESH: ${{ inputs.fresh }}
           INPUT_APPLY: ${{ inputs.apply }}
           INPUT_MAINTENANCE: ${{ inputs.maintenance }}
@@ -98,6 +102,7 @@ jobs:
           elif [ "$INPUT_APPLY" = true ]; then args+=(--apply); fi
           if [ -n "$INPUT_SOURCE" ]; then args+=(--source "$INPUT_SOURCE"); fi
           if [ -n "$INPUT_ISSUER" ]; then args+=(--issuer "$INPUT_ISSUER"); fi
+          if [ -n "$INPUT_HISTORY_ISSUERS" ]; then args+=(--history-issuers "$INPUT_HISTORY_ISSUERS"); fi
           if [ "$INPUT_FRESH" = true ]; then args+=(--fresh); fi
           if [ -n "$INPUT_MAINTENANCE" ] && [ "$INPUT_MAINTENANCE" != none ]; then args+=(--maintenance "$INPUT_MAINTENANCE"); fi
           python scraper-python/scheduled_collect.py "${args[@]}"

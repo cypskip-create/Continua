@@ -28,7 +28,7 @@ class AdapterRunner:
     def __init__(self,jobs,evidence,dead_letters):
         self.jobs,self.evidence,self.dead_letters=jobs,evidence,dead_letters
 
-    async def run(self,adapter,*,drain_only=False,batch_size=None,issuer=None,fresh=False):
+    async def run(self,adapter,*,drain_only=False,batch_size=None,issuer=None,fresh=False,issuer_view='Financials'):
         durable=getattr(adapter,'persistent_batch_size',None) is not None
         if drain_only and not durable:raise ValueError('Adapter has no durable document queue')
         batch=adapter.persistent_batch_size if batch_size is None and durable else batch_size
@@ -39,7 +39,9 @@ class AdapterRunner:
         if fresh and not issuer:raise ValueError('Fresh collection requires an exact issuer')
         if issuer and (drain_only or not durable or not hasattr(adapter,'discover_issuer_financials')):
             raise ValueError('Targeted financial collection is unavailable for this adapter')
-        documents=await adapter.discover_issuer_financials(issuer) if issuer else [] if drain_only else await adapter.discover()
+        if issuer_view not in ('Financials','Historical Data'):raise ValueError('Invalid issuer view')
+        discover=adapter.discover_issuer_history if issuer and issuer_view=='Historical Data' else getattr(adapter,'discover_issuer_financials',None)
+        documents=await discover(issuer) if issuer else [] if drain_only else await adapter.discover()
         if not isinstance(documents,list):raise ValueError('Invalid adapter discovery result')
         summary={'adapterId':adapter.id,'discovered':len(documents),'fetched':0,'newArtifacts':0,'extracted':0,'needsReview':0,'failed':0,'skipped':0}
         coverage=getattr(adapter,'discovery_coverage',None)
@@ -65,6 +67,7 @@ class AdapterRunner:
                 if durable:
                     lanes=getattr(adapter,'claim_lanes',())
                     options={'issuer':issuer} if issuer else {}
+                    if issuer and issuer_view!='Financials':options['view']=issuer_view
                     if lanes:options['lane']=lanes[(batch-remaining-1)%len(lanes)]
                     claims=await self.jobs.claim(adapter.id,1,**options)
                     if not claims:return
@@ -131,6 +134,6 @@ class AdapterRunner:
             raise
         if issuer:
             complete=summary['failed']==0 and summary['fetched']==len(documents)
-            summary['targetCoverage']={'issuer':issuer,'tab':'Financials','plannedViews':len(documents),'complete':complete}
+            summary['targetCoverage']={'issuer':issuer,'tab':issuer_view,'plannedViews':len(documents),'complete':complete}
             if not complete and summary['failed']==0:summary['failed']=1
         return summary

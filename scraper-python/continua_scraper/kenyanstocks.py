@@ -37,6 +37,10 @@ class KenyanStocksAdapter:
         if ticker not in self.tickers:raise ValueError('Issuer is not registered for this source')
         return stock_tab_documents('https://kenyanstocks.com/stock/nse/'+ticker,['Financials'])
 
+    async def discover_issuer_history(self,ticker):
+        if ticker not in self.tickers:raise ValueError('Issuer is not registered for this source')
+        return stock_tab_documents('https://kenyanstocks.com/stock/nse/'+ticker,['Historical Data'])
+
     async def _discovery_page(self,url):
         rendered=await self.renderer.render(url,discovery=True)
         if (rendered.get('coverage') or {}).get('scrollLimitReached'):

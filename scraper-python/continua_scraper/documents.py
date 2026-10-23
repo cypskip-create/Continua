@@ -71,7 +71,7 @@ class DocumentJobs:
           WHERE source_id=%s AND url=ANY(%s::text[])
           AND (status<>'processing' OR lease_until<now())""",(source_id,[d['url'] for d in documents]))
 
-    async def claim(self,source_id,limit,*,lane=None,issuer=None):
+    async def claim(self,source_id,limit,*,lane=None,issuer=None,view='Financials'):
         if type(limit) is not int or not 1<=limit<=25:
             raise ValueError("invalid document batch")
         sql="""WITH pending AS (
@@ -100,8 +100,9 @@ class DocumentJobs:
         if issuer is not None:
             import re
             if not isinstance(issuer,str) or not re.fullmatch('[A-Z0-9-]{1,20}',issuer):raise ValueError('Invalid issuer')
-            sql=sql.replace('ORDER BY attempts,',"AND document->'context'->>'ticker'=%s AND document->'context'->>'tab'='Financials' ORDER BY attempts,")
-            values.append(issuer)
+            if view not in ('Financials','Historical Data'):raise ValueError('Invalid issuer view')
+            sql=sql.replace('ORDER BY attempts,',"AND document->'context'->>'ticker'=%s AND document->'context'->>'tab'=%s ORDER BY attempts,")
+            values.extend((issuer,view))
         if self.max_attempts is not None:
             sql=sql.replace('ORDER BY attempts,','AND attempts<%s ORDER BY attempts,')
             values.append(self.max_attempts)

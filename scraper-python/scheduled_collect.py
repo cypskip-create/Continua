@@ -1,5 +1,6 @@
 """Finite Actions runner; no Render calls, HTTP server or background scheduler."""
 import argparse
+import re
 import asyncio
 import json
 import os
@@ -124,7 +125,10 @@ async def scheduled_slot(database,run_id,kind,ceiling,daily,*,migration=False):
         # Exceptions/cancellation cannot leave a completed runner marked active.
         await database.query("UPDATE scraping.scheduled_runs SET status='failed',completed_at=now() WHERE id=%s AND status='running'",(run_id,))
 
-async def run(kind,source_id=None,issuer=None,fresh=False):
+async def run(kind,source_id=None,issuer=None,fresh=False,history_issuers=None):
+    targets=list(dict.fromkeys((history_issuers or '').split(','))) if history_issuers else []
+    if targets and (source_id!='kenyanstocks' or kind!='documents' or issuer or fresh or len(targets)>12 or any(not re.fullmatch('[A-Z0-9-]{1,20}',ticker) for ticker in targets)):
+        raise ValueError('History refresh requires 1..12 exact registered issuer tickers and the KenyanStocks document source')
     if (issuer or fresh) and (source_id!='kenyanstocks' or kind!='documents' or not issuer):
         raise ValueError('Fresh issuer financials require the exact KenyanStocks document source')
     validate_environment(os.environ)
@@ -196,7 +200,13 @@ async def run(kind,source_id=None,issuer=None,fresh=False):
                                         batch=source_batch(os.environ,source['adapter'])
                                         if os.environ.get('COLLECTOR_VERIFY_ONE')=='true':batch=1
                                         adapter.persistent_batch_size=batch
-                                        result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=batch,issuer=issuer,fresh=fresh)
+                                        if targets:
+                                            result={key:0 for key in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped')}
+                                            for ticker in targets:
+                                                part=await runtime.runner.run(adapter,batch_size=1,issuer=ticker,fresh=True,issuer_view='Historical Data')
+                                                for key in result:result[key]+=part.get(key,0)
+                                        else:
+                                            result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=batch,issuer=issuer,fresh=fresh)
                                     entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','errorClasses','discoveryCoverage','targetCoverage','visited','stored','notModified')})
                             except asyncio.CancelledError as error:
                                 copy_partial_receipt(entry,error)
@@ -329,6 +339,7 @@ def main():
     parser.add_argument('--kind',choices=('news','documents','drain'),default='documents')
     parser.add_argument('--source')
     parser.add_argument('--issuer')
+    parser.add_argument('--history-issuers')
     parser.add_argument('--fresh',action='store_true')
     parser.add_argument('--apply',action='store_true')
     parser.add_argument('--maintenance',choices=('prepare','verify-storage','process-research','prepare-investment','prepare-institutional'))
@@ -336,7 +347,7 @@ def main():
     if not args.apply:
         print(json.dumps({'mode':'offline-plan','kind':args.kind,'submitted':False}));return 0
     try:
-        operation=maintenance(args.maintenance) if args.maintenance else run(args.kind,args.source,args.issuer,args.fresh)
+        operation=maintenance(args.maintenance) if args.maintenance else run(args.kind,args.source,args.issuer,args.fresh,args.history_issuers)
         result=asyncio.run(operation,loop_factory=database_event_loop)
         print(json.dumps(result,allow_nan=False,separators=(',',':')))
         return 1 if result['status']=='failed' else 0

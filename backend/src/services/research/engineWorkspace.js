@@ -80,7 +80,7 @@ export async function getPortfolioOverview(userId, exchange) {
                 ]
                 : []),
         ],
-        methodology: "Engine calculates recorded holdings, cost basis, allocation and unrealized changes from dated market quotes. Cash, closed trades, tax and brokerage fees are excluded. No OpenAI request is made.",
+        methodology: "Engine calculates recorded holdings, cost basis, allocation and unrealized changes from dated market quotes. Cash, closed trades, tax and brokerage fees are excluded.",
         generatedAt: new Date().toISOString(),
     };
 }

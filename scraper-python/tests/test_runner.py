@@ -136,3 +136,21 @@ class RunnerTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(adapter.disposed);self.assertEqual(jobs.finished,[])
 
 if __name__=='__main__':unittest.main()
+
+class HistoryTargetTests(unittest.IsolatedAsyncioTestCase):
+    async def test_history_target_never_claims_financials_or_other_issuers(self):
+        class HistoryJobs(Jobs):
+            async def refresh_documents(self,source,docs):self.refreshed=docs
+            async def claim(self,source,limit,*,issuer,view):
+                self.scope=(issuer,view)
+                return await super().claim(source,limit)
+        class HistoryAdapter(Adapter):
+            async def discover(self):raise AssertionError('Broad discovery is forbidden')
+            async def discover_issuer_financials(self,ticker):raise AssertionError('Financial discovery is forbidden')
+            async def discover_issuer_history(self,ticker):return [{'url':'https://fixture.example/history.pdf','context':{'ticker':ticker,'tab':'Historical Data'}}]
+        jobs,evidence=HistoryJobs(),Evidence()
+        result=await AdapterRunner(jobs,evidence,Dead()).run(HistoryAdapter(),issuer='KCB',fresh=True,issuer_view='Historical Data',batch_size=1)
+        self.assertEqual(jobs.scope,('KCB','Historical Data'))
+        self.assertEqual(result['extracted'],1)
+        self.assertTrue(result['targetCoverage']['complete'])
+        self.assertEqual(result['targetCoverage']['tab'],'Historical Data')
