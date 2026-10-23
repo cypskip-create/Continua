@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod/v3";
 export declare const checkoutInput: z.ZodObject<{
     plan: z.ZodEnum<["premium", "premium_plus"]>;
     cycle: z.ZodEnum<["monthly", "annual"]>;

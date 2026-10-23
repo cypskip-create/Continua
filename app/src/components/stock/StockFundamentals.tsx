@@ -30,6 +30,7 @@ const tabClass = (active: boolean) => `shrink-0 px-3 py-1.5 text-xs font-semibol
 
 
 export function StockFundamentals({ symbol, currency, price = 0, name = symbol, sector = "", marketCap = "—" }: { symbol: string; currency: string; price?: number; name?: string; sector?: string; marketCap?: string }) {
+  const [pastOpened,setPastOpened]=useState(false),[healthOpened,setHealthOpened]=useState(false);
   const [panel, setPanel] = useState<Panel>("financials");
   const panelRoot = useRef<HTMLDivElement>(null);
   const previousPanel = useRef(panel);
@@ -64,8 +65,8 @@ export function StockFundamentals({ symbol, currency, price = 0, name = symbol, 
       <SegmentDisclosure symbol={symbol} currency={currency}/>
       <PublisherFinancialTables symbol={symbol}/>
       <OperationalEfficiency symbol={symbol} currency={currency} employees={profile?.company.employees} history={sorted}/>
-      <details className="border-t border-border/70 py-5"><summary className="cursor-pointer text-base font-semibold">Past performance</summary><div className="pt-5"><PastPerformanceSection symbol={symbol} currency={currency} /></div></details>
-      <details className="border-t border-border/70 py-5"><summary className="cursor-pointer text-base font-semibold">Financial health</summary><div className="pt-5"><FinancialHealthSection symbol={symbol} currency={currency} /></div></details>
+      <details onToggle={event=>{if(event.currentTarget.open)setPastOpened(true)}} className="border-t border-border/70 py-5"><summary className="cursor-pointer text-base font-semibold">Past performance</summary>{pastOpened&&<div className="pt-5"><PastPerformanceSection symbol={symbol} currency={currency} /></div>}</details>
+      <details onToggle={event=>{if(event.currentTarget.open)setHealthOpened(true)}} className="border-t border-border/70 py-5"><summary className="cursor-pointer text-base font-semibold">Financial health</summary>{healthOpened&&<div className="pt-5"><FinancialHealthSection symbol={symbol} currency={currency} /></div>}</details>
       <ValuationPreview symbol={symbol} name={name} sector={sector || profile?.company.sectorName || ""} price={price} currency={currency}/>
       <button onClick={()=>setPanel("forecast")} className="my-4 flex w-full items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-left"><span><span className="block text-sm font-semibold">Continue with Engine Forecast</span><span className="block text-xs text-muted-foreground">Basic ratings & forecasts · Expanded Engine research</span></span><span className="text-primary">→</span></button>
     </>}

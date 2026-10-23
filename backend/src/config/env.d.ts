@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod/v3";
 /**
  * `z.coerce.boolean()` is a footgun for env vars: it does `Boolean(value)`,
  * and `Boolean("false")` is `true` in JavaScript — any non-empty string is

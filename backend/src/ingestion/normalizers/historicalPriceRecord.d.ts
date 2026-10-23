@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod/v3";
 /** Source permission is an operator assertion retained with every imported observation.
  * Closing prices alone are NOT valid OHLC bars. */
 export declare const HistoricalPriceRecordSchema: z.ZodEffects<z.ZodObject<{

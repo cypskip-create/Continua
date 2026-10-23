@@ -41,10 +41,10 @@ export function FundamentalsGate({ symbol, children }: { symbol: string; childre
     setResult(quota); setOwner(user.id); setFailed(!quota);
   });
   return <div ref={container} className="min-h-52">
-    {access === 'paid' ? <>
+    {access === 'paid' ? active ? <>
       <div className="border-b border-border/70 py-3 text-xs text-muted-foreground">{profile?.subscription_plan === 'premium_plus' ? 'Premium Plus' : 'Premium'} · unlimited Fundamentals</div>
       {children}
-    </> : access === 'unavailable' ? <div className="py-10 space-y-3"><p className="text-sm text-muted-foreground">Your account access could not be refreshed. Please try again.</p><button className="text-sm font-semibold text-primary" onClick={() => void refetch()}>Retry account access</button></div> : access === 'loading' ? <p role="status" className="py-10 text-sm text-muted-foreground">Loading your account…</p> : result?.allowed && owner === user?.id ? <>
+    </> : <p className="py-10 text-sm text-muted-foreground">Open Fundamentals to explore company research.</p> : access === 'unavailable' ? <div className="py-10 space-y-3"><p className="text-sm text-muted-foreground">Your account access could not be refreshed. Please try again.</p><button className="text-sm font-semibold text-primary" onClick={() => void refetch()}>Retry account access</button></div> : access === 'loading' ? <p role="status" className="py-10 text-sm text-muted-foreground">Loading your account…</p> : result?.allowed && owner === user?.id ? <>
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/70 py-3 text-xs">
         <span className="text-muted-foreground">{result.is_premium ? "Premium · unlimited Fundamentals" : `${result.remaining ?? 0} of ${result.limit ?? 5} new stocks left this month · revisit this stock anytime`}</span>
         {!result.is_premium && <Link to="/upgrade" className="font-semibold text-primary">Upgrade</Link>}

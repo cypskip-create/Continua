@@ -38,7 +38,7 @@ institutionalRoutes.get('/engine/institutional/liquidity/:symbol',requireEngineU
  res.json({data:{...result,configuration}});
 }));
 institutionalRoutes.post('/engine/institutional/company/:symbol',requireSubscriber,asyncHandler(async(req,res)=>{
- const name=parse(symbol,req.params.symbol),input=parse(z.object({mode:z.enum(['forecast','liquidity']),options:z.record(z.unknown()).default({})}).strict(),req.body);
+ const name=parse(symbol,req.params.symbol),input=parse(z.object({mode:z.enum(['forecast','liquidity']),options:z.record(z.string(), z.unknown()).default({})}).strict(),req.body);
  const configuration=await preparedCompany(name,input.mode,input.options);allowed(res,configuration);
  res.json({data:{configuration,result:await ownedCalculation(owner(res),configuration,'canonical company or permission-gated reviewed evidence')}});
 }));
@@ -53,11 +53,11 @@ institutionalRoutes.post('/engine/institutional/owned-liquidity',requirePremiumP
  res.json({data:await ownedLiquidity(owner(res),input)});
 }));
 institutionalRoutes.post('/engine/institutional/owned-simulation',requirePremiumPlus,asyncHandler(async(req,res)=>{
- const input=parse(z.object({horizon:z.number().int().min(1).max(252),paths:z.number().int().min(200).max(5000),method:z.enum(['historical-bootstrap','block-bootstrap','normal-log-returns']),seed:z.number().int().min(0).max(4294967295),blockLength:z.number().int().min(1).max(60).optional(),costBps:z.number().min(0).max(1000),rebalance:z.enum(['none','daily','20-sessions']),confidence:z.number().min(.9).max(.99),lossThreshold:z.number().min(0).max(1),shocks:z.record(z.number().min(-.99).max(3)).optional(),inflationAnnual:z.number().min(-.5).max(5).optional(),sessionsPerYear:z.number().int().min(1).max(366).optional()}).strict(),req.body);
+ const input=parse(z.object({horizon:z.number().int().min(1).max(252),paths:z.number().int().min(200).max(5000),method:z.enum(['historical-bootstrap','block-bootstrap','normal-log-returns']),seed:z.number().int().min(0).max(4294967295),blockLength:z.number().int().min(1).max(60).optional(),costBps:z.number().min(0).max(1000),rebalance:z.enum(['none','daily','20-sessions']),confidence:z.number().min(.9).max(.99),lossThreshold:z.number().min(0).max(1),shocks:z.record(z.string(), z.number().min(-.99).max(3)).optional(),inflationAnnual:z.number().min(-.5).max(5).optional(),sessionsPerYear:z.number().int().min(1).max(366).optional()}).strict(),req.body);
  res.json({data:await ownedSimulation(owner(res),input)});
 }));
 institutionalRoutes.post('/engine/institutional/graph',requirePremiumPlus,asyncHandler(async(req,res)=>{
- const input=parse(z.object({asOf:CalendarDate,symbol:symbol.optional(),start:z.string().max(200).optional(),end:z.string().max(200).optional(),propagation:z.object({origin:z.string().max(200),shock:z.number().min(-1).max(1),maxDepth:z.number().int().min(1).max(5),coefficients:z.record(z.number().min(0).max(1))}).strict().optional()}).strict(),req.body);
+ const input=parse(z.object({asOf:CalendarDate,symbol:symbol.optional(),start:z.string().max(200).optional(),end:z.string().max(200).optional(),propagation:z.object({origin:z.string().max(200),shock:z.number().min(-1).max(1),maxDepth:z.number().int().min(1).max(5),coefficients:z.record(z.string(), z.number().min(0).max(1))}).strict().optional()}).strict(),req.body);
  const held=(await query('SELECT upper(symbol) AS symbol FROM public.portfolios WHERE user_id=$1 GROUP BY upper(symbol) HAVING sum(shares)>0',[owner(res)])).rows.map(row=>'security:NSE:'+row.symbol);
  const configuration={...input,kind:'exposure-graph',edges:await exposureEdges(input.asOf,input.symbol),portfolioSymbols:held};
  res.json({data:{configuration,result:await ownedCalculation(owner(res),configuration,'canonical company or permission-gated reviewed evidence')}});

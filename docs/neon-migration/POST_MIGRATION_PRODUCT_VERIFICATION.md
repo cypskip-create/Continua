@@ -11,7 +11,7 @@ Runtime: existing JavaScript API/collectors, isolated Python calculations, Postg
 - Engine tables retain readable column widths and horizontal scrolling. Quick Watch completes its cycle in 38 seconds (formerly 85), with reduced motion retained.
 - Forecast/research exports produce paginated PDFs. Personal account data portability remains structured JSON.
 - Portfolio health aggregates canonical sector-aware company scores, weighted by actual quoted holdings value; any unpriced holding or under-60% coverage withholds a measure. The old gain/count-based health heuristic is removed.
-- Portfolio company reads use bounded two-way batches instead of simultaneous requests per holding. Calculator bursts queue within the existing two-process limit, with reserved risk capacity and deadlines.
+- Portfolio company reads use bounded two-way batches instead of simultaneous requests per holding. Identical in-flight private reads are deduplicated within the exact access-token scope; no responses persist after settlement. Hidden paid Fundamentals and closed financial-health/past-performance details wait until opened. Calculator bursts queue within the existing two-process limit, with reserved risk capacity and deadlines.
 
 ## Tier delivery
 
@@ -21,4 +21,6 @@ Paid AI and always-on infrastructure remain disabled under the standing project 
 
 ## Former-provider retirement
 
-Browser SDK/dependencies and auth fallback removed; owned identity transport only. Edge legacy session endpoints return 410 and cannot contact the retired provider. Backend auth is Better Auth only. Collector runtime is R2-only; optional legacy credentials cannot construct a former-provider reader. GitHub former-provider deployment workflow removed and source-project GitHub integration disabled; Vercel source-project sync detached. Offline migration tools, SQL history and encrypted recovery backups remain for audit and do not run as app services. Former source data/account remain intact.
+Browser SDK/dependencies and auth fallback removed; owned identity transport only. Edge legacy session endpoints return 410 and cannot contact the retired provider. Backend auth is Better Auth only. Collector runtime is R2-only; optional legacy credentials cannot construct a former-provider reader. GitHub former-provider deployment workflow removed and source-project GitHub integration disabled; Vercel source-project sync detached and its installed Supabase authorization removed with explicit approval of the legal acknowledgement. Vercel has no Supabase environment variables. Offline migration tools, SQL history and encrypted recovery backups remain for audit and do not run as app services. Former source data/account remain intact.
+
+Release validation: 559 backend tests, 161 frontend tests, 96 collector tests, 35 edge tests; frontend/backend/collector type checks and production build. Server-secret browser scan compares 14 protected configuration values with no matches. Newly reported Zod advisories patched to 4.6.7; old declaration-only Zod contracts use type imports from the bundled v3 namespace (no runtime v3 import).

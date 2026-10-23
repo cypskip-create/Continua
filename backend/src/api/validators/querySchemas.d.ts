@@ -5,7 +5,7 @@
  * 400 with a specific reason instead of an ad-hoc check in each controller
  * (or, worse, silently falling through to a confusing 500).
  */
-import { z } from "zod";
+import type { z } from "zod/v3";
 /** Every endpoint accepts ?exchange=, defaulting to NSE — this is what lets
  *  the same route set serve every future exchange without new routes. */
 declare const ExchangeQuery: z.ZodObject<{

@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { z } from "zod";
+import type { z } from "zod/v3";
 /**
  * `z.coerce.boolean()` is a footgun for env vars — see continua-data's
  * env.ts for the full explanation. Same fix here.

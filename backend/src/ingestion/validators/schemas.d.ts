@@ -3,7 +3,7 @@
  * passes through here first — malformed records get rejected with a clear
  * reason instead of silently corrupting a chart or a research metric later.
  */
-import { z } from "zod";
+import type { z } from "zod/v3";
 export declare const SecuritySchema: z.ZodObject<{
     id: z.ZodString;
     symbol: z.ZodString;

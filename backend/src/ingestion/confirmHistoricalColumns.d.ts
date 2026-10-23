@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod/v3";
 import type { PoolClient } from 'pg';
 export declare const HistoricalConfirmSchema: z.ZodEffects<z.ZodObject<{
     securityId: z.ZodOptional<z.ZodString>;

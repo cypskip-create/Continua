@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod/v3";
 import { checkoutInput } from "./paystackCommon.js";
 export declare const liveReferencePattern: RegExp;
 export declare function liveCheckoutEnabled(): boolean;

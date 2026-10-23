@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod/v3";
 export declare const CalendarDate: z.ZodEffects<z.ZodString, string, string>;
 export declare const AdvancedResearchSchema: z.ZodDiscriminatedUnion<"kind", [z.ZodObject<{
     kind: z.ZodLiteral<"factor-risk">;

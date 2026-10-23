@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod/v3";
 export declare const ForecastCreateSchema: z.ZodEffects<z.ZodObject<{
     symbol: z.ZodString;
     question: z.ZodString;

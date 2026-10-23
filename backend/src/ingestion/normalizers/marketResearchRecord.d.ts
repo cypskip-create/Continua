@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod/v3";
 export declare const MarketResearchRecordSchema: z.ZodEffects<z.ZodObject<{
     id: z.ZodString;
     kind: z.ZodEnum<["ipo", "macro", "economic", "bond", "derivative", "usp", "market_statistics"]>;

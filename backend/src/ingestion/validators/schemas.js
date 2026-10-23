@@ -109,5 +109,5 @@ export const CorporateActionSchema = z.object({
     payDate: isoDate.optional(),
     effectiveDate: isoDate.optional(),
     status: z.enum(["announced", "confirmed", "completed", "cancelled"]),
-    details: z.record(z.any()),
+    details: z.record(z.string(), z.any()),
 });

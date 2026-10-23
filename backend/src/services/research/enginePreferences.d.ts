@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod/v3";
 export declare const EnginePreferencesSchema: z.ZodObject<{
     goal: z.ZodDefault<z.ZodEnum<["Balanced", "Income", "Growth", "Capital preservation", "Short-term trading"]>>;
     horizon: z.ZodDefault<z.ZodEnum<["under_1_year", "1_to_5_years", "over_5_years"]>>;

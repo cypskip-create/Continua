@@ -544,7 +544,7 @@ export default function StockDetail() {
       <div className="relative">
         <div className="px-1">
           {hasHistoricalData ? (
-            <StockPriceChart symbol={symbol} timeframe={selectedTimeframe} chartType={chartType} onHoverPrice={handleChartHover} data={periodData} indicators={indicatorSettings} mainHeight={280} />
+            fullscreen ? <div className="h-[280px]" aria-hidden="true" /> : <StockPriceChart symbol={symbol} timeframe={selectedTimeframe} chartType={chartType} onHoverPrice={handleChartHover} data={periodData} indicators={indicatorSettings} mainHeight={280} />
           ) : (
             <div className="h-[280px] flex flex-col items-center justify-center px-8 text-center">
               <LineChartIcon className="h-7 w-7 text-muted-foreground/35 mb-2" />
@@ -862,7 +862,7 @@ export default function StockDetail() {
                     <div className="text-sm space-y-1">
                       <p><span className="text-muted-foreground">CEO:</span> {company.ceo}</p>
                       <p><span className="text-muted-foreground">Employees:</span> {company.employees}</p>
-                      <p className="text-[0.6875rem] text-muted-foreground pt-2">Full leadership team and board data isn't in the Data Layer's /companies/:symbol response yet — this shows the CEO field only, live.</p>
+                      <p className="text-[0.6875rem] text-muted-foreground pt-2">Additional leadership details are not available yet.</p>
                     </div>
                   ),
                 }),
