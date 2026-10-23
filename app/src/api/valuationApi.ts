@@ -27,6 +27,7 @@ export interface ValuationResult {
 }
 
 export const valuationApi = {
+  batch(symbols:string[],exchange='NSE'){return continuaFetch<{items:Record<string,ValuationResult|null>;unavailable:string[]}>('/valuation/batch',{params:{symbols:symbols.join(','),exchange}});},
   get(symbol: string, exchange = "NSE") {
     return continuaFetch<ValuationResult>(`/valuation/${encodeURIComponent(symbol)}`, { params: { exchange } });
   },

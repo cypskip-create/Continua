@@ -19,7 +19,7 @@ declare const EnvSchema: z.ZodObject<{
     PORT: z.ZodDefault<z.ZodNumber>;
     LOG_LEVEL: z.ZodDefault<z.ZodEnum<["fatal", "error", "warn", "info", "debug", "trace"]>>;
     DATABASE_URL: z.ZodString;
-    RAW_STORAGE_DRIVER: z.ZodDefault<z.ZodEnum<["local", "supabase", "r2"]>>;
+    RAW_STORAGE_DRIVER: z.ZodDefault<z.ZodEnum<["local", "r2"]>>;
     R2_ACCOUNT_ID: z.ZodOptional<z.ZodString>;
     R2_ACCESS_KEY_ID: z.ZodOptional<z.ZodString>;
     R2_SECRET_ACCESS_KEY: z.ZodOptional<z.ZodString>;
@@ -50,7 +50,7 @@ declare const EnvSchema: z.ZodObject<{
     PORT: number;
     LOG_LEVEL: "fatal" | "error" | "warn" | "info" | "debug" | "trace";
     DATABASE_URL: string;
-    RAW_STORAGE_DRIVER: "local" | "supabase" | "r2";
+    RAW_STORAGE_DRIVER: "local" | "r2";
     R2_DUAL_WRITE: boolean;
     R2_ARCHIVE_CRON: string;
     R2_ARCHIVE_BATCH_SIZE: number;
@@ -83,7 +83,7 @@ declare const EnvSchema: z.ZodObject<{
     NODE_ENV?: "development" | "test" | "production" | undefined;
     PORT?: number | undefined;
     LOG_LEVEL?: "fatal" | "error" | "warn" | "info" | "debug" | "trace" | undefined;
-    RAW_STORAGE_DRIVER?: "local" | "supabase" | "r2" | undefined;
+    RAW_STORAGE_DRIVER?: "local" | "r2" | undefined;
     R2_ACCOUNT_ID?: string | undefined;
     R2_ACCESS_KEY_ID?: string | undefined;
     R2_SECRET_ACCESS_KEY?: string | undefined;
@@ -116,7 +116,7 @@ export declare const env: {
     PORT: number;
     LOG_LEVEL: "fatal" | "error" | "warn" | "info" | "debug" | "trace";
     DATABASE_URL: string;
-    RAW_STORAGE_DRIVER: "local" | "supabase" | "r2";
+    RAW_STORAGE_DRIVER: "local" | "r2";
     R2_DUAL_WRITE: boolean;
     R2_ARCHIVE_CRON: string;
     R2_ARCHIVE_BATCH_SIZE: number;

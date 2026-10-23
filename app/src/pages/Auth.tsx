@@ -11,11 +11,10 @@ import {
 } from 'lucide-react';
 import { ContinuaMark } from '@/components/shared/ContinuaMark';
 import './auth.css';
-import { lovable } from '@/integrations/lovable';
 import { useTouchClick } from '@/hooks/useTouchClick';
 import {RecoveryPassword} from '@/components/security/RecoveryPassword';
 import {AuthBotCheck,AUTH_BOT_CHECK_CONFIGURED} from '@/components/security/AuthBotCheck';
-import {OWNED_IDENTITY_ENABLED,startOwnedGoogleSignIn} from '@/integrations/supabase/client';
+import {OWNED_IDENTITY_ENABLED,startOwnedGoogleSignIn} from '@/integrations/continua/browserClient';
 import {signupAcknowledgement} from '@/lib/legalPolicy';
 
 type Mode = 'signin' | 'signup' | 'reset';
@@ -136,10 +135,6 @@ export default function Auth() {
         if(destination.origin!=='https://accounts.google.com'||destination.pathname!=='/o/oauth2/v2/auth')throw Error('Google sign-in address could not be verified');
         window.location.assign(destination.href);return;
       }
-      const from=location.state?.from;
-      const destination=from?.pathname==='/checkout'?`/checkout${from.search ?? ''}`:'';
-      const { error } = await lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin+destination });
-      if (error) toast({ title: 'Error', description: error.message || 'Failed to sign in with Google', variant: 'destructive' });
     } catch (error) {
       toast({ title: 'Error', description: error instanceof Error?error.message:'An unexpected error occurred', variant: 'destructive' });
     } finally {

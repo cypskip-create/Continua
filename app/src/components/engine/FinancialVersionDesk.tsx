@@ -1,3 +1,4 @@
+import {ResearchDetails} from '@/components/engine/ResearchDetails';
 import { useQuery } from "@tanstack/react-query";
 import { engineAdvancedApi } from "@/api/engineAdvancedApi";
 import { ExportResearch } from "./ResearchExport";
@@ -35,13 +36,7 @@ export function FinancialVersionDesk({ symbol }: { symbol: string }) {
                 {v.recorded_at}
               </summary>
               <p className="text-xs">Period: {v.period_id}</p>
-              <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-all text-xs">
-                {JSON.stringify(
-                  { before: v.before_payload, after: v.after_payload },
-                  null,
-                  2,
-                )}
-              </pre>
+              <ResearchDetails data={{ before: v.before_payload, after: v.after_payload }}/>
             </details>
           ))}
           <ExportResearch name={`${symbol}-financial-versions`} data={q.data} />

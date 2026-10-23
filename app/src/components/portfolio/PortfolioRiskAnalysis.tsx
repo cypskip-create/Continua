@@ -21,11 +21,12 @@ interface PortfolioRiskAnalysisProps {
   risk: RiskData;
 }
 
-function computeRiskScore(risk: RiskData, top3Concentration: number): number {
+function computeRiskScore(risk: RiskData, top3Concentration: number): number | null {
+  if(risk.portfolioBeta==null||!Number.isFinite(risk.portfolioVolatility)||!Number.isFinite(risk.portfolioMaxDrawdown))return null;
   const volScore = Math.min(25, (risk.portfolioVolatility / 40) * 25);
   const ddScore = Math.min(25, (Math.abs(risk.portfolioMaxDrawdown) / 50) * 25);
   const concScore = Math.min(25, (top3Concentration / 100) * 25);
-  const betaScore = Math.min(25, (Math.min(2, risk.portfolioBeta ?? 1) / 2) * 25);
+  const betaScore = Math.min(25, (Math.min(2, risk.portfolioBeta) / 2) * 25);
   return Math.round(volScore + ddScore + concScore + betaScore);
 }
 
@@ -62,7 +63,7 @@ export function PortfolioRiskAnalysis({ holdings, risk }: PortfolioRiskAnalysisP
               is Continua's own methodology, not Simply Wall St's published one.
             </InfoTip>
           </div>
-          <p className="text-[0.6875rem] text-muted-foreground mb-3">One number for how much risk is built into the way your portfolio is put together.</p>
+          <p className="text-[0.6875rem] text-muted-foreground mb-3">A screening measure of measured volatility, historical losses, concentration and market sensitivity. It is unavailable when an input is missing.</p>
 
           {risk.isLoading ? (
             <p className="text-[0.6875rem] text-muted-foreground py-4 text-center">Loading price history…</p>

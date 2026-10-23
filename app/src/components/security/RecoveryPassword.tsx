@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {supabase,OWNED_IDENTITY_ENABLED} from '@/integrations/supabase/client';
+import {supabase,OWNED_IDENTITY_ENABLED} from '@/integrations/continua/browserClient';
 import {useAuth} from '@/hooks/useAuth';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';

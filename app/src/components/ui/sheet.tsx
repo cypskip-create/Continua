@@ -5,8 +5,13 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 import { DialogClose } from "./dialog"
+import {useKeyboardPanel} from '@/hooks/useKeyboardPanel'
 
-const Sheet = SheetPrimitive.Root
+const SheetOpenContext=React.createContext(false)
+function Sheet({open,defaultOpen,onOpenChange,...props}:React.ComponentProps<typeof SheetPrimitive.Root>){
+ const [internal,setInternal]=React.useState(defaultOpen??false),active=open??internal
+ return <SheetOpenContext.Provider value={active}><SheetPrimitive.Root {...props} open={active} onOpenChange={value=>{setInternal(value);onOpenChange?.(value)}}/></SheetOpenContext.Provider>
+}
 
 const SheetTrigger = SheetPrimitive.Trigger
 
@@ -57,12 +62,15 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "bottom", className, children, hideClose, ...props }, ref) => (
+>(({ side = "bottom", className, children, hideClose, style, ...props }, ref) => {
+ const keyboard=useKeyboardPanel(React.useContext(SheetOpenContext)&&side==='bottom')
+ return (
   <SheetPortal>
     <SheetOverlay />
     <SheetPrimitive.Content
       ref={ref}
-      className={cn(sheetVariants({ side }), className)}
+      className={cn(sheetVariants({ side }), keyboard.centered&&'keyboard-aware-panel', className)}
+      style={{...style,...keyboard.style}}
       {...props}
     >
       {children}
@@ -74,7 +82,7 @@ const SheetContent = React.forwardRef<
       )}
     </SheetPrimitive.Content>
   </SheetPortal>
-))
+)})
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
 const SheetHeader = ({

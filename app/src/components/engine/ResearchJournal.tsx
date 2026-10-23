@@ -1,3 +1,4 @@
+import {downloadResearchReport} from "@/lib/researchReport";
 import { useEffect, useState } from "react";
 
 const checks = [
@@ -220,7 +221,7 @@ function Journal({
       <label className="block text-sm">Evidence log<textarea aria-label="Journal evidence log" maxLength={3000} value={entry.evidence} onChange={e=>update({evidence:e.target.value})} placeholder="Date · filing or article URL · what it supports or contradicts" className="block mt-1 w-full border border-border bg-background p-2 min-h-24 text-sm"/></label>
       <div className="flex flex-wrap gap-2 text-xs">
         <button className="border border-border px-3 py-2" onClick={()=>update({revisions:[{at:new Date().toISOString(),notes:entry.notes,invalidation:entry.invalidation},...entry.revisions].slice(0,5)})}>Save thesis snapshot</button>
-        <button className="border border-border px-3 py-2" onClick={()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({symbol,...entry},null,2)],{type:"application/json"}));const a=document.createElement("a");a.href=url;a.download=`${symbol}-research-journal.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}}>Export journal</button>
+        <button className="border border-border px-3 py-2" onClick={()=>{downloadResearchReport(`${symbol}-research-journal`,{symbol,...entry});}}>Export journal</button>
       </div>
       {entry.revisions.map((r,index)=><details key={r.at+index} className="border-t border-border py-2 text-xs"><summary>Thesis snapshot · {new Date(r.at).toLocaleString()}</summary><p className="whitespace-pre-wrap mt-2">{r.notes||"No notes"}</p><p className="mt-1">Invalidation: {r.invalidation||"Not recorded"}</p></details>)}
       <p className="text-xs text-muted-foreground">

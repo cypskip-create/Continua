@@ -1,3 +1,5 @@
+
+vi.mock('../src/auth/runtime.js',()=>({getIdentityRuntime:()=>({verifyAccess:async(token:string)=>{const response=await fetch('https://identity.fixture.invalid/session',{headers:{Authorization:'Bearer '+token}});if(!response.ok)throw Error('Invalid fixture session');const user=await response.json();if(user.factors?.some((factor:any)=>factor.status==='verified')){let claims;try{claims=JSON.parse(Buffer.from(token.split('.')[1]??'','base64url').toString());}catch{}if(claims?.aal!=='aal2'||claims?.sub!==user.id)throw Error('MFA fixture incomplete');}return {user};}})}));
 import { afterEach, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
 const mocks = vi.hoisted(() => ({ query: vi.fn() }));
@@ -43,5 +45,5 @@ it.each(['aal1','aal2'])('requires verified MFA assurance for an enrolled Engine
  mocks.query.mockResolvedValue({rows:[{subscription_plan:'premium'}]});
  const token='fixture.'+Buffer.from(JSON.stringify({sub:id,aal})).toString('base64url')+'.fixture';
  const next=vi.fn();await requireSubscriber(req({'x-user-token':token,'x-supabase-key':'public'}),{} as Response,next);
- if(aal==='aal2')expect(next).toHaveBeenCalledWith();else expect(next.mock.calls[0]?.[0]).toMatchObject({status:403});
+ if(aal==='aal2')expect(next).toHaveBeenCalledWith();else expect(next.mock.calls[0]?.[0]).toMatchObject({status:401});
 });

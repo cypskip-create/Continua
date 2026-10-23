@@ -17,7 +17,7 @@ import { navigateBack } from "@/lib/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications, AppNotification } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { getInitials } from "@/lib/handle";
 
 const featureMeta: Record<string, { label: string; icon: any; color: string; bg: string }> = {

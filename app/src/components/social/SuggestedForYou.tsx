@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Check } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { atHandle, getInitials } from "@/lib/handle";
 
 interface Candidate {

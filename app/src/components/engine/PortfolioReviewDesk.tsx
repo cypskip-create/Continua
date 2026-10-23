@@ -1,4 +1,5 @@
 import { useState } from "react";
+import {downloadResearchReport} from "@/lib/researchReport";
 import { Link } from "react-router-dom";
 import type { EnginePortfolio } from "@/api/engineWorkspaceApi";
 import { reviewPortfolio, monthsToGoal } from "@/lib/portfolioReview";
@@ -34,14 +35,7 @@ export function PortfolioReviewDesk({ data: p }: { data: EnginePortfolio }) {
       methodology:
         "Illustrative allocation review, not trade advice or a forecast. Includes only priced holdings.",
     };
-    const url = URL.createObjectURL(
-      new Blob([JSON.stringify(report, null, 2)], { type: "application/json" }),
-    );
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "continua-portfolio-review.json";
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadResearchReport("continua-portfolio-review",report);
   };
   if (!p.available || !p.positions.length) return <section className="border-y py-4"><h3 className="font-semibold">Portfolio review</h3><p className="text-sm text-muted-foreground">{p.reason ?? "No priced holdings are available for allocation review. Add holdings in your portfolio and check quote coverage before simulating."}</p></section>;
   return (

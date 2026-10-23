@@ -73,19 +73,11 @@ class RawStorage:
     def from_environment(cls):
         if (os.environ.get('RENDER')=='true' or os.environ.get('RENDER_SERVICE_ID') or os.environ.get('NODE_ENV')=='production') and os.environ.get('RAW_STORAGE_DRIVER')!='r2':
             raise ValueError('Production/Render evidence storage must use private R2; local storage is disabled')
-        rollback=None
-        # The legacy reader remains available for migration, but a configured
-        # service key alone must never enable duplicate uploads.
-        dual_write=os.environ.get('R2_DUAL_WRITE','false').lower() in ('true','1','yes')
-        if dual_write:
+        if os.environ.get('R2_DUAL_WRITE','false').lower() in ('true','1','yes'):
             raise ValueError('Supabase file writes are disabled; set R2_DUAL_WRITE=false')
-        if dual_write or os.environ.get('SUPABASE_SERVICE_ROLE_KEY'):
-            rollback=PrivateSupabaseStorage(os.environ.get('SUPABASE_URL',''),'scraper-raw' if not os.environ.get('SUPABASE_STORAGE_BUCKET') else os.environ['SUPABASE_STORAGE_BUCKET'],os.environ.get('SUPABASE_SERVICE_ROLE_KEY',''))
-        try:r2=R2Storage.from_environment(rollback_write=rollback.upload if rollback and dual_write else None)
-        except BaseException:
-            if rollback:rollback.close()
-            raise
-        return cls(r2,rollback)
+        # Migration readers are offline tools only. Runtime never constructs a
+        # former-provider client, even if obsolete environment keys are present.
+        return cls(R2Storage.from_environment(rollback_write=None),None)
 
     def store(self,source_id,artifact):
         if not re.fullmatch(r'[A-Za-z0-9_-]{1,100}',source_id):raise ValueError('Invalid artifact source ID')

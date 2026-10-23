@@ -20,7 +20,7 @@ import { TradersHubOnboarding, INTEREST_SECTOR_TICKERS } from "@/components/soci
 import { SuggestedForYou } from "@/components/social/SuggestedForYou";
 import { PostSkeletonList } from "@/components/social/PostSkeleton";
 import { MediaFeed } from "@/components/social/MediaFeed";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { atHandle, getInitials } from "@/lib/handle";
 import { CommunityReaction } from "@/components/social/CommunityReactionButton";
 import { useLivePortfolioQuotes } from "@/hooks/useLiveQuotes";

@@ -1,5 +1,5 @@
 import {useQuery} from '@tanstack/react-query';
-import {supabase} from '@/integrations/supabase/client';
+import {supabase} from '@/integrations/continua/browserClient';
 const labels:Record<string,string>={awaiting_collection:'Awaiting eligible evidence',archive_pending:'Archiving evidence',retry_scheduled:'Retry scheduled',extraction_pending:'Extracting source data',processing_pending:'Engine processing pending',review_required:'Evidence needs review',preparing:'Preparing Cloudflare data',processed:'Known evidence processed'};
 type Status={state:string;collectedFiles:number;archivedFiles:number;processedFiles:number;preparedFiles:number;awaitingReview:number;failedFiles:number;lastCollectedAt:string|null;lastProcessedAt:string|null;scope:string};
 export function CompanyProcessingStatus({symbol}:{symbol:string}){

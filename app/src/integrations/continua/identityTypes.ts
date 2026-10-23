@@ -1,0 +1,2 @@
+export interface User {id:string;email?:string;aud:string;role?:string;created_at:string;updated_at?:string;email_confirmed_at?:string;user_metadata:Record<string,any>;app_metadata:Record<string,any>;factors?:{id:string;factor_type:string;status:string;friendly_name?:string}[]}
+export interface Session {access_token:string;refresh_token:string;expires_at?:number;expires_in:number;token_type:string;user:User}

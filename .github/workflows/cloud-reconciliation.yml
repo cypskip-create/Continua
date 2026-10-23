@@ -3,23 +3,6 @@ on:
   schedule:
     - cron: '11 0,6,12,18 * * *'
   workflow_dispatch:
-    inputs:
-      migrate_raw:
-        description: Also resume verified legacy originals and extraction snapshots
-        type: boolean
-        default: false
-      cleanup_verified_originals:
-        description: Remove only reverified migrated scraper-raw originals (requires migrate_raw)
-        type: boolean
-        default: false
-      cleanup_only:
-        description: Only remove reverified duplicates (requires migrate_raw)
-        type: boolean
-        default: false
-      migration_run_mib:
-        description: Migration transfer reservation in MiB (1–384; daily allowance unchanged)
-        type: string
-        default: '256'
 permissions:
   contents: read
 concurrency:
@@ -53,9 +36,6 @@ jobs:
           # reserving three unused duplicate uploads within the same run.
           R2_UPLOAD_ATTEMPTS: '1'
           PROCESSED_PAYLOAD_MODE: r2
-          SUPABASE_URL: https://jjsetogmnumoudrovpzn.supabase.co
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.COLLECTOR_LEGACY_STORAGE_KEY }}
-          SUPABASE_STORAGE_BUCKET: scraper-raw
           PYTHONPATH: engine-python
           COLLECTOR_RUN_TRANSFER_BYTES: '16777216'
           COLLECTOR_DAILY_TRANSFER_BYTES: ${{ vars.CONTINUA_COLLECTOR_DAILY_TRANSFER_BYTES || '134217728' }}
@@ -64,26 +44,4 @@ jobs:
           # Each stays below the approved 384 MiB maximum per run.
           CLOUD_MIGRATION_RUN_TRANSFER_BYTES: '268435456'
           CLOUD_MIGRATION_DAILY_TRANSFER_BYTES: '1073741824'
-          MIGRATION_RUN_MIB: ${{ inputs.migration_run_mib || '256' }}
-          MIGRATE_RAW: ${{ inputs.migrate_raw }}
-          CLEANUP_VERIFIED: ${{ inputs.cleanup_verified_originals }}
-          CLEANUP_ONLY: ${{ inputs.cleanup_only }}
-          EVENT_NAME: ${{ github.event_name }}
-          MIGRATION_UNTIL: ${{ vars.CONTINUA_MIGRATE_LEGACY_UNTIL }}
-        run: |
-          if ! [[ "$MIGRATION_RUN_MIB" =~ ^[1-9][0-9]{0,2}$ ]] || [ "$MIGRATION_RUN_MIB" -gt 384 ]; then
-            echo 'Invalid bounded migration reservation'; exit 1
-          fi
-          export CLOUD_MIGRATION_RUN_TRANSFER_BYTES=$((MIGRATION_RUN_MIB * 1024 * 1024))
-          args=(--apply)
-          migrate=false
-          if [ "$MIGRATE_RAW" = true ]; then args+=(--migrate-raw); migrate=true; fi
-          if [ "$CLEANUP_VERIFIED" = true ]; then args+=(--cleanup-verified-originals); fi
-          if [ "$CLEANUP_ONLY" = true ]; then args+=(--cleanup-only); fi
-          # Temporary migration scheduling expires automatically. Engine-only
-          # reconciliation continues under the existing collection opt-in.
-          if [ "$EVENT_NAME" = schedule ] && [[ "$MIGRATION_UNTIL" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && [[ "$(date -u +%F)" < "$MIGRATION_UNTIL" ]]; then args+=(--migrate-raw --cleanup-verified-originals); migrate=true; fi
-          # New R2 evidence/snapshots continue after temporary migration ends.
-          # Its process receives no Supabase file credential in steady state.
-          if [ "$migrate" != true ]; then unset SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY SUPABASE_STORAGE_BUCKET; fi
-          python scraper-python/reconcile_cloud.py "${args[@]}"
+        run: python scraper-python/reconcile_cloud.py --apply

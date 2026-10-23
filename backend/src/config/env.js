@@ -46,7 +46,7 @@ const EnvSchema = z.object({
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
     // Migration is opt-in. The deployed provider remains the default until all
     // cutover gates pass and production configuration is explicitly changed.
-    AUTH_PROVIDER: z.enum(['supabase','better-auth']).default('supabase'),
+    AUTH_PROVIDER: z.literal('better-auth').default('better-auth'),
     AUTH_PUBLIC_ORIGIN: z.string().url().optional(),
     AUTH_MAINTENANCE_SECRET: z.string().min(32).max(512).optional(),
     BETTER_AUTH_SECRET: z.string().min(32).optional(),
@@ -57,7 +57,6 @@ const EnvSchema = z.object({
     AUTH_SMTP_USER: z.string().optional(),
     AUTH_SMTP_KEY: z.string().optional(),
     AUTH_EMAIL_SENDER: z.string().email().optional(),
-    SUPABASE_URL: z.string().url().default("https://jjsetogmnumoudrovpzn.supabase.co"),
     CACHE_DRIVER: z.enum(["memory", "redis", "upstash"]).default("memory"),
     UPSTASH_REDIS_REST_URL: z.string().url().optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().optional(),

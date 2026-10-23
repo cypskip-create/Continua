@@ -5,6 +5,19 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "app/src/components/portfolio/PortfolioSnowflake.tsx",
+      "category": "Post-migration product, charts, reports and tiered monitoring",
+      "language": "Existing React frontend, JavaScript compatibility backend/scraper, existing Python financial calculations and PostgreSQL",
+      "runtime": "Existing services and bounded two-worker research batches; no new paid AI or always-on service",
+      "reason": "Use one observed-history adapter for stock and portfolio charts, remount embedded charts after fullscreen, apply VisualViewport keyboard positioning in shared dialogs/sheets, and retain legible horizontally scrolling research tables. Replace arbitrary portfolio-health heuristics with value-weighted canonical sector-aware company scores and explicit missing coverage. Reports use a self-contained readable document rather than JSON. NSE official summary distinguishes ETF units/deals from daily changes. Tiered alerts reuse owner-bound monitoring, SQL delivery deduplication and existing background workers. Remove former-provider runtime fallbacks and deployment integration without deleting the historical SQL/recovery evidence.",
+      "references": [
+        "https://www.nse.co.ke/",
+        "https://recharts.github.io/en-US/api/ResponsiveContainer/",
+        "https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport",
+        "https://node-postgres.com/features/pooling"
+      ]
+    },
+    {
       "file": "backend/src/data/browserData.js",
       "category": "Neon startup and page-read latency",
       "language": "Existing JavaScript compatibility backend, PostgreSQL, and existing React integration",

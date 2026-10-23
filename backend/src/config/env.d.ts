@@ -34,7 +34,6 @@ declare const EnvSchema: z.ZodObject<{
     WS_PORT: z.ZodDefault<z.ZodNumber>;
     LOG_LEVEL: z.ZodDefault<z.ZodEnum<["fatal", "error", "warn", "info", "debug", "trace"]>>;
     DATABASE_URL: z.ZodString;
-    SUPABASE_URL: z.ZodDefault<z.ZodString>;
     CACHE_DRIVER: z.ZodDefault<z.ZodEnum<["memory", "redis", "upstash"]>>;
     UPSTASH_REDIS_REST_URL: z.ZodOptional<z.ZodString>;
     UPSTASH_REDIS_REST_TOKEN: z.ZodOptional<z.ZodString>;
@@ -88,7 +87,6 @@ declare const EnvSchema: z.ZodObject<{
     WS_PORT: number;
     LOG_LEVEL: "fatal" | "error" | "warn" | "info" | "debug" | "trace";
     DATABASE_URL: string;
-    SUPABASE_URL: string;
     CACHE_DRIVER: "memory" | "redis" | "upstash";
     CACHE_NAMESPACE: string;
     NSE_CLIENT_MODE: "live" | "mock" | "afx" | "mystocks";
@@ -146,7 +144,6 @@ declare const EnvSchema: z.ZodObject<{
     CONTINUA_EDGE_ORIGIN_SECRET?: string | undefined;
     WS_PORT?: number | undefined;
     LOG_LEVEL?: "fatal" | "error" | "warn" | "info" | "debug" | "trace" | undefined;
-    SUPABASE_URL?: string | undefined;
     CACHE_DRIVER?: "memory" | "redis" | "upstash" | undefined;
     UPSTASH_REDIS_REST_URL?: string | undefined;
     UPSTASH_REDIS_REST_TOKEN?: string | undefined;
@@ -196,7 +193,6 @@ export declare const env: {
     WS_PORT: number;
     LOG_LEVEL: "fatal" | "error" | "warn" | "info" | "debug" | "trace";
     DATABASE_URL: string;
-    SUPABASE_URL: string;
     CACHE_DRIVER: "memory" | "redis" | "upstash";
     CACHE_NAMESPACE: string;
     NSE_CLIENT_MODE: "live" | "mock" | "afx" | "mystocks";

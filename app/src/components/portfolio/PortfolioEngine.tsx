@@ -30,7 +30,6 @@ export function PortfolioEngineBriefing({ data, showValues }: { data: EnginePort
   const research = data.researchBriefing;
   return <section className="space-y-4" aria-label="Engine portfolio research">
     <h3 className="text-lg font-semibold">Your portfolio research briefing</h3>
-    <p className="text-xs text-muted-foreground">Calculated research uses no OpenAI tokens. Portfolio questions call OpenAI only after you submit them.</p>
     {research && <>
       <p className="text-xs text-muted-foreground">{research.covered} of {research.requested} priced holdings covered · {research.methodology}</p>
       {research.companies.map(company => <details key={company.symbol} className="border-t border-border pt-3 space-y-2"><summary className="cursor-pointer text-sm font-semibold">{company.symbol} · FY{company.period ?? "Unavailable"} · {numeric(company.weight * 100)}% weight</summary>

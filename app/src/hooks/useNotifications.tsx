@@ -1,7 +1,7 @@
 import { useEffect, useId } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/continua/browserClient';
 import { useAuth } from './useAuth';
 
 export interface NotificationActor {
@@ -38,7 +38,7 @@ async function attachActors(rows: AppNotification[]): Promise<AppNotification[]>
     .from('profiles_public')
     .select('user_id, full_name, handle, avatar_url')
     .in('user_id', actorIds);
-  const byId = new Map((data || []).map((p: any) => [p.user_id, p as NotificationActor]));
+  const byId = new Map<string,NotificationActor>((data || []).map((p: any) => [p.user_id, p as NotificationActor]));
   return rows.map(r => ({ ...r, actor: r.actor_id ? byId.get(r.actor_id) || null : null }));
 }
 

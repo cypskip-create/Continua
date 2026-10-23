@@ -11,7 +11,7 @@ import { Post } from "@/hooks/usePosts";
 import { PostAttachments } from "./PostAttachments";
 import { formatTimestamp } from "@/lib/formatTimestamp";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { CommunityReactionButton, CommunityReaction } from "./CommunityReactionButton";
 import { atHandle, getHandle } from "@/lib/handle";
 import { NSE_TICKER_SET, ALIAS_OF } from "@/lib/stockPrices";

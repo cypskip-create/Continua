@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePageRefresh } from './usePageRefresh';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { useAuth } from "./useAuth";
 
 export interface Room {

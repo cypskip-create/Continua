@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useFollows } from "@/hooks/useFollows";
 import { useToast } from "@/hooks/use-toast";

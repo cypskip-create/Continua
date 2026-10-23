@@ -5,6 +5,7 @@ export const indexService = {
     async getIndices(exchange) {
         if (exchange === 'NSE')
             requestIndexCollection();
-        return cache.getOrSet(CacheKeys.indices(exchange), 30_000, () => indicesRepository.listByExchange(exchange));
+        const rows=await cache.getOrSet(CacheKeys.indices(exchange), 30_000, () => indicesRepository.listByExchange(exchange));
+        return exchange==='NSE'?rows.filter(row=>['NASI','NSE20','NSE25'].includes(row.code)):rows;
     },
 };

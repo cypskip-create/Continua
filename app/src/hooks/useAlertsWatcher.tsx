@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePriceAlerts } from "./usePriceAlerts";
 import { useLiveQuotes } from "./useLiveQuotes";
 import { useAuth } from "./useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 
 /**
  * Runs app-wide (mounted once in MainLayout) so a plain price alert can

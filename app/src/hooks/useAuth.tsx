@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase,restoreBrowserSession,clearBrowserSessionCookie,observeSessionSecurity } from '@/integrations/supabase/client';
+import { User, Session } from '@/integrations/continua/identityTypes';
+import { supabase,restoreBrowserSession,clearBrowserSessionCookie,observeSessionSecurity } from '@/integrations/continua/browserClient';
 import {queryClient} from '@/lib/queryClient';
 import {clearPrivateSessionCache} from '@/lib/privateSessionCache';
 import {signupAcknowledgement} from '@/lib/legalPolicy';

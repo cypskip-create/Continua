@@ -133,26 +133,11 @@ export function RobinhoodPerformanceChart({
       value: p.value,
       timestamp: p.timestamp,
     }));
-    formatted.push({ date: "Now", value: totalValue, timestamp: Date.now() });
+
     return formatted;
   }, [useRealData, realPoints, activeTimeframe, totalValue]);
 
-  const rawData = useMemo(
-    () =>
-      useRealData
-        ? realData
-        : activeTimeframe === "1D"
-          ? [
-              {
-                date: "Previous close",
-                value: dayStartValue,
-                timestamp: Date.now() - 86_400_000,
-              },
-              { date: "Now", value: totalValue, timestamp: Date.now() },
-            ]
-          : [],
-    [useRealData, realData, activeTimeframe, totalValue, dayStartValue],
-  );
+  const rawData = useMemo(() => useRealData ? realData : [], [useRealData,realData]);
 
   // In "performance" mode every point is shown as % vs cost basis, so the chart's
   // shape reflects genuine cumulative return at each point in the chosen window,

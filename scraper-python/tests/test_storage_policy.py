@@ -25,7 +25,8 @@ class PolicyTests(unittest.TestCase):
     def test_legacy_reader_credentials_do_not_enable_dual_write(self):
         with patch.dict(os.environ,{'SUPABASE_SERVICE_ROLE_KEY':'fixture','SUPABASE_URL':'https://jjsetogmnumoudrovpzn.supabase.co','R2_DUAL_WRITE':'false'},clear=True),patch('continua_scraper.storage.PrivateSupabaseStorage') as legacy,patch('continua_scraper.storage.R2Storage.from_environment') as r2:
             driver=RawStorage.from_environment()
-            self.assertIs(driver.rollback,legacy.return_value)
+            self.assertIsNone(driver.rollback)
+            legacy.assert_not_called()
             r2.assert_called_once_with(rollback_write=None)
 
     def test_existing_object_is_verified_without_resending_or_dual_writing(self):

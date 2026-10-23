@@ -3,7 +3,12 @@ const codes = {
     'NSE ALL SHARE INDEX': 'NASI', 'N.A.S.I': 'NASI', 'NASI': 'NASI',
     'NSE 20 SHARE INDEX': 'NSE20', 'NSE 20': 'NSE20',
     'NSE 25 SHARE INDEX': 'NSE25', 'NSE 25': 'NSE25',
-    'NSE 10 SHARE INDEX': 'NSE10', 'NSE 10': 'NSE10',
+};
+const activity={
+ 'TOTAL SHARE TRADED':['SHARES','Total shares traded','shares'], 'T.SHARE':['SHARES','Total shares traded','shares'],
+ 'EQUITY TURNOVER':['TURNOVER','Equity turnover','KES'], 'E.TURNOVER':['TURNOVER','Equity turnover','KES'],
+ 'ETF IN UNITS-TOTAL DEALS':['ETF_UNITS','ETF (U.T.D)','units'], 'ETF (U.T.D)':['ETF_UNITS','ETF (U.T.D)','units'],
+ 'ETF TURNOVER IN KES':['ETF_KES','ETF (KES)','KES'], 'ETF (KES)':['ETF_KES','ETF (KES)','KES']
 };
 /** Verified against NSE's stat_col/stat_figures markup. Never read unrelated
  * ticker prices or substitute scrape time for the publisher's observation date. */
@@ -21,8 +26,9 @@ export function extractNseIndexSummary(html) {
     const rows = new Map();
     $('.nse_statistics .stat_col').each((_, element) => {
         const col = $(element);
-        const code = codes[col.find('.stat_head').text().trim().toUpperCase()];
-        if (!code)
+        const heading=col.find('.stat_head').text().trim().toUpperCase();
+        const code = codes[heading],statistic=activity[heading];
+        if (!code&&!statistic)
             return;
         const figure = col.find('.stat_figures p').first();
         const changeText = figure.find('.stat_percent').text().trim().replaceAll(',', '').replace('−', '-');
@@ -32,6 +38,11 @@ export function extractNseIndexSummary(html) {
         if (!/^[+-]?\d+(?:\.\d+)?$/.test(changeText) || !/^\d+(?:\.\d+)?$/.test(valueText))
             return;
         const value = Number(valueText), change = Number(changeText);
+        if(statistic){
+            if(value<0)return;
+            const [key,label,unit]=statistic;
+            rows.set(key,{kind:'nse_statistic',code:key,label,unit,value,...(key==='ETF_UNITS'?{deals:change}:{change}),asOf:asOf.toISOString()});return;
+        }
         if (value <= 0 || value - change <= 0)
             return;
         rows.set(code, { kind: 'nse_index', code, value, change, asOf: asOf.toISOString() });

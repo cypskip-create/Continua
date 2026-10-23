@@ -7,7 +7,7 @@ import {
   ShieldAlert, Check, Loader2, AtSign, Sparkles, ChevronLeft, Camera,
   User, PenLine, Users, ShieldCheck, UserPlus, CheckCircle2,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { uploadCloudImage } from "@/lib/cloudMedia.js";
 import { normalizeHandle, fallbackHandle, atHandle, getInitials } from "@/lib/handle";
 import { EXPERIENCE_OPTIONS, GENDER_OPTIONS } from "@/lib/tradersHubOnboarding";

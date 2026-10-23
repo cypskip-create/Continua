@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, X, Users, Radio, MessageSquare, Loader2 } from "lucide-react";
-import { supabase,OWNED_IDENTITY_ENABLED,subscribeOwnedSnapshots } from "@/integrations/supabase/client";
+import { supabase,OWNED_IDENTITY_ENABLED,subscribeOwnedSnapshots } from "@/integrations/continua/browserClient";
 import { useAuth } from "@/hooks/useAuth";
 import type { Room } from "@/hooks/useRooms";
 

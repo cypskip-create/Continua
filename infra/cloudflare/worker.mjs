@@ -35,7 +35,7 @@ export default {scheduled:scheduledMaintenance,async fetch(request,env,ctx){
  const url=new URL(request.url),id=crypto.randomUUID();
  const eventsResponse=await privateEvents(request,env);if(eventsResponse)return eventsResponse;
  const identityResponse=await ownedIdentity(request,env);if(identityResponse)return identityResponse;
- if(env.AUTH_PROVIDER==='better-auth'&&url.pathname.startsWith('/api/session/'))return reply({error:'Legacy identity route unavailable'},410);
+ if(url.pathname.startsWith('/api/session/'))return reply({error:'Legacy identity route unavailable'},410);
  const sessionResponse=await session(request,env);if(sessionResponse)return sessionResponse;
  const reportResponse=await cspReport(request,env);if(reportResponse)return reportResponse;
  const mediaResponse=await media(request,env,security);if(mediaResponse)return mediaResponse;
@@ -52,7 +52,7 @@ export default {scheduled:scheduledMaintenance,async fetch(request,env,ctx){
  if(origin&&origin!==url.origin)return reply({error:'Origin not allowed'},403);
  if(request.headers.get('Sec-Fetch-Site')==='cross-site')return reply({error:'Cross-site request not allowed'},403);
  if(['POST','PUT','PATCH'].includes(request.method)&&!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')??''))return reply({error:'JSON content type required'},415);
- if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':url.origin,'Access-Control-Allow-Methods':'GET, HEAD, POST, PUT, PATCH, DELETE','Access-Control-Allow-Headers':'Content-Type, X-User-Token, X-Supabase-Key, X-API-Key','Cache-Control':'no-store',...security}});
+ if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':url.origin,'Access-Control-Allow-Methods':'GET, HEAD, POST, PUT, PATCH, DELETE','Access-Control-Allow-Headers':'Content-Type, X-User-Token, X-API-Key','Cache-Control':'no-store',...security}});
  let target;try{target=upstreamUrl(url,env.BACKEND_ORIGIN);}catch{return reply({error:'Route unavailable'},404);}
  const limiter=url.pathname.startsWith('/api/v1/billing/')?env.PAYMENT_RATE_LIMIT:env.EDGE_RATE_LIMIT;
  if(limiter){const key=request.headers.get('CF-Connecting-IP');if(!key)return reply({error:'Client identity unavailable'},403);const result=await limiter.limit({key});if(!result.success)return new Response(JSON.stringify({error:'Too many requests'}),{status:429,headers:{'Content-Type':'application/json','Retry-After':'60','Cache-Control':'no-store',...security}});}

@@ -4,8 +4,14 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useTouchClick } from "@/hooks/useTouchClick"
+import {useKeyboardPanel} from '@/hooks/useKeyboardPanel'
 
-const Dialog = DialogPrimitive.Root
+const DialogOpenContext=React.createContext(false)
+function Dialog({open,defaultOpen,onOpenChange,...props}:React.ComponentProps<typeof DialogPrimitive.Root>){
+ const [internal,setInternal]=React.useState(defaultOpen??false)
+ const active=open??internal
+ return <DialogOpenContext.Provider value={active}><DialogPrimitive.Root {...props} open={active} onOpenChange={value=>{setInternal(value);onOpenChange?.(value)}}/></DialogOpenContext.Provider>
+}
 
 const DialogTrigger = DialogPrimitive.Trigger
 
@@ -35,13 +41,16 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { hideClose?: boolean; fullScreen?: boolean; centered?: boolean }
->(({ className, children, hideClose, fullScreen, centered, ...props }, ref) => (
+>(({ className, children, hideClose, fullScreen, centered, style, ...props }, ref) => {
+ const keyboard=useKeyboardPanel(React.useContext(DialogOpenContext)&&!fullScreen)
+ return (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
       data-fullscreen={fullScreen || undefined}
-      data-centered={centered || undefined}
+      data-centered={keyboard.centered || centered || undefined}
+      style={{...style,...keyboard.style}}
       className={cn(
         "dialog-panel panel-motion fixed left-1/2 top-1/2 z-[101] grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-2xl border bg-background p-6 shadow-lg max-h-[92dvh] overflow-y-auto overscroll-contain",
         className
@@ -57,7 +66,7 @@ const DialogContent = React.forwardRef<
       )}
     </DialogPrimitive.Content>
   </DialogPortal>
-))
+)})
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
 const DialogHeader = ({

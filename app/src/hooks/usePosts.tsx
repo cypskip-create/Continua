@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePageRefresh } from './usePageRefresh';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/continua/browserClient';
 import { uploadCloudImage, removeCloudImages } from '@/lib/cloudMedia.js';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';

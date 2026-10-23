@@ -11,7 +11,7 @@ import {calculateInvestment} from '../../services/research/investmentResearch.js
 import {ownedCalculation,preparedCompany,ownedSimulation,ownedLiquidity,exposureEdges,institutionalKinds} from '../../services/research/institutionalResearch.js';
 
 export const institutionalRoutes=Router();
-institutionalRoutes.use(rateLimit({windowMs:60000,limit:120,standardHeaders:false,legacyHeaders:false,store:new BoundedMemoryRateStore(),keyGenerator:(req,res)=>ipKeyGenerator(rateLimitClientIP(req,res))}));
+institutionalRoutes.use('/engine',rateLimit({windowMs:60000,limit:120,standardHeaders:false,legacyHeaders:false,store:new BoundedMemoryRateStore(),keyGenerator:(req,res)=>res.locals.engineIdentityVerified===true?`user:${res.locals.engineUserId}`:ipKeyGenerator(rateLimitClientIP(req,res))}));
 const owner=res=>String(res.locals.engineUserId);
 function parse(schema,value){const result=schema.safeParse(value);if(!result.success)throw new ApiError(400,'Invalid institutional research request.');return result.data;}
 const symbol=z.string().trim().toUpperCase().regex(/^[A-Z0-9.\-]{1,20}$/);

@@ -31,7 +31,7 @@ const EnvSchema = z.object({
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
     // Local is development-only. Render/production boot fails unless R2 is
     // selected: no disk fallback can silently lose historical documents.
-    RAW_STORAGE_DRIVER: z.enum(["local", "supabase", "r2"]).default("local"),
+    RAW_STORAGE_DRIVER: z.enum(["local", "r2"]).default("local"),
     R2_ACCOUNT_ID: z.string().regex(/^[a-f0-9]{32}$/).optional(),
     R2_ACCESS_KEY_ID: z.string().optional(),
     R2_SECRET_ACCESS_KEY: z.string().optional(),

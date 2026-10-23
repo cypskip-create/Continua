@@ -5,7 +5,7 @@
 //
 // See docs/api/API.md for the full contract this is built against.
 
-import { supabase, OWNED_IDENTITY_ENABLED } from "@/integrations/supabase/client";
+import { supabase, OWNED_IDENTITY_ENABLED } from "@/integrations/continua/browserClient";
 import { resolveApiEndpoint } from "./apiEndpoint";
 import { fetchWithRateLimitRecovery } from "./rateLimitRecovery";
 import { DataApiResponseError, readApiData } from "./apiResponse";
@@ -99,7 +99,7 @@ export async function continuaFetch<T>(path: string, options: ContinuaRequestOpt
   if (/^\/(engine|billing|backtest|volume-profile)(\/|$)/.test(path)) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new ContinuaApiError("Sign in to use Continua Engine", 401, path, "session");
-    subscriberHeaders = { "X-User-Token": session.access_token, ...(!OWNED_IDENTITY_ENABLED?{"X-Supabase-Key":import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}:{}) };
+    subscriberHeaders = { "X-User-Token": session.access_token };
   }
   const url = buildUrl(path, options.params);
   const controller = new AbortController();

@@ -623,7 +623,7 @@ body { overflow-x: clip; }
 .home-quick-quote svg { flex-shrink: 0; }
 .home-watch-strip { max-width: 100%; min-width: 0; padding: .5rem 0; }
 .home-watch-viewport { overflow: hidden; max-width: 100%; }
-.home-watch-track { display: flex; width: max-content; animation: home-watch-scroll 85s linear infinite; }
+.home-watch-track { display: flex; width: max-content; animation: home-watch-scroll 38s linear infinite; }
 .home-watch-group { display: flex; gap: 1.25rem; padding-right: 1.25rem; }
 .home-watch-group .home-quick-quote { flex: 0 0 145px; min-width: 145px; padding: .35rem 0; }
 .home-watch-strip:hover .home-watch-track, .home-watch-strip:focus-within .home-watch-track, .home-watch-strip[data-paused="true"] .home-watch-track { animation-play-state: paused; }
@@ -697,3 +697,12 @@ body { overflow-x: clip; }
 .fundamental-detail dd { font-variant-numeric: tabular-nums; }
 .fundamental-detail button:focus-visible, .company-focus-research button:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
 @media (min-width: 768px) { .research-detail-body { padding-inline: 2rem; } .research-detail-header { padding-left: max(2rem, calc((100vw - 976px) / 2)); } }
+
+/* Research tables retain legible column widths on phones. */
+.engine-workspace table, .institutional-workbench table { min-width: 720px; table-layout: auto; }
+.engine-workspace th, .engine-workspace td, .institutional-workbench th, .institutional-workbench td { padding: 12px; min-width: 100px; word-break: normal; overflow-wrap: normal; vertical-align: top; }
+.engine-workspace th, .institutional-workbench th { white-space: nowrap; }
+
+.keyboard-aware-panel { top:var(--composer-top); bottom:auto!important; max-height:var(--composer-height); transform:translateY(-50%); overflow-y:auto; scroll-padding-block:24px; }
+.engine-workspace { min-width:0; }
+.engine-workspace .overflow-auto, .engine-workspace .overflow-x-auto, .institutional-workbench .overflow-auto { max-width:100%; overscroll-behavior-x:contain; }

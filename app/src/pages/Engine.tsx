@@ -16,7 +16,6 @@ import {
 import { useEnginePreferences } from "@/hooks/useEnginePreferences";
 import { engineWorkspaceApi } from "@/api/engineWorkspaceApi";
 import { ResearchJournal } from "@/components/engine/ResearchJournal";
-import { EngineConnectionCheck } from "@/components/engine/EngineConnectionCheck";
 import { mediaStoryUrl } from "@/lib/mediaRoute";
 import { useStickyHeights } from "@/hooks/useStickyHeights";
 import { useState, useEffect, useRef } from "react";
@@ -45,7 +44,6 @@ import {AdvancedResearchLab} from '@/components/engine/AdvancedResearchLab';
 import {ForecastNotebook} from '@/components/engine/ForecastNotebook';
 import {LearningResearchDesk} from '@/components/engine/LearningResearchDesk';
 import {FinancialVersionDesk} from '@/components/engine/FinancialVersionDesk';
-import {PipelineHealthDesk} from '@/components/engine/PipelineHealthDesk';
 
 const tools = [
   "Briefing",
@@ -212,7 +210,7 @@ export default function Engine() {
   return (
     <div
       ref={stickyRef}
-      className="engine-workbench page-canvas min-h-screen bg-background pb-24"
+      className="engine-workspace engine-workbench page-canvas min-h-screen bg-background pb-24"
     >
       <header
         data-sticky-header
@@ -412,7 +410,7 @@ export default function Engine() {
               data && (
                 <div key={`${exchange}:${symbol}`} className="py-6 space-y-6">
                   {tool==='Evidence'&&<EngineReliabilityDesk data={data} expanded onTool={target=>setTool(toolFromParam(target))}/>}
-                  {tool==='Evidence'&&<><FinancialVersionDesk symbol={symbol}/>{fullEngine&&<><PipelineHealthDesk/><InvestmentCoverage/><InstitutionalWorkbench key={`models:${user?.id}:${profile?.subscription_plan}`} mode="Model evidence" symbol={symbol}/><EvidenceImportLab title="Industry statement extraction review" kinds={['financial-extension']}/></>}</>}
+                  {tool==='Evidence'&&<><FinancialVersionDesk symbol={symbol}/>{fullEngine&&<><InvestmentCoverage/><InstitutionalWorkbench key={`models:${user?.id}:${profile?.subscription_plan}`} mode="Model evidence" symbol={symbol}/><EvidenceImportLab title="Industry statement extraction review" kinds={['financial-extension']}/></>}</>}
                   {query.isError&&<p role="status" className="text-sm text-muted-foreground">The background update could not connect. Showing your last saved research with its original date. <button className="text-primary" onClick={()=>void query.refetch()}>Retry update</button></p>}
                   <EngineCompanyHero data={data} sector={instruments.find(item=>item.symbol===symbol)?.sector}/>
                   {tool!=='Evidence'&&<details className="engine-source-disclosure"><summary>Evidence & coverage · {data.coverage.annualPeriods} annual observations</summary><EngineReliabilityDesk data={data} onTool={target=>setTool(toolFromParam(target))}/></details>}
@@ -629,7 +627,6 @@ export default function Engine() {
           </>
         )}
         {fullEngine&&group.name==="My workspace"&&<details className="py-4 border-t border-border"><summary className="text-xs font-semibold text-muted-foreground">Suggested research for you</summary><LearningResearchDesk onTool={target=>setTool(toolFromParam(target))} onCompany={next=>setParams(current=>{const p=new URLSearchParams(current);p.set('symbol',next);p.set('tool','Evidence');return p;},{replace:true})}/></details>}
-        {fullEngine && <EngineConnectionCheck target={tool === "Portfolio" ? "portfolio" : tool === "Monitoring" ? "monitoring" : "preferences"} exchange={exchange} />}
       </main>
       {paid && (
         <StockAlertDialog

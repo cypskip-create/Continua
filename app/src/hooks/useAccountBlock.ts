@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react';
-import {supabase} from '@/integrations/supabase/client';
+import {supabase} from '@/integrations/continua/browserClient';
 import {useAuth} from './useAuth';
 import {COMMUNITY_SAFETY_CHANGED} from '@/components/social/SafetyMenuItems';
 export function useAccountBlock(target?:string){

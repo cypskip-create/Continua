@@ -1,4 +1,4 @@
-import {supabase,OWNED_IDENTITY_ENABLED} from '@/integrations/supabase/client';
+import {supabase,OWNED_IDENTITY_ENABLED} from '@/integrations/continua/browserClient';
 const MEDIA_ORIGIN=OWNED_IDENTITY_ENABLED?window.location.origin:'https://continua.cypriankiprop41.workers.dev';
 const MEDIA_ORIGINS=new Set([MEDIA_ORIGIN,'https://continua-preview.cypriankiprop41.workers.dev']);
 

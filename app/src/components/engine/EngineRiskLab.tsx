@@ -1,3 +1,4 @@
+import {ResearchDetails} from './ResearchDetails';
 import {useState} from 'react';
 import {useMutation} from '@tanstack/react-query';
 import {engineWorkspaceApi,type StressResult,type BondResult,type FuturesResult} from '@/api/engineWorkspaceApi';
@@ -46,7 +47,7 @@ export function EngineRiskLab(){
    {'contributions' in data?<><ResultGrid values={{'Portfolio value':data.totalValue,'Scenario P/L':data.pnl,'Stressed value':data.stressedValue,'Change (%)':data.returnPercent}}/><p className="text-xs">Coverage: {data.coverage} · {new Date(data.generatedAt).toLocaleString()}</p><div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr><th className="text-left">Holding</th><th>Change</th><th>P/L</th></tr></thead><tbody>{data.contributions.map(p=><tr key={p.symbol} className="border-t"><td className="py-2">{p.symbol} · {p.sector}</td><td className="text-right">{number(p.shock*100)}%</td><td className="text-right">{number(p.pnl)}</td></tr>)}</tbody></table></div>{data.warnings.map(w=><p key={w} className="text-xs text-muted-foreground">{w}</p>)}<p className="text-xs text-muted-foreground">{data.methodology}</p></>:
     'dirtyPrice' in data?<><ResultGrid values={{'Dirty price':data.dirtyPrice,'Accrued interest':data.accruedInterest,'Clean price':data.cleanPrice,'Modified duration':data.modifiedDuration,Convexity:data.convexity,'DV01':data.dv01,'Stressed dirty price':data.stressedDirtyPrice,'Exact P/L':data.pnl,'Duration/convexity P/L':data.approximatePnl}}/><details><summary>Discounted payment schedule</summary>{data.cashFlows.map(f=><p key={f.date} className="text-sm">{f.date} · payment {number(f.amount)} · present value {number(f.presentValue)}</p>)}</details><p className="text-xs text-muted-foreground">{data.basis}</p></>:
     <><ResultGrid values={{Notional:data.notional,'Mark-to-market P/L':data.pnl,'Additional stress P/L':data.stressPnl,'Collateral after P/L':data.marginBalance,'Collateral after stress':data.stressedMarginBalance,Leverage:data.effectiveLeverage}}/>{data.expired&&<p className="text-destructive text-sm">The entered contract has expired. This is a historical illustration only.</p>}<p className="text-xs text-muted-foreground">{data.basis}</p></>}
-   {data.assumptions!=null&&<details><summary className="text-sm cursor-pointer">Assumptions used in this calculation</summary><pre className="whitespace-pre-wrap break-all text-xs py-3">{JSON.stringify(data.assumptions,null,2)}</pre></details>}
+   {data.assumptions!=null&&<details><summary className="text-sm cursor-pointer">Assumptions used in this calculation</summary><ResearchDetails data={data.assumptions}/></details>}
    <ExportResearch name={`engine-${tab}-${data.generatedAt??'calculation'}`} data={data}/>
   </div>}
  </section>;

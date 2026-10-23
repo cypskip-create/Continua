@@ -1,3 +1,4 @@
+import {canMonitor} from '../services/research/monitorEntitlements.js';
 import cron from "node-cron";
 import { env } from "../config/index.js";
 import { query, withTransaction } from "../storage/db.js";
@@ -5,13 +6,14 @@ import { logger } from "../monitoring/logger.js";
 import { getEngineBundle } from "../services/research/engineBundle.js";
 import { evaluateMonitor } from "../services/research/engineMonitoring.js";
 export async function runEngineMonitoringOnce(userId = null, symbol = null, exchange = null) {
-    const rules = (await query(`SELECT r.*,COALESCE((pref.settings->>'notifications')::boolean,true) AS notify_enabled FROM market.engine_monitor_rules r
+    const rules = (await query(`SELECT r.*,public.effective_subscription_plan(p.user_id) AS plan,COALESCE((pref.settings->>'notifications')::boolean,true) AS notify_enabled FROM market.engine_monitor_rules r
     JOIN public.profiles p ON p.user_id=r.user_id
     LEFT JOIN public.engine_preferences pref ON pref.user_id=r.user_id
-    WHERE r.enabled AND public.effective_subscription_plan(p.user_id) = 'premium_plus'
+    WHERE r.enabled AND public.effective_subscription_plan(p.user_id) IN ('premium','premium_plus')
     AND ($1::text IS NULL OR r.user_id::text=$1) AND ($2::text IS NULL OR r.symbol=$2) AND ($3::text IS NULL OR r.exchange=$3)
     ORDER BY r.created_at LIMIT 500`, [userId, symbol, exchange])).rows;
     for (const rule of rules) {
+        if(!canMonitor(rule.plan,rule.kind))continue;
         try {
             const data = await getEngineBundle(rule.symbol, rule.exchange);
             const quoteFresh = !!data.quote?.timestamp && Date.now() - Date.parse(data.quote.timestamp) < 7 * 86400000;
@@ -19,7 +21,7 @@ export async function runEngineMonitoringOnce(userId = null, symbol = null, exch
                 const current = (await client.query("SELECT kind,threshold,last_state FROM market.engine_monitor_rules WHERE id=$1 AND enabled FOR UPDATE", [rule.id])).rows[0];
                 if (!current)
                     return;
-                const state = { ...evaluateMonitor(current, { price: data.quote?.lastPrice ?? null, debt: data.financialAnalysis.metrics.debtToEquity, growth: data.financialAnalysis.metrics.revenueGrowth, earningsGrowth: data.financialAnalysis.metrics.earningsGrowth, cashConversion: data.financialAnalysis.metrics.cashConversion, dividendPayout: data.dividendAnalysis.payoutRatio, quoteAge: data.quote?.timestamp ? Math.max(0, (Date.now() - Date.parse(data.quote.timestamp)) / 86400000) : null, fingerprint: data.changes.fingerprint, material: data.changes.changes.some(c => c.material), quoteFresh }), checkedAt: new Date().toISOString(), asOf: rule.kind.startsWith("price_") || rule.kind === "quote_age_above" ? data.quote?.timestamp : data.quality.periodEnd };
+                const state = { ...evaluateMonitor(current, { price: data.quote?.lastPrice ?? null, dailyChange:data.quote?.changePercent??null,volume:data.quote?.volume??null, debt: data.financialAnalysis.metrics.debtToEquity, growth: data.financialAnalysis.metrics.revenueGrowth, earningsGrowth: data.financialAnalysis.metrics.earningsGrowth, cashConversion: data.financialAnalysis.metrics.cashConversion, dividendPayout: data.dividendAnalysis.payoutRatio, quoteAge: data.quote?.timestamp ? Math.max(0, (Date.now() - Date.parse(data.quote.timestamp)) / 86400000) : null, fingerprint: data.changes.fingerprint, material: data.changes.changes.some(c => c.material), quoteFresh }), checkedAt: new Date().toISOString(), asOf: rule.kind.startsWith("price_") || rule.kind.startsWith("daily_") || rule.kind==='volume_above' || rule.kind === "quote_age_above" ? data.quote?.timestamp : data.quality.periodEnd };
                 if (!data.changes.fingerprint && rule.kind === "material_change") {
                     state.unavailable = true;
                     state.notify = false;

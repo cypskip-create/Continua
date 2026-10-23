@@ -15,7 +15,7 @@ vi.mock('../src/storage/extractionsRepository.js',()=>({insertExtraction:f.inser
 beforeEach(()=>{vi.clearAllMocks();f.batch.mockResolvedValue([{id:'queued',url:'https://www.nse.co.ke/',depth:0}]);f.query.mockResolvedValue({rows:[]});f.extract.mockReturnValue([{kind:'nse_index'}]);});
 it('repairs an existing artifact with missing index extraction',async()=>{
  const {crawlSource}=await import('../src/crawler/crawlSource.js');const result=await crawlSource('nse-index-summary',1);
- expect(result.failed).toBe(0);expect(f.insert).toHaveBeenCalledWith(expect.objectContaining({artifactId:'retained-artifact',parserVersion:'render-index-html-v1'}));
+ expect(result.failed).toBe(0);expect(f.insert).toHaveBeenCalledWith(expect.objectContaining({artifactId:'retained-artifact',parserVersion:'render-index-html-v2'}));
 });
 it('does not duplicate a valid retained index extraction',async()=>{
  f.query.mockResolvedValue({rows:[{id:'extraction'}]});const {crawlSource}=await import('../src/crawler/crawlSource.js');await crawlSource('nse-index-summary',1);

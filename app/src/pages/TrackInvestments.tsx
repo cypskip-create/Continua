@@ -567,7 +567,7 @@ export default function TrackInvestments() {
                     Engine is analysing your portfolio…
                   </p>
                 )}
-                {!isPremiumPlus && <div className="rounded-xl border border-border p-4 space-y-2"><h3 className="font-semibold">Your Premium portfolio analysis</h3><p className="text-sm text-muted-foreground">Scorecards, diversification and company comparisons are included below. Premium Plus adds the full Engine portfolio workbench, stress tests and monitoring.</p><button onClick={() => navigate('/upgrade')} className="text-primary text-sm font-semibold">Explore Premium Plus →</button></div>}
+                {!isPremiumPlus && <div className="rounded-xl border border-border p-4 space-y-2"><h3 className="font-semibold">Your Premium portfolio analysis</h3><p className="text-sm text-muted-foreground">Scorecards, diversification and company comparisons are included below. Premium Plus adds the full Engine portfolio workbench, stress tests and allocation simulations.</p><button onClick={() => navigate('/upgrade')} className="text-primary text-sm font-semibold">Explore Premium Plus →</button></div>}
                 {!!engine.intelligence.error && isPremiumPlus && (
                   <p role="alert" className="text-sm text-bear">
                     {engine.intelligence.data ? 'The latest update could not load. Your previous analysis is still available.' : 'Portfolio analysis could not load.'} <button className="underline" onClick={() => void engine.intelligence.refetch()}>Retry analysis</button>

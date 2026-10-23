@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { uploadCloudImage, removeCloudImages } from "@/lib/cloudMedia.js";
 import { useAuth } from "@/hooks/useAuth";
 import { useFollows } from "@/hooks/useFollows";
@@ -123,7 +123,7 @@ export default function UserProfile() {
     if (!pd) return;
     const uids = [...new Set(pd.map(p => p.user_id))];
     const { data: profs } = await supabase.from("profiles_public").select("user_id, full_name, avatar_url, handle").in("user_id", uids);
-    const pm = new Map(profs?.map(p => [p.user_id, p]));
+    const pm = new Map<string,{full_name:string|null;avatar_url:string|null;handle:string|null}>(profs?.map(p => [p.user_id, p]));
     const enriched = await Promise.all(pd.map(async (post) => {
       const [l, c, r] = await Promise.all([
         supabase.from("post_likes").select("id", { count: "exact", head: true }).eq("post_id", post.id),
@@ -199,7 +199,7 @@ export default function UserProfile() {
       if (pd) {
         const uids = [...new Set(pd.map(p => p.user_id))];
         const { data: profs } = await supabase.from("profiles_public").select("user_id, full_name, avatar_url, handle").in("user_id", uids);
-        const pm = new Map(profs?.map(p => [p.user_id, p]));
+        const pm = new Map<string,{full_name:string|null;avatar_url:string|null;handle:string|null}>(profs?.map(p => [p.user_id, p]));
         const withDetails = await Promise.all(pd.map(async (post) => {
           const [l, c, r] = await Promise.all([
             supabase.from("post_likes").select("id", { count: "exact", head: true }).eq("post_id", post.id),
@@ -223,7 +223,7 @@ export default function UserProfile() {
       if (pd) {
         const uids = [...new Set(pd.map(p => p.user_id))];
         const { data: profs } = await supabase.from("profiles_public").select("user_id, full_name, avatar_url, handle").in("user_id", uids);
-        const pm = new Map(profs?.map(p => [p.user_id, p]));
+        const pm = new Map<string,{full_name:string|null;avatar_url:string|null;handle:string|null}>(profs?.map(p => [p.user_id, p]));
         const withDetails = await Promise.all(pd.map(async (post) => {
           const [l, c, r] = await Promise.all([
             supabase.from("post_likes").select("id", { count: "exact", head: true }).eq("post_id", post.id),

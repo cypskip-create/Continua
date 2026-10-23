@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/continua/browserClient';
 import { useAuth } from './useAuth';
 import { usePageRefresh } from './usePageRefresh';
 import { freshCacheTime } from '@/lib/researchCache';

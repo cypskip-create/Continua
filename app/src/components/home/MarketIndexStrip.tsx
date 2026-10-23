@@ -1,3 +1,4 @@
+import {NseActivityCards} from '@/components/markets/NseActivityCards';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { formatIndexChange } from '@/lib/researchCache';
 import { RollingNumber } from '@/components/shared/RollingNumber';
@@ -11,6 +12,6 @@ export function MarketIndexStrip({indices,onSelect}:{indices:{name:string;value:
         {idx.isUp?<ArrowUpRight className="h-2.5 w-2.5"/>:<ArrowDownRight className="h-2.5 w-2.5"/>}<RollingNumber value={formatIndexChange(idx.change)} />
       </p>
       {idx.timestamp&&<p className="mt-1 text-[0.5625rem] text-muted-foreground">Close · {new Date(idx.timestamp).toLocaleDateString('en-KE',{day:'numeric',month:'short',timeZone:'Africa/Nairobi'})}</p>}
-    </button>)}
+    </button>)}<NseActivityCards/>
   </div>;
 }

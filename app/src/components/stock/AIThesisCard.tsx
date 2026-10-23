@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import type { ContinuaScores } from "@/components/stock/ContinuaScore";
 
 interface Props {

@@ -1,3 +1,4 @@
+import {useProfile} from '@/hooks/useProfile';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { RiskIntelligence } from './RiskIntelligence';
@@ -450,7 +451,7 @@ export function EngineAssistantPanel({
               </p>
             ))}
           </div>
-          {ask.data.limitations.map((l) => (
+          {ask.data.limitations.filter(l=>!/OpenAI|API request|API key|worker configuration/i.test(l)).map((l) => (
             <p key={l} className="text-xs text-muted-foreground">
               {l}
             </p>
@@ -478,7 +479,9 @@ export function EngineMonitoringPanel({
   });
   const activity = useQuery({queryKey:[...key,"activity"],queryFn:engineWorkspaceApi.monitorActivity,retry:engineReadRetry});
   const check = useMutation({mutationFn:()=>engineWorkspaceApi.checkRules(symbol,exchange),onSuccess:value=>{client.setQueryData(key,value);void client.invalidateQueries({queryKey:[...key,"activity"]});void client.invalidateQueries({queryKey:["notifications"]});}});
-  const [kind, setKind] = useState("material_change"),
+  const {profile}=useProfile();
+  const plus=profile?.subscription_plan==='premium_plus';
+  const [kind, setKind] = useState("price_below"),
     [threshold, setThreshold] = useState("");
   const [ruleFilter,setRuleFilter]=useState("all");
   const save = useMutation({
@@ -531,7 +534,8 @@ export function EngineMonitoringPanel({
               "cash_conversion_below",
               "dividend_payout_above",
               "quote_age_above",
-            ].map((v) => (
+              "daily_gain_above", "daily_loss_below", "volume_above",
+            ].filter(v=>plus||!["material_change","cash_conversion_below","quote_age_above"].includes(v)).map((v) => (
               <option key={v} value={v}>
                 {v.replace(/_/g, " ")}
               </option>
@@ -543,9 +547,9 @@ export function EngineMonitoringPanel({
             Threshold{" "}
             {kind === "debt_above"
               ? "(debt/equity ratio)"
-              : kind.endsWith("growth_below")
+              : (kind.endsWith("growth_below")||kind.startsWith("daily_"))
                 ? "(percent)"
-                : kind === "quote_age_above" ? "(days)" : ["cash_conversion_below","dividend_payout_above"].includes(kind) ? "(ratio ×)" : "(quote currency)"}
+                : kind === "volume_above" ? "(shares traded)" : kind === "quote_age_above" ? "(days)" : ["cash_conversion_below","dividend_payout_above"].includes(kind) ? "(ratio ×)" : "(quote currency)"}
             <input
               required
               type="number"

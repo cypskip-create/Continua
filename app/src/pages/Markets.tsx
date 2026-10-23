@@ -1,3 +1,4 @@
+import {NseActivityCards} from '@/components/markets/NseActivityCards';
 import { useMemo, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -357,6 +358,7 @@ export default function Markets() {
           </p>
         </div>
       ))}
+      <NseActivityCards/>
       {!indices.length && (
         <Empty>Published NSE indices are not available yet.</Empty>
       )}

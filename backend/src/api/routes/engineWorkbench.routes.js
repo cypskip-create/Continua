@@ -1,3 +1,5 @@
+import {canMonitor,monitoringRuleLimit} from '../../services/research/monitorEntitlements.js';
+import {getPortfolioScorecard} from '../../services/research/portfolioScorecard.js';
 import {institutionalRoutes} from './institutional.routes.js';
 import { Router } from "express";
 import {rateLimit,ipKeyGenerator} from 'express-rate-limit';
@@ -24,7 +26,7 @@ import { earningsSensitivity, EarningsSensitivitySchema } from '../../services/r
 import { annualRatioAt } from '../../services/technical/valuationHistory.js';
 import { runHealthCheck } from '../../monitoring/healthCheck.js';
 export const engineWorkbenchRoutes = Router();
-engineWorkbenchRoutes.use(rateLimit({windowMs:60000,limit:120,standardHeaders:false,legacyHeaders:false,store:new BoundedMemoryRateStore(),keyGenerator:(req,res)=>ipKeyGenerator(rateLimitClientIP(req,res))}));
+engineWorkbenchRoutes.use('/engine',rateLimit({windowMs:60000,limit:120,standardHeaders:false,legacyHeaders:false,store:new BoundedMemoryRateStore(),keyGenerator:(req,res)=>res.locals.engineIdentityVerified===true?`user:${res.locals.engineUserId}`:ipKeyGenerator(rateLimitClientIP(req,res))}));
 engineWorkbenchRoutes.use(institutionalRoutes);
 engineWorkbenchRoutes.post('/engine/labs/intelligence', requirePremiumPlus, asyncHandler(async (req,res) => {
     const owned = await getPortfolioResearch(String(res.locals.engineUserId), 'NSE');
@@ -188,18 +190,20 @@ engineWorkbenchRoutes.post("/engine/cash-flows", requirePremiumPlus, handle(asyn
     res.json({ data: id });
 }));
 engineWorkbenchRoutes.delete("/engine/cash-flows/:id", requirePremiumPlus, handle(async (req, res) => { const id = parse(z.string().uuid(), req.params.id); await query("DELETE FROM public.engine_cash_flows WHERE id=$1 AND user_id=$2", [id, user(res)]); res.json({ data: { deleted: true } }); }));
+engineWorkbenchRoutes.get('/engine/portfolio/scorecard', requireEngineUser, handle(async(req,res)=>{res.set('Cache-Control','private, no-store');res.json({data:await getPortfolioScorecard(user(res),parse(exchangeSchema,req.query.exchange))});}));
 engineWorkbenchRoutes.get("/engine/peers", requirePremiumPlus, handle(async (req, res) => { res.json({ data: await getPeers(parse(symbolSchema, req.query.symbol), parse(exchangeSchema, req.query.exchange)) }); }));
-engineWorkbenchRoutes.get("/engine/monitoring", requirePremiumPlus, handle(async (_req, res) => { res.json({ data: await engineRepository.rules(user(res)) }); }));
-engineWorkbenchRoutes.post("/engine/monitoring", requirePremiumPlus, handle(async (req, res) => {
+engineWorkbenchRoutes.get("/engine/monitoring", requireSubscriber, handle(async (_req, res) => { res.json({ data: await engineRepository.rules(user(res)) }); }));
+engineWorkbenchRoutes.post("/engine/monitoring", requireSubscriber, handle(async (req, res) => {
     const rule = parse(z.object({ exchange: exchangeSchema, symbol: symbolSchema, kind: z.enum(monitoringKinds), threshold: z.number().finite().min(-1e9).max(1e9).optional(), enabled: z.boolean().default(true) }).refine(v => v.kind === "material_change" || v.threshold != null, "A numeric threshold is required"), req.body);
+    if(!canMonitor(res.locals.enginePlan,rule.kind))throw new ApiError(403,"This monitoring rule is included with Premium Plus.");
     const count = await engineRepository.rules(user(res));
-    if (count.length >= 50 && !count.some(r => r.symbol === rule.symbol && r.kind === rule.kind && r.exchange === rule.exchange))
-        throw new ApiError(400, "Maximum 50 Engine monitoring rules per account.");
-    res.json({ data: await engineRepository.saveRule(user(res), rule) });
+    if (count.length >= monitoringRuleLimit(res.locals.enginePlan) && !count.some(r => r.symbol === rule.symbol && r.kind === rule.kind && r.exchange === rule.exchange))
+        throw new ApiError(400, `Your plan includes ${monitoringRuleLimit(res.locals.enginePlan)} research alerts.`);
+    res.json({ data: await engineRepository.saveRule(user(res), rule, monitoringRuleLimit(res.locals.enginePlan)) });
 }));
-engineWorkbenchRoutes.delete("/engine/monitoring/:id", requirePremiumPlus, handle(async (req, res) => { await engineRepository.deleteRule(user(res), parse(z.string().uuid(), req.params.id)); res.json({ data: { deleted: true } }); }));
-engineWorkbenchRoutes.post("/engine/monitoring/check", requirePremiumPlus, handle(async (req, res) => { const body = parse(z.object({ symbol: symbolSchema, exchange: exchangeSchema }), req.body); await runEngineMonitoringOnce(user(res), body.symbol, body.exchange); res.json({ data: await engineRepository.rules(user(res)) }); }));
-engineWorkbenchRoutes.get("/engine/monitoring/activity", requirePremiumPlus, handle(async (_req, res) => { res.json({ data: (await query("SELECT id,title,message,created_at FROM public.notifications WHERE user_id=$1 AND type='engine' ORDER BY created_at DESC LIMIT 20", [user(res)])).rows }); }));
+engineWorkbenchRoutes.delete("/engine/monitoring/:id", requireSubscriber, handle(async (req, res) => { await engineRepository.deleteRule(user(res), parse(z.string().uuid(), req.params.id)); res.json({ data: { deleted: true } }); }));
+engineWorkbenchRoutes.post("/engine/monitoring/check", requireSubscriber, handle(async (req, res) => { const body = parse(z.object({ symbol: symbolSchema, exchange: exchangeSchema }), req.body); await runEngineMonitoringOnce(user(res), body.symbol, body.exchange); res.json({ data: await engineRepository.rules(user(res)) }); }));
+engineWorkbenchRoutes.get("/engine/monitoring/activity", requireSubscriber, handle(async (_req, res) => { res.json({ data: (await query("SELECT id,title,message,created_at FROM public.notifications WHERE user_id=$1 AND type='engine' ORDER BY created_at DESC LIMIT 20", [user(res)])).rows }); }));
 engineWorkbenchRoutes.get("/engine/usage", requirePremiumPlus, handle(async (_req, res) => { res.json({ data: { ...await engineRepository.aiUsage(user(res)), monthlyApplicationCap: env.ENGINE_AI_MONTHLY_BUDGET_USD, dailyUserLimit: env.ENGINE_AI_USER_DAILY_LIMIT, model: "gpt-5.4-mini", configured: !!env.OPENAI_API_KEY } }); }));
 engineWorkbenchRoutes.post("/engine/assistant", requirePremiumPlus, handle(async (req, res) => {
     const body = parse(z.object({ question: z.string().trim().min(3).max(2000), symbols: z.array(symbolSchema).min(1).max(3), exchange: exchangeSchema, scope: z.enum(["company", "portfolio"]).default("company") }), req.body);

@@ -1,3 +1,4 @@
+import {ResearchDetails} from './ResearchDetails';
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { engineAdvancedApi } from "@/api/engineAdvancedApi";
@@ -270,9 +271,7 @@ export function AdvancedResearchLab({ symbol }: { symbol: string }) {
           </p>
           <details>
             <summary>Full result and source details</summary>
-            <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-all text-xs">
-              {JSON.stringify(run.data, null, 2)}
-            </pre>
+            <ResearchDetails data={run.data}/>
           </details>
           <ExportResearch name={`advanced-${run.data.kind}`} data={run.data} />
         </div>

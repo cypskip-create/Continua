@@ -1,6 +1,8 @@
+import {portfolioValueHistory} from '@/lib/portfolioHistory';
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
-import { historicalApi } from "@/api/historicalApi";
+import { observedHistory } from "@/api/observedHistory";
+import {priceWindow} from "@/lib/priceHistory";
 
 export interface PortfolioHistoryPoint {
   /** yyyy-MM-dd */
@@ -53,8 +55,8 @@ export function usePortfolioHistory(holdings: { symbol: string; shares: number }
 
   const results = useQueries({
     queries: symbols.map((symbol) => ({
-      queryKey: ["continua", "portfolio-history-candles", symbol, timeframe],
-      queryFn: () => historicalApi.getCandles(symbol, { interval: "1d" as const, from }),
+      queryKey: ["continua", "observed-price-history-v2", symbol, timeframe, priceWindow(timeframe).from, priceWindow(timeframe).to],
+      queryFn: () => observedHistory(symbol,timeframe),
       enabled: supported && !!from,
       staleTime: 5 * 60_000,
       retry: 1,
@@ -63,43 +65,7 @@ export function usePortfolioHistory(holdings: { symbol: string; shares: number }
 
   const isLoading = supported && results.some((r) => r.isLoading);
 
-  const points = useMemo((): PortfolioHistoryPoint[] => {
-    if (!supported) return [];
-
-    const perSymbol = new Map<string, Map<string, number>>(); // symbol -> "yyyy-MM-dd" -> close
-    symbols.forEach((symbol, i) => {
-      const candles = (results[i]?.data as { timestamp: string | number; close: number }[] | undefined) ?? [];
-      const byDate = new Map<string, number>();
-      for (const c of candles) byDate.set(new Date(c.timestamp).toISOString().slice(0, 10), c.close);
-      perSymbol.set(symbol, byDate);
-    });
-
-    const allDates = new Set<string>();
-    perSymbol.forEach((byDate) => byDate.forEach((_, d) => allDates.add(d)));
-    const sortedDates = [...allDates].sort();
-    if (sortedDates.length === 0) return [];
-
-    // Forward-fills a holding across a date none of its own candles cover
-    // (e.g. a thinly-traded stock with no print that day) using its own
-    // last real close — never another holding's price, never a guess.
-    const lastKnown = new Map<string, number>();
-    const out: PortfolioHistoryPoint[] = [];
-    for (const d of sortedDates) {
-      let value = 0;
-      let allPriced = true;
-      for (const h of holdings) {
-        const sym = h.symbol.toUpperCase();
-        const close = perSymbol.get(sym)?.get(d);
-        if (close != null) lastKnown.set(sym, close);
-        const price = close ?? lastKnown.get(sym);
-        if (price != null) {
-          value += price * h.shares;
-        } else allPriced = false;
-      }
-      if (allPriced) out.push({ date: d, timestamp: new Date(d).getTime(), value });
-    }
-    return out;
-  }, [results, symbols, holdings, supported]);
+  const points = useMemo((): PortfolioHistoryPoint[] => supported ? portfolioValueHistory(holdings,Object.fromEntries(symbols.map((symbol,index)=>[symbol,results[index]?.data??[]]))) : [], [holdings,symbols,results,supported]);
 
   return { points, isLoading, hasRealData: points.length >= 2 };
 }

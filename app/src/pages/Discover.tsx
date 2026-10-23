@@ -11,7 +11,7 @@ import { usePosts, Post } from "@/hooks/usePosts";
 import { useFollows } from "@/hooks/useFollows";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { SparklineChart } from "@/components/shared/SparklineChart";
 import { StockHeatmap } from "@/components/home/StockHeatmap";
 import { usePortfolio } from "@/hooks/usePortfolio";

@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { FontSizeControl } from "@/components/theme/FontSizeControl";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";

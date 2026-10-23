@@ -180,11 +180,8 @@ func main() {
 			}()
 		}
 	}
-	supabase := os.Getenv("SUPABASE_URL")
-	if supabase == "" {
-		supabase = "https://jjsetogmnumoudrovpzn.supabase.co"
-	}
-	api.Users = auth.NewUserVerifier(supabase, store)
+	// Owned identity has not yet been ported to the native candidate.
+	// Fail closed for account routes; never fall back to the retired provider.
 	for _, origin := range settings.Origins {
 		api.Origins[origin] = true
 	}

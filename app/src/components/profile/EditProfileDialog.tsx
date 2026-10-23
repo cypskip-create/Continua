@@ -10,7 +10,7 @@ import { Camera, User, Loader2, Upload, X, Check, AlertCircle } from "lucide-rea
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { uploadCloudImage } from "@/lib/cloudMedia.js";
 
 interface EditProfileDialogProps {

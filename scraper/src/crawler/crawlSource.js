@@ -104,11 +104,11 @@ export async function crawlSource(sourceId, batchSize = 20) {
                 summary.stored++;
             if (env.SCRAPER_WORKLOAD_ROLE === 'render-light') {
                 const previous = await query(`SELECT id FROM scraping.extractions WHERE artifact_id=$1
-                    AND parser_version='render-index-html-v1' AND tables @> '[{"kind":"nse_index"}]'::jsonb LIMIT 1`,[artifact.id]);
+                    AND parser_version='render-index-html-v2' AND tables @> '[{"kind":"nse_index"}]'::jsonb LIMIT 1`,[artifact.id]);
                 if (!previous.rows.length) {
                     const tables = extractNseIndexSummary(res.body.toString('utf-8'));
                     if (!tables.length) throw new Error('Official page contains no usable dated index observations');
-                    await insertExtraction({artifactId:artifact.id,method:'html',parserVersion:'render-index-html-v1',
+                    await insertExtraction({artifactId:artifact.id,method:'html',parserVersion:'render-index-html-v2',
                         confidence:0.6,text:null,tables,entity:{},needsReview:false});
                 }
             }

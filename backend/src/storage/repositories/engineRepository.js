@@ -42,8 +42,14 @@ export const engineRepository = {
         });
     },
     async rules(userId) { return (await query("SELECT id,exchange,symbol,kind,threshold,enabled,last_state FROM market.engine_monitor_rules WHERE user_id=$1 ORDER BY created_at DESC", [userId])).rows; },
-    async saveRule(userId, rule) {
-        return (await query("INSERT INTO market.engine_monitor_rules(user_id,exchange,symbol,kind,threshold,enabled) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(user_id,exchange,symbol,kind) DO UPDATE SET threshold=EXCLUDED.threshold,enabled=EXCLUDED.enabled,last_state=NULL RETURNING id,exchange,symbol,kind,threshold,enabled", [userId, rule.exchange, rule.symbol, rule.kind, rule.threshold ?? null, rule.enabled])).rows[0];
+    async saveRule(userId, rule, limit=50) {
+        return withTransaction(async client=>{
+            // Serialize this owner's writes so concurrent saves cannot exceed a tier cap.
+            await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))",['engine-monitor:'+userId]);
+            const count=(await client.query('SELECT count(*)::int count,bool_or(exchange=$2 AND symbol=$3 AND kind=$4) existing FROM market.engine_monitor_rules WHERE user_id=$1',[userId,rule.exchange,rule.symbol,rule.kind])).rows[0];
+            if(count.count>=limit&&!count.existing)throw new ApiError(400,`Your plan includes ${limit} research alerts.`);
+            return (await client.query("INSERT INTO market.engine_monitor_rules(user_id,exchange,symbol,kind,threshold,enabled) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(user_id,exchange,symbol,kind) DO UPDATE SET threshold=EXCLUDED.threshold,enabled=EXCLUDED.enabled,last_state=NULL RETURNING id,exchange,symbol,kind,threshold,enabled", [userId, rule.exchange, rule.symbol, rule.kind, rule.threshold ?? null, rule.enabled])).rows[0];
+        });
     },
     async deleteRule(userId, id) { await query("DELETE FROM market.engine_monitor_rules WHERE id=$1 AND user_id=$2", [id, userId]); },
     async reserveAi(userId, model, amount, monthlyCap, userDailyLimit) {

@@ -22,7 +22,7 @@ import { PriceAlertsManager } from "@/components/alerts/PriceAlertsManager";
 import { StockAlertDialog } from "@/components/alerts/StockAlertDialog";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { AddInvestmentDialog } from "@/components/portfolio/AddInvestmentDialog";
-import {CompanyProcessingStatus} from '@/components/stock/CompanyProcessingStatus';
+
 import { ContinuaScoreCard } from "@/components/stock/ContinuaScore";
 import { STOCK_META } from "@/lib/stockPrices";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -557,7 +557,7 @@ export default function StockDetail() {
       </div>
 
       {/* Timeframe pills */}
-      {hasHistoricalData && <p className="text-[0.625rem] text-muted-foreground px-3 py-1">{priceCoverage.reason} Corporate-action adjustment may be unknown.</p>}
+
       <div className="flex items-center justify-between px-4 py-2 border-b border-border/50">
         {CHART_TIMEFRAMES.map(tf => (
           <button
@@ -788,17 +788,13 @@ export default function StockDetail() {
                 </div>
               ))}
             </div>
-            {statistics && <div className="text-[0.625rem] text-muted-foreground mt-2 space-y-1">
-              <p>Financial basis: {statistics.financialYear ? `FY${statistics.financialYear}` : 'unavailable'} · {statistics.financialBasis === 'publisher_observation' ? 'publisher observation' : 'reported evidence'}. Filing date: {statistics.filingDate ?? 'unknown'}.</p>
-              {statistics.marketCapBasis === 'price_times_reported_shares' && <p>Market cap is derived from the quoted price and shares last reported at {statistics.sharesAsOf ?? 'an unknown date'}.</p>}
-              <p>52-week source coverage: {statistics.rangeCoverage.observations} dated observations{statistics.rangeCoverage.from ? `, ${statistics.rangeCoverage.from} to ${statistics.rangeCoverage.to}` : ''}. Observed extrema are not a guarantee of a complete exchange record.</p>
-            </div>}
+
           </div>
 
           <div>
-            <CompanyProcessingStatus symbol={symbol!}/>
+
             <Eyebrow>C score</Eyebrow>
-            {scores ? <ContinuaScoreCard scores={scores} /> : <p className="text-sm text-muted-foreground">Engine research is not available yet. No placeholder score is shown.</p>}
+            {scores ? <ContinuaScoreCard scores={scores} /> : <p className="text-sm text-muted-foreground">Company research is not available yet.</p>}
           </div>
 
           {stockNews.length > 0 && (

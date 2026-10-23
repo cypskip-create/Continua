@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/continua/browserClient';
 import { useAuth } from './useAuth';
 
 export interface FollowUser {
@@ -72,7 +72,7 @@ export function useFollows() {
       .eq('follower_id', user.id);
 
     if (error) throw error;
-    return new Set(data?.map(f => f.following_id) || []);
+    return new Set<string>(data?.map(f => f.following_id) || []);
   }, [user]);
 
   useEffect(() => {

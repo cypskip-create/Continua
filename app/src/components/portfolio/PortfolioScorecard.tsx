@@ -26,13 +26,8 @@ function scoreHolding(symbol: string, research: ResearchBundle | undefined, valu
   const ratios = research?.ratios;
   const bestModel = valuation?.models.find((m) => m.upsidePercent != null);
 
-  const value = bestModel?.upsidePercent != null ? clamp06(3 + bestModel.upsidePercent / 20) : null;
-  const future = ratios?.priceMomentum3m != null ? clamp06(3 + ratios.priceMomentum3m / 10) : null;
-  const past = ratios?.roe != null && benchmark.roe != null ? clamp06(3 + (ratios.roe - benchmark.roe) / 5) : null;
-  const health = ratios?.debtToEquity != null && benchmark.debtToEquity != null ? clamp06(3 - (ratios.debtToEquity - benchmark.debtToEquity) / 20) : null;
-  const dividendScore = dividend && dividend.payouts.length > 0 ? dividendQualityScore(dividend) : null;
-
-  return { Value: value, Future: future, Past: past, Health: health, Dividend: dividendScore };
+  const scale=(value:number|null|undefined)=>typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=100?value*6/100:null;
+  return {Value:scale(research?.score?.afriValue),Future:scale(research?.score?.afriGrowth),Past:scale(research?.score?.afriQuality),Health:scale(research?.score?.afriHealth),Dividend:scale(research?.score?.afriIncome)};
 }
 
 export function PortfolioScorecard({ holdings, research, valuations, benchmark, dividendData }: PortfolioScorecardProps) {
@@ -48,9 +43,10 @@ export function PortfolioScorecard({ holdings, research, valuations, benchmark, 
   // Returns null (not 0) when no holding has real data for this axis — a
   // portfolio-wide "no data" case is never shown as a real score of zero.
   const axisAverage = (axis: Axis): number | null => {
-    const vals = perHolding.map((h) => h.scores[axis]).filter((v): v is number => v != null);
-    if (vals.length === 0) return null;
-    return vals.reduce((a, b) => a + b, 0) / vals.length;
+    const eligible=perHolding.filter(h=>h.scores[axis]!=null&&h.weight>0);
+    const weight=eligible.reduce((sum,h)=>sum+h.weight,0),total=perHolding.reduce((sum,h)=>sum+Math.max(0,h.weight),0);
+    if(total<=0||weight/total<.6)return null;
+    return eligible.reduce((sum,h)=>sum+h.scores[axis]!*h.weight,0)/weight;
   };
 
   // The radar still needs a numeric point per axis to keep the five-point
@@ -66,10 +62,10 @@ export function PortfolioScorecard({ holdings, research, valuations, benchmark, 
   const holdingBack = ranked.slice(3).reverse();
 
   const AXIS_DESCRIPTIONS: Record<Axis, string> = {
-    Value: "How far each holding trades from its narrative fair value.",
-    Future: "Recent price momentum, used as a forward-looking proxy — Continua doesn't have analyst growth forecasts yet.",
-    Past: "Return on equity relative to the market sample.",
-    Health: "Debt to equity relative to the market sample — lower is stronger.",
+    Value: "Company valuation score using available reported financial information.",
+    Future: "Reported company growth, weighted by holding value.",
+    Past: "Company quality measured from reported profitability and cash flow.",
+    Health: "Sector-aware financial strength from reported company information. Missing regulatory evidence is not estimated.",
     Dividend: "Dividend Quality score from real, confirmed payout history.",
   };
 

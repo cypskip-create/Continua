@@ -1,3 +1,6 @@
+import {Suspense,lazy} from 'react';
+import {useProfile} from '@/hooks/useProfile';
+const ResearchAlerts=lazy(()=>import('@/components/engine/EngineWorkspace').then(module=>({default:module.EngineMonitoringPanel})));
 import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -38,6 +41,8 @@ const emptyDraft = (price: number): Draft => ({
 export function StockAlertDialog({ open, onOpenChange, symbol, currentPrice }: StockAlertDialogProps) {
   const { alerts, createAlert, updateAlert, deleteAlert, toggleAlert } = usePriceAlerts();
   const { exchange, exchangeMeta } = useExchange();
+  const {profile}=useProfile();
+  const [advanced,setAdvanced]=useState(false);
   const { toast } = useToast();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -84,7 +89,7 @@ export function StockAlertDialog({ open, onOpenChange, symbol, currentPrice }: S
     } else if (draft.indicator === "RSI") {
       const period = parseInt(draft.rsi_period, 10);
       const threshold = parseFloat(draft.rsi_threshold);
-      if (!period || !threshold) {
+      if (!Number.isInteger(period)||period<2||period>200||!Number.isFinite(threshold)||threshold<0||threshold>100) {
         toast({ title: "Enter a valid RSI period and threshold", variant: "destructive" });
         return;
       }
@@ -111,11 +116,11 @@ export function StockAlertDialog({ open, onOpenChange, symbol, currentPrice }: S
     if (editingId) {
       const { error } = await updateAlert(editingId, payload);
       if (!error) toast({ title: "Alert updated" });
-      else toast({ title: "Couldn't update alert", variant: "destructive" });
+      else {toast({ title: "Couldn't update alert", variant: "destructive" });return;}
     } else {
       const { error } = await createAlert(payload);
       if (!error) toast({ title: "Alert created", description: describeAlert(symbol, payload, exchangeMeta.currency) });
-      else toast({ title: "Couldn't create alert", variant: "destructive" });
+      else {toast({ title: "Couldn't create alert", variant: "destructive" });return;}
     }
     cancel();
   };
@@ -249,6 +254,7 @@ export function StockAlertDialog({ open, onOpenChange, symbol, currentPrice }: S
             {symbolAlerts.length > 0 ? `Add another ${symbol} alert` : `Create ${symbol} alert`}
           </Button>
         )}
+        {open&&["premium","premium_plus"].includes(profile?.subscription_plan??"")&&<details className="mt-4 border-t pt-4" onToggle={event=>setAdvanced(event.currentTarget.open)}><summary className="cursor-pointer font-semibold">Advanced alerts · {profile?.subscription_plan==='premium_plus'?'Premium Plus':'Premium'}</summary>{advanced&&<Suspense fallback={<p>Loading alerts…</p>}><ResearchAlerts symbol={symbol} exchange={exchange}/></Suspense>}</details>}
       </DialogContent>
     </Dialog>
   );

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePageRefresh } from './usePageRefresh';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/continua/browserClient';
 import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
 

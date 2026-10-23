@@ -1,18 +1,20 @@
 import { afterEach, expect, it, vi } from "vitest";
 import express from "express";
 import { createServer } from "node:http";
-const mocks = vi.hoisted(() => ({ query: vi.fn(), overview: vi.fn(), portfolio: vi.fn(), ask: vi.fn(),check:vi.fn(),rules:vi.fn(),bundle:vi.fn(),calculate:vi.fn(),stockRisk:vi.fn() }));
+const mocks = vi.hoisted(() => ({ query: vi.fn(), overview: vi.fn(), portfolio: vi.fn(), ask: vi.fn(),check:vi.fn(),rules:vi.fn(),bundle:vi.fn(),calculate:vi.fn(),stockRisk:vi.fn(),saveRule:vi.fn() }));
 vi.mock("../src/config/index.js", () => ({ ACTIVE_EXCHANGES: ["NSE"], env: { SUPABASE_URL: "https://auth.fixture.invalid", NODE_ENV: "test", LOG_LEVEL: "silent" } }));
 vi.mock("../src/storage/db.js", () => ({ query: mocks.query }));
 vi.mock("../src/services/research/engineWorkspace.js", () => ({ getPortfolioOverview: mocks.overview, getPortfolioResearch: mocks.portfolio, getPeers: vi.fn() }));
 vi.mock("../src/services/research/engineBundle.js", () => ({ getEngineBundle: mocks.bundle }));
 vi.mock("../src/services/research/engineAssistant.js", () => ({ askEngine: mocks.ask }));
-vi.mock("../src/storage/repositories/engineRepository.js", () => ({ engineRepository: {rules:mocks.rules} }));
+vi.mock("../src/storage/repositories/engineRepository.js", () => ({ engineRepository: {rules:mocks.rules,saveRule:mocks.saveRule} }));
 vi.mock("../src/workers/engineMonitorWorker.js",()=>({runEngineMonitoringOnce:mocks.check}));
 vi.mock('../src/services/research/pythonCalculations.js',async(importOriginal)=>({...await importOriginal<typeof import('../src/services/research/pythonCalculations.js')>(),pythonCalculation:mocks.calculate}));
 vi.mock('../src/services/research/stockRisk.js',()=>({getStockRisk:mocks.stockRisk}));
 import { engineWorkbenchRoutes } from "../src/api/routes/engineWorkbench.routes.js";
 import { engineRoutes } from "../src/api/routes/engine.routes.js";
+
+vi.mock('../src/auth/runtime.js',()=>({getIdentityRuntime:()=>({verifyAccess:async(token:string)=>{const response=await fetch('https://identity.fixture.invalid/session',{headers:{Authorization:'Bearer '+token}});if(!response.ok)throw Error('Invalid fixture session');const user=await response.json();if(user.factors?.some((factor:any)=>factor.status==='verified')){let claims;try{claims=JSON.parse(Buffer.from(token.split('.')[1]??'','base64url').toString());}catch{}if(claims?.aal!=='aal2'||claims?.sub!==user.id)throw Error('MFA fixture incomplete');}return {user};}})}));
 
 const realFetch = globalThis.fetch;
 const verifiedId = "11111111-1111-4111-8111-111111111111";
@@ -65,7 +67,7 @@ it.each(['free','premium','premium_plus'])('company research and Forecast expans
   if (plan === 'free') expect(mocks.bundle).not.toHaveBeenCalled();
   else expect(mocks.bundle).toHaveBeenCalledWith('KCB','NSE');
 });
-it.each(['/engine/portfolio','/engine/peers?symbol=KCB','/engine/monitoring','/engine/preferences','/engine/usage'])('Premium still cannot access Plus workspace endpoint %s', async path => {
+it.each(['/engine/portfolio','/engine/peers?symbol=KCB','/engine/preferences','/engine/usage'])('Premium still cannot access Plus workspace endpoint %s', async path => {
   expect((await request('premium',path)).status).toBe(403);
 });
 it.each(['/engine/labs/stress','/engine/labs/bond','/engine/labs/futures'])('requires Plus for %s even with a forged header',async path=>{
@@ -115,3 +117,5 @@ it('rejects null event consent and client-owned allocation inputs',async()=>{
  expect((await request('premium_plus','/engine/investment/optimize-owned','POST',true,{objective:'minimum-variance',turnoverCap:1,symbols:['FORGED'],covariance:[[1]]})).status).toBe(400);
  expect(mocks.portfolio).not.toHaveBeenCalled();
 });
+
+it('allows Premium alert management but keeps Plus kinds restricted',async()=>{expect((await request('premium','/engine/monitoring')).status).toBe(200);expect((await request('premium','/engine/monitoring','POST',true,{symbol:'KCB',exchange:'NSE',kind:'material_change'})).status).toBe(403);const response=await request('premium','/engine/monitoring','POST',true,{symbol:'KCB',exchange:'NSE',kind:'volume_above',threshold:1000});expect(response.status).toBe(200);expect(mocks.saveRule).toHaveBeenCalledWith(verifiedId,expect.objectContaining({kind:'volume_above'}),20);});
