@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
   "name": "continua",
+  "account_id": "de867ecc0ef417877b8d4ef9580c4fe7",
   "main": "worker.mjs",
   "compatibility_date": "2026-10-12",
   "workers_dev": true,
@@ -11,7 +12,7 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": true
   },
-  "vars": { "BACKEND_ORIGIN": "https://continua-backend.onrender.com", "PUBLIC_EDGE_CACHE": "true", "MEDIA_STORAGE_ENABLED": "true", "APPLICATION_SCHEDULE_ENABLED": "false" },
+  "vars": { "BACKEND_ORIGIN": "https://continua-backend.onrender.com", "PUBLIC_EDGE_CACHE": "true", "MEDIA_STORAGE_ENABLED": "true", "APPLICATION_SCHEDULE_ENABLED": "true", "AUTH_PROVIDER": "better-auth", "MIGRATION_WRITE_FREEZE": "false" },
   "r2_buckets": [{"binding":"MEDIA_BUCKET","bucket_name":"continua-public-media"}],
   "ratelimits": [
     {"name":"AUTH_RATE_LIMIT","namespace_id":"42004","simple":{"limit":20,"period":60}},

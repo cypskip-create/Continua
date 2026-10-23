@@ -5,11 +5,22 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "app/src/api/apiEndpoint.ts",
+      "category": "Production market/news gateway continuity during Neon cutover",
+      "language": "Existing frontend integration module and Cloudflare JavaScript ESM; existing PostgreSQL data and refresh workers",
+      "runtime": "Existing browser, Worker and Render services",
+      "reason": "Pin REST requests from the exact production Worker origin to its same-origin gateway so a stale local/direct-Render build setting cannot send a development key to Render and blank prices or news. Keep private gateway credentials server-side, preserve 30-second quote and 60-second news polling, persist owned auth flags in versioned Worker configuration, and retain explicit legacy auth only as an opt-in rollback. No frontend redesign or new runtime is introduced.",
+      "references": [
+        "https://developers.cloudflare.com/workers/configuration/environment-variables/",
+        "https://developers.cloudflare.com/workers/configuration/secrets/"
+      ]
+    },
+    {
       "file": "infra/neon/restore-empty-production.mjs",
       "category": "Controlled production database migration operators",
       "language": "JavaScript ESM orchestration, existing pg_dump/pg_restore and PostgreSQL SQL",
       "runtime": "Local operator only; no new application service",
-      "reason": "Reuse the rehearsed PostgreSQL archive/DDL transformations and exact SQL row hashes. Fixed project/branch/endpoint guards, explicit approval, empty-target checks, preserved source grants, stable UUID/bcrypt import and a final source-identity stability gate prevent silent overwrite or credential loss. These operators have not yet executed a production restore. Optional pinned Neon HTTPS driver is confined to a read-only artifact verification query when local TCP is unavailable; transactional production import stays on the existing PostgreSQL tooling.",
+      "reason": "Reuse the rehearsed PostgreSQL archive/DDL transformations and exact SQL row hashes. Fixed project/branch/endpoint guards, explicit approval, empty-target checks, preserved source grants, stable UUID/bcrypt import and a final source-identity stability gate prevent silent overwrite or credential loss. The approved production restore completed with 102 exact application-table hashes, eight UUID/bcrypt identities and current-source schema parity. Optional pinned Neon HTTPS driver is confined to a read-only artifact verification query when local TCP is unavailable; transactional production import stays on the existing PostgreSQL tooling.",
       "references": [
         "https://www.postgresql.org/docs/current/app-pgdump.html",
         "https://www.postgresql.org/docs/current/app-pgrestore.html",

@@ -12,7 +12,7 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 const gateway=typeof window!=='undefined'&&window.location.protocol==='https:'&&(['continua.cypriankiprop41.workers.dev','continua-preview.cypriankiprop41.workers.dev'].includes(window.location.hostname)||import.meta.env.VITE_SESSION_GATEWAY_ENABLED==='true');
 let verifierStorage:Storage|undefined;try{if(typeof window!=='undefined')verifierStorage=window.sessionStorage;}catch{/* Browser storage may be disabled. */}
-export const OWNED_IDENTITY_ENABLED=import.meta.env.VITE_AUTH_PROVIDER==='better-auth';
+export const OWNED_IDENTITY_ENABLED=(import.meta.env.VITE_AUTH_PROVIDER??'better-auth')==='better-auth';
 const ownedClient=OWNED_IDENTITY_ENABLED?createContinuaClient({origin:window.location.origin,channel:typeof BroadcastChannel==='function'?new BroadcastChannel('continua-session'):undefined}):null;
 // Retain the legacy export while migrating audited callers. The selected owned
 // transport establishes no Supabase client and needs no Supabase environment.

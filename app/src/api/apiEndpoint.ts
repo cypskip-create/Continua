@@ -1,6 +1,9 @@
 export const HOSTED_DATA_API = "https://continua-backend.onrender.com/api/v1";
 
 export function resolveApiEndpoint(configured: string | undefined, production: boolean,frontendOrigin?:string): { rest: string; upstream: string } {
+  if(production&&frontendOrigin==='https://continua.cypriankiprop41.workers.dev'){
+    return {rest:frontendOrigin+'/api/v1',upstream:HOSTED_DATA_API};
+  }
   let upstream = configured?.trim() || (production ? HOSTED_DATA_API : "http://localhost:4000/api/v1");
   if(upstream.startsWith('/')){
     if(!frontendOrigin)throw new Error('Relative API endpoint requires a frontend origin');
