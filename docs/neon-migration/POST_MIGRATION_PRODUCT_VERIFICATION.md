@@ -74,3 +74,8 @@ Validation: 164 frontend tests passed, including negative currency direction, di
 - Discover more and feature titles open public explanations at /features/company-research, /features/markets-charts and /features/monitoring. Each page covers supported tools, getting started and plan access. Developers & API is linked in desktop and mobile navigation.
 - Header reduced to 62 px desktop and 54 px mobile, with smaller brand artwork and matching menu/anchor offsets.
 - Browser QA traversed all three detail pages and confirmed matching portfolio imagery. All 166 frontend tests pass; TypeScript and production build are checked before release.
+
+### Stock-details full-surface chart scrubbing
+- StockPriceChart now uses the same shared horizontal time-selection helper as Home, with capture-phase pointer events on the full pane. Captured drags clamp at chart edges and are not cleared by SVG/chart leave events.
+- Explicit pointer release/cancel handling preserves pinned crosshairs; drawing tools and price-axis zoom retain their own interactions. Both embedded and fullscreen price charts use this component.
+- Browser QA dragged below the plotted data across area, line and candlestick modes. Every mode reported the same successive selected prices (104.36 through 118.60 on the synthetic fixture). All 166 frontend tests, TypeScript and the production build pass.

@@ -1,3 +1,4 @@
+import { chartTimeScrubIndex } from "@/lib/chartScrub";
 import {
   AreaChart, Area, ComposedChart, Bar, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, ReferenceLine, Cell, CartesianGrid
 } from "recharts";
@@ -174,6 +175,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
   // requires touch to be wired explicitly, it is no longer inferred from onMouseMove.
   const [crosshair, setCrosshair] = useState<{ x: number; y: number; fraction: number } | null>(null);
   const plotRef = useRef<HTMLDivElement | null>(null);
+  const scrubPointerId = useRef<number | null>(null);
   const PLOT_MARGIN_TOP = 8;
 
   const autoDomainMin = minPrice - padding;
@@ -204,32 +206,36 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
     }
   }, [data, onHoverPrice, firstPrice, domainMin, domainMax]);
 
-  // Track the pointer on the pane, including SVG paths and filled areas.
-  // Recharts item targeting can otherwise interrupt a touch drag on the curve.
+  // Capture at the full pane, before SVG paths, candles or overlays can
+  // change the event target. Selection is horizontal only, like Home/Portfolio.
   const scrubPointer = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (activeDrawTool || !data.length) return;
+    if (activeDrawTool || axisDragRef.current || !data.length || (scrubPointerId.current !== null && scrubPointerId.current !== event.pointerId)) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const width = Math.max(1, rect.width - (showPriceAxis ? PRICE_AXIS_WIDTH : 0));
     const x = event.clientX - rect.left;
-    if (x > width || x < 0) return;
-    const fraction = Math.min(1, Math.max(0, x / width));
-    const first = data[0].timestamp;
-    const last = data[data.length - 1].timestamp;
-    const target = first + fraction * (last - first);
-    let index = 0;
-    for (let i = 1; i < data.length; i++) if (Math.abs(data[i].timestamp - target) < Math.abs(data[index].timestamp - target)) index = i;
-    updateFromChartState({ activeIndex: index, activeCoordinate: { x: last === first ? width / 2 : (data[index].timestamp - first) / (last - first) * width } });
+    // Preserve price-axis zoom when no chart drag is in progress.
+    if (scrubPointerId.current === null && (x > width || x < 0)) return;
+    const index = chartTimeScrubIndex(event.clientX,rect.left,rect.width,data.map(point=>point.timestamp),showPriceAxis ? PRICE_AXIS_WIDTH : 0);
+    const first = data[0].timestamp, last = data.at(-1)!.timestamp;
+    updateFromChartState({activeIndex:index,activeCoordinate:{x:last===first?width/2:(data[index].timestamp-first)/(last-first)*width}});
   };
   const startScrub = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (activeDrawTool) return;
+    if (activeDrawTool || !data.length || (event.pointerType === 'mouse' && event.button !== 0)) return;
     const rect = event.currentTarget.getBoundingClientRect();
     if (event.clientX - rect.left > rect.width - (showPriceAxis ? PRICE_AXIS_WIDTH : 0)) return;
+    scrubPointerId.current = event.pointerId;
     event.currentTarget.setPointerCapture(event.pointerId);
     scrubPointer(event);
   };
+  const finishScrub = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (scrubPointerId.current !== event.pointerId) return;
+    scrubPointerId.current = null;
+    if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
+    handleLeave();
+  };
 
   const handleLeave = useCallback(() => {
-    if (pinCrosshair) return;
+    if (pinCrosshair || scrubPointerId.current !== null) return;
     setCrosshair(null);
     onHoverPrice?.(null, null, null, null);
   }, [onHoverPrice, pinCrosshair]);
@@ -873,20 +879,17 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
   // whatever's left in a flex parent (fullscreen chart, already
   // viewport-bounded so there's nowhere for extra height to go).
   const mainPaneStyle = mainHeight ? { height: mainHeight, flex: "0 0 auto" as const } : undefined;
-  const mainPaneClass = mainHeight ? "shrink-0 relative" : "flex-1 min-h-0 relative";
+  const mainPaneClass = mainHeight ? "shrink-0 relative touch-none select-none" : "flex-1 min-h-0 relative touch-none select-none";
   const outerClass = `relative w-full flex flex-col touch-none ${mainHeight ? "" : "h-full"}`;
 
   if (chartType === "candle") {
     return (
-      <div className={outerClass} onTouchEnd={handleLeave}>
-        <div ref={plotRef} className={mainPaneClass} style={mainPaneStyle} onPointerDown={startScrub} onPointerMove={scrubPointer} onPointerUp={handleLeave} onPointerCancel={handleLeave}>
+      <div className={outerClass}>
+        <div ref={plotRef} className={mainPaneClass} style={mainPaneStyle} onPointerDownCapture={startScrub} onPointerMoveCapture={scrubPointer} onPointerUp={finishScrub} onPointerCancel={finishScrub} onPointerLeave={event=>{if(!event.currentTarget.hasPointerCapture(event.pointerId))handleLeave();}}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={chartData}
               margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
-
-              onMouseLeave={handleLeave}
-
               syncId={syncId}
             >
               {showGrid && <CartesianGrid horizontal vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.4} strokeDasharray="3 3" />}
@@ -931,15 +934,12 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
   }
 
   return (
-    <div className={outerClass} onTouchEnd={handleLeave}>
-      <div ref={plotRef} className={mainPaneClass} style={mainPaneStyle} onPointerDown={startScrub} onPointerMove={scrubPointer} onPointerUp={handleLeave} onPointerCancel={handleLeave}>
+    <div className={outerClass}>
+      <div ref={plotRef} className={mainPaneClass} style={mainPaneStyle} onPointerDownCapture={startScrub} onPointerMoveCapture={scrubPointer} onPointerUp={finishScrub} onPointerCancel={finishScrub} onPointerLeave={event=>{if(!event.currentTarget.hasPointerCapture(event.pointerId))handleLeave();}}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}
             margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
-
-            onMouseLeave={handleLeave}
-
             syncId={syncId}
           >
             <defs>
