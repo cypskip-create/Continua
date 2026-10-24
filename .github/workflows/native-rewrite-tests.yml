@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'backend-go/**'
+      - 'backend/src/**'
+      - 'backend/package-lock.json'
       - 'backend/python/**'
       - 'engine-python/**'
       - 'scraper-python/**'
@@ -19,6 +21,8 @@ on:
   pull_request:
     paths:
       - 'backend-go/**'
+      - 'backend/src/**'
+      - 'backend/package-lock.json'
       - 'backend/python/**'
       - 'engine-python/**'
       - 'scraper-python/**'
