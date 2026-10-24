@@ -55,3 +55,11 @@ Validation: 164 frontend tests passed, including negative currency direction, di
 - Cloudflare npm 10.9.2 did not apply the nested Miniflare undici override, so clean installation rejected the npm 11 lockfile.
 - Applied the patched undici 7.30.1 override at the workspace root; regenerated the lockfile with npm 10.9.2.
 - Exact npm 10.9.2 ci dry-run passes; npm audit reports zero vulnerabilities. Application code and scheduled triggers are unchanged.
+
+### Public site and chart interaction revision
+- Rebuilt the public landing page around spacious product groups, restrained manual story transitions and current plan capabilities. Documentation and API resources are grouped. Removed illustrative portfolio previews and decorative logo framing. Buttons have rounded rectangular corners.
+- Replaced the initial vector turbine after user feedback with built-in image generation: original graphite/platinum computational research core with violet glass conduits on dark aubergine, no text, logos, UI or aircraft engine. Project asset: app/public/landing/engine-intelligence.webp (90,592 bytes).
+- Home and Portfolio now select from the full plot using pointer capture; fixture browser drags begun below both curves produced successive exact header values. Time-scaled Home selection accounts for gaps between trading dates. Existing numerical inputs are unchanged.
+- Number wheels use continuously retargeted springs with reduced-motion support. No fabricated market observations are added.
+- TradersHub reuses owner-scoped five-minute session snapshots with allowlisted display fields, clears them on logout/safety edits, and reads posts/safety settings concurrently before exposing refreshed rows. First visible post images get priority; new large static post images are compressed client-side before upload.
+- 166 frontend tests pass, including owner isolation, snapshot expiry/credential exclusion and plot-edge selection.

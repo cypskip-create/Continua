@@ -1,3 +1,4 @@
+import { readFeedSnapshot, saveFeedSnapshot, clearFeedSnapshot } from '@/lib/feedSnapshot';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePageRefresh } from './usePageRefresh';
 import { supabase } from '@/integrations/continua/browserClient';
@@ -115,13 +116,16 @@ export function removeCommentFromTree(comments: Comment[], id: string): { tree: 
 // Module-level cache so re-entering TradersHub is instant
 let __postsCache: Post[] | null = null;
 let __postsCacheKey: string | null = null;
+if(typeof window!=='undefined')window.addEventListener('continua:session-cleared',()=>{__postsCache=null;__postsCacheKey=null;});
 
 export function usePosts() {
   const { user } = useAuth();
   const { toast } = useToast();
   const cacheKey = user?.id || 'anon';
-  const initial = __postsCache && __postsCacheKey === cacheKey ? __postsCache : [];
-  const [posts, setPosts] = useState<Post[]>(initial);
+  const initial = __postsCache && __postsCacheKey === cacheKey ? __postsCache : user ? readFeedSnapshot(cacheKey) ?? [] : [];
+  const [postState, setPostState] = useState<{owner:string;rows:Post[]}>({owner:cacheKey,rows:initial});
+  const posts = postState.owner === cacheKey ? postState.rows : initial;
+  const setPosts = useCallback((update: Post[] | ((previous:Post[])=>Post[])) => setPostState(previous => ({owner:cacheKey,rows:typeof update === 'function' ? update(previous.owner===cacheKey?previous.rows:[]) : update})),[cacheKey]);
   const [loading, setLoading] = useState(initial.length === 0);
   const [error, setError] = useState<string | null>(null);
   const fetchVersion=useRef(0);
@@ -130,24 +134,24 @@ export function usePosts() {
     const version=++fetchVersion.current;
     if (!__postsCache || __postsCacheKey !== cacheKey) setLoading(true);
     try {
-      const { data: postsDataRaw, error: postsError } = await supabase
-        .from('posts')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (postsError) throw postsError;
-
-      let postsData = postsDataRaw;
-      if (user && postsData && postsData.length > 0) {
-        const [hiddenRes, blockedRes, mutedRes, mutedKeywordsRes] = await Promise.all([
-          supabase.from('hidden_posts' as any).select('post_id').eq('user_id', user.id),
-          supabase.from('blocked_users' as any).select('blocked_id').eq('blocker_id', user.id),
-          supabase.from('muted_users' as any).select('muted_id').eq('muter_id', user.id),
-          supabase.from('muted_keywords' as any).select('keyword').eq('user_id', user.id),
-        ]);
+      // Safety preferences and posts are independent reads. Start together,
+      // but never publish rows until all safety filters have succeeded.
+      const [postResponse, safety] = await Promise.all([
+        supabase.from('posts').select('*').order('created_at', {ascending:false}).limit(50),
+        user ? Promise.all([
+          supabase.from('hidden_posts' as any).select('post_id').eq('user_id',user.id),
+          supabase.from('blocked_users' as any).select('blocked_id').eq('blocker_id',user.id),
+          supabase.from('muted_users' as any).select('muted_id').eq('muter_id',user.id),
+          supabase.from('muted_keywords' as any).select('keyword').eq('user_id',user.id),
+        ]) : Promise.resolve([]),
+      ]);
+      const {data:postsDataRaw,error:postsError}=postResponse;
+      if(postsError)throw postsError;
+      let postsData=postsDataRaw;
+      if(user && postsData && postsData.length>0){
+        const [hiddenRes,blockedRes,mutedRes,mutedKeywordsRes]=safety;
         const safetyError=hiddenRes.error||blockedRes.error||mutedRes.error||mutedKeywordsRes.error;
-        if(safetyError)throw safetyError;
+        if(safetyError){clearFeedSnapshot(cacheKey);__postsCache=null; if(version===fetchVersion.current)setPosts([]);throw safetyError;}
         const hiddenSet = new Set((hiddenRes.data as any[] | null)?.map(r => r.post_id));
         // Blocking/muting someone only meant anything if it actually kept
         // their posts out of your feed — previously these tables were
@@ -175,7 +179,7 @@ export function usePosts() {
 
       if (!postsData || postsData.length === 0) {
         if(version!==fetchVersion.current)return;
-        setPosts([]); setError(null); setLoading(false); return;
+        setPosts([]); __postsCache=[]; __postsCacheKey=cacheKey; if(user)saveFeedSnapshot(cacheKey,[]); setError(null); setLoading(false); return;
       }
 
       const postIds = postsData.map(p => p.id);
@@ -277,6 +281,7 @@ export function usePosts() {
       setPosts(enriched as Post[]);
       __postsCache = enriched as Post[];
       __postsCacheKey = cacheKey;
+      if(user)saveFeedSnapshot(cacheKey,enriched as Post[]);
       setError(null);
     } catch (err) {
       console.error('Error fetching posts:', err);
@@ -287,9 +292,9 @@ export function usePosts() {
   }, [user, cacheKey]);
 
   usePageRefresh(fetchPosts);
-  useEffect(() => { fetchPosts(); }, [fetchPosts]);
+  useEffect(() => { setPosts(initial); setLoading(initial.length===0); void fetchPosts(); return()=>{fetchVersion.current++;}; }, [cacheKey, fetchPosts]);
   useEffect(() => { __postsCache = posts; __postsCacheKey = cacheKey; }, [posts, cacheKey]);
-  useEffect(()=>{const refresh=()=>{__postsCache=null;setPosts([]);void fetchPosts();};window.addEventListener('continua:community-safety-changed',refresh);return()=>window.removeEventListener('continua:community-safety-changed',refresh);},[fetchPosts]);
+  useEffect(()=>{const refresh=()=>{clearFeedSnapshot(cacheKey);__postsCache=null;setPosts([]);void fetchPosts();};window.addEventListener('continua:community-safety-changed',refresh);return()=>window.removeEventListener('continua:community-safety-changed',refresh);},[fetchPosts]);
 
   const createPost = async (content: string, imageInput?: string | string[], quotedPostId?: string, poll?: import("@/components/social/PostAttachments").PostPoll) => {
     if (!user) return { error: { message: 'Must be logged in' } };

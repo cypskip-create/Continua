@@ -707,3 +707,6 @@ body { overflow-x: clip; }
 .keyboard-aware-panel { top:var(--composer-top); bottom:auto!important; max-height:var(--composer-height); transform:translateY(-50%); overflow-y:auto; scroll-padding-block:24px; }
 .engine-workspace { min-width:0; }
 .engine-workspace .overflow-auto, .engine-workspace .overflow-x-auto, .institutional-workbench .overflow-auto { max-width:100%; overscroll-behavior-x:contain; }
+
+.rolling-wheel {display:block;position:relative;height:100%;width:1ch;}
+.rolling-wheel-glyph {position:absolute;inset:0;display:block;will-change:transform;}

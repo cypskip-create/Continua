@@ -7,14 +7,14 @@ import { toast } from 'sonner';
 import { ImageViewer } from './ImageViewer';
 
 export interface PostPoll { question: string; options: string[]; endsAt?: string; durationHours?: number }
-export function PostAttachments({ post }: { post: { id: string; image_url?: string | null; image_urls?: string[]; poll?: PostPoll | null } }) {
+export function PostAttachments({ post, priority = false }: { priority?: boolean; post: { id: string; image_url?: string | null; image_urls?: string[]; poll?: PostPoll | null } }) {
   const images = post.image_urls?.length ? post.image_urls : post.image_url ? [post.image_url] : [];
   const [viewer, setViewer] = useState(false);
   const [selected, setSelected] = useState(0);
   return <div onClick={event => event.stopPropagation()}>
     {!!images.length && <div className={`grid gap-2 my-3 overflow-hidden ${images.length === 1 ? 'grid-cols-1 rounded-xl' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
       {images.slice(0, 3).map((src,index) => <button key={src + index} aria-label={`Open image ${index + 1} of ${images.length}`} onClick={() => { setSelected(index); setViewer(true); }} className={`relative overflow-hidden rounded-xl ${images.length > 1 ? 'aspect-square' : ''}`}>
-        <img src={src} alt={`Post image ${index + 1}`} loading="lazy" className={`w-full h-full object-cover ${images.length === 1 ? 'max-h-96' : ''}`} />
+        <img src={src} alt={`Post image ${index + 1}`} loading={priority ? "eager" : "lazy"} decoding="async" fetchPriority={priority && index === 0 ? "high" : "auto"} className={`w-full h-full object-cover ${images.length === 1 ? 'max-h-96' : ''}`} />
         {index === 2 && images.length > 3 && <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-white text-3xl font-semibold">+<RollingNumber value={images.length - 3} /></span>}
       </button>)}
     </div>}

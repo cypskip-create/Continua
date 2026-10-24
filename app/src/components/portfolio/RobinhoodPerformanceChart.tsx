@@ -1,3 +1,4 @@
+import { chartScrubIndex } from "@/lib/chartScrub";
 import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useId, useState, useMemo, useCallback, useRef } from "react";
 import {
@@ -183,33 +184,15 @@ export function RobinhoodPerformanceChart({
   const fillId = `perfFill-${chartId}`;
   const crosshairFraction = hoverFraction ?? 1;
 
-  // Recharts owns the cursor/dot; only the inspected value and line tint are local.
-  const handleMove = useCallback(
-    (
-      state: {
-        activeIndex?: number | string;
-        activeCoordinate?: { x: number; y?: number };
-      } | null,
-    ) => {
-      const idx = state?.activeIndex != null ? Number(state.activeIndex) : NaN;
-      const coord = state?.activeCoordinate;
-      if (Number.isFinite(idx) && chartData[idx] && coord) {
-        const point = chartData[idx];
-        const rect = plotRef.current?.getBoundingClientRect();
-        const axisWidth = hideValue ? 0 : 48;
-        const plotWidth = Math.max(1, (rect?.width ?? 1) - axisWidth);
-        setHoverFraction(
-          Math.min(1, Math.max(0, (coord.x - axisWidth) / plotWidth)),
-        );
-        setHoverValue((prev) => {
-          if (prev !== point.value) haptic(6);
-          return point.value;
-        });
-        setHoverDate(point.date);
-      }
-    },
-    [chartData, hideValue],
-  );
+  const handlePointer = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const idx = chartScrubIndex(event.clientX, rect.left, rect.width, chartData.length, hideValue ? 0 : 48);
+    const point = chartData[idx];
+    if (!point) return;
+    setHoverFraction(chartData.length > 1 ? idx / (chartData.length - 1) : 0);
+    setHoverValue(previous => { if (previous !== point.value) haptic(6); return point.value; });
+    setHoverDate(point.date);
+  }, [chartData, hideValue]);
 
   const handleLeave = useCallback(() => {
     setHoverValue(null);
@@ -242,7 +225,7 @@ export function RobinhoodPerformanceChart({
             <>
               {!hideValue && (
                 <span className="font-semibold">
-                  {changeInWindow >= 0 ? "+" : ""}KES{" "}
+                  {changeInWindow >= 0 ? "+" : "−"}KES{" "}
                   <RollingNumber value={Math.abs(changeInWindow).toLocaleString("en-US", {
                     minimumFractionDigits: 2, maximumFractionDigits: 2,
                   })} />
@@ -271,16 +254,17 @@ export function RobinhoodPerformanceChart({
       <div
         ref={plotRef}
         className="relative h-[210px] -mx-4 touch-none select-none"
-        onTouchStart={() => haptic(10)}
-        onTouchEnd={handleLeave}
+        onPointerDown={event => {event.currentTarget.setPointerCapture(event.pointerId); handlePointer(event);}}
+        onPointerMove={handlePointer}
+        onPointerUp={event => {if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);handleLeave();}}
+        onPointerCancel={handleLeave}
+        onPointerLeave={event => {if(!event.currentTarget.hasPointerCapture(event.pointerId))handleLeave();}}
       >
+        {hoverFraction !== null && <div aria-hidden="true" className="pointer-events-none absolute top-1 bottom-8 z-10 w-px bg-muted-foreground/50" style={{left: (hideValue ? 0 : 48) + (Math.max(0,(plotRef.current?.clientWidth ?? 0)-(hideValue ? 0 : 48))*hoverFraction)}}/>}
         {chartData.length >= 2 ? (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={chartData}
-              onMouseMove={handleMove}
-              onMouseLeave={handleLeave}
-              onTouchMove={handleMove}
               margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
             >
               <defs><linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={lineColor} stopOpacity={0.24}/><stop offset="100%" stopColor={lineColor} stopOpacity={0}/></linearGradient>
@@ -324,10 +308,7 @@ export function RobinhoodPerformanceChart({
               />
               <Tooltip
                 content={() => null}
-                cursor={{
-                  stroke: "hsl(var(--muted-foreground))",
-                  strokeDasharray: "3 5",
-                }}
+                cursor={false}
               />
               <Area
                 type="linear"
@@ -337,7 +318,7 @@ export function RobinhoodPerformanceChart({
                 strokeWidth={1.5}
                 dot={false}
                 isAnimationActive={false}
-                activeDot={{ r: 4 }}
+                activeDot={false}
               />
             </AreaChart>
           </ResponsiveContainer>

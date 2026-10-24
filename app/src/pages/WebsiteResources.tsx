@@ -33,13 +33,13 @@ const endpoints = [
 ] as const;
 export default function WebsiteResources({ section }: { section: Section }) {
   const [title, description] = titles[section];
-  return <div className="continua-landing website-resources">
+  return <div className="continua-site website-resources">
     <Helmet><title>{navigation.find(([key]) => key === section)?.[1]} — Continua</title><meta name="description" content={description} /></Helmet>
-    <a href="#resource-main" className="lp-skip">Skip to content</a>
-    <header className="lp-header"><Link to="/landing" className="lp-brand" aria-label="Continua website"><ContinuaMark size={40} appearance="light" /><span>Continua</span></Link><Link to="/auth" className="lp-signin">Open the app <ArrowUpRight size={16} /></Link></header>
-    <nav className="wr-nav lp-wrap" aria-label="Resources">{navigation.map(([key, label]) => <Link key={key} to={`/${key}`} aria-current={key === section ? "page" : undefined}>{label}</Link>)}</nav>
-    <main id="resource-main" className="lp-wrap wr-main">
-      <div className="wr-heading"><p className="lp-eyebrow">CONTINUA RESOURCES</p><h1>{title}</h1><p>{description}</p></div>
+    <a href="#resource-main" className="site-skip">Skip to content</a>
+    <header className="site-header"><Link to="/landing" className="site-brand" aria-label="Continua website"><ContinuaMark size={40} appearance="light" /><span>Continua</span></Link><Link to="/auth" className="site-resource-app-link">Open the app <ArrowUpRight size={16} /></Link></header>
+    <nav className="wr-nav site-wrap" aria-label="Resources">{navigation.map(([key, label]) => <Link key={key} to={`/${key}`} aria-current={key === section ? "page" : undefined}>{label}</Link>)}</nav>
+    <main id="resource-main" className="site-wrap wr-main">
+      <div className="wr-heading"><p className="site-kicker">CONTINUA RESOURCES</p><h1>{title}</h1><p>{description}</p></div>
       {section === "docs" && <><nav className="wr-topics" aria-label="Guide topics">{guides.map(([id, heading]) => <a href={`#${id}`} key={id}>{heading}</a>)}</nav><div className="wr-grid">{guides.map(([id, heading, text]) => <section id={id} key={id} className="wr-card"><BookOpen size={22} /><h2>{heading}</h2><p>{text}</p>{id === "plans" && <Link to="/landing#plans">Compare plans <ArrowRight size={16} /></Link>}</section>)}</div></>}
       {section === "developers" && <>
         <section className="wr-notice"><Code2 size={24} /><div><h2>Integration preview, not an open key signup</h2><p>The backend already supports authenticated reads. Before an external integration goes live, access, quotas and source redistribution rights must be agreed. Premium and Premium Plus are app plans—not API licences. There are no trade execution or payout endpoints in this preview.</p></div></section>
@@ -63,7 +63,7 @@ export default function WebsiteResources({ section }: { section: Section }) {
         ["Manage your account", "Open Settings for security, notifications, portfolio visibility, personalization, data export and account deletion. Use the subscription controls to review your plan and billing state."],
         ["New to financial research?", "Start with the company’s reported revenue, cash flow and debt before interpreting valuation or forecasts. Use the in-app Learn section and tool explanations; a scenario is an assumption to test, not a prediction to trust blindly."],
       ].map(([heading, text]) => <details key={heading}><summary>{heading}</summary><p>{text}</p></details>)}</div><section className="wr-notice"><div><h2>Still need a hand?</h2><p>Email a clear description, ticker and screenshot. Don’t include passwords, API keys or card details.</p><a href="mailto:cypskip@gmail.com?subject=Continua%20support">Email support <ArrowUpRight size={16} /></a></div></section></>}
-    </main><footer className="lp-footer lp-wrap"><div className="wr-footer">{navigation.map(([key, label]) => <Link key={key} to={`/${key}`}>{label}</Link>)}<Link to="/landing#plans">Plans</Link></div><div className="lp-footer-bottom"><span>© <RollingNumber value={new Date().getFullYear()} /> Continua</span><span>Research is not investment advice. Capital is at risk.</span></div></footer>
-    <nav aria-label="Legal policies" className="lp-wrap flex flex-wrap gap-4 pb-6 text-xs"><Link to="/terms">Terms</Link><Link to="/privacy">Privacy</Link><Link to="/billing-policy">Billing policy</Link><Link to="/copyright">Copyright reports</Link></nav>
+    </main><footer className="site-footer site-wrap"><div className="wr-footer">{navigation.map(([key, label]) => <Link key={key} to={`/${key}`}>{label}</Link>)}<Link to="/landing#plans">Plans</Link></div><div className="site-resource-footer-bottom"><span>© <RollingNumber value={new Date().getFullYear()} /> Continua</span><span>Research is not investment advice. Capital is at risk.</span></div></footer>
+    <nav aria-label="Legal policies" className="site-wrap flex flex-wrap gap-4 pb-6 text-xs"><Link to="/terms">Terms</Link><Link to="/privacy">Privacy</Link><Link to="/billing-policy">Billing policy</Link><Link to="/copyright">Copyright reports</Link></nav>
   </div>;
 }

@@ -5,6 +5,20 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "app/src/pages/Landing.tsx",
+      "category": "Public website redesign, chart pointer capture, continuous number motion and owner-scoped feed snapshots",
+      "language": "Existing frontend React TypeScript/JSX, CSS and WebP assets",
+      "runtime": "Existing browser bundle; no additional service",
+      "reason": "The user explicitly requested a public-site redesign and interaction/loading changes. Native pointer capture covers every chart pixel; existing Framer Motion springs retarget digit motion without event queues. Account-scoped five-minute session snapshots display only allowed post fields, clear on sign-out, and retain safety filtering before refresh. Generated artwork is served locally as a 91 KB WebP. Existing backend, auth verification and financial calculations remain unchanged.",
+      "references": [
+        "https://react.dev/learn/responding-to-events",
+        "https://developer.mozilla.org/en-US/docs/Web/API/Element/setPointerCapture",
+        "https://www.nvidia.com/en-us/",
+        "https://www.moomoo.com/us",
+        "https://robinhood.com/us/en/support/articles/using-charts/"
+      ]
+    },
+    {
       "file": "app/src/components/shared/RollingNumber.tsx",
       "category": "Consistent rolling financial readouts",
       "language": "Existing React frontend TypeScript/JSX and CSS",

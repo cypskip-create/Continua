@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const next=session?.user.id??null;
         if((owner.current&&owner.current!==next)||event==='SIGNED_OUT'){
           void queryClient.cancelQueries();queryClient.clear();
-          try{clearPrivateSessionCache(localStorage);}catch{/* Storage may be unavailable. */}
+          try{clearPrivateSessionCache(localStorage);clearPrivateSessionCache(sessionStorage);}catch{/* Storage may be unavailable. */}
           window.dispatchEvent(new Event('continua:session-cleared'));
         }
         owner.current=next;
@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {error}=await supabase.auth.signOut({scope:'local'});
     if(error)throw error;
     void queryClient.cancelQueries();queryClient.clear();
-    try{clearPrivateSessionCache(localStorage);}catch{/* Optional storage. */}
+    try{clearPrivateSessionCache(localStorage);clearPrivateSessionCache(sessionStorage);}catch{/* Optional storage. */}
   };
 
   const resetPassword = async (email: string,captchaToken?:string) => {

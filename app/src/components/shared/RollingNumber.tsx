@@ -1,6 +1,7 @@
 import { memo, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { rollingDigits, rollingDirection } from "@/lib/rollingNumber";
+import { RollingDigit } from './RollingDigit';
 
 /** Rolls only changed digits, aligned by place value; never animates through
  * invented intermediate financial values or announces animation frames. */
@@ -19,7 +20,7 @@ export const RollingNumber = memo(function RollingNumber({ value, className }: {
     const revision = transition.revision;
     // Retarget fast scrubs immediately; never queue old values. Retire digit
     // layers after the short animation, including when reduced motion is on.
-    const timer = window.setTimeout(() => setTransition(current => current.revision === revision ? {...current, settled: true} : current), 180);
+    const timer = window.setTimeout(() => setTransition(current => current.revision === revision ? {...current, settled: true} : current), 600);
     return () => window.clearTimeout(timer);
   }, [transition.revision, transition.settled]);
   const down = rollingDirection(transition.from, transition.to) === 'down';
@@ -28,10 +29,7 @@ export const RollingNumber = memo(function RollingNumber({ value, className }: {
     <span aria-hidden="true" className="rolling-number-digits">
       {transition.settled ? transition.to : rollingDigits(transition.from, transition.to).map(({character, old, changed, place}) => {
         return <span key={place} className={/\d/.test(character) ? "rolling-digit" : "rolling-symbol"}>
-          {changed ? <span key={transition.revision} className={cn("rolling-digit-motion", down && "rolling-digit-down")}>
-            <span className="rolling-digit-old">{old}</span>
-            <span className="rolling-digit-new">{character}</span>
-          </span> : character}
+          {/\d/.test(character) ? <RollingDigit old={old ?? character} digit={character} down={down}/> : character}
         </span>;
       })}
     </span>

@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export interface HubPostCardProps {
   post: Post;
+  priority?: boolean;
   currentUserId?: string;
   isFollowing?: boolean;
   onFollow?: (userId: string) => void;
@@ -68,6 +69,7 @@ export function renderRichText(text: string, navigate: (url: string) => void) {
 }
 
 export function HubPostCard({
+  priority = false,
   post, currentUserId, isFollowing, onFollow, onOpen, onComment,
   onReact, onBookmark, onShare, onDelete, onEdit, onReport, onHide,
 }: HubPostCardProps) {
@@ -142,7 +144,7 @@ export function HubPostCard({
       </div>
 
       {/* Media */}
-      <PostAttachments post={post} />
+      <PostAttachments post={post} priority={priority} />
 
       {/* Quoted post */}
       {post.quoted_post && (

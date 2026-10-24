@@ -511,10 +511,11 @@ export default function TradersHub() {
         </div>
       ) : (
         <div>
-          {feed.map(post => (
+          {feed.map((post, index) => (
             <HubPostCard
               key={post.id}
               post={post}
+              priority={index < 2}
               currentUserId={user?.id}
               isFollowing={isFollowing(post.user_id)}
               onFollow={handleFollow}
