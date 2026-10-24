@@ -11,3 +11,35 @@ test('recovery tokens leave browser history and remain in memory only until rese
 test('transport errors remain actionable and do not claim a session exists',async t=>{const f=fixture(t,()=>new Response('<html>challenge</html>',{headers:{'Content-Type':'text/html'}}));const result=await f.auth.signInWithPassword({email:'fixture@example.invalid',password:'fixture-password'});assert.match(result.error.message,/unexpected response/);assert.equal(result.data.session,null);});
 
 test('fragment recovery credentials never enter network URLs or remain in browser history',async t=>{let cleaned='';const token='fixture-fragment-recovery-token';const f=fixture(t,path=>Response.json(path==='session'?{session:null}:{mfaRequired:false}),{location:()=>({href:origin+'/auth#recovery_token='+token}),replaceUrl:(url:string)=>{cleaned=url;}});await f.auth.restoreSession();assert.equal(cleaned,'/auth');assert.equal(f.auth.getSecurityState().recoveryMode,true);assert.equal(f.calls.find(c=>c.url.endsWith('/recovery-begin')).body.token,token);assert.equal(f.calls.some(c=>c.url.includes(token)),false);});
+
+test('repeated sign-out clicks share one request and wait for confirmed revocation',async t=>{
+ let finish:any;const messages:any[]=[];
+ const f=fixture(t,path=>path==='signout'?new Promise(resolve=>{finish=resolve;}):Response.json({session:session()}),{channel:{postMessage:(value:any)=>messages.push(value),addEventListener:()=>{},removeEventListener:()=>{}}});
+ await f.auth.restoreSession();
+ const first=f.auth.signOut(),second=f.auth.signOut();
+ assert.equal(first,second);
+ const restoring=f.auth.restoreSession();
+ assert.equal(f.calls.filter(c=>c.url.endsWith('/signout')).length,1);
+ assert.equal(f.calls.filter(c=>c.url.endsWith('/session')).length,1);
+ assert.ok((await f.auth.getSession()).data.session);
+ finish(Response.json({signedOut:true}));
+ assert.equal((await first).error,null);assert.equal((await second).error,null);
+ assert.equal((await restoring).data.session,null);
+ assert.equal((await f.auth.getSession()).data.session,null);
+ assert.deepEqual(messages,[{type:'signed-out'}]);
+});
+
+test('failed sign-out keeps the session and permits a successful retry',async t=>{
+ let attempts=0;const f=fixture(t,path=>path==='signout'?++attempts===1?Response.json({error:'Too many attempts'},{status:429}):Response.json({signedOut:true}):Response.json({session:session()}));
+ await f.auth.restoreSession();
+ assert.equal((await f.auth.signOut()).error.status,429);
+ assert.ok((await f.auth.getSession()).data.session);
+ assert.equal((await f.auth.signOut()).error,null);
+ assert.equal((await f.auth.getSession()).data.session,null);
+});
+
+test('an unconfirmed sign-out never clears the local session',async t=>{
+ const f=fixture(t,path=>Response.json(path==='signout'?{}:{session:session()}));await f.auth.restoreSession();
+ assert.match((await f.auth.signOut()).error.message,/not confirmed/);
+ assert.ok((await f.auth.getSession()).data.session);
+});

@@ -10,7 +10,7 @@ import {reauthenticateSession} from './reauthenticate.js';
 // host-only HttpOnly cookie; only a short-lived JWT is returned to JavaScript.
 export function createIdentityRouter({auth,database,verifyAccess,publicOrigin}){
  const origin=new URL(publicOrigin).origin,router=express.Router();
- router.use(rateLimit({windowMs:60000,limit:120,standardHeaders:false,legacyHeaders:false,store:new BoundedMemoryRateStore(),keyGenerator:(req,res)=>ipKeyGenerator(rateLimitClientIP(req,res))}));
+ router.use(rateLimit({windowMs:60000,limit:120,standardHeaders:false,legacyHeaders:false,store:new BoundedMemoryRateStore(),keyGenerator:(req,res)=>{const ip=ipKeyGenerator(rateLimitClientIP(req,res));return req.method==='POST'&&req.path==='/signout'?`signout:${ip}`:ip;}}));
  const methods=new Set(['signin','google','signup','signout','recover','verify-password','mfa-enable','mfa-verify','mfa-disable','email','recovery-begin','reset-password']);
  router.use(express.json({limit:'64kb'}));
  router.use((req,res,next)=>{res.set('Cache-Control','private, no-store');res.set('Pragma','no-cache');res.set('Referrer-Policy','no-referrer');next();});

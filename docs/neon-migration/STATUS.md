@@ -1,5 +1,12 @@
 # Production migration status — 23 October 2026
 
+Authentication clarification (24 October): production uses **self-hosted Better
+Auth on Render**, stored in Neon's `app_identity.continua_auth_*` tables, rather
+than managed Neon Auth's `neon_auth` tables. A fresh read-only source/target check
+confirmed all eight original UUID/email/bcrypt tuples and subscription fields
+match. See [the authentication audit](AUTH_AUDIT_20261024.md) for current evidence,
+deployment verification limits and safe next steps.
+
 Production migration is complete on the existing Neon project and production branch. Render uses Neon and Better Auth; Cloudflare serves the owned identity/data gateway and private R2 media. The user confirmed production Google sign-in and receipt of the recovery email. Prices and news are populated in the deployed app. Actual authorization checks returned 12 owned portfolio rows, no other-owner rows, rejected an invalid session, and delivered an authenticated owner-only notification snapshot.
 
 All production refresh switches are restored: Render backend workers and scraper scheduler are enabled, GitHub news/document opt-ins are true, and Cloudflare idle housekeeping runs hourly with request-time expiry retained. Existing collection schedules remain unchanged. Saved Render and Cloudflare runtime/build settings and GitHub Actions no longer contain operational Supabase connections. Local development now targets isolated Neon staging with workers, email and payments disabled; original local connection settings are protected privately for explicit recovery. The source project and data remain intact and frozen; its old cron jobs stay inactive to avoid duplicate writers.

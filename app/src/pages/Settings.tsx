@@ -59,6 +59,20 @@ export default function Settings() {
   const [portfolioOn, setPortfolioOn] = useState(!!profile?.portfolio_public);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await signOut();
+      navigate('/auth', { replace: true });
+    } catch (error) {
+      toast({ title: "Couldn't sign out", description: error instanceof Error ? error.message : 'Please retry.', variant: 'destructive' });
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   const [prefs, setPrefs] = useState<any>({ notif_comments: true, notif_follows: true });
   const [blockedKeyword, setBlockedKeyword] = useState("");
@@ -282,9 +296,9 @@ export default function Settings() {
 
             <div>
               <div className="flat-section rounded-2xl border border-border/60 bg-card overflow-hidden">
-                <button onClick={async () => { await signOut?.(); navigate('/auth'); }} className="w-full flex items-center gap-3 px-3.5 py-3 hover:bg-muted/40 active:bg-muted/60 transition text-left">
-                  <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0"><KeyRound className="h-4 w-4 text-muted-foreground" /></div>
-                  <div className="flex-1 text-sm font-semibold">Log out</div>
+                <button onClick={handleSignOut} disabled={signingOut} aria-busy={signingOut} className="w-full flex items-center gap-3 px-3.5 py-3 hover:bg-muted/40 active:bg-muted/60 transition text-left disabled:opacity-60">
+                  <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">{signingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4 text-muted-foreground" />}</div>
+                  <div className="flex-1 text-sm font-semibold" role="status">{signingOut ? 'Signing out…' : 'Log out'}</div>
                 </button>
               </div>
             </div>

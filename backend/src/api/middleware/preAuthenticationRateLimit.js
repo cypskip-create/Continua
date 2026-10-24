@@ -8,7 +8,10 @@ export function preAuthenticationRateLimit(limit = 120) {
     return protectedRateLimit({
         windowMs: 60000,
         limit,
-        keyGenerator:(req,res)=>ipKeyGenerator(rateLimitClientIP(req,res)),
+        keyGenerator:(req,res)=>{
+            const ip=ipKeyGenerator(rateLimitClientIP(req,res));
+            return req.method==='POST'&&req.path==='/identity/signout'?`signout:${ip}`:ip;
+        },
         standardHeaders: "draft-7",
         legacyHeaders: false,
         skip: (req) => /^\/health(?:\/|$)/.test(req.path) || req.path === "/billing/paystack/webhook",

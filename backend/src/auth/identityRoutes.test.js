@@ -1,6 +1,7 @@
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import express from 'express';
 import {createIdentityRouter} from './identityRoutes.js';
+import {preAuthenticationRateLimit} from '../api/middleware/preAuthenticationRateLimit.js';
 const servers=[];afterEach(async()=>{await Promise.all(servers.splice(0).map(s=>new Promise(resolve=>s.close(resolve))));});
 async function fixture(handler=async()=>Response.json({})){
  const auth={handler:vi.fn(handler),api:{getSession:vi.fn(async()=>null)}};const database={query:vi.fn()};const verifyAccess=vi.fn(async()=>{throw Error('revoked');});
@@ -8,6 +9,22 @@ async function fixture(handler=async()=>Response.json({})){
 }
 const headers={'Content-Type':'application/json',Origin:'https://continua.example','X-Continua-Session':'1'};
 describe('owned identity browser boundary',()=>{
+ it('normal API traffic cannot exhaust sign-out admission, which remains rate limited',async()=>{
+  const app=express();app.use('/api/v1',preAuthenticationRateLimit(2));app.use('/api/v1',(_req,res)=>res.json({ok:true}));
+  const server=app.listen(0,'127.0.0.1');servers.push(server);await new Promise(resolve=>server.once('listening',resolve));const url='http://127.0.0.1:'+server.address().port+'/api/v1';
+  for(let i=0;i<2;i++)expect((await fetch(url+'/quotes')).status).toBe(200);
+  expect((await fetch(url+'/identity/session')).status).toBe(429);
+  for(let i=0;i<2;i++)expect((await fetch(url+'/identity/signout',{method:'POST'})).status).toBe(200);
+  expect((await fetch(url+'/identity/signout',{method:'POST'})).status).toBe(429);
+ });
+ it('exhausting identity reads does not prevent provider session revocation',async()=>{
+  const f=await fixture(async()=>Response.json({success:true}));
+  for(let i=0;i<120;i++)expect((await fetch(f.url+'/verify',{headers})).status).toBe(401);
+  expect((await fetch(f.url+'/verify',{headers})).status).toBe(429);
+  const response=await fetch(f.url+'/signout',{method:'POST',headers,body:'{}'});
+  expect(response.status).toBe(200);expect(await response.json()).toEqual({signedOut:true});
+  expect(f.auth.handler.mock.calls.at(-1)[0].url).toBe('https://continua.example/api/auth/sign-out');
+ });
  it('starts independent envelope reads together and waits for token verification before returning',async()=>{
   let releaseToken,readsStarted;const started=new Promise(resolve=>{readsStarted=resolve;});const tokenReady=new Promise(resolve=>{releaseToken=resolve;});
   const token='header.'+Buffer.from(JSON.stringify({exp:Math.floor(Date.now()/1000)+300})).toString('base64url')+'.signature';

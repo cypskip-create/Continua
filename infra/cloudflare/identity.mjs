@@ -23,7 +23,8 @@ export async function ownedIdentity(request,env,fetcher=fetch){
  for(const name of url.searchParams.keys())if(!allowedQuery.has(name)||url.searchParams.getAll(name).length!==1)return reply({error:'Invalid identity query'},400);
  if(url.searchParams.has('iss')&&url.searchParams.get('iss')!=='https://accounts.google.com')return reply({error:'Invalid identity issuer'},400);
  const ip=request.headers.get('CF-Connecting-IP');if(!ip||ip.length>64||!env.AUTH_RATE_LIMIT)return reply({error:'Identity unavailable'},503);
- try{if(!(await env.AUTH_RATE_LIMIT.limit({key:ip})).success){const response=reply({error:'Too many attempts'},429);response.headers.set('Retry-After','60');return response;}}catch{return reply({error:'Identity unavailable'},503);}
+ // Session reads and failed sign-ins must not exhaust the ability to sign out.
+ try{if(!(await env.AUTH_RATE_LIMIT.limit({key:path==='signout'?ip+':signout':ip})).success){const response=reply({error:'Too many attempts'},429);response.headers.set('Retry-After','60');return response;}}catch{return reply({error:'Identity unavailable'},503);}
  let target;try{target=ownedIdentityTarget(url.origin,env,callback?'provider/'+path:path,url.search);}catch{return reply({error:'Identity unavailable'},503);}
  const headers=new Headers({'Content-Type':'application/json','Origin':url.origin,'X-Continua-Session':'1','X-API-Key':env.BACKEND_API_KEY,'X-Continua-Edge-Secret':env.EDGE_ORIGIN_SECRET,'X-Continua-Client-IP':ip});
  for(const name of ['X-User-Token','User-Agent']){const value=request.headers.get(name);if(value)headers.set(name,value);}

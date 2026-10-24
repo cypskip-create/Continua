@@ -9,6 +9,7 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  ReferenceDot,
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown } from "lucide-react";
@@ -287,7 +288,8 @@ export function RobinhoodPerformanceChart({
                 vertical={false}
               />
               <XAxis
-                dataKey="date"
+                dataKey="timestamp"
+                tickFormatter={timestamp => formatDateLabel(new Date(timestamp), timeframes.find(t => t.label === activeTimeframe)?.days ?? 30)}
                 minTickGap={55}
                 axisLine={false}
                 tickLine={false}
@@ -320,6 +322,16 @@ export function RobinhoodPerformanceChart({
                 isAnimationActive={false}
                 activeDot={false}
               />
+              {hoverFraction !== null && hoverValue !== null && <ReferenceDot
+                x={chartData[Math.round(hoverFraction * (chartData.length - 1))]?.timestamp}
+                y={hoverValue}
+                r={5}
+                fill={lineColor}
+                stroke="hsl(var(--background))"
+                strokeWidth={2}
+                ifOverflow="visible"
+                style={{ pointerEvents: "none" }}
+              />}
             </AreaChart>
           </ResponsiveContainer>
         ) : (
@@ -344,6 +356,7 @@ export function RobinhoodPerformanceChart({
             size="sm"
             onClick={() => {
               setActiveTimeframe(tf.label);
+              handleLeave();
               haptic(5);
             }}
             className={`text-[0.6875rem] px-2.5 py-1 h-auto font-semibold rounded-full border transition-all ${

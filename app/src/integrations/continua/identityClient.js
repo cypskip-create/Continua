@@ -2,7 +2,7 @@
 // the provider session remains in a host-only, HttpOnly cookie.
 export function createIdentityClient({origin,fetcher=fetch,now=Date.now,location=()=>globalThis.location,replaceUrl=url=>globalThis.history?.replaceState(null,'',url),channel}={}){
  const site=new URL(origin);if(site.origin!==origin||site.protocol!=='https:'&&!['localhost','127.0.0.1'].includes(site.hostname))throw Error('An owned HTTPS origin is required');
- let session=null,pendingMfa=false,recoveryToken=null,restoring=null,timer,failures=0,destroyed=false,revision=0,restored=false,checkedAt=0,recoveryStarted=false;const listeners=new Set(),securityListeners=new Set();
+ let session=null,pendingMfa=false,recoveryToken=null,restoring=null,signingOut=null,timer,failures=0,destroyed=false,revision=0,restored=false,checkedAt=0,recoveryStarted=false;const listeners=new Set(),securityListeners=new Set();
  const security=()=>({mfaPending:pendingMfa,recoveryMode:!!recoveryToken});
  function publish(event){for(const listener of listeners){try{Promise.resolve(listener(event,session)).catch(()=>{});}catch{}}for(const listener of securityListeners){try{listener(security());}catch{}}}
  function schedule(delay){clearTimeout(timer);if(destroyed||!session)return;timer=setTimeout(()=>void refresh(),delay??Math.max(5000,session.expires_at*1000-now()-30000));timer?.unref?.();}
@@ -19,11 +19,12 @@ export function createIdentityClient({origin,fetcher=fetch,now=Date.now,location
  const result=async work=>{try{return {data:await work(),error:null};}catch(error){return {data:{session:null,user:null},error:error instanceof Error?error:new Error('Identity request could not complete')};}};
  function consumeRecoveryUrl(){const current=location();if(!current?.href)return;const url=new URL(current.href),fragment=new URLSearchParams(url.hash.slice(1));if(url.origin!==origin||!url.searchParams.has('token')&&!fragment.has('recovery_token'))return;const token=fragment.get('recovery_token')??url.searchParams.get('token');url.searchParams.delete('token');fragment.delete('recovery_token');url.hash=fragment.toString();replaceUrl(url.pathname+url.search+url.hash);if(/^[A-Za-z0-9_-]{8,256}$/.test(token??'')){recoveryToken=token;recoveryStarted=false;revision++;}}
  async function refresh(){
+  if(signingOut)return signingOut.then(({error})=>({data:{session,user:session?.user??null},error}));
   if(restoring)return restoring;
   const startedAtRevision=revision;
   restoring=result(async()=>{try{const data=await call('session');if(startedAtRevision!==revision)return {session,user:session?.user??null,mfaRequired:pendingMfa};pendingMfa=data.mfaRequired===true;assign(data.session??null);if(recoveryToken){if(!recoveryStarted){const pending=await call('recovery-begin',{token:recoveryToken});if(startedAtRevision!==revision)return {session,user:session?.user??null,mfaRequired:pendingMfa};recoveryStarted=true;pendingMfa=pending.mfaRequired===true;}publish('PASSWORD_RECOVERY');}return {session,user:session?.user??null,mfaRequired:pendingMfa};}catch(error){if(startedAtRevision!==revision)throw error;if(error.status===401){pendingMfa=false;assign(null);}else{failures++;schedule(Math.min(60000,10000*failures));}throw error;}}).finally(()=>{restoring=null;});return restoring;
  }
- async function sessionOperation(path,body){const operationRevision=++revision;const data=await call(path,body);if(operationRevision!==revision)throw Error('Identity request was superseded');pendingMfa=data.mfaRequired===true;if(Object.hasOwn(data,'session'))assign(data.session);else publish('USER_UPDATED');return {...data,user:session?.user??null};}
+ async function sessionOperation(path,body){if(signingOut)throw Error('Sign-out is in progress');const operationRevision=++revision;const data=await call(path,body);if(operationRevision!==revision)throw Error('Identity request was superseded');pendingMfa=data.mfaRequired===true;if(Object.hasOwn(data,'session'))assign(data.session);else publish('USER_UPDATED');return {...data,user:session?.user??null};}
  const auth={
   getSession:async()=>session&&session.expires_at*1000-now()>30000||!session&&restored&&now()-checkedAt<30000?{data:{session},error:null}:refresh(),
   refreshSession:()=>refresh(),
@@ -35,7 +36,11 @@ export function createIdentityClient({origin,fetcher=fetch,now=Date.now,location
   signUp:({email,password,options={}})=>result(()=>sessionOperation('signup',{email,password,name:options.data?.full_name,acknowledgement:options.data,captchaToken:options.captchaToken})),
   resetPasswordForEmail:(email,options={})=>result(()=>call('recover',{email,captchaToken:options.captchaToken})),
   signInWithGoogle:options=>result(()=>call('google',options)),
-  signOut:()=>result(async()=>{const operationRevision=++revision;await call('signout',{});if(operationRevision!==revision)return {};pendingMfa=false;recoveryToken=null;assign(null);channel?.postMessage({type:'signed-out'});return {}; }),
+  signOut:()=>{
+   if(signingOut)return signingOut;
+   signingOut=result(async()=>{++revision;clearTimeout(timer);const data=await call('signout',{});if(data.signedOut!==true)throw Error('Sign-out was not confirmed. Please retry.');pendingMfa=false;recoveryToken=null;assign(null);channel?.postMessage({type:'signed-out'});return {};}).finally(()=>{signingOut=null;if(session)schedule();});
+   return signingOut;
+  },
   updateUser:values=>result(async()=>{if(values.password){const operationRevision=++revision;if(!recoveryToken)throw Error('Open a fresh password recovery link first');const data=await call('reset-password',{token:recoveryToken,password:values.password});if(operationRevision!==revision)throw Error('Identity request was superseded');recoveryToken=null;pendingMfa=false;assign(null);return data;}if(values.email)return call('email',{email:values.email});throw Error('Identity change unavailable');}),
   reauthenticate:()=>result(async()=>{throw Error('Request a fresh password recovery link instead of an email confirmation code');}),
   setSession:()=>result(async()=>{throw Error('Only the owned server can establish an identity session');}),
