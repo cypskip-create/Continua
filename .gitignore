@@ -36,3 +36,4 @@ scraper/data/*
 __pycache__/
 *.pyc
 .neon
+.wrangler/
