@@ -1,7 +1,7 @@
 # Native collector dependencies. No Node/TypeScript runtime.
 psycopg[binary]==3.3.6
 psycopg-pool==3.3.3
-boto3==1.43.97
+boto3==1.43.114
 beautifulsoup4==4.15.0
 html5lib==1.1
 feedparser==6.0.14
