@@ -1,6 +1,7 @@
 import { FUNDAMENTAL_BAR_SIZE } from '@/lib/financialPresentation';
 import { useQuery } from "@tanstack/react-query";
-import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine } from "recharts";
+import { PieChart, Pie, Cell,  LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis,  ReferenceLine } from 'recharts';
+import { InlineChartContainer as ResponsiveContainer, InlineChartTooltip as Tooltip } from '@/components/charts/InlineChart';
 import { ReportSection, SubWidget } from "./ReportSection";
 import { CriteriaChecklist } from "./CriteriaChecklist";
 import { useValuation } from "@/hooks/useValuation";
@@ -28,7 +29,7 @@ function FairValueBar({ price, fair, currency }: { price: number; fair: number |
   return (
     <div>
       <p className={`text-2xl font-bold ${!hasFair ? "text-muted-foreground" : pct >= 0 ? "text-bull" : "text-bear"}`}>
-        {hasFair ? <>{Math.abs(pct).toFixed(1)}% <span className="text-sm font-semibold">{pct >= 0 ? "Undervalued" : "Overvalued"}</span></> : "N/A"}
+        {hasFair ? <>{Math.abs(pct).toFixed(2)}% <span className="text-sm font-semibold">{pct >= 0 ? "Undervalued" : "Overvalued"}</span></> : "N/A"}
       </p>
       <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
         <div><dt className="text-muted-foreground">Current price</dt><dd className="font-semibold">{currency} {price.toFixed(2)}</dd></div>
@@ -73,7 +74,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
     <ReportSection number={1} title="Valuation">
       <CriteriaChecklist
         checks={checks}
-        narrative={bestModel ? `${symbol} trades ${Math.abs(((bestModel.fairValue! - price) / price) * 100).toFixed(1)}% ${bestModel.fairValue! > price ? "below" : "above"} its model-based fair value. Continua has no analyst coverage on file, so growth-based fair-ratio checks aren't evaluated.` : `Not enough data on file to compute a fair value for ${symbol} yet.`}
+        narrative={bestModel ? `${symbol} trades ${Math.abs(((bestModel.fairValue! - price) / price) * 100).toFixed(2)}% ${bestModel.fairValue! > price ? "below" : "above"} its model-based fair value. Continua has no analyst coverage on file, so growth-based fair-ratio checks aren't evaluated.` : `Not enough data on file to compute a fair value for ${symbol} yet.`}
       />
 
       <SubWidget number="1.1" title="Share Price vs Fair Value" description={`What is the fair price of ${symbol} based on Continua's real valuation models?`}>
@@ -94,7 +95,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
             </ResponsiveContainer>
           </div>
           <div>
-            <p className="text-3xl font-bold tabular">{ratios?.pe != null ? `${ratios.pe.toFixed(1)}x` : "—"}</p>
+            <p className="text-3xl font-bold tabular">{ratios?.pe != null ? `${ratios.pe.toFixed(2)}x` : "—"}</p>
             <p className="text-[0.6875rem] text-muted-foreground">P/E Ratio — used since {symbol} is profitable</p>
             <p className="text-[0.6875rem] text-muted-foreground mt-1">P/B Ratio: {ratios?.pb != null ? `${ratios.pb.toFixed(2)}x` : "—"}</p>
           </div>
@@ -102,13 +103,13 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
       </SubWidget>
 
       <SubWidget number="1.3" title="Price to Earnings Ratio vs Peers" description={`How does ${symbol}'s P/E compare to its real NSE sector peers?`}>
-        {peerAvg != null && <p className="text-[0.65625rem] text-muted-foreground mb-1">Peer average: {peerAvg.toFixed(1)}x</p>}
+        {peerAvg != null && <p className="text-[0.65625rem] text-muted-foreground mb-1">Peer average: {peerAvg.toFixed(2)}x</p>}
         <div style={{ height: CHART_H_MEDIUM }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={peerChartData} layout="vertical" margin={{ left: 8, right: 16 }}>
               <XAxis type="number" tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="symbol" tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} width={48} />
-              <Tooltip formatter={(v: number) => [`${v.toFixed(1)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: "0.6875rem", color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
+              <Tooltip formatter={(v: number) => [`${v.toFixed(2)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: "0.6875rem", color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
               {peerAvg != null && <ReferenceLine x={peerAvg} stroke="hsl(38 92% 50%)" strokeDasharray="4 3" />}
               <Bar barSize={FUNDAMENTAL_BAR_SIZE} dataKey="pe" radius={[0, 4, 4, 0]}>
                 {peerChartData.map((p) => <Cell key={p.symbol} fill={p.isSelf ? "hsl(217 91% 60%)" : "hsl(var(--bull))"} />)}
@@ -125,8 +126,8 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
             <LineChart data={ratios?.pe != null ? [{ x: "Current", pe: ratios.pe }] : []}>
               <XAxis dataKey="x" tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} width={28} />
-              <Tooltip formatter={(v: number) => [`${v.toFixed(1)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: "0.6875rem", color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
-              <Line type="monotone" dataKey="pe" stroke={fx.revenue} strokeWidth={2} dot={{ r: 4 }} />
+              <Tooltip formatter={(v: number) => [`${v.toFixed(2)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: "0.6875rem", color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
+              <Line type="monotone" dataKey="pe" stroke={fx.revenue} strokeWidth={1.5} dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -138,11 +139,11 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
           <>
             <div className="flex items-center justify-center gap-8 mb-2">
               <div className="text-center">
-                <p className="text-2xl font-bold tabular" style={{ color: "hsl(217 91% 60%)" }}>{ratios.pe.toFixed(1)}x</p>
+                <p className="text-2xl font-bold tabular" style={{ color: "hsl(217 91% 60%)" }}>{ratios.pe.toFixed(2)}x</p>
                 <p className="text-[0.65625rem] text-muted-foreground mt-0.5">{symbol}</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold tabular text-muted-foreground">{peerAvg.toFixed(1)}x</p>
+                <p className="text-2xl font-bold tabular text-muted-foreground">{peerAvg.toFixed(2)}x</p>
                 <p className="text-[0.65625rem] text-muted-foreground mt-0.5">Industry Average</p>
               </div>
             </div>
@@ -151,7 +152,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
                 <BarChart data={[{ name: symbol, pe: ratios.pe }, { name: "Industry Avg", pe: peerAvg }]} layout="vertical" margin={{ left: 4, right: 16 }}>
                   <XAxis type="number" hide />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: "0.6875rem" }} axisLine={false} tickLine={false} width={78} />
-                  <Tooltip formatter={(v: number) => [`${v.toFixed(1)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: "0.6875rem", color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
+                  <Tooltip formatter={(v: number) => [`${v.toFixed(2)}x`, "P/E"]} contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: "0.6875rem", color: "hsl(var(--popover-foreground))" }} labelStyle={{ color: "hsl(var(--popover-foreground))" }} itemStyle={{ color: "hsl(var(--popover-foreground))" }} />
                   <Bar barSize={FUNDAMENTAL_BAR_SIZE} dataKey="pe" radius={[0, 4, 4, 0]}>
                     <Cell fill="hsl(217 91% 60%)" />
                     <Cell fill="hsl(var(--muted-foreground) / 0.5)" />
@@ -160,7 +161,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
               </ResponsiveContainer>
             </div>
             <p className="text-[0.6875rem] text-muted-foreground mt-1 text-center">
-              {symbol} trades at {Math.abs(((ratios.pe - peerAvg) / peerAvg) * 100).toFixed(0)}% {ratios.pe <= peerAvg ? "below" : "above"} its sector's average P/E of {peerAvg.toFixed(1)}x.
+              {symbol} trades at {Math.abs(((ratios.pe - peerAvg) / peerAvg) * 100).toFixed(0)}% {ratios.pe <= peerAvg ? "below" : "above"} its sector's average P/E of {peerAvg.toFixed(2)}x.
             </p>
           </>
         ) : (

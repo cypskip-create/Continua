@@ -30,8 +30,8 @@ const SUBMETRICS: Record<Group, string[]> = {
   Dividends: ["Yield", "Growth", "Payout"],
 };
 
-const pctFmt = (v: number) => `${v >= 0 ? "" : "−"}${Math.abs(v).toFixed(1)}%`;
-const xFmt = (v: number) => `${v.toFixed(1)}x`;
+const pctFmt = (v: number) => `${v >= 0 ? "" : "−"}${Math.abs(v).toFixed(2)}%`;
+const xFmt = (v: number) => `${v.toFixed(2)}x`;
 
 export function KeyMetricsBenchmarks({ holdings, research, valuations, growth, dividendData, benchmark, isLoading }: KeyMetricsBenchmarksProps) {
   const [group, setGroup] = useState<Group>("Valuation");

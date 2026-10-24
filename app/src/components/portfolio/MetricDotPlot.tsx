@@ -125,7 +125,7 @@ export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel
       {selected && (
         <button type="button" onClick={() => navigate(`/stock/${selected.symbol}`)} className="flex w-full items-center gap-3 border-t border-border/60 py-3 text-left">
           <div className={`grid h-10 w-10 place-items-center rounded-full text-xs font-bold text-white ${selected.good === false ? "bg-bear" : selected.good === true ? "bg-bull" : "bg-muted-foreground"}`}>{selected.symbol.slice(0, 3)}</div>
-          <div className="min-w-0 flex-1" aria-live="polite"><p className="truncate text-xs font-bold">{selected.name || selected.symbol}</p><p className="text-[0.6875rem] text-muted-foreground">{fmt(selected.value)} · {(selected.weight ?? 0).toFixed(1)}% portfolio weight</p></div>
+          <div className="min-w-0 flex-1" aria-live="polite"><p className="truncate text-xs font-bold">{selected.name || selected.symbol}</p><p className="text-[0.6875rem] text-muted-foreground">{fmt(selected.value)} · {(selected.weight ?? 0).toFixed(2)}% portfolio weight</p></div>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </button>
       )}

@@ -53,7 +53,7 @@ export function ReturnsContributors({
               {showValues ? `${positive ? "" : "−"}${currencyLabel}${Math.abs(h.amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••"}
             </p>
             <p className={`text-[0.65625rem] tabular ${positive ? "text-bull" : "text-bear"}`}>
-              {positive ? "+" : ""}{h.gainPct.toFixed(1)}%
+              {positive ? "+" : ""}{h.gainPct.toFixed(2)}%
             </p>
           </div>
         </div>

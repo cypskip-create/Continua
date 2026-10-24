@@ -1,5 +1,6 @@
 import { FUNDAMENTAL_BAR_SIZE } from '@/lib/financialPresentation';
-import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import {  AreaChart, Area, BarChart, Bar, XAxis, YAxis,  Legend } from 'recharts';
+import { InlineChartContainer as ResponsiveContainer, InlineChartTooltip as Tooltip } from '@/components/charts/InlineChart';
 import { ReportSection, SubWidget } from "./ReportSection";
 import { CriteriaChecklist } from "./CriteriaChecklist";
 import { KeyInfoUpdates } from "./KeyInfoUpdates";
@@ -44,7 +45,7 @@ export function FinancialHealthSection({ symbol, currency }: Props) {
         rows={[
           { label: "Debt to equity ratio", value: ratios?.debtToEquity != null ? `${ratios.debtToEquity.toFixed(0)}%` : "n/a", highlight: true },
           { label: "Debt", value: latest ? `${currency}${fmtB(latest.totalDebt)}` : "n/a", highlight: true },
-          { label: "Interest coverage ratio", value: ratios?.interestCoverage != null ? `${ratios.interestCoverage.toFixed(1)}x` : "n/a" },
+          { label: "Interest coverage ratio", value: ratios?.interestCoverage != null ? `${ratios.interestCoverage.toFixed(2)}x` : "n/a" },
           { label: "Cash", value: latest ? `${currency}${fmtB(latest.cash)}` : "n/a" },
           { label: "Equity", value: latest ? `${currency}${fmtB(latest.totalEquity)}` : "n/a" },
           { label: "Total liabilities", value: latest ? `${currency}${fmtB(latest.totalLiabilities)}` : "n/a" },

@@ -46,5 +46,5 @@ class FreshFinancialTests(unittest.IsolatedAsyncioTestCase):
         sql,args=db.query.call_args.args
         self.assertIn("document->'context'->>'ticker'=%s",sql)
         self.assertIn("document->'context'->>'tab'='Financials'",sql)
-        self.assertEqual(args,('kenyanstocks','COOP',5,'Financials',1))
+        self.assertEqual(args,('kenyanstocks','COOP','Financials',5,'Financials',1))
         with self.assertRaises(ValueError):await jobs.claim('kenyanstocks',1,issuer="COOP' OR true")

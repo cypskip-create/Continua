@@ -112,7 +112,7 @@ export function PortfolioInsights({ holdings, prices }: Props) {
                   <span className="text-[0.625rem] font-medium text-muted-foreground">Biggest Gainer</span>
                 </div>
                 <p className="text-sm font-bold mt-0.5 text-bull">
-                  {biggestGain.symbol} +{biggestGain.gainPct.toFixed(1)}%
+                  {biggestGain.symbol} +{biggestGain.gainPct.toFixed(2)}%
                 </p>
               </div>
             ) : <div />}
@@ -123,7 +123,7 @@ export function PortfolioInsights({ holdings, prices }: Props) {
                   <span className="text-[0.625rem] font-medium text-muted-foreground">Biggest Loser</span>
                 </div>
                 <p className="text-sm font-bold mt-0.5 text-bear">
-                  {biggestLoss.symbol} {biggestLoss.gainPct.toFixed(1)}%
+                  {biggestLoss.symbol} {biggestLoss.gainPct.toFixed(2)}%
                 </p>
               </div>
             ) : <div />}

@@ -1,7 +1,7 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useId, useState, useMemo, useCallback, useRef } from "react";
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   CartesianGrid,
   XAxis,
   YAxis,
@@ -177,7 +177,9 @@ export function RobinhoodPerformanceChart({
 
   const lineColor = isPositive ? "hsl(var(--bull))" : "hsl(var(--bear))";
   const greyLineColor = "hsl(var(--muted-foreground))";
-  const crosshairGradId = `perfChGrad-${activeTimeframe}-${mode}`;
+  const chartId = useId().replace(/:/g, "");
+  const crosshairGradId = `perfChGrad-${chartId}-${activeTimeframe}-${mode}`;
+  const fillId = `perfFill-${chartId}`;
   const crosshairFraction = hoverFraction ?? 1;
 
   // Recharts owns the cursor/dot; only the inspected value and line tint are local.
@@ -215,7 +217,7 @@ export function RobinhoodPerformanceChart({
   }, []);
 
   const formatHero = (v: number) => {
-    if (mode === "performance") return `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`;
+    if (mode === "performance") return `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
     if (hideValue) return "••••••";
     return `KES ${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
@@ -241,20 +243,20 @@ export function RobinhoodPerformanceChart({
                 <span className="font-semibold">
                   {changeInWindow >= 0 ? "+" : ""}KES{" "}
                   {Math.abs(changeInWindow).toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
+                    minimumFractionDigits: 2, maximumFractionDigits: 2,
                   })}
                 </span>
               )}
               <span className={hideValue ? "font-semibold" : "opacity-80"}>
                 {hideValue ? "" : "("}
                 {changePercent >= 0 ? "+" : ""}
-                {changePercent.toFixed(1)}%{hideValue ? "" : ")"}
+                {changePercent.toFixed(2)}%{hideValue ? "" : ")"}
               </span>
             </>
           ) : (
             <span className="font-semibold">
               {changeInWindow >= 0 ? "+" : ""}
-              {changeInWindow.toFixed(1)}% in {activeTimeframe}
+              {changeInWindow.toFixed(2)}% in {activeTimeframe}
             </span>
           )}
           <span className="text-muted-foreground ml-1">
@@ -273,14 +275,14 @@ export function RobinhoodPerformanceChart({
       >
         {chartData.length >= 2 ? (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
+            <AreaChart
               data={chartData}
               onMouseMove={handleMove}
               onMouseLeave={handleLeave}
               onTouchMove={handleMove}
               margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
             >
-              <defs>
+              <defs><linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={lineColor} stopOpacity={0.24}/><stop offset="100%" stopColor={lineColor} stopOpacity={0}/></linearGradient>
                 <linearGradient
                   id={crosshairGradId}
                   x1="0"
@@ -326,16 +328,17 @@ export function RobinhoodPerformanceChart({
                   strokeDasharray: "3 5",
                 }}
               />
-              <Line
+              <Area
                 type="linear"
                 dataKey="value"
+                fill={`url(#${fillId})`}
                 stroke={`url(#${crosshairGradId})`}
-                strokeWidth={2}
+                strokeWidth={1.5}
                 dot={false}
                 isAnimationActive={false}
                 activeDot={{ r: 4 }}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         ) : (
           <div className="flex h-full items-center justify-center px-8 text-center text-xs text-muted-foreground">

@@ -1,6 +1,6 @@
 import { useIndices } from "@/hooks/useIndices";
 import { useState } from "react";
-import { 
+import {
   Newspaper, Clock, TrendingUp, Bookmark, BookmarkCheck,
   Play, Share2, MessageCircle, Bell, ChevronRight,
   Flame, Globe, BarChart3, Zap, Eye, Search
@@ -170,7 +170,7 @@ export default function News() {
                       </div>
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center gap-2 text-[0.625rem] text-muted-foreground">
-                          <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" />{((article.views || 0) / 1000).toFixed(1)}K</span>
+                          <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" />{((article.views || 0) / 1000).toFixed(2)}K</span>
                         </div>
                         <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={(e) => { e.stopPropagation(); toggleSave(article.id); }}>
                           <BookmarkCheck className="h-3.5 w-3.5 text-primary" />
@@ -210,7 +210,7 @@ export default function News() {
             <LiveConferencePlayer conference={liveNews} open={livePlayerOpen} onClose={() => setLivePlayerOpen(false)} />
 
             {/* Breaking News */}
-            <Card 
+            <Card
               className="soft-card border-0 overflow-hidden cursor-pointer animate-fade-in"
               onClick={() => { setSelectedArticle(breakingNews); setDetailDialogOpen(true); }}
             >
@@ -295,7 +295,7 @@ export default function News() {
                       <h4 className="text-[0.6875rem] font-bold leading-snug line-clamp-2 mt-0.5">{article.title}</h4>
                       <div className="flex items-center gap-2 mt-1.5 text-[0.625rem] text-muted-foreground">
                         <span className="flex items-center gap-0.5"><MessageCircle className="h-2.5 w-2.5" />{article.comments}</span>
-                        <span className="flex items-center gap-0.5"><Eye className="h-2.5 w-2.5" />{((article.views || 0) / 1000).toFixed(1)}K</span>
+                        <span className="flex items-center gap-0.5"><Eye className="h-2.5 w-2.5" />{((article.views || 0) / 1000).toFixed(2)}K</span>
                       </div>
                     </div>
                   </Card>
@@ -376,7 +376,7 @@ export default function News() {
                             </div>
                             <div className="flex items-center justify-between mt-2">
                               <div className="flex items-center gap-2 text-[0.625rem] text-muted-foreground">
-                                <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" />{((article.views || 0) / 1000).toFixed(1)}K</span>
+                                <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" />{((article.views || 0) / 1000).toFixed(2)}K</span>
                                 <span className="flex items-center gap-0.5"><MessageCircle className="h-3 w-3" />{article.comments}</span>
                               </div>
                               <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={(e) => { e.stopPropagation(); toggleSave(article.id); }}>

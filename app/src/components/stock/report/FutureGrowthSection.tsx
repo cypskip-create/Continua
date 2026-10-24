@@ -50,9 +50,9 @@ export function FutureGrowthSection({ symbol, currency="KES", basic=false }: Pro
       ) : (
         <KeyInfoUpdates
           rows={[
-            { label: "Trailing earnings growth rate", value: earningsGrowth != null ? `${earningsGrowth >= 0 ? "+" : ""}${earningsGrowth.toFixed(1)}%` : "n/a", highlight: true },
-            { label: "Trailing EPS growth rate", value: epsGrowth != null ? `${epsGrowth >= 0 ? "+" : ""}${epsGrowth.toFixed(1)}%` : "n/a", highlight: true },
-            { label: "Trailing revenue growth rate", value: revenueGrowth != null ? `${revenueGrowth >= 0 ? "+" : ""}${revenueGrowth.toFixed(1)}%` : "n/a" },
+            { label: "Trailing earnings growth rate", value: earningsGrowth != null ? `${earningsGrowth >= 0 ? "+" : ""}${earningsGrowth.toFixed(2)}%` : "n/a", highlight: true },
+            { label: "Trailing EPS growth rate", value: epsGrowth != null ? `${epsGrowth >= 0 ? "+" : ""}${epsGrowth.toFixed(2)}%` : "n/a", highlight: true },
+            { label: "Trailing revenue growth rate", value: revenueGrowth != null ? `${revenueGrowth >= 0 ? "+" : ""}${revenueGrowth.toFixed(2)}%` : "n/a" },
             { label: "Forecast return on equity", value: "n/a" },
             { label: "Analyst coverage count", value: "Not supplied" },
             { label: "Last updated", value: "n/a" },

@@ -15,7 +15,7 @@ export function PortfolioReviewDesk({ data: p }: { data: EnginePortfolio }) {
   const breaches = rows.filter((r) => r.overLimit > 0);
   const months = monthsToGoal(p.totalValue, Number(goal), Number(monthly));
   const money = (n: number) =>
-    `${p.currency ?? ""} ${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+    `${p.currency ?? ""} ${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const control =
     "border border-border rounded-full bg-background px-3 py-2 text-sm min-h-11 max-w-full";
   const income = p.dividends
@@ -54,7 +54,7 @@ export function PortfolioReviewDesk({ data: p }: { data: EnginePortfolio }) {
           <small>Largest holding</small>
           <strong>
             {Math.max(...p.positions.map((r) => r.weight)) * 100 >= 0
-              ? `${(Math.max(...p.positions.map((r) => r.weight)) * 100).toFixed(1)}%`
+              ? `${(Math.max(...p.positions.map((r) => r.weight)) * 100).toFixed(2)}%`
               : "—"}
           </strong>
         </div>
@@ -99,7 +99,7 @@ export function PortfolioReviewDesk({ data: p }: { data: EnginePortfolio }) {
             <div key={r.symbol} className="market-row text-sm">
               <span>{r.symbol}</span>
               <span>
-                {r.overLimit.toFixed(1)} percentage points above limit ·{" "}
+                {r.overLimit.toFixed(2)} percentage points above limit ·{" "}
                 {money(r.excessValue)}
               </span>
             </div>

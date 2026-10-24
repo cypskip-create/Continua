@@ -188,8 +188,8 @@ export default function Discover() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <TopBar 
-        title="Discover" 
+      <TopBar
+        title="Discover"
         subtitle="Social investing & learning"
         showSearch={true}
         showNotifications={true}
@@ -239,7 +239,7 @@ export default function Discover() {
                   <h3 className="font-semibold text-sm">Portfolio Insights</h3>
                 </div>
                 <Badge variant="secondary" className={`text-xs ${portfolioStats.gainPct >= 0 ? 'text-bull' : 'text-bear'}`}>
-                  {portfolioStats.gainPct >= 0 ? '+' : ''}{portfolioStats.gainPct.toFixed(1)}%
+                  {portfolioStats.gainPct >= 0 ? '+' : ''}{portfolioStats.gainPct.toFixed(2)}%
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
@@ -254,7 +254,7 @@ export default function Discover() {
                     <div className="mt-2 text-xs">
                       <span className="text-muted-foreground">Best: </span>
                       <span className={`font-medium ${topGainerHolding.gainPct >= 0 ? 'text-bull' : 'text-bear'}`}>
-                        {topGainerHolding.symbol} {topGainerHolding.gainPct >= 0 ? '+' : ''}{topGainerHolding.gainPct.toFixed(1)}%
+                        {topGainerHolding.symbol} {topGainerHolding.gainPct >= 0 ? '+' : ''}{topGainerHolding.gainPct.toFixed(2)}%
                       </span>
                     </div>
                   )}
@@ -339,10 +339,10 @@ export default function Discover() {
             <div className="flex justify-between items-center mb-3">
               <div className="flex space-x-1.5">
                 {["latest", "top", "following"].map(tab => (
-                  <Button 
+                  <Button
                     key={tab}
-                    variant={feedTab === tab ? "default" : "ghost"} 
-                    size="sm" 
+                    variant={feedTab === tab ? "default" : "ghost"}
+                    size="sm"
                     className="text-xs h-8 rounded-full capitalize"
                     onClick={() => setFeedTab(tab)}
                   >
@@ -364,8 +364,8 @@ export default function Discover() {
               <Card className="card-gradient">
                 <CardContent className="p-6 text-center">
                   <p className="text-muted-foreground text-sm">
-                    {feedTab === "following" 
-                      ? "Follow traders to see their posts here" 
+                    {feedTab === "following"
+                      ? "Follow traders to see their posts here"
                       : "No posts yet. Be the first to share!"}
                   </p>
                   <Button className="mt-3" size="sm" onClick={() => navigate('/traders-hub')}>
@@ -376,13 +376,13 @@ export default function Discover() {
             ) : (
               <div className="divide-y divide-border/50">
                 {filteredPosts.map((post) => (
-                  <div 
-                    key={post.id} 
+                  <div
+                    key={post.id}
                     className="py-3 cursor-pointer active:bg-muted/20 transition-colors"
                     onClick={() => navigate(`/traders-hub/post/${post.id}`)}
                   >
                     <div className="flex items-start space-x-3">
-                      <Avatar 
+                      <Avatar
                         className="h-9 w-9 cursor-pointer shrink-0"
                         onClick={(e) => { e.stopPropagation(); navigate(`/profile/${post.user_id}`); }}
                       >
@@ -393,7 +393,7 @@ export default function Discover() {
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <span 
+                          <span
                             className="font-semibold text-sm cursor-pointer hover:underline truncate"
                             onClick={(e) => { e.stopPropagation(); navigate(`/profile/${post.user_id}`); }}
                           >
@@ -404,7 +404,7 @@ export default function Discover() {
                           </span>
                         </div>
                         <p className="text-sm leading-relaxed mb-2.5">{renderPostContent(post.content)}</p>
-                        
+
                         {/* X-style interaction bar */}
                         <div className="flex items-center justify-between max-w-[280px] text-muted-foreground">
                           <button
@@ -482,7 +482,7 @@ export default function Discover() {
                     <span className="text-xs text-primary font-medium">{course.progress}%</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-1.5">
-                    <div 
+                    <div
                       className="bg-primary rounded-full h-1.5 transition-all"
                       style={{ width: `${course.progress}%` }}
                     />
@@ -505,7 +505,7 @@ export default function Discover() {
                 <Card key={trader.id} className="soft-card tap-scale">
                   <CardContent className="p-3.5">
                     <div className="flex items-center justify-between">
-                      <div 
+                      <div
                         className="flex items-center space-x-3 cursor-pointer"
                         onClick={() => navigate(`/profile/${trader.user_id}`)}
                       >
@@ -522,9 +522,9 @@ export default function Discover() {
                       </div>
                       <div className="text-right">
                         {user && user.id !== trader.user_id && (
-                          <Button 
-                            variant={isFollowing(trader.user_id) ? "outline" : "default"} 
-                            size="sm" 
+                          <Button
+                            variant={isFollowing(trader.user_id) ? "outline" : "default"}
+                            size="sm"
                             className="text-xs h-8 rounded-full"
                             onClick={() => handleFollow(trader.user_id)}
                           >

@@ -73,14 +73,14 @@ export function PastPerformanceSection({ symbol, currency }: Props) {
       {latest?.basis&&<p className="text-xs text-muted-foreground">Includes Engine-mapped publisher annual observations; unavailable fields remain blank.</p>}
       <CriteriaChecklist
         checks={checks}
-        narrative={isLoading ? "Loading…" : `${symbol}'s earnings ${earningsGrowth1y != null ? `changed ${earningsGrowth1y >= 0 ? "+" : ""}${earningsGrowth1y.toFixed(1)}% over the last year` : "history is not on file yet"}. Real, already-reported figures — not a projection.`}
+        narrative={isLoading ? "Loading…" : `${symbol}'s earnings ${earningsGrowth1y != null ? `changed ${earningsGrowth1y >= 0 ? "+" : ""}${earningsGrowth1y.toFixed(2)}% over the last year` : "history is not on file yet"}. Real, already-reported figures — not a projection.`}
       />
 
       <KeyInfoUpdates
         rows={[
-          { label: "Return on equity", value: ratios?.roe != null ? `${ratios.roe.toFixed(1)}%` : "n/a", highlight: true },
-          { label: "1-year earnings growth", value: earningsGrowth1y != null ? `${earningsGrowth1y >= 0 ? "+" : ""}${earningsGrowth1y.toFixed(1)}%` : "n/a", highlight: true },
-          { label: "Net margin", value: ratios?.netMargin != null ? `${(ratios.netMargin * 100).toFixed(1)}%` : "n/a" },
+          { label: "Return on equity", value: ratios?.roe != null ? `${ratios.roe.toFixed(2)}%` : "n/a", highlight: true },
+          { label: "1-year earnings growth", value: earningsGrowth1y != null ? `${earningsGrowth1y >= 0 ? "+" : ""}${earningsGrowth1y.toFixed(2)}%` : "n/a", highlight: true },
+          { label: "Net margin", value: ratios?.netMargin != null ? `${(ratios.netMargin * 100).toFixed(2)}%` : "n/a" },
           { label: "Last reported period", value: mostRecent ? `FY${mostRecent.fiscalYear}` : "n/a" },
         ]}
         updates={[]}
@@ -145,7 +145,7 @@ export function PastPerformanceSection({ symbol, currency }: Props) {
             ]}>
               <XAxis dataKey="name" tick={{ fontSize: "0.5625rem" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: "0.625rem" }} axisLine={false} tickLine={false} width={32} unit="%" />
-              <Tooltip formatter={(v: number) => [`${v.toFixed(1)}%`, ""]} contentStyle={tooltipStyle} />
+              <Tooltip formatter={(v: number) => [`${v.toFixed(2)}%`, ""]} contentStyle={tooltipStyle} />
               <Legend wrapperStyle={{ fontSize: "0.625rem" }} />
               <Bar barSize={FUNDAMENTAL_BAR_SIZE} dataKey="Company" fill={fx.revenue} radius={[4, 4, 0, 0]} />
               <Bar barSize={FUNDAMENTAL_BAR_SIZE} dataKey="NSE Top 15" fill="hsl(var(--muted-foreground) / 0.3)" radius={[4, 4, 0, 0]} />

@@ -5,6 +5,18 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "app/src/components/charts/InlineChart.tsx",
+      "category": "Mobile chart inspection and shared watchlist loading",
+      "language": "Existing React frontend TypeScript/JSX",
+      "runtime": "Existing Recharts and TanStack Query in the browser",
+      "reason": "Retain the deployed frontend and its chart library. Reserve a header readout outside every line/area plot, capture stock-chart pointers across SVG fills, use actual historical values for hover and direction, and share owner-keyed watchlist queries. No added service, numerical engine, billing or backend language change. Financial evidence and withheld ratings remain authoritative.",
+      "references": [
+        "https://recharts.github.io/en-US/api/Tooltip/",
+        "https://developer.mozilla.org/en-US/docs/Web/API/Element/setPointerCapture",
+        "https://tanstack.com/query/latest/docs/framework/react/guides/caching"
+      ]
+    },
+    {
       "file": "app/src/components/portfolio/PortfolioSnowflake.tsx",
       "category": "Post-migration product, charts, reports and tiered monitoring",
       "language": "Existing React frontend, JavaScript compatibility backend/scraper, existing Python financial calculations and PostgreSQL",

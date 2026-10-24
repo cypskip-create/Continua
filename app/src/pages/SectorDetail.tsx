@@ -93,7 +93,7 @@ export default function SectorDetail() {
             </div>
             {avgChange != null ? (
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${isUp ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
-                {isUp ? '+' : ''}{avgChange.toFixed(1)}%
+                {isUp ? '+' : ''}{avgChange.toFixed(2)}%
               </span>
             ) : (
               <Skeleton className="h-5 w-12 rounded-full shrink-0" />
@@ -101,7 +101,7 @@ export default function SectorDetail() {
           </div>
           {topMover && (
             <p className="text-xs text-muted-foreground mt-1">
-              Top mover today: <span className="font-semibold text-foreground">{topMover.symbol}</span> {topMover.change! >= 0 ? '+' : ''}{topMover.change!.toFixed(1)}%
+              Top mover today: <span className="font-semibold text-foreground">{topMover.symbol}</span> {topMover.change! >= 0 ? '+' : ''}{topMover.change!.toFixed(2)}%
             </p>
           )}
         </Card>
@@ -132,7 +132,7 @@ export default function SectorDetail() {
                       <p className="text-sm font-bold">KES {stock.price!.toFixed(2)}</p>
                       <p className={`text-xs font-semibold flex items-center justify-end gap-0.5 ${stock.change! >= 0 ? 'text-bull' : 'text-bear'}`}>
                         {stock.change! >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                        {stock.change! >= 0 ? '+' : ''}{stock.change!.toFixed(1)}%
+                        {stock.change! >= 0 ? '+' : ''}{stock.change!.toFixed(2)}%
                       </p>
                     </div>
                   ) : (

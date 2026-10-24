@@ -91,9 +91,9 @@ export function PortfolioRiskAnalysis({ holdings, risk }: PortfolioRiskAnalysisP
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <MetricCard label="Portfolio Volatility" value={risk.isLoading ? "—" : `${risk.portfolioVolatility.toFixed(1)}%`} note={risk.hasEnoughData ? `vs basket ${risk.marketVolatility.toFixed(1)}%` : "Not enough data"} />
-          <MetricCard label="Max Drawdown" value={risk.isLoading ? "—" : `${risk.portfolioMaxDrawdown.toFixed(1)}%`} note="Peak to trough, this lookback window" />
-          <MetricCard label="Top 3 Concentration" value={`${top3Concentration.toFixed(1)}%`} note={`Largest is ${largest}`} />
+          <MetricCard label="Portfolio Volatility" value={risk.isLoading ? "—" : `${risk.portfolioVolatility.toFixed(2)}%`} note={risk.hasEnoughData ? `vs basket ${risk.marketVolatility.toFixed(2)}%` : "Not enough data"} />
+          <MetricCard label="Max Drawdown" value={risk.isLoading ? "—" : `${risk.portfolioMaxDrawdown.toFixed(2)}%`} note="Peak to trough, this lookback window" />
+          <MetricCard label="Top 3 Concentration" value={`${top3Concentration.toFixed(2)}%`} note={`Largest is ${largest}`} />
           <MetricCard label="Portfolio Beta" value={risk.portfolioBeta != null ? `${risk.portfolioBeta.toFixed(2)}x` : "—"} note="vs. equal-weight basket of your holdings" />
           <MetricCard label="Sharpe Ratio" value={risk.sharpe != null ? risk.sharpe.toFixed(2) : "—"} note="Above 2.0 is generally considered very good" />
           <MetricCard label="Sortino Ratio" value={risk.sortino != null ? risk.sortino.toFixed(2) : "—"} note="Above 3.0 is exceptional for the risk taken" />
@@ -120,7 +120,7 @@ export function PortfolioRiskAnalysis({ holdings, risk }: PortfolioRiskAnalysisP
             description="Which of your holdings give the bumpiest ride, annualized from daily price moves."
             rows={risk.volatilityByHolding.map((r) => ({ symbol: r.symbol, value: r.volatility }))}
             extra={risk.hasEnoughData ? [{ symbol: "Basket", value: risk.marketVolatility }, { symbol: "Portfolio", value: risk.portfolioVolatility }] : []}
-            fmt={(v) => `${v.toFixed(1)}%`}
+            fmt={(v) => `${v.toFixed(2)}%`}
             isLoading={risk.isLoading}
           />
         )}
@@ -130,7 +130,7 @@ export function PortfolioRiskAnalysis({ holdings, risk }: PortfolioRiskAnalysisP
             description="The worst peak-to-trough decline for each holding in this lookback window."
             rows={risk.drawdownByHolding.map((r) => ({ symbol: r.symbol, value: r.drawdown }))}
             extra={risk.hasEnoughData ? [{ symbol: "Portfolio", value: risk.portfolioMaxDrawdown }] : []}
-            fmt={(v) => `${v.toFixed(1)}%`}
+            fmt={(v) => `${v.toFixed(2)}%`}
             isLoading={risk.isLoading}
             negative
           />

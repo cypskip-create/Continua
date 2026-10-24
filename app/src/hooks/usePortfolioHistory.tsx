@@ -1,6 +1,6 @@
 import {portfolioValueHistory} from '@/lib/portfolioHistory';
 import { useMemo } from "react";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { observedHistory } from "@/api/observedHistory";
 import {priceWindow} from "@/lib/priceHistory";
 
@@ -38,6 +38,7 @@ const TIMEFRAME_DAYS: Record<string, number | undefined> = {
  * must show an unavailable state instead of inventing intraday performance.
  */
 export function usePortfolioHistory(holdings: { symbol: string; shares: number }[], timeframe: string) {
+  const client = useQueryClient();
   const days = timeframe === "YTD" ? undefined : TIMEFRAME_DAYS[timeframe];
   const supported = timeframe !== "1D" && holdings.length > 0;
 
@@ -57,6 +58,9 @@ export function usePortfolioHistory(holdings: { symbol: string; shares: number }
     queries: symbols.map((symbol) => ({
       queryKey: ["continua", "observed-price-history-v2", symbol, timeframe, priceWindow(timeframe).from, priceWindow(timeframe).to],
       queryFn: () => observedHistory(symbol,timeframe),
+      placeholderData: () => client.getQueryCache().findAll({queryKey: ['continua', 'observed-price-history-v2', symbol, timeframe]})
+        .filter(query => Date.now() - query.state.dataUpdatedAt < 86_400_000)
+        .sort((a,b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt)[0]?.state.data as Awaited<ReturnType<typeof observedHistory>> | undefined,
       enabled: supported && !!from,
       staleTime: 5 * 60_000,
       retry: 1,

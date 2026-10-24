@@ -63,7 +63,7 @@ function IndicatorReadouts({ symbol }: { symbol: string }) {
               <p className="text-[0.625rem] text-muted-foreground">Relative Strength Index</p>
             </div>
             <div className="text-right">
-              <p className="text-sm font-bold tabular">{rsiValue != null ? rsiValue.toFixed(1) : "—"}</p>
+              <p className="text-sm font-bold tabular">{rsiValue != null ? rsiValue.toFixed(2) : "—"}</p>
               {rsiState && <Badge variant="outline" className="text-[0.5625rem]" style={{ color: rsiColor, borderColor: `${rsiColor}55` }}>{rsiState}</Badge>}
             </div>
           </div>
@@ -146,7 +146,7 @@ function VolumeProfileSection({ symbol, currency }: { symbol: string; currency: 
             const isPoc = Math.abs(b.priceMid - profile.pointOfControl) < 1e-6;
             return (
               <div key={`${b.priceLow}-${b.priceHigh}`} className="flex items-center gap-2 h-4">
-                <span className="text-[0.5625rem] tabular text-muted-foreground w-14 text-right shrink-0">{b.priceMid.toFixed(1)}</span>
+                <span className="text-[0.5625rem] tabular text-muted-foreground w-14 text-right shrink-0">{b.priceMid.toFixed(2)}</span>
                 <div className="flex-1 h-full bg-muted/30 rounded-sm overflow-hidden">
                   <div
                     className="h-full rounded-sm"
@@ -217,10 +217,10 @@ function BacktesterSection({ symbol }: { symbol: string }) {
         {result && (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
-              <StatBox label="Strategy Return" value={`${result.metrics.totalReturnPercent >= 0 ? "+" : ""}${result.metrics.totalReturnPercent.toFixed(1)}%`} positive={result.metrics.totalReturnPercent >= 0} />
-              <StatBox label="Buy & Hold Return" value={`${result.metrics.buyHoldReturnPercent >= 0 ? "+" : ""}${result.metrics.buyHoldReturnPercent.toFixed(1)}%`} positive={result.metrics.buyHoldReturnPercent >= 0} />
+              <StatBox label="Strategy Return" value={`${result.metrics.totalReturnPercent >= 0 ? "+" : ""}${result.metrics.totalReturnPercent.toFixed(2)}%`} positive={result.metrics.totalReturnPercent >= 0} />
+              <StatBox label="Buy & Hold Return" value={`${result.metrics.buyHoldReturnPercent >= 0 ? "+" : ""}${result.metrics.buyHoldReturnPercent.toFixed(2)}%`} positive={result.metrics.buyHoldReturnPercent >= 0} />
               <StatBox label="Win Rate" value={result.metrics.winRate != null ? `${result.metrics.winRate.toFixed(0)}%` : "—"} />
-              <StatBox label="Max Drawdown" value={`-${result.metrics.maxDrawdownPercent.toFixed(1)}%`} positive={false} />
+              <StatBox label="Max Drawdown" value={`-${result.metrics.maxDrawdownPercent.toFixed(2)}%`} positive={false} />
             </div>
             <p className="text-[0.625rem] text-muted-foreground">{result.metrics.totalTrades} trade{result.metrics.totalTrades === 1 ? "" : "s"} · {result.caveat}</p>
 
@@ -229,7 +229,7 @@ function BacktesterSection({ symbol }: { symbol: string }) {
                 {result.trades.slice(-5).reverse().map((t, i) => (
                   <div key={i} className="flex items-center justify-between py-2">
                     <span className="text-[0.625rem] text-muted-foreground">{new Date(t.entryDate).toLocaleDateString()} → {new Date(t.exitDate).toLocaleDateString()}</span>
-                    <span className={`text-xs font-semibold tabular ${t.returnPercent >= 0 ? "text-bull" : "text-bear"}`}>{t.returnPercent >= 0 ? "+" : ""}{t.returnPercent.toFixed(1)}%</span>
+                    <span className={`text-xs font-semibold tabular ${t.returnPercent >= 0 ? "text-bull" : "text-bear"}`}>{t.returnPercent >= 0 ? "+" : ""}{t.returnPercent.toFixed(2)}%</span>
                   </div>
                 ))}
               </div>

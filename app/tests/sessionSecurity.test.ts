@@ -14,9 +14,9 @@ test('only owned Auth calls use cookie transport and other provider requests ret
  await transport('https://owned.supabase.co/rest/v1/profiles');assert.equal(calls[1][0],'https://owned.supabase.co/rest/v1/profiles');
 });
 test('logout clears disposable private caches and legacy sessions without deleting journals or preferences',()=>{
- const values=new Map([['continua:portfolio:user','private'],['continua:company-engine:user:premium:NSE:KCB','private'],['sb-fixture-auth-token','session'],['continua:journal:v1:user:NSE:KCB','authored record'],['continua:chart-preferences','public preference']]);
+ const values=new Map([['continua:portfolio:user','private'],['continua:private-snapshot:watchlist:user','private'],['continua:company-engine:user:premium:NSE:KCB','private'],['sb-fixture-auth-token','session'],['continua:journal:v1:user:NSE:KCB','authored record'],['continua:chart-preferences','public preference']]);
  const storage={get length(){return values.size;},key:(i:number)=>[...values.keys()][i]??null,removeItem:(k:string)=>{values.delete(k);}};
- assert.equal(clearPrivateSessionCache(storage).removed,3);assert.equal(values.size,2);
+ assert.equal(clearPrivateSessionCache(storage).removed,4);assert.equal(values.size,2);
 });
 
 test('browser transport errors and HTML challenges become actionable Auth errors without retrying passwords',async()=>{

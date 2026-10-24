@@ -26,7 +26,7 @@ class JobTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(params,('kenyanstocks','Financials',1))
         await jobs.claim('kenyanstocks',1,issuer='COOP',lane='Financials')
         self.assertNotIn('issuer_coverage',database.calls[-1][0])
-        self.assertEqual(database.calls[-1][1],('kenyanstocks','COOP','Financials',1))
+        self.assertEqual(database.calls[-1][1],('kenyanstocks','COOP','Financials','Financials',1))
 
     async def test_scheduled_retry_ceiling_is_parameter_bound(self):
         database=FakeDatabase()

@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import {financialNumber, growthPercent, metricPoints, statementMetrics, metricNumber} from "../src/lib/financialPresentation.ts";
 
 test("financial values use compact units and keep zeros distinct from missing data",()=>{
-  assert.equal(financialNumber(153900000000,"KES"),"KES 153.9B");
-  assert.equal(financialNumber(-549700000),"-549.7M");
-  assert.equal(financialNumber(31000),"31K");
-  assert.equal(financialNumber(0),"0");
+  assert.equal(financialNumber(153900000000,"KES"),"KES 153.90B");
+  assert.equal(financialNumber(-549700000),"-549.70M");
+  assert.equal(financialNumber(31000),"31.00K");
+  assert.equal(financialNumber(0),"0.00");
   for(const v of [null,undefined,"",NaN,Infinity])assert.equal(financialNumber(v),"—");
 });
 test("YoY matches the same fiscal quarter, not the preceding row",()=>{
@@ -20,7 +20,7 @@ test("YoY matches the same fiscal quarter, not the preceding row",()=>{
 });
 test("ratios require valid denominators and never invent missing statement values",()=>{
   const metric=statementMetrics["Financial indicators"].find(m=>m.label==="ROE")!;
-  assert.equal(metricNumber(metric.get({fiscalYear:2025,revenue:100,netIncome:10,eps:1,totalEquity:100}),metric),"10.0%");
+  assert.equal(metricNumber(metric.get({fiscalYear:2025,revenue:100,netIncome:10,eps:1,totalEquity:100}),metric),"10.00%");
   assert.equal(metric.get({fiscalYear:2025,revenue:100,netIncome:10,eps:1,totalEquity:0}),null);
   assert.equal(metricNumber(null,metric),"—");
 });

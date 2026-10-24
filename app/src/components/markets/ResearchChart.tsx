@@ -2,14 +2,15 @@ import {
   CartesianGrid,
   Line,
   LineChart,
-  ResponsiveContainer,
-  Tooltip,
+
+
   XAxis,
   YAxis,
   ReferenceLine,
   Area,
   ComposedChart,
 } from "recharts";
+import { InlineChartContainer as ResponsiveContainer, InlineChartTooltip as Tooltip } from '@/components/charts/InlineChart';
 export interface ChartPoint {
   date: string;
   [key: string]: string | number | number[] | undefined;
@@ -52,7 +53,7 @@ export function ResearchChart({
             width={48}
             domain={["auto", "auto"]}
             tick={{ fill: "hsl(var(--muted-foreground))", fontSize: "0.6875rem" }}
-            tickFormatter={(v) => Number(v).toFixed(1)}
+            tickFormatter={(v) => Number(v).toFixed(2)}
           />
           <Tooltip
             contentStyle={{
@@ -77,7 +78,7 @@ export function ResearchChart({
               dataKey={line.key}
               name={line.label}
               stroke={line.color}
-              strokeWidth={2}
+              strokeWidth={1.5}
               dot={data.length === 1 ? { r: 4 } : false}
               strokeDasharray={line.dashed ? "4 4" : undefined}
               isAnimationActive={false}

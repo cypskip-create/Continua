@@ -9,7 +9,7 @@ import { ResearchChart } from "@/components/markets/ResearchChart";
 import { ExportResearch } from "./ResearchExport";
 const field = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
 const percent = (v: number | null) =>
-  v == null ? "—" : `${(v * 100).toFixed(1)}%`;
+  v == null ? "—" : `${(v * 100).toFixed(2)}%`;
 export function ForecastNotebook({ symbol }: { symbol: string }) {
   const { user } = useAuth(),
     client = useQueryClient(),

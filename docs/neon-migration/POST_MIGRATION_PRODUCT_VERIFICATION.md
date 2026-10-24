@@ -24,3 +24,15 @@ Paid AI and always-on infrastructure remain disabled under the standing project 
 Browser SDK/dependencies and auth fallback removed; owned identity transport only. Edge legacy session endpoints return 410 and cannot contact the retired provider. Backend auth is Better Auth only. Collector runtime is R2-only; optional legacy credentials cannot construct a former-provider reader. GitHub former-provider deployment workflow removed and source-project GitHub integration disabled; Vercel source-project sync detached and its installed Supabase authorization removed with explicit approval of the legal acknowledgement. Vercel has no Supabase environment variables. Offline migration tools, SQL history and encrypted recovery backups remain for audit and do not run as app services. Former source data/account remain intact.
 
 Release validation: 559 backend tests, 161 frontend tests, 96 collector tests, 35 edge tests; frontend/backend/collector type checks and production build. Server-secret browser scan compares 14 protected configuration values with no matches. Newly reported Zod advisories patched to 4.6.7; old declaration-only Zod contracts use type imports from the bundled v3 namespace (no runtime v3 import).
+
+
+## 24 October mobile chart and startup follow-up
+
+- Shared line/area chart readouts occupy a reserved header, never a floating box over plotted data. Values use two decimal places; research lines use 1.5px strokes.
+- Home historical value and cost-basis return update together during inspection; selected-window direction colors its area red/green. Portfolio uses area shading with its existing header readout.
+- Stock-chart pointer capture tracks across SVG fills and paths while excluding drawing tools and the draggable price axis.
+- Watchlists share an owner-keyed query and validated 24-hour private display snapshot. Loading, request failure, missing quotes and an empty watchlist are distinct. Session cleanup removes those snapshots. Public quotes, current observed-history and valuation query versions hydrate before React renders; refresh retains original data timestamps.
+- SVG stars show the canonical Engine rating. Unrated companies show neutral outlines and a reason. Production EQTY currently has fewer than two usable valuation models; no EPS, balance-sheet inputs or rating is fabricated to fill this gap.
+- Supabase GitHub installation removal confirmed in GitHub; Neon/Render/Cloudflare remain installed. Removal revokes the former app's account-wide repository permissions without deleting source data.
+- Targeted history collection run 40012261174 succeeded; subsequent scheduled run 40062754614 succeeded. Collection schedules and hourly housekeeping remain enabled.
+- Returning visits benefit from cached data. First visits, session verification, unavailable evidence and free Render cold starts still require live work; background execution while the browser is closed is not promised.

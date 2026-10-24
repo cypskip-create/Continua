@@ -123,7 +123,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
     let finalContent = content;
 
     if (attachedPL && portfolioSnapshot) {
-      const plText = `\n\n📊 Today's P/L: ${portfolioSnapshot.todayGain >= 0 ? "+" : ""}KES ${portfolioSnapshot.todayGain.toLocaleString()} (${portfolioSnapshot.todayGain >= 0 ? "+" : ""}${portfolioSnapshot.todayPercent.toFixed(1)}%)\nTop holdings: ${portfolioSnapshot.holdings.slice(0, 3).map(h => `$${h.symbol}`).join(", ")}`;
+      const plText = `\n\n📊 Today's P/L: ${portfolioSnapshot.todayGain >= 0 ? "+" : ""}KES ${portfolioSnapshot.todayGain.toLocaleString()} (${portfolioSnapshot.todayGain >= 0 ? "+" : ""}${portfolioSnapshot.todayPercent.toFixed(2)}%)\nTop holdings: ${portfolioSnapshot.holdings.slice(0, 3).map(h => `$${h.symbol}`).join(", ")}`;
       finalContent += plText;
     }
 
@@ -131,12 +131,12 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
       const gainLine = displaySnapshot.hideGains
         ? ""
         : displaySnapshot.useDayChange
-          ? `\nToday: ${displaySnapshot.todayGain >= 0 ? "+" : ""}${displaySnapshot.hideAmounts ? "" : `KES ${displaySnapshot.todayGain.toLocaleString()} `}(${displaySnapshot.todayGain >= 0 ? "+" : ""}${displaySnapshot.todayPercent.toFixed(1)}%)`
-          : `\nAll-time: ${displaySnapshot.totalGain >= 0 ? "+" : ""}${displaySnapshot.hideAmounts ? "" : `KES ${displaySnapshot.totalGain.toLocaleString()} `}(${displaySnapshot.gainPercent.toFixed(1)}%)`;
+          ? `\nToday: ${displaySnapshot.todayGain >= 0 ? "+" : ""}${displaySnapshot.hideAmounts ? "" : `KES ${displaySnapshot.todayGain.toLocaleString()} `}(${displaySnapshot.todayGain >= 0 ? "+" : ""}${displaySnapshot.todayPercent.toFixed(2)}%)`
+          : `\nAll-time: ${displaySnapshot.totalGain >= 0 ? "+" : ""}${displaySnapshot.hideAmounts ? "" : `KES ${displaySnapshot.totalGain.toLocaleString()} `}(${displaySnapshot.gainPercent.toFixed(2)}%)`;
       const holdingsLines = displaySnapshot.holdings
         .map(h => displaySnapshot.hideGains
           ? `$${h.symbol}${displaySnapshot.hideAmounts ? "" : `: ${h.shares} shares`}`
-          : `$${h.symbol}${displaySnapshot.hideAmounts ? "" : `: ${h.shares} shares`} (${(displaySnapshot.useDayChange ? h.dayChangePct : h.gain) >= 0 ? "+" : ""}${(displaySnapshot.useDayChange ? h.dayChangePct : h.gain).toFixed(1)}%)`)
+          : `$${h.symbol}${displaySnapshot.hideAmounts ? "" : `: ${h.shares} shares`} (${(displaySnapshot.useDayChange ? h.dayChangePct : h.gain) >= 0 ? "+" : ""}${(displaySnapshot.useDayChange ? h.dayChangePct : h.gain).toFixed(2)}%)`)
         .join("\n");
       const pText = `\n\n💼 Portfolio Snapshot\nTotal Value: ${displaySnapshot.hideAmounts ? "••••••" : `KES ${displaySnapshot.totalValue.toLocaleString()}`}${gainLine}\n${holdingsLines}`;
       finalContent += pText;
@@ -233,7 +233,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                   {portfolioSnapshot.todayGain >= 0 ? "+" : ""}KES {portfolioSnapshot.todayGain.toLocaleString()}
                 </div>
                 <div className={`text-sm ${portfolioSnapshot.todayGain >= 0 ? "text-bull" : "text-bear"}`}>
-                  {portfolioSnapshot.todayGain >= 0 ? "+" : ""}{portfolioSnapshot.todayPercent.toFixed(1)}%
+                  {portfolioSnapshot.todayGain >= 0 ? "+" : ""}{portfolioSnapshot.todayPercent.toFixed(2)}%
                 </div>
               </div>
             )}
@@ -252,7 +252,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                 {!displaySnapshot.hideGains && (
                   <div className={`text-xs font-semibold mt-0.5 ${(displaySnapshot.useDayChange ? displaySnapshot.todayGain : displaySnapshot.totalGain) >= 0 ? "text-bull" : "text-bear"}`}>
                     {displaySnapshot.useDayChange ? "Today" : "All-time"} {(displaySnapshot.useDayChange ? displaySnapshot.todayGain : displaySnapshot.totalGain) >= 0 ? "+" : ""}
-                    {(displaySnapshot.useDayChange ? displaySnapshot.todayPercent : displaySnapshot.gainPercent).toFixed(1)}%
+                    {(displaySnapshot.useDayChange ? displaySnapshot.todayPercent : displaySnapshot.gainPercent).toFixed(2)}%
                   </div>
                 )}
                 <div className="mt-2 space-y-1">
@@ -261,7 +261,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                       <span className="font-medium">${h.symbol}</span>
                       {!displaySnapshot.hideGains && (
                         <span className={(displaySnapshot.useDayChange ? h.dayChangePct : h.gain) >= 0 ? "text-bull" : "text-bear"}>
-                          {(displaySnapshot.useDayChange ? h.dayChangePct : h.gain) >= 0 ? "+" : ""}{(displaySnapshot.useDayChange ? h.dayChangePct : h.gain).toFixed(1)}%
+                          {(displaySnapshot.useDayChange ? h.dayChangePct : h.gain) >= 0 ? "+" : ""}{(displaySnapshot.useDayChange ? h.dayChangePct : h.gain).toFixed(2)}%
                         </span>
                       )}
                     </div>

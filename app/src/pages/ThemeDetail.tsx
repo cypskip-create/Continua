@@ -73,7 +73,7 @@ export default function ThemeDetail() {
             <p className="text-sm font-bold">{theme.desc}</p>
             {avgChange != null ? (
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${isUp ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
-                {isUp ? '+' : ''}{avgChange.toFixed(1)}%
+                {isUp ? '+' : ''}{avgChange.toFixed(2)}%
               </span>
             ) : (
               <Skeleton className="h-5 w-12 rounded-full shrink-0" />

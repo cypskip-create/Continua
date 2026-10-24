@@ -57,7 +57,7 @@ export default {scheduled:scheduledMaintenance,async fetch(request,env,ctx){
  const limiter=url.pathname.startsWith('/api/v1/billing/')?env.PAYMENT_RATE_LIMIT:env.EDGE_RATE_LIMIT;
  if(limiter){const key=request.headers.get('CF-Connecting-IP');if(!key)return reply({error:'Client identity unavailable'},403);const result=await limiter.limit({key});if(!result.success)return new Response(JSON.stringify({error:'Too many requests'}),{status:429,headers:{'Content-Type':'application/json','Retry-After':'60','Cache-Control':'no-store',...security}});}
  const headers=new Headers();
- for(const name of ['Content-Type','Accept','X-User-Token','X-Supabase-Key','If-None-Match','Prefer']){const value=request.headers.get(name);if(value)headers.set(name,value);}
+ for(const name of ['Content-Type','Accept','X-User-Token','If-None-Match','Prefer']){const value=request.headers.get(name);if(value)headers.set(name,value);}
  if(env.BACKEND_API_KEY)headers.set('X-API-Key',env.BACKEND_API_KEY);else return reply({error:'Gateway credentials not configured'},503);
  if(env.EDGE_ORIGIN_SECRET){
   const ip=request.headers.get('CF-Connecting-IP');

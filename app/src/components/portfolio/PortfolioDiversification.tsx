@@ -116,7 +116,7 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
               )}
             >
               <Tooltip
-                formatter={(v: number) => [hasHoldings ? (showValues ? `${currencyLabel}${v.toLocaleString("en-US", { maximumFractionDigits: 0 })}` : "••••") : "No holdings yet", ""]}
+                formatter={(v: number) => [hasHoldings ? (showValues ? `${currencyLabel}${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••") : "No holdings yet", ""]}
                 contentStyle={tooltipStyle}
               />
             </Sankey>
@@ -162,21 +162,21 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
               <p className="text-[0.78125rem] font-bold leading-tight" style={{ color: hasHoldings ? (selected.isOther ? "hsl(var(--muted-foreground))" : colorFor(selected.name)) : "hsl(var(--muted-foreground))" }}>
                 {selected.name}
               </p>
-              {hasHoldings && <p className="text-[0.9375rem] font-bold tabular leading-tight">{selected.pct.toFixed(1)}%</p>}
+              {hasHoldings && <p className="text-[0.9375rem] font-bold tabular leading-tight">{selected.pct.toFixed(2)}%</p>}
               {hasHoldings && !selected.isOther && (
                 <div className="mt-1 w-[88px] space-y-px">
                   <div className="flex items-center justify-between text-[0.5625rem] leading-tight">
                     <span className="text-muted-foreground">Value</span>
-                    <span className="font-semibold tabular">{showValues ? `${currencyLabel}${selected.value.toLocaleString("en-US", { maximumFractionDigits: 0 })}` : "••••"}</span>
+                    <span className="font-semibold tabular">{showValues ? `${currencyLabel}${selected.value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••"}</span>
                   </div>
                   <div className="flex items-center justify-between text-[0.5625rem] leading-tight">
                     <span className="text-muted-foreground">1Y</span>
-                    <span className="font-semibold tabular">{oneYear.isLoading ? "···" : yearPct === null ? "n/a" : `${yearPct >= 0 ? "+" : ""}${yearPct.toFixed(1)}%`}</span>
+                    <span className="font-semibold tabular">{oneYear.isLoading ? "···" : yearPct === null ? "n/a" : `${yearPct >= 0 ? "+" : ""}${yearPct.toFixed(2)}%`}</span>
                   </div>
                   <div className="flex items-center justify-between text-[0.5625rem] leading-tight">
                     <span className="text-muted-foreground">7D</span>
                     <span className={`font-semibold tabular ${weekPct !== null ? (weekPct >= 0 ? "text-bull" : "text-bear") : ""}`}>
-                      {oneWeek.isLoading ? "···" : weekPct === null ? "n/a" : `${weekPct >= 0 ? "+" : ""}${weekPct.toFixed(1)}%`}
+                      {oneWeek.isLoading ? "···" : weekPct === null ? "n/a" : `${weekPct >= 0 ? "+" : ""}${weekPct.toFixed(2)}%`}
                     </span>
                   </div>
                 </div>
@@ -201,8 +201,8 @@ export function PortfolioDiversification({ holdings, showValues = true, currency
                 >
                   <span className="h-2 w-2 rounded-full shrink-0" style={{ background: colorFor(d.name) }} />
                   <span className="min-w-0 flex-1 truncate"><strong className="text-foreground">{d.name}</strong> · {d.fullName}</span>
-                  <span className="font-semibold tabular text-foreground">{d.pct.toFixed(1)}%</span>
-                  <span className="w-20 text-right tabular text-muted-foreground">{showValues ? `${currencyLabel}${d.value.toLocaleString("en-US", { maximumFractionDigits: 0 })}` : "••••"}</span>
+                  <span className="font-semibold tabular text-foreground">{d.pct.toFixed(2)}%</span>
+                  <span className="w-20 text-right tabular text-muted-foreground">{showValues ? `${currencyLabel}${d.value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••"}</span>
                 </button>
               );
             })}
@@ -283,7 +283,7 @@ function SankeyNodeShape({ x, y, width, height, index, payload, rootIndex, secto
         fill="hsl(var(--foreground))"
       >
         {payload.name}
-        {isSector && !muted && <tspan fill="hsl(var(--muted-foreground))" fontWeight={500}> {pct.toFixed(1)}%</tspan>}
+        {isSector && !muted && <tspan fill="hsl(var(--muted-foreground))" fontWeight={500}> {pct.toFixed(2)}%</tspan>}
       </text>
     </Layer>
   );

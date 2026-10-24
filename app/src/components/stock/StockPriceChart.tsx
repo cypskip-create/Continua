@@ -204,6 +204,30 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
     }
   }, [data, onHoverPrice, firstPrice, domainMin, domainMax]);
 
+  // Track the pointer on the pane, including SVG paths and filled areas.
+  // Recharts item targeting can otherwise interrupt a touch drag on the curve.
+  const scrubPointer = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (activeDrawTool || !data.length) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = Math.max(1, rect.width - (showPriceAxis ? PRICE_AXIS_WIDTH : 0));
+    const x = event.clientX - rect.left;
+    if (x > width || x < 0) return;
+    const fraction = Math.min(1, Math.max(0, x / width));
+    const first = data[0].timestamp;
+    const last = data[data.length - 1].timestamp;
+    const target = first + fraction * (last - first);
+    let index = 0;
+    for (let i = 1; i < data.length; i++) if (Math.abs(data[i].timestamp - target) < Math.abs(data[index].timestamp - target)) index = i;
+    updateFromChartState({ activeIndex: index, activeCoordinate: { x: last === first ? width / 2 : (data[index].timestamp - first) / (last - first) * width } });
+  };
+  const startScrub = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (activeDrawTool) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (event.clientX - rect.left > rect.width - (showPriceAxis ? PRICE_AXIS_WIDTH : 0)) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    scrubPointer(event);
+  };
+
   const handleLeave = useCallback(() => {
     if (pinCrosshair) return;
     setCrosshair(null);
@@ -365,7 +389,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
         return (
           <g key="s">
             {Ln(p1, p2)}
-            <text x={m.x} y={m.y - 6} fontSize={10} fill={stroke} textAnchor="middle" opacity={opacity}>{angle.toFixed(1)}°</text>
+            <text x={m.x} y={m.y - 6} fontSize={10} fill={stroke} textAnchor="middle" opacity={opacity}>{angle.toFixed(2)}°</text>
           </g>
         );
       }
@@ -855,14 +879,14 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
   if (chartType === "candle") {
     return (
       <div className={outerClass} onTouchEnd={handleLeave}>
-        <div ref={plotRef} className={mainPaneClass} style={mainPaneStyle}>
+        <div ref={plotRef} className={mainPaneClass} style={mainPaneStyle} onPointerDown={startScrub} onPointerMove={scrubPointer} onPointerUp={handleLeave} onPointerCancel={handleLeave}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={chartData}
               margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
-              onMouseMove={updateFromChartState}
+
               onMouseLeave={handleLeave}
-              onTouchMove={updateFromChartState}
+
               syncId={syncId}
             >
               {showGrid && <CartesianGrid horizontal vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.4} strokeDasharray="3 3" />}
@@ -908,14 +932,14 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
 
   return (
     <div className={outerClass} onTouchEnd={handleLeave}>
-      <div ref={plotRef} className={mainPaneClass} style={mainPaneStyle}>
+      <div ref={plotRef} className={mainPaneClass} style={mainPaneStyle} onPointerDown={startScrub} onPointerMove={scrubPointer} onPointerUp={handleLeave} onPointerCancel={handleLeave}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}
             margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
-            onMouseMove={updateFromChartState}
+
             onMouseLeave={handleLeave}
-            onTouchMove={updateFromChartState}
+
             syncId={syncId}
           >
             <defs>

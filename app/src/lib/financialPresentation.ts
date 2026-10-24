@@ -5,7 +5,7 @@ export function financialNumber(value: unknown, currency = ""): string {
   const n = Number(value), abs = Math.abs(n);
   const scale = abs >= 1e12 ? 1e12 : abs >= 1e9 ? 1e9 : abs >= 1e6 ? 1e6 : abs >= 1e3 ? 1e3 : 1;
   const unit = scale === 1e12 ? "T" : scale === 1e9 ? "B" : scale === 1e6 ? "M" : scale === 1e3 ? "K" : "";
-  return `${currency ? currency + " " : ""}${(n / scale).toLocaleString("en", { maximumFractionDigits: 2 })}${unit}`;
+  return `${currency ? currency + " " : ""}${(n / scale).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${unit}`;
 }
 export function finiteFinancial(value: unknown): number | null {
   return value == null || value === "" || !Number.isFinite(Number(value)) ? null : Number(value);
@@ -14,7 +14,7 @@ export function growthPercent(value: unknown, prior: unknown): number | null {
   const n = finiteFinancial(value), p = finiteFinancial(prior);
   return n == null || p == null || p === 0 ? null : (n - p) / Math.abs(p) * 100;
 }
-export const financialPercent = (n: number | null) => n == null ? "—" : `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
+export const financialPercent = (n: number | null) => n == null ? "—" : `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 export const financialPeriod = (row: {fiscalYear: number; fiscalQuarter?: number | null}) => `${row.fiscalYear}/${row.fiscalQuarter ? `Q${row.fiscalQuarter}` : "FY"}`;
 export type FinancialMetric = { label: string; get: (r: FinancialHistoryEntry) => unknown; kind?: "percent" | "ratio" | "perShare"; description?: string; inputs?: (keyof FinancialHistoryEntry)[] };
 const ratio = (a: unknown, b: unknown, multiplier = 1) => {
@@ -52,7 +52,7 @@ export const statementMetrics: Record<string, FinancialMetric[]> = {
 };
 export function metricNumber(value: unknown, metric: FinancialMetric): string {
   const n = finiteFinancial(value);
-  return n == null ? "—" : metric.kind === "percent" ? `${n.toFixed(1)}%` : metric.kind === "perShare" ? n.toFixed(2) : financialNumber(n);
+  return n == null ? "—" : metric.kind === "percent" ? `${n.toFixed(2)}%` : metric.kind === "perShare" ? n.toFixed(2) : financialNumber(n);
 }
 export function metricPoints(history: FinancialHistoryEntry[], metric: FinancialMetric) {
   return [...history].sort((a,b)=>a.fiscalYear-b.fiscalYear || (a.fiscalQuarter??0)-(b.fiscalQuarter??0)).map(row=>({

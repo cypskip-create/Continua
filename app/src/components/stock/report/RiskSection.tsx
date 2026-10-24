@@ -55,7 +55,7 @@ export function RiskSection({ symbol, currency="KES", basic=false }: Props) {
     },
     {
       label: "Price volatility",
-      note: volatility != null ? `${volatility.toFixed(1)}% annualized, last 180 days` : "Not enough price history on file",
+      note: volatility != null ? `${volatility.toFixed(2)}% annualized, last 180 days` : "Not enough price history on file",
       level: volatility == null ? "Unknown" : volatility > 35 ? "High" : volatility > 20 ? "Medium" : "Low",
     },
     {
@@ -65,12 +65,12 @@ export function RiskSection({ symbol, currency="KES", basic=false }: Props) {
     },
     {
       label: "Momentum risk",
-      note: ratios?.priceMomentum3m != null ? `${ratios.priceMomentum3m >= 0 ? "+" : ""}${ratios.priceMomentum3m.toFixed(1)}% over 3 months` : "No momentum data on file",
+      note: ratios?.priceMomentum3m != null ? `${ratios.priceMomentum3m >= 0 ? "+" : ""}${ratios.priceMomentum3m.toFixed(2)}% over 3 months` : "No momentum data on file",
       level: ratios?.priceMomentum3m == null ? "Unknown" : ratios.priceMomentum3m < -10 ? "High" : ratios.priceMomentum3m < 0 ? "Medium" : "Low",
     },
     {
       label: "Drawdown risk",
-      note: drawdown != null ? `${drawdown.toFixed(1)}% peak-to-trough, last 180 days` : "Not enough price history on file",
+      note: drawdown != null ? `${drawdown.toFixed(2)}% peak-to-trough, last 180 days` : "Not enough price history on file",
       level: drawdown == null ? "Unknown" : drawdown < -30 ? "High" : drawdown < -15 ? "Medium" : "Low",
     },
   ];
@@ -118,7 +118,7 @@ export function RiskSection({ symbol, currency="KES", basic=false }: Props) {
               {volatility == null ? (
                 <p className="text-xs text-muted-foreground">Not enough history yet</p>
               ) : (
-                <p className="text-2xl font-bold tabular">{volatility.toFixed(1)}%</p>
+                <p className="text-2xl font-bold tabular">{volatility.toFixed(2)}%</p>
               )}
             </div>
             <div>
@@ -126,7 +126,7 @@ export function RiskSection({ symbol, currency="KES", basic=false }: Props) {
               {drawdown == null ? (
                 <p className="text-xs text-muted-foreground">Not enough history yet</p>
               ) : (
-                <p className="text-2xl font-bold tabular text-bear">{drawdown.toFixed(1)}%</p>
+                <p className="text-2xl font-bold tabular text-bear">{drawdown.toFixed(2)}%</p>
               )}
             </div>
           </div>

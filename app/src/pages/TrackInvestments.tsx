@@ -854,7 +854,7 @@ export default function TrackInvestments() {
                                   : "••••"}
                               </p>
                               <p className="text-[0.6875rem] text-muted-foreground tabular">
-                                {sel.pct.toFixed(1)}%
+                                {sel.pct.toFixed(2)}%
                               </p>
                             </>
                           );
@@ -909,7 +909,7 @@ export default function TrackInvestments() {
                             : "••••"}
                         </span>
                         <span className="text-[0.75rem] font-semibold tabular w-14 text-right">
-                          {s.pct.toFixed(1)}%
+                          {s.pct.toFixed(2)}%
                         </span>
                       </button>
                     );
@@ -1060,7 +1060,7 @@ export default function TrackInvestments() {
                           className={`text-[0.75rem] font-semibold tabular ${m.gain >= 0 ? "text-bull" : "text-bear"}`}
                         >
                           {m.gain >= 0 ? "+" : ""}
-                          {m.gainPct.toFixed(1)}%
+                          {m.gainPct.toFixed(2)}%
                         </span>
                       </div>
                     ))}

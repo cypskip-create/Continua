@@ -4,11 +4,12 @@ import {
   CartesianGrid,
   Line,
   LineChart,
-  ResponsiveContainer,
-  Tooltip,
+
+
   XAxis,
   YAxis,
-} from "recharts";
+} from 'recharts';
+import { InlineChartContainer as ResponsiveContainer, InlineChartTooltip as Tooltip } from '@/components/charts/InlineChart';
 import { useStockFinancials } from "@/hooks/useStockFinancials";
 import { ValueSignal } from "./ValueSignal";
 import { financialNumber } from "@/lib/financialPresentation";
@@ -17,7 +18,7 @@ import { ScenarioWorkbench } from "./ForecastWorkbenches";
 
 const finite = (value: number | null | undefined): number | null =>
   value != null && Number.isFinite(Number(value)) ? Number(value) : null;
-const percent = (value: number) => `${value.toFixed(1)}%`;
+const percent = (value: number) => `${value.toFixed(2)}%`;
 
 export function FundamentalsInsights({
   symbol,
@@ -153,7 +154,7 @@ export function FundamentalsInsights({
                   type="linear"
                   dataKey={returnMetric}
                   stroke="#4f7cf5"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   dot={false}
                   connectNulls={false}
                   isAnimationActive={false}
@@ -242,7 +243,7 @@ export function FundamentalsInsights({
                   dataKey="actual"
                   name="Reported"
                   stroke="#4f7cf5"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   dot={false}
                   isAnimationActive={false}
                 />
@@ -251,7 +252,7 @@ export function FundamentalsInsights({
                   name="Scenario"
                   stroke="#f97316"
                   strokeDasharray="5 4"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   dot={false}
                   isAnimationActive={false}
                 />
@@ -264,7 +265,7 @@ export function FundamentalsInsights({
             anchor a scenario.
           </p>
         )}
-        {!basic&&base!=null&&base>0&&<div className="overflow-x-auto"><h4 className="text-sm font-semibold">Growth sensitivity · {currency}</h4><table className="w-full text-xs whitespace-nowrap"><thead><tr><th className="text-left py-2">Annual growth</th>{[1,2,3].map(y=><th key={y} className="px-3 text-right">Year {y}</th>)}</tr></thead><tbody>{[Math.max(-50,growth-5),growth,Math.min(50,growth+5)].map((g,i)=><tr key={i} className="border-t border-border"><th className="text-left py-2 font-normal">{g.toFixed(1)}%</th>{[1,2,3].map(y=><td key={y} className="px-3 text-right">{financialNumber(base*(1+g/100)**y)}</td>)}</tr>)}</tbody></table><p className="text-xs text-muted-foreground">Constant compounded growth; no probability, valuation multiple or price target is implied.</p></div>}
+        {!basic&&base!=null&&base>0&&<div className="overflow-x-auto"><h4 className="text-sm font-semibold">Growth sensitivity · {currency}</h4><table className="w-full text-xs whitespace-nowrap"><thead><tr><th className="text-left py-2">Annual growth</th>{[1,2,3].map(y=><th key={y} className="px-3 text-right">Year {y}</th>)}</tr></thead><tbody>{[Math.max(-50,growth-5),growth,Math.min(50,growth+5)].map((g,i)=><tr key={i} className="border-t border-border"><th className="text-left py-2 font-normal">{g.toFixed(2)}%</th>{[1,2,3].map(y=><td key={y} className="px-3 text-right">{financialNumber(base*(1+g/100)**y)}</td>)}</tr>)}</tbody></table><p className="text-xs text-muted-foreground">Constant compounded growth; no probability, valuation multiple or price target is implied.</p></div>}
         <PremiumDetail title="Scenario forecast research" symbol={symbol} currency={currency}><ScenarioWorkbench symbol={symbol} currency={currency}/></PremiumDetail>
       </section>
     </div>

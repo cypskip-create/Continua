@@ -235,7 +235,7 @@ export default function StockDetail() {
   // dividendYield from the Data Layer's ratios engine is a raw fraction
   // (e.g. 0.0493), not a percentage — see backend/src/services/research/ratiosEngine.ts.
   const divYield = liveResearch?.ratios.dividendYield != null
-    ? (liveResearch.ratios.dividendYield * 100).toFixed(1)
+    ? (liveResearch.ratios.dividendYield * 100).toFixed(2)
     : null;
 
   // Gain/loss for the whole selected timeframe — first vs. last point of that period's
@@ -755,7 +755,7 @@ export default function StockDetail() {
                   <div><p className="text-[0.625rem] text-muted-foreground">Avg cost</p><p className="text-sm font-semibold tabular">KES {myHolding.avg_cost.toFixed(2)}</p></div>
                   <div><p className="text-[0.625rem] text-muted-foreground">P/L</p>
                     <p className={`text-sm font-semibold tabular ${(stock.price - myHolding.avg_cost) >= 0 ? 'text-bull' : 'text-bear'}`}>
-                      {(stock.price - myHolding.avg_cost) >= 0 ? '+' : ''}{(((stock.price - myHolding.avg_cost) / myHolding.avg_cost) * 100).toFixed(1)}%
+                      {(stock.price - myHolding.avg_cost) >= 0 ? '+' : ''}{(((stock.price - myHolding.avg_cost) / myHolding.avg_cost) * 100).toFixed(2)}%
                     </p>
                   </div>
                 </div>

@@ -178,7 +178,7 @@ export function PortfolioValuations({
             const color = diffPct < -10 ? "text-bear" : diffPct > 10 ? "text-bull" : "text-muted-foreground";
             return (
               <p className={`text-[0.75rem] font-semibold mt-3 ${color}`}>
-                {overall} · {diffPct >= 0 ? "+" : ""}{diffPct.toFixed(1)}% vs current value
+                {overall} · {diffPct >= 0 ? "+" : ""}{diffPct.toFixed(2)}% vs current value
                 <span className="text-muted-foreground font-normal"> (based on assigned models, {assignedRows.length} of {holdings.length} holdings)</span>
               </p>
             );
@@ -373,7 +373,7 @@ function ValuationRow({
           <p className="text-[0.8125rem] font-bold tabular">{fmtMoney(holding.price, currencyLabel, showValues)}</p>
           {fairValue != null && upsidePercent != null ? (
             <p className={`text-[0.65625rem] font-semibold tabular ${upsidePercent < -10 ? "text-bear" : upsidePercent > 10 ? "text-bull" : "text-muted-foreground"}`}>
-              {Math.abs(upsidePercent).toFixed(1)}% {upsidePercent < 0 ? "overvalued" : "undervalued"}
+              {Math.abs(upsidePercent).toFixed(2)}% {upsidePercent < 0 ? "overvalued" : "undervalued"}
             </p>
           ) : (
             <p className="text-[0.65625rem] text-muted-foreground">—</p>

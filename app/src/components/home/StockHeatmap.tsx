@@ -34,7 +34,7 @@ export function StockHeatmap({ stocks }: StockHeatmapProps) {
       return {
         symbol,
         name: STOCK_META[symbol].name,
-        change: +q.changePercent.toFixed(1),
+        change: +q.changePercent.toFixed(2),
         marketCap: (q.marketCap ?? 0) / 1e9, // billions, for relative tile sizing only
         sector: STOCK_META[symbol].sector,
       };
@@ -80,7 +80,7 @@ export function StockHeatmap({ stocks }: StockHeatmapProps) {
         // Larger stocks get more visual prominence
         const isLarge = index < 3;
         const isMedium = index >= 3 && index < 6;
-        
+
         return (
           <div
             key={stock.symbol}
@@ -94,13 +94,13 @@ export function StockHeatmap({ stocks }: StockHeatmapProps) {
             `}
           >
             {/* Subtle grid pattern */}
-            <div className="absolute inset-0 opacity-10" 
-              style={{ 
+            <div className="absolute inset-0 opacity-10"
+              style={{
                 backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
                 backgroundSize: '12px 12px'
-              }} 
+              }}
             />
-            
+
             <div className="relative h-full p-2 flex flex-col justify-between">
               <div>
                 <div className={`font-bold ${isLarge ? 'text-sm' : 'text-xs'} ${getTextColor(stock.change)}`}>
@@ -112,10 +112,10 @@ export function StockHeatmap({ stocks }: StockHeatmapProps) {
                   </div>
                 )}
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <span className={`font-bold ${isLarge ? 'text-base' : 'text-xs'} ${getTextColor(stock.change)}`}>
-                  {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(1)}%
+                  {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
                 </span>
                 {isLarge && (
                   stock.change >= 0 ? (

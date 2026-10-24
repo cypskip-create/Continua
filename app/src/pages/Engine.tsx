@@ -542,7 +542,7 @@ export default function Engine() {
                           <p className="text-xs text-muted-foreground">
                             {model.fairValue == null
                               ? model.unavailableReason
-                              : `${Number(model.upsidePercent).toFixed(1)}% model-implied upside`}
+                              : `${Number(model.upsidePercent).toFixed(2)}% model-implied upside`}
                           </p>
                           <p className="text-xs leading-relaxed text-muted-foreground">
                             {model.methodology}

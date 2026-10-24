@@ -6,12 +6,13 @@ screening, financial news, and an investor community in one mobile-first app.
 
 ## Services
 
-- `app/` — React, Vite, TypeScript, Tailwind, React Query, and Supabase.
+- `app/` — React, Vite, TypeScript, Tailwind, React Query, and the owned Continua identity/data API.
 - `backend/` — Express REST/WebSocket market-data API, ingestion workers,
   research calculations, technical indicators, and multi-exchange adapters.
 - `scraper/` — polite, robots-aware news and filing ingestion with RSS,
   HTML, PDF, OCR, deduplication, provenance, retries, and dead letters.
-- `supabase/` — database migrations and Edge Functions.
+- `infra/neon/` — Neon PostgreSQL migration, permissions and operational tooling.
+- `supabase/` — historical SQL and recovery references; no production connection.
 - `docs/` — API, architecture, data-flow, and deployment documentation.
 
 ## Local development

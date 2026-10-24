@@ -6,7 +6,7 @@ import {ToolHelp} from '@/components/shared/ToolHelp';
 import {ExportResearch} from './ResearchExport';
 type LabResult=(StressResult|BondResult|FuturesResult)&{assumptions?:unknown;generatedAt?:string};
 
-const number=(v:number|null)=>v==null?'Not available':v.toLocaleString(undefined,{maximumFractionDigits:4});
+const number=(v:number|null)=>v==null?'Not available':v.toLocaleString(undefined,{minimumFractionDigits: 2, maximumFractionDigits: 2});
 const field='rounded-xl border border-border bg-background px-3 py-2 w-full';
 function ResultGrid({values}:{values:Record<string,number|null>}){return <dl className="grid grid-cols-2 gap-4">{Object.entries(values).map(([label,value])=><div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="font-semibold tabular-nums">{number(value)}</dd></div>)}</dl>}
 function Input({label,value,onChange,type='number'}:{label:string;value:string|number;onChange:(v:string)=>void;type?:string}){return <label className="flex flex-col gap-1 text-sm"><span className="flex min-h-10 items-end">{label}</span><input required className={field} type={type} step="any" value={value} onChange={e=>onChange(e.target.value)}/></label>}

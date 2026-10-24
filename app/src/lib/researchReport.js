@@ -5,7 +5,7 @@ function render(value,depth=0){
  if(depth>12)return '<p>Additional details omitted.</p>';
  if(value==null)return '<span class="muted">Unavailable</span>';
  if(typeof value==='boolean')return value?'Yes':'No';
- if(typeof value==='number')return Number.isFinite(value)?escape(value.toLocaleString('en-KE',{maximumFractionDigits:6})):'Unavailable';
+ if(typeof value==='number')return Number.isFinite(value)?escape(value.toLocaleString('en-KE',{minimumFractionDigits: 2, maximumFractionDigits: 2})):'Unavailable';
  if(typeof value!=='object')return escape(value);
  if(Array.isArray(value))return value.length?'<ol>'+value.map(item=>'<li>'+render(item,depth+1)+'</li>').join('')+'</ol>':'<p class="muted">None reported</p>';
  return '<dl>'+Object.entries(value).filter(([key])=>!hidden.has(key)).map(([key,item])=>'<div class="field"><dt>'+escape(label(key))+'</dt><dd>'+render(item,depth+1)+'</dd></div>').join('')+'</dl>';
@@ -17,7 +17,7 @@ export function researchReportHtml(name,data){
 export function researchReportLines(data,heading='',depth=0){
  if(depth>12)return [];
  if(data==null)return [heading+': Unavailable'];
- if(typeof data!=='object')return [(heading?heading+': ':'')+(typeof data==='number'?data.toLocaleString('en-KE',{maximumFractionDigits:6}):typeof data==='boolean'?(data?'Yes':'No'):String(data))];
+ if(typeof data!=='object')return [(heading?heading+': ':'')+(typeof data==='number'?data.toLocaleString('en-KE',{minimumFractionDigits: 2, maximumFractionDigits: 2}):typeof data==='boolean'?(data?'Yes':'No'):String(data))];
  if(Array.isArray(data))return [heading,...data.slice(0,100).flatMap((row,index)=>researchReportLines(row,'Item '+(index+1),depth+1)),...(data.length>100?['Showing the first 100 of '+data.length+' entries.']:[])];
  return [...(heading?[heading]:[]),...Object.entries(data).filter(([key])=>!hidden.has(key)).flatMap(([key,value])=>researchReportLines(value,label(key),depth+1))];
 }

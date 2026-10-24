@@ -1,5 +1,6 @@
 import {useState} from 'react';
-import {Bar, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
+import {Bar, CartesianGrid, ComposedChart, Line, ReferenceLine,   XAxis, YAxis} from 'recharts';
+import { InlineChartContainer as ResponsiveContainer, InlineChartTooltip as Tooltip } from '@/components/charts/InlineChart';
 import {publisherChartGroups, type PublisherSeries} from '@/lib/publisherCharts';
 import {usePublisherResearch} from '@/hooks/usePublisherResearch';
 
@@ -21,7 +22,7 @@ function CategoryChart({category,series}:{category:string;series:PublisherSeries
    <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 4"/><XAxis dataKey="year" tickLine={false} axisLine={false} tick={{fontSize:11}}/>
    <YAxis tickFormatter={compact} width={55} tickLine={false} axisLine={false} tick={{fontSize:10}} domain={[(n:number)=>Math.min(0,n),'auto']}/><ReferenceLine y={0} stroke="hsl(var(--border))"/>
    <Tooltip content={({active,payload,label})=>active&&payload?.length?<div className="max-w-64 rounded-lg border border-border bg-popover p-3 text-xs text-popover-foreground shadow-md"><p className="font-semibold">{metric.label} · {label}</p><p>{payload[0]?.payload?.raw||'Unavailable'}</p></div>:null}/>
-   {style==='bar'?<Bar dataKey="value" fill="#4f7cf5" maxBarSize={36} radius={[4,4,0,0]} isAnimationActive={false}/>:<Line dataKey="value" type="linear" stroke="#4f7cf5" strokeWidth={2} dot={{r:3}} connectNulls={false} isAnimationActive={false}/>}
+   {style==='bar'?<Bar dataKey="value" fill="#4f7cf5" maxBarSize={36} radius={[4,4,0,0]} isAnimationActive={false}/>:<Line dataKey="value" type="linear" stroke="#4f7cf5" strokeWidth={1.5} dot={{r:3}} connectNulls={false} isAnimationActive={false}/>}
   </ComposedChart></ResponsiveContainer></div>
   <div className="overflow-x-auto"><table className="w-full text-center text-xs tabular-nums"><caption className="sr-only">{metric.label} chart values</caption><thead><tr>{metric.points.map(p=><th key={p.year} className="px-2 py-1 font-normal text-muted-foreground">{p.year}</th>)}</tr></thead><tbody><tr>{metric.points.map(p=><td key={p.year} className="px-2 py-1">{p.raw||'—'}</td>)}</tr></tbody></table></div>
  </section>;

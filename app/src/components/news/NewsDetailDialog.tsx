@@ -6,8 +6,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Bookmark, BookmarkCheck, Share2, MessageCircle, 
+import {
+  Bookmark, BookmarkCheck, Share2, MessageCircle,
   Clock, Eye, X, Send, User
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -48,12 +48,12 @@ interface NewsDetailDialogProps {
 }
 
 
-export function NewsDetailDialog({ 
-  article, 
-  open, 
-  onOpenChange, 
-  savedArticles, 
-  onToggleSave 
+export function NewsDetailDialog({
+  article,
+  open,
+  onOpenChange,
+  savedArticles,
+  onToggleSave
 }: NewsDetailDialogProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -112,15 +112,15 @@ export function NewsDetailDialog({
         <ScrollArea className="max-h-[90vh]">
           {/* Hero Image */}
           <div className="relative">
-            <img 
-              src={article.imageUrl} 
+            <img
+              src={article.imageUrl}
               alt={article.title}
               className="w-full h-56 object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="absolute top-3 right-3 bg-black/30 hover:bg-black/50 text-white"
               onClick={() => onOpenChange(false)}
             >
@@ -177,9 +177,9 @@ export function NewsDetailDialog({
             {article.stockMentions && article.stockMentions.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {article.stockMentions.map((stock) => (
-                  <Badge 
-                    key={stock} 
-                    variant="outline" 
+                  <Badge
+                    key={stock}
+                    variant="outline"
                     className="cursor-pointer hover:bg-primary/10"
                     onClick={() => {
                       onOpenChange(false);
@@ -211,10 +211,10 @@ export function NewsDetailDialog({
                 {article.views && (
                   <span className="flex items-center gap-1">
                     <Eye className="h-4 w-4" />
-                    {(article.views / 1000).toFixed(1)}K views
+                    {(article.views / 1000).toFixed(2)}K views
                   </span>
                 )}
-                <button 
+                <button
                   className="flex items-center gap-1 hover:text-primary transition-colors"
                   onClick={() => setShowComments(!showComments)}
                 >
@@ -226,8 +226,8 @@ export function NewsDetailDialog({
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2 mb-4">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex-1"
                 onClick={() => onToggleSave(article.id)}
               >
@@ -247,9 +247,9 @@ export function NewsDetailDialog({
                 <Share2 className="h-4 w-4 mr-2" />
                 Share
               </Button>
-              <Button 
-                variant={showComments ? "default" : "outline"} 
-                className="flex-1" 
+              <Button
+                variant={showComments ? "default" : "outline"}
+                className="flex-1"
                 onClick={() => setShowComments(!showComments)}
               >
                 <MessageCircle className="h-4 w-4 mr-2" />
@@ -273,15 +273,15 @@ export function NewsDetailDialog({
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 flex gap-2">
-                    <Textarea 
+                    <Textarea
                       placeholder={user ? "Add a comment..." : "Sign in to comment"}
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                       className="min-h-[60px] resize-none text-sm"
                       disabled={!user}
                     />
-                    <Button 
-                      size="icon" 
+                    <Button
+                      size="icon"
                       className="h-[60px]"
                       onClick={handleAddComment}
                       disabled={!newComment.trim() || !user}

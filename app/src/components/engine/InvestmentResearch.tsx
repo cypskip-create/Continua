@@ -15,7 +15,8 @@ import { engineApi } from '@/api/engineApi';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { ExportResearch } from './ResearchExport';
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, Line, LineChart,   XAxis, YAxis } from 'recharts';
+import { InlineChartContainer as ResponsiveContainer, InlineChartTooltip as Tooltip } from '@/components/charts/InlineChart';
 
 type Observation={id:string;series?:string;date:string;availableAt:string;sourceUrl:string;provider?:string;licenseUrl?:string;value?:number;unit?:string;type?:string;title?:string;effectiveDate?:string;status?:string;terms?:Record<string,unknown>};
 type Series={series:string;latest:Observation;history:Observation[];change:number|null;ageDays:number};

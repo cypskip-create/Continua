@@ -147,7 +147,7 @@ function ScoreRow({ h, axis }: { h: { symbol: string; name: string; weight: numb
         <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
           <div className="h-full rounded-full bg-bull" style={{ width: `${(score / 6) * 100}%` }} />
         </div>
-        <span className="text-[0.65625rem] text-muted-foreground w-10 text-right">{h.weight.toFixed(1)}%</span>
+        <span className="text-[0.65625rem] text-muted-foreground w-10 text-right">{h.weight.toFixed(2)}%</span>
       </div>
     </div>
   );

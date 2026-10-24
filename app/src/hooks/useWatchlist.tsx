@@ -1,4 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { readPrivateSnapshot, writePrivateSnapshot } from '@/lib/privateSnapshot';
+import type { SetStateAction } from 'react';
 import { usePageRefresh } from './usePageRefresh';
 import { supabase } from '@/integrations/continua/browserClient';
 import { useAuth } from './useAuth';
@@ -31,11 +34,27 @@ const FREE_FOLDER_LIMIT = 1;
 const PREMIUM_FOLDER_LIMIT = 20;
 
 export function useWatchlist() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { profile } = useProfile();
   const [folders, setFolders] = useState<WatchlistFolder[]>([]);
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const watchlistKey = ['continua', 'watchlist', user?.id];
+  const watchlistQuery = useQuery({
+    queryKey: watchlistKey,
+    initialData: () => user ? readPrivateSnapshot<WatchlistItem[]>('watchlist', user.id) : undefined,
+    initialDataUpdatedAt: 0,
+    enabled: !!user && !authLoading, staleTime: 60_000, retry: 1,
+    queryFn: async ({signal}) => {
+      const {data, error} = await supabase.from('watchlists').select('*').eq('user_id', user!.id).order('created_at', {ascending: false}).abortSignal(signal);
+      if (error) throw error;
+      if (signal.aborted) throw new Error("Watchlist request cancelled");
+      writePrivateSnapshot('watchlist', user!.id, data ?? []);
+      return (data ?? []) as WatchlistItem[];
+    },
+  });
+  const watchlist = watchlistQuery.data ?? [];
+  const loading = authLoading || (!!user && watchlistQuery.isPending);
+  const setWatchlist = (next: SetStateAction<WatchlistItem[]>) => queryClient.setQueryData<WatchlistItem[]>(watchlistKey, previous => { const result = typeof next === 'function' ? next(previous ?? []) : next; if (user) writePrivateSnapshot('watchlist', user.id, result); return result; });
   const [foldersLoading, setFoldersLoading] = useState(true);
 
   const isPremium = profile?.subscription_plan === 'premium' || profile?.subscription_plan === 'premium_plus';
@@ -79,38 +98,20 @@ export function useWatchlist() {
   }, [user]);
 
   const fetchWatchlist = useCallback(async () => {
-    if (!user) return;
-    try {
-      const { data, error } = await supabase
-        .from('watchlists')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching watchlist:', error);
-      } else {
-        setWatchlist(data || []);
-      }
-    } catch (error) {
-      console.error('Error fetching watchlist:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+    if (user) await watchlistQuery.refetch();
+  }, [user?.id, watchlistQuery.refetch]);
 
   usePageRefresh(fetchWatchlist);
   useEffect(() => {
+    if (authLoading) return;
     if (user) {
+      setFoldersLoading(true);
       fetchFolders();
-      fetchWatchlist();
     } else {
       setFolders([]);
-      setWatchlist([]);
-      setLoading(false);
       setFoldersLoading(false);
     }
-  }, [user, fetchFolders, fetchWatchlist]);
+  }, [user, authLoading, fetchFolders]);
 
   const defaultFolderId = useMemo(
     () => folders.find(f => f.is_default)?.id || folders[0]?.id,
@@ -250,6 +251,7 @@ export function useWatchlist() {
     // Flat, cross-folder view -- unchanged shape for existing callers.
     watchlist,
     loading,
+    isError: watchlistQuery.isError,
     addToWatchlist,
     removeFromWatchlist,
     isInWatchlist,

@@ -157,8 +157,8 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
                       value={showGains ? (r.gain != null ? (showValues ? `${r.gain >= 0 ? "+" : "−"}${kes(Math.abs(r.gain), 0)}` : "••••") : "—") : "—"}
                       tone={r.gain != null ? (r.gain >= 0 ? "bull" : "bear") : undefined}
                     />
-                    <Metric label="Portfolio weight" value={r.value != null ? `${weight.toFixed(1)}%` : "—"} />
-                    <Metric label="Div. yield" value={r.divYield > 0 ? `${r.divYield.toFixed(1)}%` : "—"} />
+                    <Metric label="Portfolio weight" value={r.value != null ? `${weight.toFixed(2)}%` : "—"} />
+                    <Metric label="Div. yield" value={r.divYield > 0 ? `${r.divYield.toFixed(2)}%` : "—"} />
                     <Metric label="Est. income / yr" value={r.income != null && r.divYield > 0 && showValues ? kes(r.income, 0) : "—"} />
                   </div>
 

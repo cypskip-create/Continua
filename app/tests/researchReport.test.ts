@@ -1,8 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {researchReportHtml,researchReportLines} from '../src/lib/researchReport.js';
-test('research exports use readable labels and omit developer internals',()=>{
- const data={expectedReturn:12.5,lossProbability:.1,missing:null,inputHash:'private-hash',sourceUrl:'https://fixture.invalid'};
- const text=researchReportLines(data).join('\n');assert.match(text,/Expected Return: 12.5/);assert.match(text,/Missing: Unavailable/);assert.doesNotMatch(text,/private-hash|fixture.invalid/);
+test('readable reports preserve results and limitations while excluding operational hashes',()=>{
+ const data={expectedShortfall:1234.5,assumptions:{horizonDays:30},limitation:'A scenario, not a guarantee.',missing:null,governance:{inputHash:'private-hash'}};
+ const lines=researchReportLines(data).join('\n');assert.match(lines,/Expected Shortfall: 1,234.5/);assert.match(lines,/Horizon Days: 30/);assert.match(lines,/Missing: Unavailable/);assert.match(lines,/not a guarantee/);assert.doesNotMatch(lines,/private-hash/);
 });
 test('HTML report text cannot execute a supplied script or image handler',()=>{
  const html=researchReportHtml('Forecast',{note:'<SCRIPT>alert(1)</SCRIPT><img src=x onerror=alert(2)>'});

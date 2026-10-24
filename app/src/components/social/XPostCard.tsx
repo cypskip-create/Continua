@@ -64,8 +64,8 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
     (Date.now() - new Date(post.created_at).getTime()) < 30 * 60 * 1000;
 
   const formatNumber = (num: number) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
-    if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+    if (num >= 1000000) return (num / 1000000).toFixed(2) + "M";
+    if (num >= 1000) return (num / 1000).toFixed(2) + "K";
     return num > 0 ? num.toString() : "";
   };
 
@@ -96,7 +96,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
             {priceData && (
               <span className={`ml-1 text-[0.6875rem] font-medium ${priceData.change >= 0 ? "text-bull" : "text-bear"}`}>
                 KES {priceData.price.toFixed(2)}
-                <span className="ml-0.5">{priceData.change >= 0 ? "↑" : "↓"}{Math.abs(priceData.change).toFixed(1)}%</span>
+                <span className="ml-0.5">{priceData.change >= 0 ? "↑" : "↓"}{Math.abs(priceData.change).toFixed(2)}%</span>
               </span>
             )}
           </span>
@@ -186,7 +186,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
                   return (
                     <Badge key={stock} variant="secondary" className="text-[0.6875rem] px-2 py-0.5 cursor-pointer hover:bg-primary/10 rounded-full gap-1 border-0" onClick={(e) => { e.stopPropagation(); navigate(`/stock/${stock}`); }}>
                       ${stock}
-                      {change !== null && <span className={change >= 0 ? "text-bull" : "text-bear"}>{change >= 0 ? "+" : ""}{change.toFixed(1)}%</span>}
+                      {change !== null && <span className={change >= 0 ? "text-bull" : "text-bear"}>{change >= 0 ? "+" : ""}{change.toFixed(2)}%</span>}
                     </Badge>
                   );
                 })}
