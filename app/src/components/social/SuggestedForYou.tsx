@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -101,7 +102,7 @@ export function SuggestedForYou({ currentUserId, myInterests, followingIds, onFo
                 <p className="text-[0.75rem] font-bold truncate">{c.full_name || "Investor"}</p>
                 <p className="text-[0.65625rem] text-muted-foreground truncate">{atHandle(c)}</p>
                 {c.sharedCount > 0 && (
-                  <p className="text-[0.59375rem] text-primary font-semibold mt-0.5">{c.sharedCount} shared interest{c.sharedCount > 1 ? "s" : ""}</p>
+                  <p className="text-[0.59375rem] text-primary font-semibold mt-0.5"><RollingNumber value={c.sharedCount} /> shared interest{c.sharedCount > 1 ? "s" : ""}</p>
                 )}
               </div>
               <Button

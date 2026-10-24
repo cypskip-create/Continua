@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Circle, DollarSign } from "lucide-react";
 import {
@@ -140,7 +141,7 @@ export function DividendCalendar({ holdings, dividendData, showValues = true, cu
                 {e.kind === "ex-dividend" ? "Ex-Dividend" : "Payment"}{e.estimated ? " (Est.)" : ""}
               </span>
               <span className="font-semibold tabular">
-                {e.amount != null ? (showValues ? `${currencyLabel}${e.amount.toFixed(2)}` : "••••") : "n/a"}
+                <RollingNumber value={e.amount != null ? (showValues ? `${currencyLabel}${e.amount.toFixed(2)}` : "••••") : "n/a"} />
               </span>
             </div>
           ))}

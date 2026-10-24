@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { InfoTip } from "./InfoTip";
 
 export interface ContributorRow {
@@ -50,10 +51,10 @@ export function ReturnsContributors({
           </div>
           <div className="text-right shrink-0">
             <p className={`text-[0.8125rem] font-bold tabular ${positive ? "text-bull" : "text-bear"}`}>
-              {showValues ? `${positive ? "" : "−"}${currencyLabel}${Math.abs(h.amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••"}
+              <RollingNumber value={showValues ? `${positive ? "" : "−"}${currencyLabel}${Math.abs(h.amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••"} />
             </p>
             <p className={`text-[0.65625rem] tabular ${positive ? "text-bull" : "text-bear"}`}>
-              {positive ? "+" : ""}{h.gainPct.toFixed(2)}%
+              {positive ? "+" : ""}<RollingNumber value={h.gainPct.toFixed(2)} />%
             </p>
           </div>
         </div>
@@ -92,7 +93,7 @@ export function ReturnsContributors({
           onClick={onSeeAll}
           className="w-full mt-3 h-10 rounded-full bg-muted/50 text-[0.75rem] font-semibold text-foreground active:opacity-70 transition-opacity"
         >
-          See all {holdings.length} holdings
+          See all <RollingNumber value={holdings.length} /> holdings
         </button>
       )}
     </div>

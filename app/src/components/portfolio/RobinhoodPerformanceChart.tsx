@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useId, useState, useMemo, useCallback, useRef } from "react";
 import {
   AreaChart,
@@ -227,7 +228,7 @@ export function RobinhoodPerformanceChart({
       {/* Hero */}
       <div className="mb-3">
         <div className="text-xl font-bold tracking-tight tabular-nums">
-          {formatHero(displayValue)}
+          <RollingNumber value={formatHero(displayValue)} />
         </div>
         {chartData.length>=2&&<div
           className={`flex items-center gap-1 mt-0.5 text-[0.6875rem] ${isPositive ? "text-bull" : "text-bear"}`}
@@ -242,21 +243,21 @@ export function RobinhoodPerformanceChart({
               {!hideValue && (
                 <span className="font-semibold">
                   {changeInWindow >= 0 ? "+" : ""}KES{" "}
-                  {Math.abs(changeInWindow).toLocaleString("en-US", {
+                  <RollingNumber value={Math.abs(changeInWindow).toLocaleString("en-US", {
                     minimumFractionDigits: 2, maximumFractionDigits: 2,
-                  })}
+                  })} />
                 </span>
               )}
               <span className={hideValue ? "font-semibold" : "opacity-80"}>
                 {hideValue ? "" : "("}
                 {changePercent >= 0 ? "+" : ""}
-                {changePercent.toFixed(2)}%{hideValue ? "" : ")"}
+                <RollingNumber value={changePercent.toFixed(2)} />%{hideValue ? "" : ")"}
               </span>
             </>
           ) : (
             <span className="font-semibold">
               {changeInWindow >= 0 ? "+" : ""}
-              {changeInWindow.toFixed(2)}% in {activeTimeframe}
+              <RollingNumber value={changeInWindow.toFixed(2)} />% in {activeTimeframe}
             </span>
           )}
           <span className="text-muted-foreground ml-1">

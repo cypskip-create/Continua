@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { TrendingUp, Calendar, Coins, ArrowUpRight, ChevronRight } from "lucide-react";
@@ -97,8 +98,8 @@ export function CommandCenterSections({ quotes }: CommandCenterSectionsProps) {
         <Section title="Undervalued Picks" icon={Coins} iconClass="text-bull" actionLabel="More" onAction={() => navigate("/screener")}>
           {undervalued.map(s => (
             <Row key={s.symbol} onClick={() => navigate(`/stock/${s.symbol}`)}
-              left={<div><p className="text-xs font-semibold">{s.symbol} <span className="font-normal text-muted-foreground">· {s.name}</span></p><p className="text-[0.625rem] text-muted-foreground tabular">KES {s.price.toFixed(2)}</p></div>}
-              right={<div className="text-right"><p className="text-xs font-semibold text-bull tabular flex items-center gap-0.5 justify-end"><ArrowUpRight className="h-3 w-3" />+{s.upside.toFixed(2)}%</p><p className="text-[0.625rem] text-muted-foreground">upside</p></div>}
+              left={<div><p className="text-xs font-semibold">{s.symbol} <span className="font-normal text-muted-foreground">· {s.name}</span></p><p className="text-[0.625rem] text-muted-foreground tabular">KES <RollingNumber value={s.price.toFixed(2)} /></p></div>}
+              right={<div className="text-right"><p className="text-xs font-semibold text-bull tabular flex items-center gap-0.5 justify-end"><ArrowUpRight className="h-3 w-3" />+<RollingNumber value={s.upside.toFixed(2)} />%</p><p className="text-[0.625rem] text-muted-foreground">upside</p></div>}
             />
           ))}
         </Section>
@@ -108,7 +109,7 @@ export function CommandCenterSections({ quotes }: CommandCenterSectionsProps) {
         {highGrowth.map(s => (
           <Row key={s.symbol} onClick={() => navigate(`/stock/${s.symbol}`)}
             left={<div><p className="text-xs font-semibold">{s.symbol} <span className="font-normal text-muted-foreground">· {s.name}</span></p><p className="text-[0.625rem] text-muted-foreground">3-yr revenue</p></div>}
-            right={<p className="text-xs font-semibold text-accent tabular">+{s.growth.toFixed(2)}%</p>}
+            right={<p className="text-xs font-semibold text-accent tabular">+<RollingNumber value={s.growth.toFixed(2)} />%</p>}
           />
         ))}
       </Section>
@@ -117,7 +118,7 @@ export function CommandCenterSections({ quotes }: CommandCenterSectionsProps) {
         {dividendStars.map(s => (
           <Row key={s.symbol} onClick={() => navigate(`/stock/${s.symbol}`)}
             left={<div><p className="text-xs font-semibold">{s.symbol} <span className="font-normal text-muted-foreground">· {s.name}</span></p><p className="text-[0.625rem] text-muted-foreground">forward yield</p></div>}
-            right={<p className="text-xs font-semibold text-chart-3 tabular">{s.yield.toFixed(2)}%</p>}
+            right={<p className="text-xs font-semibold text-chart-3 tabular"><RollingNumber value={s.yield.toFixed(2)} />%</p>}
           />
         ))}
       </Section>

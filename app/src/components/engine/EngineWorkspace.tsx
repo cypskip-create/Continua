@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import {useProfile} from '@/hooks/useProfile';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from "react";
@@ -42,9 +43,9 @@ export function EngineInsights({ data }: { data: EngineBundle }) {
       <div>
         <h3 className="text-lg font-semibold">What changed?</h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          {data.changes?.baseline
+          <RollingNumber value={data.changes?.baseline
             ? "This is the first complete research baseline. Changes appear after new evidence is observed."
-            : `Compared with ${data.changes?.comparedAsOf ? new Date(data.changes.comparedAsOf).toLocaleString() : "the previous complete research snapshot"}.`}
+            : `Compared with ${data.changes?.comparedAsOf ? new Date(data.changes.comparedAsOf).toLocaleString() : "the previous complete research snapshot"}.`} />
         </p>
         {data.changes?.changes.map((item, index) => (
           <p key={index} className="mt-2 text-sm">
@@ -61,9 +62,9 @@ export function EngineInsights({ data }: { data: EngineBundle }) {
         <h3 className="text-sm font-semibold">Evidence quality</h3>
         <p className="mt-2 text-xs text-muted-foreground">
           Quote:{" "}
-          {data.quality.quoteAsOf
+          <RollingNumber value={data.quality.quoteAsOf
             ? new Date(data.quality.quoteAsOf).toLocaleString()
-            : "Unavailable"}{" "}
+            : "Unavailable"} />{" "}
           · {data.quality.quoteSource ?? "Unknown source"}
           <br />
           Financial period ended {data.quality.periodEnd ?? "Unavailable"} ·
@@ -131,7 +132,7 @@ export function EngineInsights({ data }: { data: EngineBundle }) {
               className="border-t border-border py-3 sm:border-t-0 sm:border-l sm:first:border-l-0 sm:pl-3"
             >
               <p className="text-sm font-semibold">
-                {s.name} · {s.growthPercent}%
+                {s.name} · <RollingNumber value={s.growthPercent} />%
               </p>
               <p className="text-xs mt-2">
                 Revenue: {number(s.revenue)}
@@ -417,16 +418,16 @@ export function EngineAssistantPanel({
       <Notice value={usage.error} />
       {usage.data && (
         <p className="text-xs text-muted-foreground">
-          {usage.data.configured
+          <RollingNumber value={usage.data.configured
             ? `${usage.data.requests} requests this month · $${usage.data.reserved.toFixed(2)} reserved usage · ${usage.data.dailyUserLimit} requests per user/day. Application monthly cap: $${usage.data.monthlyApplicationCap}.`
-            : "Calculated evidence mode: structured, sourced answers without generative AI."}{" "}
+            : "Calculated evidence mode: structured, sourced answers without generative AI."} />{" "}
           Requests run only when you submit a question.
         </p>
       )}
       {ask.data && (
         <article className="border-t border-border pt-4 space-y-3">
           <h4 className="text-sm font-semibold">Research response · {submitted?.scope==="portfolio"?"My portfolio":submitted?.symbol??symbol}</h4>
-          <p className="text-xs text-muted-foreground">{ask.data.sources.length} evidence sources · {ask.data.sources.filter(s=>s.asOf).length} dated · {ask.data.citations.length} citation references. Counts do not establish accuracy; inspect the underlying evidence.</p>
+          <p className="text-xs text-muted-foreground"><RollingNumber value={ask.data.sources.length} /> evidence sources · <RollingNumber value={ask.data.sources.filter(s=>s.asOf).length} /> dated · <RollingNumber value={ask.data.citations.length} /> citation references. Counts do not establish accuracy; inspect the underlying evidence.</p>
           <ExportResearch name={`${submitted?.symbol??symbol}-assistant-research`} data={{request:submitted,answer:ask.data}}/>
           <p className="text-sm leading-relaxed whitespace-pre-wrap">
             {ask.data.answer}
@@ -578,7 +579,7 @@ export function EngineMonitoringPanel({
             <p className="text-xs text-muted-foreground">
               {rule.enabled ? "Active" : "Paused"} · {rule.exchange}
             </p>
-            <p className="text-xs text-muted-foreground">{rule.last_state?.checkedAt?`Checked ${new Date(rule.last_state.checkedAt).toLocaleString()} · ${rule.last_state.error??(rule.last_state.unavailable?"Input unavailable":rule.last_state.triggered?"Threshold crossed":"No crossing")}`:"Awaiting first check"}{rule.last_state?.value!=null?` · observed ${number(rule.last_state.value)}`:""}{rule.last_state?.asOf?` · data ${rule.last_state.asOf}`:""}</p>
+            <p className="text-xs text-muted-foreground"><RollingNumber value={rule.last_state?.checkedAt?`Checked ${new Date(rule.last_state.checkedAt).toLocaleString()} · ${rule.last_state.error??(rule.last_state.unavailable?"Input unavailable":rule.last_state.triggered?"Threshold crossed":"No crossing")}`:"Awaiting first check"} />{rule.last_state?.value!=null?` · observed ${number(rule.last_state.value)}`:""}{rule.last_state?.asOf?` · data ${rule.last_state.asOf}`:""}</p>
           </div>
           <div className="flex gap-2">
             <button
@@ -602,7 +603,7 @@ export function EngineMonitoringPanel({
       <Notice value={activity.error} />
       {activity.error && <button className={control} disabled={activity.isFetching} onClick={()=>void activity.refetch()}>Retry alert history</button>}
       {activity.error && !!activity.data?.length && <p role="status" className="text-xs text-muted-foreground">Showing previously loaded alerts. The latest check could not complete.</p>}
-      {activity.data?.map(item=><div key={item.id} className="border-t border-border py-2 text-xs"><strong>{item.title}</strong><p>{item.message}</p><time>{new Date(item.created_at).toLocaleString()}</time></div>)}
+      {activity.data?.map(item=><div key={item.id} className="border-t border-border py-2 text-xs"><strong>{item.title}</strong><p>{item.message}</p><time><RollingNumber value={new Date(item.created_at).toLocaleString()} /></time></div>)}
       {!activity.error && activity.data?.length===0&&<p className="text-xs text-muted-foreground">No Engine alerts yet. New alerts appear here and in Notifications.</p>}
     </section>
   );
@@ -648,7 +649,7 @@ export function EnginePortfolioPanel({ exchange }: { exchange: string }) {
         </button>
       </div>
       <Notice value={portfolio.error} />
-      {portfolio.error && p && <p role="status" className="text-xs text-muted-foreground">Showing the last successfully loaded portfolio, not a fresh analysis. Loaded {new Date(portfolio.dataUpdatedAt).toLocaleString()}.</p>}
+      {portfolio.error && p && <p role="status" className="text-xs text-muted-foreground">Showing the last successfully loaded portfolio, not a fresh analysis. Loaded <RollingNumber value={new Date(portfolio.dataUpdatedAt).toLocaleString()} />.</p>}
       {portfolio.isLoading && (
         <p role="status" className="text-sm">
           Analysing your holdings…

@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import {useState} from 'react';
 import {Bar, CartesianGrid, ComposedChart, Line, ReferenceLine,   XAxis, YAxis} from 'recharts';
 import { InlineChartContainer as ResponsiveContainer, InlineChartTooltip as Tooltip } from '@/components/charts/InlineChart';
@@ -24,7 +25,7 @@ function CategoryChart({category,series}:{category:string;series:PublisherSeries
    <Tooltip content={({active,payload,label})=>active&&payload?.length?<div className="max-w-64 rounded-lg border border-border bg-popover p-3 text-xs text-popover-foreground shadow-md"><p className="font-semibold">{metric.label} · {label}</p><p>{payload[0]?.payload?.raw||'Unavailable'}</p></div>:null}/>
    {style==='bar'?<Bar dataKey="value" fill="#4f7cf5" maxBarSize={36} radius={[4,4,0,0]} isAnimationActive={false}/>:<Line dataKey="value" type="linear" stroke="#4f7cf5" strokeWidth={1.5} dot={{r:3}} connectNulls={false} isAnimationActive={false}/>}
   </ComposedChart></ResponsiveContainer></div>
-  <div className="overflow-x-auto"><table className="w-full text-center text-xs tabular-nums"><caption className="sr-only">{metric.label} chart values</caption><thead><tr>{metric.points.map(p=><th key={p.year} className="px-2 py-1 font-normal text-muted-foreground">{p.year}</th>)}</tr></thead><tbody><tr>{metric.points.map(p=><td key={p.year} className="px-2 py-1">{p.raw||'—'}</td>)}</tr></tbody></table></div>
+  <div className="overflow-x-auto"><table className="w-full text-center text-xs tabular-nums"><caption className="sr-only">{metric.label} chart values</caption><thead><tr>{metric.points.map(p=><th key={p.year} className="px-2 py-1 font-normal text-muted-foreground"><RollingNumber value={p.year} /></th>)}</tr></thead><tbody><tr>{metric.points.map(p=><td key={p.year} className="px-2 py-1">{p.raw||'—'}</td>)}</tr></tbody></table></div>
  </section>;
 }
 export function PublisherFinancialTables({symbol}:{symbol:string}) {

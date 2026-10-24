@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useEffect, useRef, useMemo } from "react";
 import {SafetyMenuItems} from '@/components/social/SafetyMenuItems';
 import {useAccountBlock} from '@/hooks/useAccountBlock';
@@ -491,10 +492,10 @@ export default function UserProfile() {
           {/* Following/Followers */}
           <div className="flex gap-4 mt-2">
             <button className="hover:underline text-[0.8125rem]" onClick={() => { setDialogTab("following"); setFollowersDialogOpen(true); }}>
-              <span className="font-bold">{followingCount}</span> <span className="text-muted-foreground">Following</span>
+              <span className="font-bold"><RollingNumber value={followingCount} /></span> <span className="text-muted-foreground">Following</span>
             </button>
             <button className="hover:underline text-[0.8125rem]" onClick={() => { setDialogTab("followers"); setFollowersDialogOpen(true); }}>
-              <span className="font-bold">{followersCount}</span> <span className="text-muted-foreground">Followers</span>
+              <span className="font-bold"><RollingNumber value={followersCount} /></span> <span className="text-muted-foreground">Followers</span>
             </button>
           </div>
         </div>
@@ -690,14 +691,14 @@ export default function UserProfile() {
                 <div>
                   <p className="section-eyebrow">Portfolio value</p>
                   <div className="mt-1 text-[1.75rem] leading-none font-semibold tabular">
-                    {maskAmounts ? "••••••" : `KES ${portfolioSummary.totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
+                    <RollingNumber value={maskAmounts ? "••••••" : `KES ${portfolioSummary.totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}`} />
                   </div>
                   {!maskGains && (
                     <div className={`text-[0.75rem] font-semibold mt-1.5 flex items-center gap-1 tabular ${portfolioSummary.totalGain >= 0 ? "text-bull" : "text-bear"}`}>
                       {portfolioSummary.totalGain >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-                      {maskAmounts
+                      <RollingNumber value={maskAmounts
                         ? `${portfolioSummary.totalGain >= 0 ? "+" : "−"}${Math.abs(portfolioSummary.gainPercent).toFixed(2)}%`
-                        : `${portfolioSummary.totalGain >= 0 ? "+" : "−"}KES ${Math.abs(portfolioSummary.totalGain).toLocaleString('en-US', { maximumFractionDigits: 0 })} (${portfolioSummary.gainPercent.toFixed(2)}%)`}
+                        : `${portfolioSummary.totalGain >= 0 ? "+" : "−"}KES ${Math.abs(portfolioSummary.totalGain).toLocaleString('en-US', { maximumFractionDigits: 0 })} (${portfolioSummary.gainPercent.toFixed(2)}%)`} />
                     </div>
                   )}
                 </div>
@@ -716,7 +717,7 @@ export default function UserProfile() {
                 showGains={!maskGains}
               />
               {!isOwnProfile && profileData?.portfolio_top_holdings_only && (portfolioSummary?.holdings?.length || 0) > visibleHoldings.length && (
-                <p className="text-[0.6875rem] text-muted-foreground text-center">Showing top {visibleHoldings.length} holdings only</p>
+                <p className="text-[0.6875rem] text-muted-foreground text-center">Showing top <RollingNumber value={visibleHoldings.length} /> holdings only</p>
               )}
 
               {/* Share portfolio button */}

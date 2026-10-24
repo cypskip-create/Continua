@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import {ResearchDetails} from './ResearchDetails';
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -176,7 +177,7 @@ export function AdvancedResearchLab({ symbol }: { symbol: string }) {
           )}
           {load.data && (
             <p className="text-xs text-muted-foreground">
-              {load.data.points.length} observations loaded · {load.data.basis}
+              <RollingNumber value={load.data.points.length} /> observations loaded · {load.data.basis}
             </p>
           )}
         </form>
@@ -256,9 +257,9 @@ export function AdvancedResearchLab({ symbol }: { symbol: string }) {
                     {k.replace(/([A-Z])/g, " $1")}
                   </dt>
                   <dd className="font-semibold">
-                    {Number(v).toLocaleString(undefined, {
+                    <RollingNumber value={Number(v).toLocaleString(undefined, {
                       maximumFractionDigits: 2,
-                    })}
+                    })} />
                   </dd>
                 </div>
               ))}

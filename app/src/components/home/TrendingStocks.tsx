@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -80,7 +81,7 @@ export function TrendingStocks() {
             <div className="flex items-center gap-3">
               {/* Rank */}
               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-xs font-bold">
-                {index + 1}
+                <RollingNumber value={index + 1} />
               </div>
 
               {/* Stock Info */}
@@ -104,9 +105,9 @@ export function TrendingStocks() {
               <div className="text-right">
                 {stock.isLive ? (
                   <>
-                    <p className="text-sm font-semibold">KES {stock.price!.toFixed(2)}</p>
+                    <p className="text-sm font-semibold">KES <RollingNumber value={stock.price!.toFixed(2)} /></p>
                     <p className={`text-xs font-medium ${stock.change! >= 0 ? 'text-bull' : 'text-bear'}`}>
-                      {stock.change! >= 0 ? '+' : ''}{stock.change!.toFixed(2)}%
+                      {stock.change! >= 0 ? '+' : ''}<RollingNumber value={stock.change!.toFixed(2)} />%
                     </p>
                   </>
                 ) : (
@@ -126,12 +127,12 @@ export function TrendingStocks() {
               <div className="flex items-center gap-3 text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Eye className="h-3 w-3" />
-                  {stock.mentions}
+                  <RollingNumber value={stock.mentions} />
                 </span>
                 {stock.volume != null && (
                   <span className="flex items-center gap-1">
                     <TrendingUp className="h-3 w-3" />
-                    {stock.volume.toLocaleString()}
+                    <RollingNumber value={stock.volume.toLocaleString()} />
                   </span>
                 )}
               </div>

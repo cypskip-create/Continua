@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { engineApi } from "@/api/engineApi";
@@ -21,7 +22,7 @@ export function FocusedComparison({symbol,exchange}:{symbol:string;exchange:stri
     {query.error&&<p role="alert" className="text-xs text-bear">{query.error.message}</p>}
     {query.data&&peer!==symbol&&<>
       <div className="grid grid-cols-2 gap-3">{query.data.map(d=><div key={d.symbol} className="border-t border-border py-2"><strong className="text-sm">{d.symbol}</strong><p className="text-base">{value(d)?.toFixed(2)??"Unavailable"}</p><p className="text-xs text-muted-foreground">FY {d.financialAnalysis?.period??"unknown"} · {d.currency} · filed {d.quality?.filedAt??"unknown"}</p></div>)}</div>
-      <p className="text-xs text-muted-foreground">{comparable&&values?.every(v=>v!=null)?`${symbol} minus ${peer}: ${(values![0]!-values![1]!).toFixed(2)} ${metric.endsWith("Growth")||metric==="returnOnAssets"?"percentage points":"ratio points"}. This is a difference, not a ranking or recommendation.`:"Periods or currencies differ, or inputs are missing. No like-for-like difference is calculated."}</p>
+      <p className="text-xs text-muted-foreground"><RollingNumber value={comparable&&values?.every(v=>v!=null)?`${symbol} minus ${peer}: ${(values![0]!-values![1]!).toFixed(2)} ${metric.endsWith("Growth")||metric==="returnOnAssets"?"percentage points":"ratio points"}. This is a difference, not a ranking or recommendation.`:"Periods or currencies differ, or inputs are missing. No like-for-like difference is calculated."} /></p>
     </>}
   </section>;
 }

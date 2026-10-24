@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -51,10 +52,10 @@ export function QuickTradeWidget({ quotes }: QuickTradeWidgetProps) {
                   </div>
                   {stock.isLive ? (
                     <>
-                      <p className="text-sm font-bold tabular-nums">KES {stock.price!.toFixed(2)}</p>
+                      <p className="text-sm font-bold tabular-nums">KES <RollingNumber value={stock.price!.toFixed(2)} /></p>
                       <p className={`text-[0.625rem] font-semibold flex items-center gap-0.5 ${stock.changePct! >= 0 ? 'text-bull' : 'text-bear'}`}>
                         {stock.changePct! >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
-                        {stock.changePct! >= 0 ? '+' : ''}{stock.changePct!.toFixed(2)}%
+                        {stock.changePct! >= 0 ? '+' : ''}<RollingNumber value={stock.changePct!.toFixed(2)} />%
                       </p>
                     </>
                   ) : (

@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { PostAttachments } from "@/components/social/PostAttachments";
 import {SafetyMenuItems} from '@/components/social/SafetyMenuItems';
 import { useEffect, useMemo, useState, useCallback } from "react";
@@ -254,14 +255,14 @@ export default function PostDetail() {
           </div>
 
           <p className="mt-3 text-right text-[0.6875rem] text-muted-foreground tabular-nums">
-            {post.comments_count || 0} Comments
+            <RollingNumber value={post.comments_count || 0} /> Comments
           </p>
         </div>
 
         {/* Comments */}
         <div className="border-t-4 border-muted/40">
           <div className="flex items-center justify-between px-4 py-3">
-            <h2 className="text-[0.875rem] font-bold">Comments ({totalComments})</h2>
+            <h2 className="text-[0.875rem] font-bold">Comments (<RollingNumber value={totalComments} />)</h2>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-7 px-2 text-[0.6875rem] gap-1" data-small-target>
@@ -313,7 +314,7 @@ export default function PostDetail() {
               <CommunityReactionButton counts={post.reaction_counts || {}} selected={post.my_reaction} onSelect={react} />
               <button data-small-target aria-label="Comments" className="flex items-center gap-1 h-9 px-1.5 text-muted-foreground">
                 <MessageSquare className="h-[17px] w-[17px]" />
-                <span className="text-[0.6875rem] tabular-nums">{post.comments_count || 0}</span>
+                <span className="text-[0.6875rem] tabular-nums"><RollingNumber value={post.comments_count || 0} /></span>
               </button>
               <button data-small-target aria-label="Share" onClick={share} className="h-9 px-1.5 text-muted-foreground"><Share2 className="h-[17px] w-[17px]" /></button>
               <button data-small-target aria-label="Bookmark" onClick={bookmark} className={`h-9 px-1.5 ${post.is_bookmarked ? "text-primary" : "text-muted-foreground"}`}>

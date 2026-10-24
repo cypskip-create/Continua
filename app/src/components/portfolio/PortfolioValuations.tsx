@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Info, Loader2, ChevronDown, Lock } from "lucide-react";
@@ -178,8 +179,8 @@ export function PortfolioValuations({
             const color = diffPct < -10 ? "text-bear" : diffPct > 10 ? "text-bull" : "text-muted-foreground";
             return (
               <p className={`text-[0.75rem] font-semibold mt-3 ${color}`}>
-                {overall} · {diffPct >= 0 ? "+" : ""}{diffPct.toFixed(2)}% vs current value
-                <span className="text-muted-foreground font-normal"> (based on assigned models, {assignedRows.length} of {holdings.length} holdings)</span>
+                {overall} · {diffPct >= 0 ? "+" : ""}<RollingNumber value={diffPct.toFixed(2)} />% vs current value
+                <span className="text-muted-foreground font-normal"> (based on assigned models, <RollingNumber value={assignedRows.length} /> of <RollingNumber value={holdings.length} /> holdings)</span>
               </p>
             );
           })()
@@ -341,7 +342,7 @@ function BucketSection({
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${dotColor}`} />
           <span className="text-[0.8125rem] font-bold">{title}</span>
-          <span className="text-[0.6875rem] text-muted-foreground bg-muted rounded-full w-5 h-5 inline-flex items-center justify-center">{count}</span>
+          <span className="text-[0.6875rem] text-muted-foreground bg-muted rounded-full w-5 h-5 inline-flex items-center justify-center"><RollingNumber value={count} /></span>
         </div>
         <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
       </button>
@@ -373,7 +374,7 @@ function ValuationRow({
           <p className="text-[0.8125rem] font-bold tabular">{fmtMoney(holding.price, currencyLabel, showValues)}</p>
           {fairValue != null && upsidePercent != null ? (
             <p className={`text-[0.65625rem] font-semibold tabular ${upsidePercent < -10 ? "text-bear" : upsidePercent > 10 ? "text-bull" : "text-muted-foreground"}`}>
-              {Math.abs(upsidePercent).toFixed(2)}% {upsidePercent < 0 ? "overvalued" : "undervalued"}
+              <RollingNumber value={Math.abs(upsidePercent).toFixed(2)} />% {upsidePercent < 0 ? "overvalued" : "undervalued"}
             </p>
           ) : (
             <p className="text-[0.65625rem] text-muted-foreground">—</p>

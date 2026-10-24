@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { PriceAlertsManager } from "@/components/alerts/PriceAlertsManager";
 import { useState, useMemo, useEffect } from "react";
 import {
@@ -153,7 +154,7 @@ export default function Notifications() {
             </Button>
             <h1 className="text-base font-bold flex items-center gap-2">
               Notifications
-              {unreadCount > 0 && <Badge className="h-5 min-w-5 text-[0.625rem] bg-primary rounded-full">{unreadCount}</Badge>}
+              {unreadCount > 0 && <Badge className="h-5 min-w-5 text-[0.625rem] bg-primary rounded-full"><RollingNumber value={unreadCount} /></Badge>}
             </h1>
           </div>
           <div className="flex items-center gap-1">

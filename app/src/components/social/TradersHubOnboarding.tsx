@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -427,7 +428,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 className="min-h-[90px] resize-none rounded-2xl"
                 maxLength={160}
               />
-              <p className="text-[0.6875rem] text-muted-foreground text-right mt-1">{bio.length}/160</p>
+              <p className="text-[0.6875rem] text-muted-foreground text-right mt-1"><RollingNumber value={bio.length} />/160</p>
             </div>
             <Button className="w-full h-12 rounded-full font-bold text-base" onClick={() => goTo("about")}>
               {bio.trim() ? "Continue" : "Skip for now"}

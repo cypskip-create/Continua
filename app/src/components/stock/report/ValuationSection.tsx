@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { FUNDAMENTAL_BAR_SIZE } from '@/lib/financialPresentation';
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell,  LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis,  ReferenceLine } from 'recharts';
@@ -29,11 +30,11 @@ function FairValueBar({ price, fair, currency }: { price: number; fair: number |
   return (
     <div>
       <p className={`text-2xl font-bold ${!hasFair ? "text-muted-foreground" : pct >= 0 ? "text-bull" : "text-bear"}`}>
-        {hasFair ? <>{Math.abs(pct).toFixed(2)}% <span className="text-sm font-semibold">{pct >= 0 ? "Undervalued" : "Overvalued"}</span></> : "N/A"}
+        {hasFair ? <><RollingNumber value={Math.abs(pct).toFixed(2)} />% <span className="text-sm font-semibold">{pct >= 0 ? "Undervalued" : "Overvalued"}</span></> : "N/A"}
       </p>
       <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
-        <div><dt className="text-muted-foreground">Current price</dt><dd className="font-semibold">{currency} {price.toFixed(2)}</dd></div>
-        <div><dt className="text-muted-foreground">Model fair value</dt><dd className="font-semibold">{hasFair ? `${currency} ${fair!.toFixed(2)}` : "Unavailable"}</dd></div>
+        <div><dt className="text-muted-foreground">Current price</dt><dd className="font-semibold">{currency} <RollingNumber value={price.toFixed(2)} /></dd></div>
+        <div><dt className="text-muted-foreground">Model fair value</dt><dd className="font-semibold"><RollingNumber value={hasFair ? `${currency} ${fair!.toFixed(2)}` : "Unavailable"} /></dd></div>
       </dl>
       <div aria-hidden="true" className="relative h-8 mt-2 rounded-lg overflow-hidden" style={{ background: hasFair ? "linear-gradient(90deg, #10b981 0%, #10b981 55%, #eab308 75%, #7f1d1d 100%)" : "hsl(var(--muted))" }}>
         <div className="absolute top-0 bottom-0 border-l-2 border-white/80" style={{ left: `${Math.min(98, priceX)}%` }} />
@@ -95,15 +96,15 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
             </ResponsiveContainer>
           </div>
           <div>
-            <p className="text-3xl font-bold tabular">{ratios?.pe != null ? `${ratios.pe.toFixed(2)}x` : "—"}</p>
+            <p className="text-3xl font-bold tabular"><RollingNumber value={ratios?.pe != null ? `${ratios.pe.toFixed(2)}x` : "—"} /></p>
             <p className="text-[0.6875rem] text-muted-foreground">P/E Ratio — used since {symbol} is profitable</p>
-            <p className="text-[0.6875rem] text-muted-foreground mt-1">P/B Ratio: {ratios?.pb != null ? `${ratios.pb.toFixed(2)}x` : "—"}</p>
+            <p className="text-[0.6875rem] text-muted-foreground mt-1">P/B Ratio: <RollingNumber value={ratios?.pb != null ? `${ratios.pb.toFixed(2)}x` : "—"} /></p>
           </div>
         </div>
       </SubWidget>
 
       <SubWidget number="1.3" title="Price to Earnings Ratio vs Peers" description={`How does ${symbol}'s P/E compare to its real NSE sector peers?`}>
-        {peerAvg != null && <p className="text-[0.65625rem] text-muted-foreground mb-1">Peer average: {peerAvg.toFixed(2)}x</p>}
+        {peerAvg != null && <p className="text-[0.65625rem] text-muted-foreground mb-1">Peer average: <RollingNumber value={peerAvg.toFixed(2)} />x</p>}
         <div style={{ height: CHART_H_MEDIUM }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={peerChartData} layout="vertical" margin={{ left: 8, right: 16 }}>
@@ -139,11 +140,11 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
           <>
             <div className="flex items-center justify-center gap-8 mb-2">
               <div className="text-center">
-                <p className="text-2xl font-bold tabular" style={{ color: "hsl(217 91% 60%)" }}>{ratios.pe.toFixed(2)}x</p>
+                <p className="text-2xl font-bold tabular" style={{ color: "hsl(217 91% 60%)" }}><RollingNumber value={ratios.pe.toFixed(2)} />x</p>
                 <p className="text-[0.65625rem] text-muted-foreground mt-0.5">{symbol}</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold tabular text-muted-foreground">{peerAvg.toFixed(2)}x</p>
+                <p className="text-2xl font-bold tabular text-muted-foreground"><RollingNumber value={peerAvg.toFixed(2)} />x</p>
                 <p className="text-[0.65625rem] text-muted-foreground mt-0.5">Industry Average</p>
               </div>
             </div>
@@ -161,7 +162,7 @@ export function ValuationSection({ symbol, name, sector, price, currency }: Prop
               </ResponsiveContainer>
             </div>
             <p className="text-[0.6875rem] text-muted-foreground mt-1 text-center">
-              {symbol} trades at {Math.abs(((ratios.pe - peerAvg) / peerAvg) * 100).toFixed(0)}% {ratios.pe <= peerAvg ? "below" : "above"} its sector's average P/E of {peerAvg.toFixed(2)}x.
+              {symbol} trades at <RollingNumber value={Math.abs(((ratios.pe - peerAvg) / peerAvg) * 100).toFixed(0)} />% {ratios.pe <= peerAvg ? "below" : "above"} its sector's average P/E of <RollingNumber value={peerAvg.toFixed(2)} />x.
             </p>
           </>
         ) : (

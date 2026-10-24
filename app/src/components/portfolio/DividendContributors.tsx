@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { InfoTip } from "./InfoTip";
 import { LockedPreview } from "./LockedPreview";
 import type { HoldingDividendData } from "@/hooks/usePortfolioDividends";
@@ -28,7 +29,7 @@ function ContributorRow({ row, maxAbs, currencyLabel, showValues }: { row: Row; 
           <div className="h-full rounded-full bg-bull" style={{ width: `${widthPct}%` }} />
         </div>
         <p className="text-[0.8125rem] font-bold tabular shrink-0">
-          {showValues ? `${currencyLabel}${row.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••"}
+          <RollingNumber value={showValues ? `${currencyLabel}${row.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••"} />
         </p>
       </div>
     </div>

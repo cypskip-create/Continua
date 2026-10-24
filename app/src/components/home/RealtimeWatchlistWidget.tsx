@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -103,7 +104,7 @@ export function RealtimeWatchlistWidget() {
                     </div>
                     <div className={`text-[0.625rem] flex items-center justify-end gap-0.5 ${isUp ? 'text-bull' : 'text-bear'}`}>
                       {isUp ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
-                      {priceData ? `${isUp ? '+' : ''}${priceData.changePercent.toFixed(2)}%` : '---'}
+                      <RollingNumber value={priceData ? `${isUp ? '+' : ''}${priceData.changePercent.toFixed(2)}%` : '---'} />
                     </div>
                   </div>
                 </div>

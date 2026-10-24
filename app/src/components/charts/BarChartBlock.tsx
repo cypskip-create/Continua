@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 /**
  * Moomoo-style research bar chart.
  *
@@ -153,7 +154,7 @@ export function BarChartBlock({
                   className="text-[0.75rem] font-semibold tabular"
                   style={{ color: colorFor ? colorFor(row, s) : s.color }}
                 >
-                  {fmt(row[s.key], s)}
+                  <RollingNumber value={fmt(row[s.key], s)} />
                 </span>
               </div>
             ))}

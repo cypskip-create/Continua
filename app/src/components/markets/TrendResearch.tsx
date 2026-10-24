@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { historicalApi } from "@/api/historicalApi";
@@ -164,8 +165,8 @@ export function TrendResearch({
       )}
       {similarity != null && (
         <p className="text-sm mt-4">
-          Return correlation <strong>{similarity.toFixed(2)}</strong> ·{" "}
-          {aligned.length} aligned closes
+          Return correlation <strong><RollingNumber value={similarity.toFixed(2)} /></strong> ·{" "}
+          <RollingNumber value={aligned.length} /> aligned closes
         </p>
       )}
       <p className="market-note">

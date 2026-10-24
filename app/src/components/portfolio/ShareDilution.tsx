@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useQueries } from "@tanstack/react-query";
 import { financialsApi } from "@/api/financialsApi";
 import { InfoTip } from "./InfoTip";
@@ -73,7 +74,7 @@ export function ShareDilution({ holdings }: ShareDilutionProps) {
             <div className="flat-section rounded-xl bg-muted/30 p-3 mb-3 flex items-center justify-between">
               <span className="text-[0.75rem] font-bold">Portfolio (weighted)</span>
               <span className={`text-[0.8125rem] font-bold tabular ${portfolioDilution <= 0.5 ? "text-bull" : "text-bear"}`}>
-                {portfolioDilution >= 0 ? "+" : ""}{portfolioDilution.toFixed(2)}%
+                {portfolioDilution >= 0 ? "+" : ""}<RollingNumber value={portfolioDilution.toFixed(2)} />%
               </span>
             </div>
           )}
@@ -87,14 +88,14 @@ export function ShareDilution({ holdings }: ShareDilutionProps) {
                   <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                     <div className={`h-full rounded-full ${positive ? "bg-bull" : "bg-bear"}`} style={{ width: `${widthPct}%` }} />
                   </div>
-                  <span className="text-[0.6875rem] font-semibold tabular w-16 text-right">{r.dilutionPct >= 0 ? "+" : ""}{r.dilutionPct.toFixed(2)}%</span>
+                  <span className="text-[0.6875rem] font-semibold tabular w-16 text-right">{r.dilutionPct >= 0 ? "+" : ""}<RollingNumber value={r.dilutionPct.toFixed(2)} />%</span>
                 </div>
               );
             })}
           </div>
           {rows.length > withData.length && (
             <p className="text-[0.625rem] text-muted-foreground mt-3">
-              {rows.length - withData.length} holding{rows.length - withData.length === 1 ? "" : "s"} don't have a value for this metric.
+              <RollingNumber value={rows.length - withData.length} /> holding{rows.length - withData.length === 1 ? "" : "s"} don't have a value for this metric.
             </p>
           )}
         </>

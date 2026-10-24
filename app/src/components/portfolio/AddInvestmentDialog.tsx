@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useEffect } from "react";
 import {useKeyboardPanel} from '@/hooks/useKeyboardPanel';
 import {
@@ -128,7 +129,7 @@ export function AddInvestmentDialog({
           </DialogTitle>
           {existing && (
             <p className="text-xs text-muted-foreground mt-1">
-              You hold {existing.shares} shares · avg KES {existing.avg_cost.toFixed(2)}
+              You hold <RollingNumber value={existing.shares} /> shares · avg KES <RollingNumber value={existing.avg_cost.toFixed(2)} />
             </p>
           )}
         </DialogHeader>

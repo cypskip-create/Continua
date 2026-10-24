@@ -10,10 +10,10 @@ button:not(:disabled):active, [role="button"]:not([aria-disabled="true"]):active
 .rolling-number-digits { display: inline-flex; white-space: pre; }
 .rolling-digit { display: inline-block; width: 1ch; height: 1.15em; overflow: hidden; position: relative; vertical-align: baseline; }
 .rolling-symbol { display: inline-block; }
-.rolling-digit-motion { display: block; position: relative; height: 100%; }
+.rolling-digit-motion { display: block; position: relative; height: 100%; will-change: transform; }
 .rolling-digit-old, .rolling-digit-new { position: absolute; inset: 0; }
-.rolling-digit-old { animation: digit-out 380ms cubic-bezier(.2,.7,.2,1) forwards; }
-.rolling-digit-new { animation: digit-in 380ms cubic-bezier(.2,.7,.2,1) forwards; }
+.rolling-digit-old { animation: digit-out 160ms cubic-bezier(.2,.7,.2,1) forwards; }
+.rolling-digit-new { animation: digit-in 160ms cubic-bezier(.2,.7,.2,1) forwards; }
 .rolling-digit-down .rolling-digit-old { animation-name: digit-out-down; }
 .rolling-digit-down .rolling-digit-new { animation-name: digit-in-down; }
 @keyframes digit-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -23,6 +23,7 @@ button:not(:disabled):active, [role="button"]:not([aria-disabled="true"]):active
 @media (prefers-reduced-motion: reduce) {
   button:not(:disabled), [role="button"] { transition: none; }
   button:not(:disabled):active, [role="button"]:active { scale: 1; }
+  .rolling-digit-motion { will-change: auto; }
   .rolling-digit-old { display: none; }
   .rolling-digit-new { animation: none; }
 }

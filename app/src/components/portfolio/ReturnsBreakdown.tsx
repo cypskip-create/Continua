@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { InfoTip } from "./InfoTip";
 import {
   ResponsiveContainer,
@@ -88,9 +89,9 @@ export function ReturnsBreakdown({
                   : "text-bear"
               } ${f.label === "Total" ? "font-bold" : ""}`}
             >
-              {f.value === null
+              <RollingNumber value={f.value === null
                 ? "No Data"
-                : `${showValues ? (f.value < 0 ? "−" : "") + fmt(f.value, currencyLabel) : "••••"}`}
+                : `${showValues ? (f.value < 0 ? "−" : "") + fmt(f.value, currencyLabel) : "••••"}`} />
             </p>
           </div>
         ))}

@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import {
@@ -80,7 +81,7 @@ export function DrawingToolsSheet({ open, onOpenChange, onSelectTool, hasDrawing
 
         {DRAW_TOOL_CATEGORIES.map((category) => (
           <div key={category.name} className="mt-4">
-            <p className="section-eyebrow mb-2">{category.name} ({category.tools.length})</p>
+            <p className="section-eyebrow mb-2">{category.name} (<RollingNumber value={category.tools.length} />)</p>
             <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4">
               {category.tools.map((tool) => {
                 const Icon = ICONS[tool.id];

@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
 import { InfoTip } from "./InfoTip";
@@ -110,7 +111,7 @@ export function PortfolioScorecard({ holdings, research, valuations, benchmark, 
         ))}
       </div>
 
-      <p className="text-[0.9375rem] font-bold font-serif">{selected} <span className="text-muted-foreground font-sans text-[0.8125rem] font-normal">{axisAverage(selected) != null ? `${axisAverage(selected)!.toFixed(2)} / 6` : "No data"}</span></p>
+      <p className="text-[0.9375rem] font-bold font-serif">{selected} <span className="text-muted-foreground font-sans text-[0.8125rem] font-normal"><RollingNumber value={axisAverage(selected) != null ? `${axisAverage(selected)!.toFixed(2)} / 6` : "No data"} /></span></p>
       <p className="text-[0.6875rem] text-muted-foreground mb-3">{AXIS_DESCRIPTIONS[selected]}</p>
 
       {ranked.length === 0 ? (
@@ -141,13 +142,13 @@ function ScoreRow({ h, axis }: { h: { symbol: string; name: string; weight: numb
     <div className="py-2">
       <div className="flex items-center justify-between">
         <span className="text-[0.78125rem] font-bold underline decoration-dotted underline-offset-2">{h.name}</span>
-        <span className="text-[0.75rem] font-bold tabular">{score.toFixed(0)}/6</span>
+        <span className="text-[0.75rem] font-bold tabular"><RollingNumber value={score.toFixed(0)} />/6</span>
       </div>
       <div className="flex items-center gap-2 mt-1">
         <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
           <div className="h-full rounded-full bg-bull" style={{ width: `${(score / 6) * 100}%` }} />
         </div>
-        <span className="text-[0.65625rem] text-muted-foreground w-10 text-right">{h.weight.toFixed(2)}%</span>
+        <span className="text-[0.65625rem] text-muted-foreground w-10 text-right"><RollingNumber value={h.weight.toFixed(2)} />%</span>
       </div>
     </div>
   );

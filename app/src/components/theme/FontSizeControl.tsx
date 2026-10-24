@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useEffect, useId, useState } from "react";
 import { applyFontScale, FONT_SCALE_EVENT, FONT_SCALE_KEY, getFontScale, MAX_FONT_PERCENT, MIN_FONT_PERCENT } from "@/lib/appearance";
 
@@ -25,7 +26,7 @@ export function FontSizeControl() {
     <section className="font-size-control" aria-label="Font size settings">
       <div className="flex items-center justify-between gap-2">
         <label htmlFor={id} className="font-medium">Text size</label>
-        <output htmlFor={id} className="tabular-nums text-muted-foreground">{percent}%</output>
+        <output htmlFor={id} className="tabular-nums text-muted-foreground"><RollingNumber value={percent} />%</output>
       </div>
       <p className="mt-1 text-muted-foreground">Drag for live changes across the app.</p>
       <div className="flex items-center gap-3">
@@ -45,7 +46,7 @@ export function FontSizeControl() {
         <span aria-hidden="true" style={{ fontSize: 22 }}>A</span>
       </div>
       <div className="flex items-center justify-between text-muted-foreground">
-        <span>Smaller · {MIN_FONT_PERCENT}%</span><span>Larger · {MAX_FONT_PERCENT}%</span>
+        <span>Smaller · <RollingNumber value={MIN_FONT_PERCENT} />%</span><span>Larger · <RollingNumber value={MAX_FONT_PERCENT} />%</span>
       </div>
       <div className="mt-2 border-y border-border py-2" aria-label="Text size preview" style={{ fontSize: "0.875rem", lineHeight: 1.5 }}>
         <p className="font-semibold">Your market, at a glance</p>

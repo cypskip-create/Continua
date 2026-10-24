@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ResponsiveContainer, BarChart, Bar, XAxis, Cell } from "recharts";
@@ -98,7 +99,7 @@ export function DividendHistory({ holdings, dividendData, isPremium = false, sho
           {latestPaid.label}{view === "monthly" ? ` ${new Date().getFullYear()}` : ""} (Realised)
         </p>
         <p className="text-lg font-bold tabular mt-0.5">
-          {showValues ? `${currencyLabel}${latestPaid.value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••"}
+          <RollingNumber value={showValues ? `${currencyLabel}${latestPaid.value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••"} />
         </p>
       </div>
 
@@ -124,14 +125,14 @@ export function DividendHistory({ holdings, dividendData, isPremium = false, sho
       )}
 
       <p className="section-eyebrow mt-2 mb-1">
-        {format(new Date(), "MMM yyyy")} <span className="text-muted-foreground font-normal">· {thisMonthEvents.length} paid</span>
+        {format(new Date(), "MMM yyyy")} <span className="text-muted-foreground font-normal">· <RollingNumber value={thisMonthEvents.length} /> paid</span>
       </p>
       <div className="grid grid-cols-2 text-[0.625rem] text-muted-foreground uppercase tracking-wide pb-1 border-b border-border/50">
         <span>Symbol</span><span className="text-right">Amount</span>
       </div>
       <div className="flex items-center justify-between py-2 rounded-lg bg-bull/10 px-2 -mx-2 mt-1">
         <span className="text-[0.75rem] font-bold">Paid payments</span>
-        <span className="text-[0.75rem] font-bold tabular">{showValues ? `${currencyLabel}${totalThisMonth.toFixed(2)}` : "••••"}</span>
+        <span className="text-[0.75rem] font-bold tabular"><RollingNumber value={showValues ? `${currencyLabel}${totalThisMonth.toFixed(2)}` : "••••"} /></span>
       </div>
       <div className="divide-y divide-border/40">
         {thisMonthEvents.map((e, i) => (
@@ -140,7 +141,7 @@ export function DividendHistory({ holdings, dividendData, isPremium = false, sho
               <span className="text-[0.75rem] font-bold text-primary">{e.symbol}</span>
               <span className="text-[0.6875rem] text-muted-foreground ml-1.5 truncate">{e.name}</span>
             </div>
-            <span className="text-[0.75rem] font-semibold tabular">{showValues ? `${currencyLabel}${e.amount.toFixed(2)}` : "••••"}</span>
+            <span className="text-[0.75rem] font-semibold tabular"><RollingNumber value={showValues ? `${currencyLabel}${e.amount.toFixed(2)}` : "••••"} /></span>
           </div>
         ))}
         {thisMonthEvents.length === 0 && (

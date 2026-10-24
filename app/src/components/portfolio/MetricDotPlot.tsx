@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { layoutMetricBubbles } from "@/lib/metricLayout";
 import { ChevronRight } from "lucide-react";
@@ -77,14 +78,14 @@ export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel
   return (
     <div className="space-y-3">
       <div className="flex min-h-8 flex-wrap items-center gap-2">
-        {portfolioValue != null && <span className="rounded-full border border-sky-500/70 px-3 py-1 text-xs font-bold text-sky-500">Portfolio {fmt(portfolioValue)}</span>}
-        {marketValue != null && <span className="rounded-full border border-muted-foreground/70 px-3 py-1 text-xs font-bold text-foreground">{marketLabel} {fmt(marketValue)}</span>}
+        {portfolioValue != null && <span className="rounded-full border border-sky-500/70 px-3 py-1 text-xs font-bold text-sky-500">Portfolio <RollingNumber value={fmt(portfolioValue)} /></span>}
+        {marketValue != null && <span className="rounded-full border border-muted-foreground/70 px-3 py-1 text-xs font-bold text-foreground">{marketLabel} <RollingNumber value={fmt(marketValue)} /></span>}
         {outliers.size > 0 && (
           <label className="ml-auto flex cursor-pointer items-center gap-2 text-[0.6875rem] font-semibold text-muted-foreground">
             <button type="button" role="switch" aria-checked={hideOutliers} onClick={() => setHideOutliers((value) => !value)} className={`relative h-5 w-9 rounded-full transition-colors ${hideOutliers ? "bg-primary" : "bg-muted"}`}>
               <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-background shadow transition-transform ${hideOutliers ? "translate-x-[18px]" : "translate-x-0.5"}`} />
             </button>
-            Hide {outliers.size} outlier{outliers.size === 1 ? "" : "s"}
+            Hide <RollingNumber value={outliers.size} /> outlier{outliers.size === 1 ? "" : "s"}
           </label>
         )}
       </div>
@@ -110,22 +111,22 @@ export function MetricDotPlot({ points, portfolioValue, marketValue, marketLabel
               >
                 <span className="flex flex-col items-center leading-tight">
                   <span>{point.symbol}</span>
-                  {selectedSymbol === point.symbol && <span className="mt-0.5 text-[0.625rem] tabular-nums" data-testid="selected-metric-value">{fmt(point.value)}</span>}
+                  {selectedSymbol === point.symbol && <span className="mt-0.5 text-[0.625rem] tabular-nums" data-testid="selected-metric-value"><RollingNumber value={fmt(point.value)} /></span>}
                 </span>
               </button>
             );
           })}
         </div>
-        <div className="relative mt-2 h-5 text-[0.625rem] tabular-nums text-muted-foreground">{ticks.map((tick, index) => <span className="absolute -translate-x-1/2" style={{ left: pixelX(tick) }} key={index}>{fmt(tick)}</span>)}</div>
+        <div className="relative mt-2 h-5 text-[0.625rem] tabular-nums text-muted-foreground">{ticks.map((tick, index) => <span className="absolute -translate-x-1/2" style={{ left: pixelX(tick) }} key={index}><RollingNumber value={fmt(tick)} /></span>)}</div>
       </div>
 
       {outliers.size > 0 && hideOutliers && <p className="text-[0.6875rem] text-muted-foreground">Hiding {[...outliers].join(", ")}, which sit far outside the range of the other holdings. Portfolio and market reference lines still use the complete dataset.</p>}
-      {!!unavailableCount && <p className="text-[0.6875rem] text-muted-foreground">{unavailableCount} holding{unavailableCount === 1 ? "" : "s"} do{unavailableCount === 1 ? "es" : ""} not have a verified value for this metric.</p>}
+      {!!unavailableCount && <p className="text-[0.6875rem] text-muted-foreground"><RollingNumber value={unavailableCount} /> holding{unavailableCount === 1 ? "" : "s"} do{unavailableCount === 1 ? "es" : ""} not have a verified value for this metric.</p>}
 
       {selected && (
         <button type="button" onClick={() => navigate(`/stock/${selected.symbol}`)} className="flex w-full items-center gap-3 border-t border-border/60 py-3 text-left">
           <div className={`grid h-10 w-10 place-items-center rounded-full text-xs font-bold text-white ${selected.good === false ? "bg-bear" : selected.good === true ? "bg-bull" : "bg-muted-foreground"}`}>{selected.symbol.slice(0, 3)}</div>
-          <div className="min-w-0 flex-1" aria-live="polite"><p className="truncate text-xs font-bold">{selected.name || selected.symbol}</p><p className="text-[0.6875rem] text-muted-foreground">{fmt(selected.value)} · {(selected.weight ?? 0).toFixed(2)}% portfolio weight</p></div>
+          <div className="min-w-0 flex-1" aria-live="polite"><p className="truncate text-xs font-bold">{selected.name || selected.symbol}</p><p className="text-[0.6875rem] text-muted-foreground"><RollingNumber value={fmt(selected.value)} /> · <RollingNumber value={(selected.weight ?? 0).toFixed(2)} />% portfolio weight</p></div>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </button>
       )}

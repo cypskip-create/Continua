@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
 import { CheckCircle2, XCircle, MinusCircle } from "lucide-react";
@@ -85,7 +86,7 @@ export function StockSnowflake({ symbol, currency="KES", basic=false }: StockSno
         </InfoTip>
       </div>
       <p className="text-[0.6875rem] text-muted-foreground mb-4">
-        {symbol} · {Object.values(checksFor).flat().filter(c=>c.status!=='unknown').length} covered checks. {totalScore.toFixed(0)}/30 across available measures; unfilled axes are unknown, not failures.
+        {symbol} · <RollingNumber value={Object.values(checksFor).flat().filter(c=>c.status!=='unknown').length} /> covered checks. <RollingNumber value={totalScore.toFixed(0)} />/30 across available measures; unfilled axes are unknown, not failures.
       </p>
 
       {isLoading ? (
@@ -110,7 +111,7 @@ export function StockSnowflake({ symbol, currency="KES", basic=false }: StockSno
                 onClick={() => setSelected(axis)}
                 className={`shrink-0 h-8 px-3 rounded-full text-[0.6875rem] font-semibold ${selected === axis ? "contrast-active" : "bg-muted/60"}`}
               >
-                {axis} {scoreFor(axis).toFixed(0)}/6
+                {axis} <RollingNumber value={scoreFor(axis).toFixed(0)} />/6
               </button>
             ))}
           </div>

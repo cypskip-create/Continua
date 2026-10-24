@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
@@ -88,7 +89,7 @@ export function RiskSection({ symbol, currency="KES", basic=false }: Props) {
         right={<InfoTip>Factors Continua can't evaluate yet are left off this chart entirely rather than plotted as a false neutral score.</InfoTip>}
       >
         {knownFactors.length < 3 ? (
-          <p className="text-xs text-muted-foreground py-6">Not enough real signals on file yet to plot a risk snowflake for {symbol} ({knownFactors.length}/{factors.length} factors known).</p>
+          <p className="text-xs text-muted-foreground py-6">Not enough real signals on file yet to plot a risk snowflake for {symbol} (<RollingNumber value={knownFactors.length} />/<RollingNumber value={factors.length} /> factors known).</p>
         ) : (
           <>
             <div className="h-64">
@@ -101,7 +102,7 @@ export function RiskSection({ symbol, currency="KES", basic=false }: Props) {
               </ResponsiveContainer>
             </div>
             {omittedCount > 0 && (
-              <p className="text-[0.625rem] text-muted-foreground text-center mt-1">{omittedCount} factor{omittedCount > 1 ? "s" : ""} omitted — no data on file yet.</p>
+              <p className="text-[0.625rem] text-muted-foreground text-center mt-1"><RollingNumber value={omittedCount} /> factor{omittedCount > 1 ? "s" : ""} omitted — no data on file yet.</p>
             )}
           </>
         )}
@@ -118,7 +119,7 @@ export function RiskSection({ symbol, currency="KES", basic=false }: Props) {
               {volatility == null ? (
                 <p className="text-xs text-muted-foreground">Not enough history yet</p>
               ) : (
-                <p className="text-2xl font-bold tabular">{volatility.toFixed(2)}%</p>
+                <p className="text-2xl font-bold tabular"><RollingNumber value={volatility.toFixed(2)} />%</p>
               )}
             </div>
             <div>
@@ -126,7 +127,7 @@ export function RiskSection({ symbol, currency="KES", basic=false }: Props) {
               {drawdown == null ? (
                 <p className="text-xs text-muted-foreground">Not enough history yet</p>
               ) : (
-                <p className="text-2xl font-bold tabular text-bear">{drawdown.toFixed(2)}%</p>
+                <p className="text-2xl font-bold tabular text-bear"><RollingNumber value={drawdown.toFixed(2)} />%</p>
               )}
             </div>
           </div>

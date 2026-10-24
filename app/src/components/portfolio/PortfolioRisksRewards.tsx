@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { Star, ShieldAlert, ChevronDown } from "lucide-react";
 import { InfoTip } from "./InfoTip";
@@ -87,7 +88,7 @@ export function PortfolioRisksRewards({ holdings, research, valuations, benchmar
         >
           <span className="flex items-center gap-1.5 text-bull">
             <Star className="h-3.5 w-3.5 fill-bull" />
-            <span className="text-[0.75rem] font-bold">{rewards.length} Reward{rewards.length === 1 ? "" : "s"}</span>
+            <span className="text-[0.75rem] font-bold"><RollingNumber value={rewards.length} /> Reward{rewards.length === 1 ? "" : "s"}</span>
           </span>
           <ChevronDown className={`h-3.5 w-3.5 text-bull transition-transform ${expanded === "rewards" ? "rotate-180" : ""}`} />
         </button>
@@ -98,7 +99,7 @@ export function PortfolioRisksRewards({ holdings, research, valuations, benchmar
         >
           <span className="flex items-center gap-1.5 text-bear">
             <ShieldAlert className="h-3.5 w-3.5" />
-            <span className="text-[0.75rem] font-bold">{risks.length} Risk{risks.length === 1 ? "" : "s"}</span>
+            <span className="text-[0.75rem] font-bold"><RollingNumber value={risks.length} /> Risk{risks.length === 1 ? "" : "s"}</span>
           </span>
           <ChevronDown className={`h-3.5 w-3.5 text-bear transition-transform ${expanded === "risks" ? "rotate-180" : ""}`} />
         </button>

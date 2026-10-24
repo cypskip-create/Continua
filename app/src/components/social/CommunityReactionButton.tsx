@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -197,7 +198,7 @@ export function ReactionChips({
           data-small-target
         >
           <ReactionIcon id={r.meta.id} size={20}/>
-          <span className="text-muted-foreground">{r.count}</span>
+          <span className="text-muted-foreground"><RollingNumber value={r.count} /></span>
         </button>
       ))}
     </div>

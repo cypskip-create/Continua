@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -94,7 +95,7 @@ export function RoomChatDialog({ open, onOpenChange, room }: Props) {
             </div>
             <div className="min-w-0">
               <div className="text-sm font-bold truncate flex items-center gap-1.5">{room.name}{room.is_live && <span className="text-[0.625rem] bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded font-bold">LIVE</span>}</div>
-              <div className="text-[0.6875rem] text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" />{room.member_count} members</div>
+              <div className="text-[0.6875rem] text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /><RollingNumber value={room.member_count} /> members</div>
             </div>
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onOpenChange(false)}><X className="h-4 w-4" /></Button>

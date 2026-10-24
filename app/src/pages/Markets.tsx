@@ -332,7 +332,7 @@ export default function Markets() {
             <span className="block text-xs text-muted-foreground">
               {d.toLocaleDateString("en-KE", { weekday: "short" })}
             </span>
-            {d.getDate()}
+            <RollingNumber value={d.getDate()} />
           </button>
         ))}
       </div>
@@ -400,9 +400,9 @@ export default function Markets() {
               <h3>{r.title}</h3>
               <dl className="market-definition">
                 <dt>Initial price · KES</dt>
-                <dd>{fmt(r.payload.price)}</dd>
+                <dd><RollingNumber value={fmt(r.payload.price)} /></dd>
                 <dt>Shares offered</dt>
-                <dd>{fmt(r.payload.shares, 0)}</dd>
+                <dd><RollingNumber value={fmt(r.payload.shares, 0)} /></dd>
                 <dt>Listing date</dt>
                 <dd>
                   {r.payload.date ? dateLabel(r.payload.date) : "Not announced"}
@@ -470,8 +470,8 @@ export default function Markets() {
                     <td>
                       <Change value={q.changePercent} />
                     </td>
-                    <td>{fmt(q.lastPrice)}</td>
-                    <td>{fmt(q.volume, 0)}</td>
+                    <td><RollingNumber value={fmt(q.lastPrice)} /></td>
+                    <td><RollingNumber value={fmt(q.volume, 0)} /></td>
                     {full && <td>{dateLabel(q.timestamp)}</td>}
                   </tr>
                 ))}
@@ -604,7 +604,7 @@ export default function Markets() {
                         <button onClick={() => navigate(`/stock/${e.symbol}`)}>
                           {e.symbol}
                           <small>
-                            {e.companyName} · {e.fiscalYear}
+                            {e.companyName} · <RollingNumber value={e.fiscalYear} />
                             {e.fiscalQuarter ? ` Q${e.fiscalQuarter}` : ""}
                           </small>
                         </button>
@@ -614,14 +614,14 @@ export default function Markets() {
                           <td>
                             <Change value={percent} />
                           </td>
-                          <td>{fmt(actual)}</td>
-                          <td>{fmt(estimate)}</td>
+                          <td><RollingNumber value={fmt(actual)} /></td>
+                          <td><RollingNumber value={fmt(estimate)} /></td>
                           <td>—</td>
                         </>
                       ) : (
                         <>
-                          <td>{fmt(e.epsActual)}</td>
-                          <td>{fmt(e.revenueActual, 0)}</td>
+                          <td><RollingNumber value={fmt(e.epsActual)} /></td>
+                          <td><RollingNumber value={fmt(e.revenueActual, 0)} /></td>
                         </>
                       )}
                       <td>
@@ -691,9 +691,9 @@ export default function Markets() {
                     </p>
                     <h3>{r.title}</h3>
                     <p className="market-note">
-                      Previous {fmt(r.payload.previous)} · Consensus{" "}
-                      {fmt(r.payload.consensus)} · Actual{" "}
-                      {fmt(r.payload.actual)} {r.payload.unit}
+                      Previous <RollingNumber value={fmt(r.payload.previous)} /> · Consensus{" "}
+                      <RollingNumber value={fmt(r.payload.consensus)} /> · Actual{" "}
+                      <RollingNumber value={fmt(r.payload.actual)} /> {r.payload.unit}
                     </p>
                     {source(r)}
                   </div>
@@ -713,10 +713,10 @@ export default function Markets() {
                     <small>{d.companyName}</small>
                     <p className="market-note">
                       KES{" "}
-                      {fmt(
+                      <RollingNumber value={fmt(
                         (d.details as { amountPerShare?: number })
                           .amountPerShare,
-                      )}{" "}
+                      )} />{" "}
                       per share · Ex-date{" "}
                       {d.exDate ? dateLabel(d.exDate) : "Not announced"}
                       {d.payDate ? ` · Payment ${dateLabel(d.payDate)}` : ""}
@@ -812,7 +812,7 @@ export default function Markets() {
                     <Change value={t.change} />
                     <span className="market-note">
                       {" "}
-                      · {t.coverage}/{t.stocks.length} quoted
+                      · <RollingNumber value={t.coverage} />/<RollingNumber value={t.stocks.length} /> quoted
                     </span>
                   </div>
                   <p className="text-xs text-primary mt-2">
@@ -859,13 +859,13 @@ export default function Markets() {
                     <tr key={r.symbol}>
                       <th>
                         <button onClick={() => navigate(`/stock/${r.symbol}`)}>
-                          {i + 1}. {r.symbol}
+                          <RollingNumber value={i + 1} />. {r.symbol}
                           <small>{r.companyName}</small>
                         </button>
                       </th>
-                      <td>{fmt(r.dividendYield! * 100)}%</td>
-                      <td>{fmt(r.lastPrice)}</td>
-                      <td>{fmt(r.pe)}</td>
+                      <td><RollingNumber value={fmt(r.dividendYield! * 100)} />%</td>
+                      <td><RollingNumber value={fmt(r.lastPrice)} /></td>
+                      <td><RollingNumber value={fmt(r.pe)} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -918,7 +918,7 @@ export default function Markets() {
                 <div className="text-right">
                   <p>{r.signal}</p>
                   <Change value={r.changePercent} />
-                  <small>{fmt(r.volume, 0)} shares</small>
+                  <small><RollingNumber value={fmt(r.volume, 0)} /> shares</small>
                 </div>
               </div>
             ))}
@@ -946,7 +946,7 @@ export default function Markets() {
               <div key={k}>
                 <small className="capitalize text-muted-foreground">{k}</small>
                 <p className="text-xl">
-                  {fmt(macroHistory.at(-1)?.payload[k as "actual"])}{" "}
+                  <RollingNumber value={fmt(macroHistory.at(-1)?.payload[k as "actual"])} />{" "}
                   {macroHistory.at(-1)?.payload.unit}
                 </p>
               </div>
@@ -1115,7 +1115,7 @@ export default function Markets() {
                       <div className="market-breadth">
                         {marketSnapshot?.distribution.map((d, i) => (
                           <div key={d.label}>
-                            <strong>{d.count}</strong>
+                            <strong><RollingNumber value={d.count} /></strong>
                             <div
                               style={{
                                 height: Math.max(
@@ -1159,7 +1159,7 @@ export default function Markets() {
                         >
                           <span>
                             {s.name}
-                            <small>{s.coverage} quoted issuers</small>
+                            <small><RollingNumber value={s.coverage} /> quoted issuers</small>
                           </span>
                           <Change value={s.changePercent} />
                         </button>
@@ -1266,8 +1266,8 @@ function Bonds({
                 .map((r) => (
                   <tr key={r.id}>
                     <th>{r.title}</th>
-                    <td>{fmt(r.payload.yield)}</td>
-                    <td>{fmt(r.payload.coupon)}</td>
+                    <td><RollingNumber value={fmt(r.payload.yield)} /></td>
+                    <td><RollingNumber value={fmt(r.payload.coupon)} /></td>
                     <td>
                       {r.payload.maturity ? dateLabel(r.payload.maturity) : "—"}
                     </td>

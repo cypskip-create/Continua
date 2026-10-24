@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -373,7 +374,7 @@ export function StockScreener() {
           </div>
         )}
         <div className="flex justify-between">
-          <h3>{result.length} matching stocks</h3>
+          <h3><RollingNumber value={result.length} /> matching stocks</h3>
           <Button variant="ghost" onClick={() => navigate("/compare")}>
             Compare →
           </Button>

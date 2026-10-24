@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useNavigate } from "react-router-dom";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { CANONICAL_SYMBOLS, STOCK_META } from "@/lib/stockPrices";
@@ -115,7 +116,7 @@ export function StockHeatmap({ stocks }: StockHeatmapProps) {
 
               <div className="flex items-center justify-between">
                 <span className={`font-bold ${isLarge ? 'text-base' : 'text-xs'} ${getTextColor(stock.change)}`}>
-                  {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
+                  {stock.change >= 0 ? '+' : ''}<RollingNumber value={stock.change.toFixed(2)} />%
                 </span>
                 {isLarge && (
                   stock.change >= 0 ? (

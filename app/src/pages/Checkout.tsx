@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
@@ -283,7 +284,7 @@ export default function Checkout() {
               <span
                 className={`mx-auto mb-2 grid size-8 place-items-center rounded-full ${step >= i + 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
               >
-                {i + 1}
+                <RollingNumber value={i + 1} />
               </span>
               {label}
             </li>
@@ -295,7 +296,7 @@ export default function Checkout() {
               <div>
                 <h2 className="text-xl font-semibold">{p.name}</h2>
                 <p className="mt-3 text-3xl font-semibold">
-                  KES {amount.toLocaleString()}
+                  KES <RollingNumber value={amount.toLocaleString()} />
                   <span className="text-sm font-normal text-muted-foreground">
                     /{annual ? "year" : "month"}
                   </span>
@@ -327,7 +328,7 @@ export default function Checkout() {
                 <ShieldCheck className="size-12 text-bull" />
                 <h2 className="text-2xl font-semibold">{receipt.mode==='test'?'Test payment confirmed':'Payment confirmed'}</h2>
                 <p>{receipt.mode==='test'?'Sandbox only. No real charge or paid access was created.':`${confirmedPlan?.name ?? 'Your membership'} is ready to use.`}</p>
-                <p className="text-sm">Verified payment: {receipt.currency} {receipt.amount.toLocaleString()}</p>
+                <p className="text-sm">Verified payment: {receipt.currency} <RollingNumber value={receipt.amount.toLocaleString()} /></p>
                 {receipt.mode==='live'&&<p className="text-sm text-muted-foreground">
                   Receipt {receipt.receiptNumber} · Access through{" "}
                   {receipt.expiresAt
@@ -376,7 +377,7 @@ export default function Checkout() {
                       <div className="min-h-0 overflow-hidden">
                         <div className="px-4 pb-4 space-y-3">
                           {value==='card'?<><p className="text-xs text-muted-foreground">Paystack securely collects your card details, OTP and bank verification. Continua never asks for your card number, CVV or PIN.</p>
-                            {!annual&&paymentStatus.data?.automaticRenewal&&<label className="flex gap-2 text-xs"><input type="checkbox" checked={autoRenew} disabled={busy||!!reference||method!==value} onChange={e=>setAutoRenew(e.target.checked)}/><span>Automatically renew monthly at KES {amount.toLocaleString()} with an eligible reusable card. Turn it off here before the next charge. Off by default.</span></label>}
+                            {!annual&&paymentStatus.data?.automaticRenewal&&<label className="flex gap-2 text-xs"><input type="checkbox" checked={autoRenew} disabled={busy||!!reference||method!==value} onChange={e=>setAutoRenew(e.target.checked)}/><span>Automatically renew monthly at KES <RollingNumber value={amount.toLocaleString()} /> with an eligible reusable card. Turn it off here before the next charge. Off by default.</span></label>}
                           </>:<>
                             <label className="block text-sm" htmlFor={`phone-${value}`}>{value==='mpesa'?'M-PESA':'Airtel Money'} phone number</label>
                             <input id={`phone-${value}`} type="tel" inputMode="tel" autoComplete="tel" maxLength={40} placeholder="0712 345 678" value={phone} disabled={busy||!!reference||method!==value} onChange={e=>setPhone(e.target.value)} className="w-full rounded-xl border bg-background px-3 py-3 text-base" />
@@ -411,7 +412,7 @@ export default function Checkout() {
                     <Link className="text-primary underline" to="/terms">
                       Terms
                     </Link>
-                    . {autoRenew?`KES ${amount.toLocaleString()} now and monthly after your paid term ends, only if Paystack confirms a reusable card. Otherwise renew manually.`:`One payment of KES ${amount.toLocaleString()}, no automatic renewal.`} Tier switches have no automatic prorated credit.
+                    . <RollingNumber value={autoRenew?`KES ${amount.toLocaleString()} now and monthly after your paid term ends, only if Paystack confirms a reusable card. Otherwise renew manually.`:`One payment of KES ${amount.toLocaleString()}, no automatic renewal.`} /> Tier switches have no automatic prorated credit.
                   </span>
                 </label>
                 {!user && !loading ? (

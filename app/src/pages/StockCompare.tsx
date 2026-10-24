@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { navigateBack } from "@/lib/navigation";
@@ -364,7 +365,7 @@ export default function StockCompare() {
                 className="w-full h-12 rounded-full border border-dashed border-border/70 hover:border-primary/40 hover:bg-primary/5 flex items-center justify-center gap-2 text-sm font-medium transition-colors"
               >
                 <Plus className="h-4 w-4" />
-                Add Stock to Compare ({selectedStocks.length}/4)
+                Add Stock to Compare (<RollingNumber value={selectedStocks.length} />/4)
               </button>
             )}
           </div>
@@ -400,7 +401,7 @@ export default function StockCompare() {
                     </div>
                   </div>
                   <div className="text-sm font-semibold tabular">
-                    KES {stock.price == null ? "—" : stock.price.toFixed(2)}
+                    KES <RollingNumber value={stock.price == null ? "—" : stock.price.toFixed(2)} />
                   </div>
                   <div
                     className={`text-[0.6875rem] flex items-center gap-0.5 tabular ${stock.change >= 0 ? "text-bull" : "text-bear"}`}
@@ -410,9 +411,9 @@ export default function StockCompare() {
                     ) : (
                       <TrendingDown className="h-3 w-3" />
                     )}
-                    {stock.change == null
+                    <RollingNumber value={stock.change == null
                       ? "—"
-                      : `${stock.change > 0 ? "+" : ""}${stock.change.toFixed(2)}%`}
+                      : `${stock.change > 0 ? "+" : ""}${stock.change.toFixed(2)}%`} />
                   </div>
                   <div className="mt-2">
                     <SparklineChart

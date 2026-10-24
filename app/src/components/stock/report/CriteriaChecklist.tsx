@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { CheckCircle2, XCircle, ChevronRight } from "lucide-react";
 
@@ -32,7 +33,7 @@ export function CriteriaChecklist({ checks, narrative }: CriteriaChecklistProps)
         className="w-full flex items-center justify-between gap-3"
       >
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[0.78125rem] font-semibold">Criteria checks {passed}/{evaluable.length || checks.length}</span>
+          <span className="text-[0.78125rem] font-semibold">Criteria checks <RollingNumber value={passed} />/<RollingNumber value={evaluable.length || checks.length} /></span>
           <div className="flex items-center gap-1">
             {checks.map((c, i) => (
               c.status === "pass" ? (

@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, TrendingUp, TrendingDown } from "lucide-react";
@@ -39,15 +40,15 @@ export function CommunityTab({ symbol }: Props) {
           <h4 className="text-xs font-bold mb-2">Community Sentiment</h4>
           <div className="flex items-center gap-2 text-xs">
             <TrendingUp className="h-3.5 w-3.5 text-bull" />
-            <span className="font-bold text-bull">{sentiment.bullPct}%</span>
+            <span className="font-bold text-bull"><RollingNumber value={sentiment.bullPct} />%</span>
             <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden flex">
               <div className="h-full bg-bull" style={{ width: `${sentiment.bullPct}%` }} />
               <div className="h-full bg-bear" style={{ width: `${sentiment.bearPct}%` }} />
             </div>
-            <span className="font-bold text-bear">{sentiment.bearPct}%</span>
+            <span className="font-bold text-bear"><RollingNumber value={sentiment.bearPct} />%</span>
             <TrendingDown className="h-3.5 w-3.5 text-bear" />
           </div>
-          <p className="text-[0.625rem] text-muted-foreground mt-1.5 text-center">Based on {relevant.length} recent TradersHub posts mentioning ${symbol}. {sentiment.unclassified} neutral or mixed; directional posts weighted equally.</p>
+          <p className="text-[0.625rem] text-muted-foreground mt-1.5 text-center">Based on <RollingNumber value={relevant.length} /> recent TradersHub posts mentioning ${symbol}. <RollingNumber value={sentiment.unclassified} /> neutral or mixed; directional posts weighted equally.</p>
         </CardContent>
       </Card>
 
@@ -78,9 +79,9 @@ export function CommunityTab({ symbol }: Props) {
                 </div>
                 <p className="text-xs line-clamp-3">{p.content}</p>
                 <div className="flex gap-3 mt-2 text-[0.625rem] text-muted-foreground">
-                  <span>♥ {p.likes_count || 0}</span>
-                  <span>💬 {p.comments_count || 0}</span>
-                  <span>↻ {p.reposts_count || 0}</span>
+                  <span>♥ <RollingNumber value={p.likes_count || 0} /></span>
+                  <span>💬 <RollingNumber value={p.comments_count || 0} /></span>
+                  <span>↻ <RollingNumber value={p.reposts_count || 0} /></span>
                 </div>
               </CardContent>
             </Card>

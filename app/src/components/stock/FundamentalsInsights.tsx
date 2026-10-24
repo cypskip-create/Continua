@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useEffect, useMemo, useState } from "react";
 import { ToolHelp } from "@/components/shared/ToolHelp";
 import {
@@ -265,7 +266,7 @@ export function FundamentalsInsights({
             anchor a scenario.
           </p>
         )}
-        {!basic&&base!=null&&base>0&&<div className="overflow-x-auto"><h4 className="text-sm font-semibold">Growth sensitivity · {currency}</h4><table className="w-full text-xs whitespace-nowrap"><thead><tr><th className="text-left py-2">Annual growth</th>{[1,2,3].map(y=><th key={y} className="px-3 text-right">Year {y}</th>)}</tr></thead><tbody>{[Math.max(-50,growth-5),growth,Math.min(50,growth+5)].map((g,i)=><tr key={i} className="border-t border-border"><th className="text-left py-2 font-normal">{g.toFixed(2)}%</th>{[1,2,3].map(y=><td key={y} className="px-3 text-right">{financialNumber(base*(1+g/100)**y)}</td>)}</tr>)}</tbody></table><p className="text-xs text-muted-foreground">Constant compounded growth; no probability, valuation multiple or price target is implied.</p></div>}
+        {!basic&&base!=null&&base>0&&<div className="overflow-x-auto"><h4 className="text-sm font-semibold">Growth sensitivity · {currency}</h4><table className="w-full text-xs whitespace-nowrap"><thead><tr><th className="text-left py-2">Annual growth</th>{[1,2,3].map(y=><th key={y} className="px-3 text-right">Year <RollingNumber value={y} /></th>)}</tr></thead><tbody>{[Math.max(-50,growth-5),growth,Math.min(50,growth+5)].map((g,i)=><tr key={i} className="border-t border-border"><th className="text-left py-2 font-normal"><RollingNumber value={g.toFixed(2)} />%</th>{[1,2,3].map(y=><td key={y} className="px-3 text-right"><RollingNumber value={financialNumber(base*(1+g/100)**y)} /></td>)}</tr>)}</tbody></table><p className="text-xs text-muted-foreground">Constant compounded growth; no probability, valuation multiple or price target is implied.</p></div>}
         <PremiumDetail title="Scenario forecast research" symbol={symbol} currency={currency}><ScenarioWorkbench symbol={symbol} currency={currency}/></PremiumDetail>
       </section>
     </div>

@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -149,7 +150,7 @@ export function ForecastNotebook({ symbol }: { symbol: string }) {
           <section className="space-y-3 rounded-2xl border p-4">
             <h3 className="font-semibold">Your private calibration</h3>
             <p className="text-sm">
-              {q.data.calibration.resolvedCount} resolved · initial Brier{" "}
+              <RollingNumber value={q.data.calibration.resolvedCount} /> resolved · initial Brier{" "}
               {q.data.calibration.initialBrier?.toFixed(2) ?? "—"} · latest
               Brier {q.data.calibration.latestBrier?.toFixed(2) ?? "—"}
             </p>
@@ -175,7 +176,7 @@ export function ForecastNotebook({ symbol }: { symbol: string }) {
                   {q.data.calibration.bins.map((b) => (
                     <tr className="border-t" key={b.range}>
                       <td className="py-2">{b.range}</td>
-                      <td>{b.count}</td>
+                      <td><RollingNumber value={b.count} /></td>
                       <td>{percent(b.meanProbability)}</td>
                       <td>{percent(b.observedYesRate)}</td>
                     </tr>

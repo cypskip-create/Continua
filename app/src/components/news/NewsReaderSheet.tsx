@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Newspaper, ExternalLink, ArrowLeft } from "lucide-react";
@@ -81,7 +82,7 @@ function NewsReaderContent({ item, open, onOpenChange, navigate }: NewsReaderShe
                   const quote = quotes[s.toUpperCase()];
                   return <button key={s} data-small-target onClick={() => { onOpenChange(false); navigate(`/stock/${s}`); }} className="flex items-center gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2 text-left">
                     <Badge variant="outline" className="rounded-full text-[0.625rem]">${s}</Badge>
-                    {quote && <div><p className="text-xs font-bold tabular-nums">KES {quote.lastPrice.toFixed(2)}</p><p className={`text-[0.625rem] font-semibold ${quote.changePercent >= 0 ? "text-bull" : "text-bear"}`}>{quote.changePercent >= 0 ? "+" : ""}{quote.changePercent.toFixed(2)}%</p></div>}
+                    {quote && <div><p className="text-xs font-bold tabular-nums">KES <RollingNumber value={quote.lastPrice.toFixed(2)} /></p><p className={`text-[0.625rem] font-semibold ${quote.changePercent >= 0 ? "text-bull" : "text-bear"}`}>{quote.changePercent >= 0 ? "+" : ""}<RollingNumber value={quote.changePercent.toFixed(2)} />%</p></div>}
                   </button>
                 })}
                 </div>

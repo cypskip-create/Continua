@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -321,7 +322,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                 maxLength={160}
               />
               <p className="text-xs text-muted-foreground text-right">
-                {bio.length}/160
+                <RollingNumber value={bio.length} />/160
               </p>
             </div>
 

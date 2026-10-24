@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo } from "react";
 import { Heart, TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,7 +77,7 @@ export function WatchlistSummary() {
                     <span className="text-sm font-medium">Watchlist avg. today</span>
                   </div>
                   <div className={`text-lg font-bold ${avgChangePct >= 0 ? "text-bull" : "text-bear"}`}>
-                    {avgChangePct >= 0 ? "+" : ""}{avgChangePct.toFixed(2)}%
+                    {avgChangePct >= 0 ? "+" : ""}<RollingNumber value={avgChangePct.toFixed(2)} />%
                   </div>
                 </>
               ) : (
@@ -97,9 +98,9 @@ export function WatchlistSummary() {
                   <span className="text-xs font-medium">{stock.symbol}</span>
                   {stock.isLive ? (
                     <div className="text-right">
-                      <div className="text-xs font-medium">KES {stock.price!.toFixed(2)}</div>
+                      <div className="text-xs font-medium">KES <RollingNumber value={stock.price!.toFixed(2)} /></div>
                       <div className={`text-xs ${stock.isUp ? 'text-bull' : 'text-bear'}`}>
-                        {stock.isUp ? '+' : ''}{stock.change!.toFixed(2)}%
+                        {stock.isUp ? '+' : ''}<RollingNumber value={stock.change!.toFixed(2)} />%
                       </div>
                     </div>
                   ) : (

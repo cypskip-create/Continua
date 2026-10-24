@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import {PortfolioLiquidity} from '@/components/engine/PortfolioLiquidity';
 import {InstitutionalWorkbench} from '@/components/engine/InstitutionalWorkbench';
 import { EvidenceImportLab } from '@/components/engine/EvidenceImportLab';
@@ -413,7 +414,7 @@ export default function Engine() {
                   {tool==='Evidence'&&<><FinancialVersionDesk symbol={symbol}/>{fullEngine&&<><InvestmentCoverage/><InstitutionalWorkbench key={`models:${user?.id}:${profile?.subscription_plan}`} mode="Model evidence" symbol={symbol}/><EvidenceImportLab title="Industry statement extraction review" kinds={['financial-extension']}/></>}</>}
                   {query.isError&&<p role="status" className="text-sm text-muted-foreground">The background update could not connect. Showing your last saved research with its original date. <button className="text-primary" onClick={()=>void query.refetch()}>Retry update</button></p>}
                   <EngineCompanyHero data={data} sector={instruments.find(item=>item.symbol===symbol)?.sector}/>
-                  {tool!=='Evidence'&&<details className="engine-source-disclosure"><summary>Evidence & coverage · {data.coverage.annualPeriods} annual observations</summary><EngineReliabilityDesk data={data} onTool={target=>setTool(toolFromParam(target))}/></details>}
+                  {tool!=='Evidence'&&<details className="engine-source-disclosure"><summary>Evidence & coverage · <RollingNumber value={data.coverage.annualPeriods} /> annual observations</summary><EngineReliabilityDesk data={data} onTool={target=>setTool(toolFromParam(target))}/></details>}
                   {!!data.unavailable?.length && (
                     <p role="status" className="text-sm text-muted-foreground">
                       Some feeds could not be loaded:{" "}
@@ -490,9 +491,9 @@ export default function Engine() {
                           <p className="mt-2 text-sm text-muted-foreground">
                             Detailed change comparisons are not available in
                             this response. Coverage:{" "}
-                            {data.coverage.annualPeriods} annual periods,{" "}
-                            {data.coverage.valuationModels} valuation models and{" "}
-                            {data.coverage.analystEstimates} analyst estimates.
+                            <RollingNumber value={data.coverage.annualPeriods} /> annual periods,{" "}
+                            <RollingNumber value={data.coverage.valuationModels} /> valuation models and{" "}
+                            <RollingNumber value={data.coverage.analystEstimates} /> analyst estimates.
                           </p>
                         </section>
                       )}
@@ -536,13 +537,13 @@ export default function Engine() {
                               {model.model}
                             </h3>
                             <span className="text-sm font-semibold">
-                              {money(model.fairValue, data.currency)}
+                              <RollingNumber value={money(model.fairValue, data.currency)} />
                             </span>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {model.fairValue == null
+                            <RollingNumber value={model.fairValue == null
                               ? model.unavailableReason
-                              : `${Number(model.upsidePercent).toFixed(2)}% model-implied upside`}
+                              : `${Number(model.upsidePercent).toFixed(2)}% model-implied upside`} />
                           </p>
                           <p className="text-xs leading-relaxed text-muted-foreground">
                             {model.methodology}
@@ -655,10 +656,10 @@ function Briefing({ data, goal }: { data: EngineBundle; goal: string }) {
   return (
     <section className="engine-briefing space-y-3">
       <EngineHeadlineMetrics data={data}/><details><summary className="text-xs font-semibold text-muted-foreground">Research coverage</summary><div className="engine-evidence-summary" aria-label="Research coverage">
-        <div><span>Annual periods</span><strong>{data.coverage.annualPeriods}</strong></div>
-        <div><span>Valuation models</span><strong>{data.coverage.valuationModels}</strong></div>
-        <div><span>Earnings records</span><strong>{data.coverage.earningsEvents}</strong></div>
-        <div><span>Analyst estimates</span><strong>{data.coverage.analystEstimates}</strong></div>
+        <div><span>Annual periods</span><strong><RollingNumber value={data.coverage.annualPeriods} /></strong></div>
+        <div><span>Valuation models</span><strong><RollingNumber value={data.coverage.valuationModels} /></strong></div>
+        <div><span>Earnings records</span><strong><RollingNumber value={data.coverage.earningsEvents} /></strong></div>
+        <div><span>Analyst estimates</span><strong><RollingNumber value={data.coverage.analystEstimates} /></strong></div>
       </div>
       </details><div>
         <h3 className="text-lg font-semibold">Investment summary</h3>
@@ -688,7 +689,7 @@ function Briefing({ data, goal }: { data: EngineBundle; goal: string }) {
           ["Risks to examine", data.briefing.risks],
         ].map(([label, entries]) => (
           <details key={label as string} open>
-            <summary>{label as string} · {(entries as string[]).length}</summary>
+            <summary>{label as string} · <RollingNumber value={(entries as string[]).length} /></summary>
             {(entries as string[]).length ? (
               (entries as string[]).map((item) => (
                 <p className="mt-2 text-sm text-muted-foreground" key={item}>

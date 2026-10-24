@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { navigateBack } from "@/lib/navigation";
@@ -146,9 +147,9 @@ export default function SectorHeatmap() {
                 <p className="text-xs font-semibold">{s.name}</p>
                 <p className={`text-base font-bold tabular ${s.change >= 0 ? 'text-bull' : 'text-bear'} flex items-center gap-1`}>
                   {s.change >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-                  {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
+                  {s.change >= 0 ? '+' : ''}<RollingNumber value={s.change.toFixed(2)} />%
                 </p>
-                <p className="text-[0.625rem] text-muted-foreground mt-0.5">{s.count} stocks</p>
+                <p className="text-[0.625rem] text-muted-foreground mt-0.5"><RollingNumber value={s.count} /> stocks</p>
               </button>
             ))}
           </div>
@@ -168,7 +169,7 @@ export default function SectorHeatmap() {
 
         {/* Heatmap */}
         <div>
-          <p className="section-eyebrow mb-2">{sector === "All" ? "Full NSE" : sector} · {filtered.length} stocks</p>
+          <p className="section-eyebrow mb-2">{sector === "All" ? "Full NSE" : sector} · <RollingNumber value={filtered.length} /> stocks</p>
           <StockHeatmap stocks={filtered} />
         </div>
       </div>

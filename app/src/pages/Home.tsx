@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { HomeEngineIntro } from "@/components/home/HomeEngineIntro";
 import { HomePortfolioOverview } from "@/components/home/HomePortfolioOverview";
 import { HomeQuickWatch } from "@/components/home/HomeQuickWatch";
@@ -232,9 +233,9 @@ export default function Home() {
                       <p className="text-[0.625rem] text-muted-foreground">{s.name}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-semibold tabular">KES {s.price.toFixed(2)}</p>
+                      <p className="text-xs font-semibold tabular">KES <RollingNumber value={s.price.toFixed(2)} /></p>
                       <p className={`text-[0.625rem] font-semibold tabular ${s.changePct >= 0 ? 'text-bull' : 'text-bear'}`}>
-                        {s.changePct >= 0 ? '+' : ''}{s.changePct.toFixed(2)}%
+                        {s.changePct >= 0 ? '+' : ''}<RollingNumber value={s.changePct.toFixed(2)} />%
                       </p>
                     </div>
                   </button>

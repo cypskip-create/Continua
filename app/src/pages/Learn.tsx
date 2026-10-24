@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { ArrowLeft, BookOpen, Play, Coffee, Award, Clock, GraduationCap, Trophy, Target, CheckCircle2, Lock, Star, Video, FileText, Headphones, ChevronRight, Flame, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -219,15 +220,15 @@ export default function Learn() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Flame className="h-5 w-5 text-orange-500" />
-                <span className="font-semibold text-sm">{dailyChallenge.streak} Day Streak!</span>
+                <span className="font-semibold text-sm"><RollingNumber value={dailyChallenge.streak} /> Day Streak!</span>
               </div>
               <Badge variant="secondary" className="text-xs">
-                +{dailyChallenge.xp} XP
+                +<RollingNumber value={dailyChallenge.xp} /> XP
               </Badge>
             </div>
             <p className="text-sm mb-2">{dailyChallenge.title}</p>
             <Progress value={(dailyChallenge.progress / dailyChallenge.total) * 100} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-1">{dailyChallenge.progress}/{dailyChallenge.total} completed</p>
+            <p className="text-xs text-muted-foreground mt-1"><RollingNumber value={dailyChallenge.progress} />/<RollingNumber value={dailyChallenge.total} /> completed</p>
           </CardContent>
         </Card>
 
@@ -279,11 +280,11 @@ export default function Learn() {
                     <h4 className="font-semibold text-sm">{path.title}</h4>
                     <p className="text-xs opacity-80 mb-2">{path.description}</p>
                     <div className="flex items-center justify-between text-xs opacity-80 mb-2">
-                      <span>{path.courses} courses</span>
+                      <span><RollingNumber value={path.courses} /> courses</span>
                       <span>{path.duration}</span>
                     </div>
                     <Progress value={path.progress} className="h-1.5 bg-white/30" />
-                    <p className="text-xs mt-1">{path.progress}% complete</p>
+                    <p className="text-xs mt-1"><RollingNumber value={path.progress} />% complete</p>
                   </CardContent>
                 </Card>
               );
@@ -362,7 +363,7 @@ export default function Learn() {
                           </div>
                           <div className="flex items-center gap-1 text-xs text-yellow-500">
                             <Star className="h-3 w-3 fill-current" />
-                            <span>{course.rating}</span>
+                            <span><RollingNumber value={course.rating} /></span>
                           </div>
                         </div>
                       </div>
@@ -370,8 +371,8 @@ export default function Learn() {
                     </div>
                     
                     <div className="flex items-center justify-between mt-3">
-                      <span className="text-xs text-muted-foreground">{course.lessons} lessons • {course.students.toLocaleString()} students</span>
-                      <span className="text-xs text-primary font-medium">{course.progress}%</span>
+                      <span className="text-xs text-muted-foreground"><RollingNumber value={course.lessons} /> lessons • <RollingNumber value={course.students.toLocaleString()} /> students</span>
+                      <span className="text-xs text-primary font-medium"><RollingNumber value={course.progress} />%</span>
                     </div>
                     <Progress value={course.progress} className="h-1.5 mt-2" />
                   </div>

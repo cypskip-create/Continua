@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { InfoTip } from "./InfoTip";
 
@@ -71,7 +72,7 @@ export function PortfolioRiskAnalysis({ holdings, risk }: PortfolioRiskAnalysisP
             <p className="text-[0.6875rem] text-muted-foreground py-4 text-center">Not enough price history on file yet to compute a score.</p>
           ) : (
             <>
-              <p className="text-3xl font-bold tabular text-right">{score}<span className="text-base text-muted-foreground">/100</span></p>
+              <p className="text-3xl font-bold tabular text-right"><RollingNumber value={score} /><span className="text-base text-muted-foreground">/100</span></p>
               <div className="relative h-2.5 rounded-full mt-3" style={{ background: "linear-gradient(90deg, #3b82f6, #a855f7, #ef4444)" }}>
                 <div className="absolute -top-1.5 w-1 h-5 bg-white rounded-full" style={{ left: `${score}%` }} />
               </div>
@@ -137,9 +138,9 @@ export function PortfolioRiskAnalysis({ holdings, risk }: PortfolioRiskAnalysisP
         )}
         {tab === "beta" && (
           <p className="text-[0.6875rem] text-muted-foreground py-4 text-center">
-            {risk.portfolioBeta != null
+            <RollingNumber value={risk.portfolioBeta != null
               ? `Portfolio beta is ${risk.portfolioBeta.toFixed(2)}x vs. an equal-weight basket of your own holdings — ${(Math.abs(1 - risk.portfolioBeta) * 100).toFixed(0)}% ${risk.portfolioBeta < 1 ? "less" : "more"} sensitive than that basket.`
-              : "Not enough price history on file yet to compute beta."}
+              : "Not enough price history on file yet to compute beta."} />
           </p>
         )}
       </div>
@@ -184,7 +185,7 @@ function RiskByHoldingList({ title, description, rows, extra, fmt, isLoading, ne
                   style={{ width: `${widthPct}%`, background: r.symbol === "Portfolio" ? "hsl(217 91% 60%)" : r.symbol === "Basket" ? "hsl(var(--muted-foreground))" : negative ? "hsl(var(--bull))" : "hsl(270 91% 65%)" }}
                 />
               </div>
-              <span className="text-[0.6875rem] font-semibold tabular w-14 text-right">{fmt(r.value)}</span>
+              <span className="text-[0.6875rem] font-semibold tabular w-14 text-right"><RollingNumber value={fmt(r.value)} /></span>
             </div>
           );
         })}

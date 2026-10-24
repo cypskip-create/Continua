@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import {SafetyMenuItems} from './SafetyMenuItems';
 import { MessageCircle, Share, Bookmark, BookmarkCheck, Trash2, MoreHorizontal, Verified, Eye, Pencil, VolumeX, Flag, UserX, Link2 } from "lucide-react";
@@ -95,8 +96,8 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
             </span>
             {priceData && (
               <span className={`ml-1 text-[0.6875rem] font-medium ${priceData.change >= 0 ? "text-bull" : "text-bear"}`}>
-                KES {priceData.price.toFixed(2)}
-                <span className="ml-0.5">{priceData.change >= 0 ? "↑" : "↓"}{Math.abs(priceData.change).toFixed(2)}%</span>
+                KES <RollingNumber value={priceData.price.toFixed(2)} />
+                <span className="ml-0.5">{priceData.change >= 0 ? "↑" : "↓"}<RollingNumber value={Math.abs(priceData.change).toFixed(2)} />%</span>
               </span>
             )}
           </span>
@@ -186,7 +187,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
                   return (
                     <Badge key={stock} variant="secondary" className="text-[0.6875rem] px-2 py-0.5 cursor-pointer hover:bg-primary/10 rounded-full gap-1 border-0" onClick={(e) => { e.stopPropagation(); navigate(`/stock/${stock}`); }}>
                       ${stock}
-                      {change !== null && <span className={change >= 0 ? "text-bull" : "text-bear"}>{change >= 0 ? "+" : ""}{change.toFixed(2)}%</span>}
+                      {change !== null && <span className={change >= 0 ? "text-bull" : "text-bear"}>{change >= 0 ? "+" : ""}<RollingNumber value={change.toFixed(2)} />%</span>}
                     </Badge>
                   );
                 })}
@@ -211,13 +212,13 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
               </div>
             )}
 
-            {expanded && <p className="mt-3 text-[0.6875rem] text-muted-foreground tabular">{formatNumber(viewCount || 1)} views</p>}
+            {expanded && <p className="mt-3 text-[0.6875rem] text-muted-foreground tabular"><RollingNumber value={formatNumber(viewCount || 1)} /> views</p>}
             {/* Community action bar: reactions, replies, bookmark */}
             <div className="flex items-center justify-between mt-3 -ml-2 max-w-[425px] border-t border-border/40 pt-1">
               <CommunityReactionButton counts={post.reaction_counts || {}} selected={post.my_reaction} onSelect={reaction => onReact?.(post.id, reaction)} />
               <button className="group flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors" onClick={(e) => { e.stopPropagation(); onComment(post); }} data-small-target>
                 <div className="p-2 rounded-full group-hover:bg-primary/10 transition-colors"><MessageCircle className="h-[18px] w-[18px]" /></div>
-                <span className="text-xs">{formatNumber(post.comments_count)}</span>
+                <span className="text-xs"><RollingNumber value={formatNumber(post.comments_count)} /></span>
               </button>
                 <button className={`p-2 rounded-full transition-colors ${post.is_bookmarked ? "text-primary" : "text-muted-foreground hover:text-primary hover:bg-primary/10"}`} onClick={(e) => { e.stopPropagation(); onBookmark(post.id); }} data-small-target aria-label="Bookmark post">
                   {post.is_bookmarked ? <BookmarkCheck className="h-[18px] w-[18px] fill-current" /> : <Bookmark className="h-[18px] w-[18px]" />}

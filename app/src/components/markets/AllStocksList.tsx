@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -133,7 +134,7 @@ export function AllStocksList({ initialSector, onlySymbols, search }: AllStocksL
     <>
     <Card className="soft-card overflow-hidden">
       <div className="flex items-center justify-between px-4 pt-4 pb-3">
-        <span className="text-sm font-bold">All Stocks ({filteredStocks.length})</span>
+        <span className="text-sm font-bold">All Stocks (<RollingNumber value={filteredStocks.length} />)</span>
         <div className="flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

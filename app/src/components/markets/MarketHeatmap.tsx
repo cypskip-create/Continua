@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { MarketIntelligence } from "@/api/marketResearchApi";
@@ -60,7 +61,7 @@ export function MarketHeatmap({
               className={`text-xl my-2 ${i.change > 0 ? "text-bull" : i.change < 0 ? "text-bear" : "text-muted-foreground"}`}
             >
               {i.change > 0 ? "+" : ""}
-              {i.change.toFixed(2)}%
+              <RollingNumber value={i.change.toFixed(2)} />%
             </p>
             <small>{i.detail}</small>
           </button>

@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useEffect, useRef } from "react";
 import {
   Play, Pause, Volume2, VolumeX, Maximize2, Minimize2,
@@ -139,10 +140,10 @@ export function LiveConferencePlayer({ conference, open, onClose }: LiveConferen
               </Badge>
               <Badge variant="secondary" className="bg-black/60 text-white text-[0.6875rem] backdrop-blur-sm border-0">
                 <Users className="h-3 w-3 mr-1" />
-                {viewers.toLocaleString()}
+                <RollingNumber value={viewers.toLocaleString()} />
               </Badge>
               <Badge variant="secondary" className="bg-black/60 text-white text-[0.625rem] backdrop-blur-sm border-0 hidden sm:flex">
-                {quality} · {speed}×
+                {quality} · <RollingNumber value={speed} />×
               </Badge>
             </div>
 
@@ -216,7 +217,7 @@ export function LiveConferencePlayer({ conference, open, onClose }: LiveConferen
                       <DropdownMenuLabel className="text-[0.6875rem]">Speed</DropdownMenuLabel>
                       {SPEED_OPTIONS.map(s => (
                         <DropdownMenuItem key={s} onClick={() => setSpeed(s)} className="text-xs">
-                          {speed === s ? "✓ " : "  "}{s}×
+                          {speed === s ? "✓ " : "  "}<RollingNumber value={s} />×
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
@@ -236,7 +237,7 @@ export function LiveConferencePlayer({ conference, open, onClose }: LiveConferen
               <div className="flex items-start justify-between mb-3">
                 <div className="min-w-0">
                   <h2 className="font-bold text-base mb-0.5 line-clamp-2">{conference.title}</h2>
-                  <p className="text-xs text-muted-foreground">{conference.source} · {viewers.toLocaleString()} watching now</p>
+                  <p className="text-xs text-muted-foreground">{conference.source} · <RollingNumber value={viewers.toLocaleString()} /> watching now</p>
                 </div>
               </div>
 
@@ -280,7 +281,7 @@ export function LiveConferencePlayer({ conference, open, onClose }: LiveConferen
                   <h3 className="font-semibold text-sm flex items-center gap-2">
                     <MessageCircle className="h-4 w-4" /> Live Chat
                   </h3>
-                  <Badge variant="secondary" className="text-[0.625rem]">{viewers.toLocaleString()} viewers</Badge>
+                  <Badge variant="secondary" className="text-[0.625rem]"><RollingNumber value={viewers.toLocaleString()} /> viewers</Badge>
                 </div>
 
                 <ScrollArea className="flex-1 p-3">

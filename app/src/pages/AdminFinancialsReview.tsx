@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import {ModelGovernanceAdmin} from '@/components/engine/ModelGovernanceAdmin';
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -258,7 +259,7 @@ function CandidateReviewForm({ candidateId, onDone }: { candidateId: string; onD
           </div>
           {data.draft.unmapped.length > 0 && (
             <p className="text-[0.625rem] text-muted-foreground mt-2">
-              {data.draft.unmapped.length} detected row(s) not auto-mapped: {data.draft.unmapped.map((r) => r.label).join(", ")}
+              <RollingNumber value={data.draft.unmapped.length} /> detected row(s) not auto-mapped: {data.draft.unmapped.map((r) => r.label).join(", ")}
             </p>
           )}
         </div>

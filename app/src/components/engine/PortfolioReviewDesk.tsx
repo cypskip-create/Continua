@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import {downloadResearchReport} from "@/lib/researchReport";
 import { Link } from "react-router-dom";
@@ -53,21 +54,21 @@ export function PortfolioReviewDesk({ data: p }: { data: EnginePortfolio }) {
         <div>
           <small>Largest holding</small>
           <strong>
-            {Math.max(...p.positions.map((r) => r.weight)) * 100 >= 0
+            <RollingNumber value={Math.max(...p.positions.map((r) => r.weight)) * 100 >= 0
               ? `${(Math.max(...p.positions.map((r) => r.weight)) * 100).toFixed(2)}%`
-              : "—"}
+              : "—"} />
           </strong>
         </div>
         <div>
           <small>Income observed</small>
           <strong>
-            {p.dividends.some((d) => d.trailingIncome != null)
+            <RollingNumber value={p.dividends.some((d) => d.trailingIncome != null)
               ? money(income)
-              : "Unavailable"}
+              : "Unavailable"} />
           </strong>
           <small>
-            {p.dividends.filter((d) => d.trailingIncome != null).length}/
-            {p.positions.length} holdings · trailing
+            <RollingNumber value={p.dividends.filter((d) => d.trailingIncome != null).length} />/
+            <RollingNumber value={p.positions.length} /> holdings · trailing
           </small>
         </div>
         <div>
@@ -99,8 +100,8 @@ export function PortfolioReviewDesk({ data: p }: { data: EnginePortfolio }) {
             <div key={r.symbol} className="market-row text-sm">
               <span>{r.symbol}</span>
               <span>
-                {r.overLimit.toFixed(2)} percentage points above limit ·{" "}
-                {money(r.excessValue)}
+                <RollingNumber value={r.overLimit.toFixed(2)} /> percentage points above limit ·{" "}
+                <RollingNumber value={money(r.excessValue)} />
               </span>
             </div>
           ))
@@ -151,9 +152,9 @@ export function PortfolioReviewDesk({ data: p }: { data: EnginePortfolio }) {
           </label>
         </div>
         <p className="py-3 text-lg tabular-nums">
-          Illustrative value: {money(p.totalValue + scenarioLoss)}{" "}
+          Illustrative value: <RollingNumber value={money(p.totalValue + scenarioLoss)} />{" "}
           <span className="text-sm text-muted-foreground">
-            ({money(scenarioLoss)})
+            (<RollingNumber value={money(scenarioLoss)} />)
           </span>
         </p>
         <p className="text-xs text-muted-foreground">

@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Users, Trophy, MessageCircle, BookOpen, TrendingUp, Hash, Play, PieChart, Coffee, Heart, Repeat2, UserPlus, Flame, ChevronRight, Share2, Bookmark, MoreHorizontal } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -205,7 +206,7 @@ export default function Discover() {
               onClick={() => navigate(`/stock/${s.symbol}`)}
             >
               <span className="text-xs font-bold">${s.symbol}</span>
-              <span className="text-[0.625rem] text-muted-foreground">{s.price}</span>
+              <span className="text-[0.625rem] text-muted-foreground"><RollingNumber value={s.price} /></span>
               <span className={`text-[0.625rem] font-semibold ${s.isUp ? 'text-bull' : 'text-bear'}`}>
                 {s.change}
               </span>
@@ -239,7 +240,7 @@ export default function Discover() {
                   <h3 className="font-semibold text-sm">Portfolio Insights</h3>
                 </div>
                 <Badge variant="secondary" className={`text-xs ${portfolioStats.gainPct >= 0 ? 'text-bull' : 'text-bear'}`}>
-                  {portfolioStats.gainPct >= 0 ? '+' : ''}{portfolioStats.gainPct.toFixed(2)}%
+                  {portfolioStats.gainPct >= 0 ? '+' : ''}<RollingNumber value={portfolioStats.gainPct.toFixed(2)} />%
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
@@ -254,7 +255,7 @@ export default function Discover() {
                     <div className="mt-2 text-xs">
                       <span className="text-muted-foreground">Best: </span>
                       <span className={`font-medium ${topGainerHolding.gainPct >= 0 ? 'text-bull' : 'text-bear'}`}>
-                        {topGainerHolding.symbol} {topGainerHolding.gainPct >= 0 ? '+' : ''}{topGainerHolding.gainPct.toFixed(2)}%
+                        {topGainerHolding.symbol} {topGainerHolding.gainPct >= 0 ? '+' : ''}<RollingNumber value={topGainerHolding.gainPct.toFixed(2)} />%
                       </span>
                     </div>
                   )}
@@ -412,21 +413,21 @@ export default function Discover() {
                             onClick={(e) => { e.stopPropagation(); navigate(`/traders-hub/post/${post.id}`); }}
                           >
                             <MessageCircle className="h-3.5 w-3.5 group-hover:bg-primary/10 rounded-full p-0" />
-                            <span>{post.comments_count}</span>
+                            <span><RollingNumber value={post.comments_count} /></span>
                           </button>
                           <button
                             className={`flex items-center gap-1 text-xs transition-colors group ${post.is_reposted ? 'text-bull' : 'hover:text-bull'}`}
                             onClick={(e) => handleRepost(e, post.id)}
                           >
                             <Repeat2 className="h-3.5 w-3.5" />
-                            <span>{post.reposts_count}</span>
+                            <span><RollingNumber value={post.reposts_count} /></span>
                           </button>
                           <button
                             className={`flex items-center gap-1 text-xs transition-colors group ${post.is_liked ? 'text-red-500' : 'hover:text-red-500'}`}
                             onClick={(e) => handleLike(e, post.id)}
                           >
                             <Heart className={`h-3.5 w-3.5 transition-transform ${post.is_liked ? 'fill-current scale-110' : 'group-hover:scale-110'}`} />
-                            <span>{post.likes_count}</span>
+                            <span><RollingNumber value={post.likes_count} /></span>
                           </button>
                           <button
                             className={`flex items-center gap-1 text-xs transition-colors ${post.is_bookmarked ? 'text-primary' : 'hover:text-primary'}`}
@@ -478,8 +479,8 @@ export default function Discover() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-muted-foreground">{course.lessons} lessons</span>
-                    <span className="text-xs text-primary font-medium">{course.progress}%</span>
+                    <span className="text-xs text-muted-foreground"><RollingNumber value={course.lessons} /> lessons</span>
+                    <span className="text-xs text-primary font-medium"><RollingNumber value={course.progress} />%</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-1.5">
                     <div
@@ -517,7 +518,7 @@ export default function Discover() {
                         </Avatar>
                         <div>
                           <div className="font-semibold text-sm">{trader.full_name || "Trader"}</div>
-                          <div className="text-xs text-muted-foreground">{trader.posts_count} posts</div>
+                          <div className="text-xs text-muted-foreground"><RollingNumber value={trader.posts_count} /> posts</div>
                         </div>
                       </div>
                       <div className="text-right">

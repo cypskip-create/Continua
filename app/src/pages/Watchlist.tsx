@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Plus, Search, X, Heart, TrendingUp, TrendingDown, Trash2, MoreHorizontal, Pencil, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -152,8 +153,8 @@ export default function Watchlist() {
             <div className="min-w-0">
               <h1 className="text-base font-bold leading-tight truncate">{currentFolder?.name || "Watchlist"}</h1>
               <p className="text-[0.6875rem] text-muted-foreground leading-tight">
-                {rows.length} {rows.length === 1 ? "stock" : "stocks"}
-                {rows.length > 0 && <> · <span className="text-bull font-medium">{gainers} up</span> · <span className="text-bear font-medium">{losers} down</span></>}
+                <RollingNumber value={rows.length} /> {rows.length === 1 ? "stock" : "stocks"}
+                {rows.length > 0 && <> · <span className="text-bull font-medium"><RollingNumber value={gainers} /> up</span> · <span className="text-bear font-medium"><RollingNumber value={losers} /> down</span></>}
               </p>
             </div>
           </div>
@@ -251,10 +252,10 @@ export default function Watchlist() {
               <div className="text-right shrink-0 w-[92px]">
                 {stock.isLive ? (
                   <>
-                    <p className="text-[0.84375rem] font-bold tabular-nums leading-tight">KES {stock.price!.toFixed(2)}</p>
+                    <p className="text-[0.84375rem] font-bold tabular-nums leading-tight">KES <RollingNumber value={stock.price!.toFixed(2)} /></p>
                     <div className={`flex items-center justify-end gap-0.5 mt-0.5 ${stock.isUp ? "text-bull" : "text-bear"}`}>
                       {stock.isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                      <span className="text-[0.6875rem] font-semibold tabular-nums">{stock.isUp ? "+" : ""}{stock.changePercent!.toFixed(2)}%</span>
+                      <span className="text-[0.6875rem] font-semibold tabular-nums">{stock.isUp ? "+" : ""}<RollingNumber value={stock.changePercent!.toFixed(2)} />%</span>
                     </div>
                   </>
                 ) : (

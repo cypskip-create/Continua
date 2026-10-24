@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -177,7 +178,7 @@ export function StockScreener() {
 
           <div>
             <label className="text-xs text-muted-foreground mb-2 block">
-              Change Range: {filters.minChange}% to {filters.maxChange}%
+              Change Range: <RollingNumber value={filters.minChange} />% to <RollingNumber value={filters.maxChange} />%
             </label>
             <div className="flex items-center gap-3">
               <Slider
@@ -197,7 +198,7 @@ export function StockScreener() {
               Reset
             </Button>
             <Badge variant="outline" className="text-xs">
-              {filteredStocks.length} stocks
+              <RollingNumber value={filteredStocks.length} /> stocks
             </Badge>
           </div>
         </div>
@@ -221,17 +222,17 @@ export function StockScreener() {
                 <div className="text-xs text-muted-foreground truncate">{stock.name}</div>
                 <div className="flex gap-3 mt-1">
                   <span className="text-[0.625rem] text-muted-foreground">Vol: {stock.volume}</span>
-                  <span className="text-[0.625rem] text-muted-foreground">P/E: {stock.pe}</span>
+                  <span className="text-[0.625rem] text-muted-foreground">P/E: <RollingNumber value={stock.pe} /></span>
                 </div>
               </div>
               
               <div className="flex items-center gap-2">
                 <SparklineChart isPositive={stock.change >= 0} width={40} height={18} />
                 <div className="text-right min-w-[65px]">
-                  <div className="font-semibold text-sm">KES {stock.price}</div>
+                  <div className="font-semibold text-sm">KES <RollingNumber value={stock.price} /></div>
                   <div className={`text-xs flex items-center justify-end gap-0.5 ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>
                     {stock.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {stock.change >= 0 ? '+' : ''}{stock.change}%
+                    {stock.change >= 0 ? '+' : ''}<RollingNumber value={stock.change} />%
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />

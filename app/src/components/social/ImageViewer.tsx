@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -88,7 +89,7 @@ export function ImageViewer({ open, onOpenChange, images, initialIndex = 0 }: Im
           </Button>
           {images.length > 1 && (
             <span className="text-white/80 text-sm font-semibold tabular-nums">
-              {currentIndex + 1} / {images.length}
+              <RollingNumber value={currentIndex + 1} /> / <RollingNumber value={images.length} />
             </span>
           )}
           <div className="flex items-center gap-1">

@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { PostAttachments } from "./PostAttachments";
 import {SafetyMenuItems} from './SafetyMenuItems';
 import {postPreview} from '@/lib/postPreview';
@@ -185,7 +186,7 @@ export function HubPostCard({
           className="flex items-center gap-1.5 h-8 px-1.5 text-muted-foreground hover:text-foreground transition-colors"
         >
           <MessageSquare className="h-[17px] w-[17px]" />
-          <span className="text-[0.6875rem] font-medium tabular-nums">{post.comments_count || 0}</span>
+          <span className="text-[0.6875rem] font-medium tabular-nums"><RollingNumber value={post.comments_count || 0} /></span>
         </button>
         <button
           type="button"

@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { navigateBack } from "@/lib/navigation";
@@ -89,11 +90,11 @@ export default function SectorDetail() {
               <div className="w-9 h-9 rounded-2xl bg-accent/10 text-accent flex items-center justify-center shrink-0">
                 <Landmark className="h-4.5 w-4.5" />
               </div>
-              <p className="text-sm font-bold truncate">{stocks.length} {stocks.length === 1 ? "stock" : "stocks"} on the NSE</p>
+              <p className="text-sm font-bold truncate"><RollingNumber value={stocks.length} /> {stocks.length === 1 ? "stock" : "stocks"} on the NSE</p>
             </div>
             {avgChange != null ? (
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${isUp ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
-                {isUp ? '+' : ''}{avgChange.toFixed(2)}%
+                {isUp ? '+' : ''}<RollingNumber value={avgChange.toFixed(2)} />%
               </span>
             ) : (
               <Skeleton className="h-5 w-12 rounded-full shrink-0" />
@@ -101,7 +102,7 @@ export default function SectorDetail() {
           </div>
           {topMover && (
             <p className="text-xs text-muted-foreground mt-1">
-              Top mover today: <span className="font-semibold text-foreground">{topMover.symbol}</span> {topMover.change! >= 0 ? '+' : ''}{topMover.change!.toFixed(2)}%
+              Top mover today: <span className="font-semibold text-foreground">{topMover.symbol}</span> {topMover.change! >= 0 ? '+' : ''}<RollingNumber value={topMover.change!.toFixed(2)} />%
             </p>
           )}
         </Card>
@@ -129,10 +130,10 @@ export default function SectorDetail() {
                   <SparklineChart isPositive={(stock.change ?? 0) >= 0} width={44} height={18} data={getSparkline(stock.symbol)} isLoading={!stock.isLive} />
                   {stock.isLive ? (
                     <div className="text-right min-w-[72px]">
-                      <p className="text-sm font-bold">KES {stock.price!.toFixed(2)}</p>
+                      <p className="text-sm font-bold">KES <RollingNumber value={stock.price!.toFixed(2)} /></p>
                       <p className={`text-xs font-semibold flex items-center justify-end gap-0.5 ${stock.change! >= 0 ? 'text-bull' : 'text-bear'}`}>
                         {stock.change! >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                        {stock.change! >= 0 ? '+' : ''}{stock.change!.toFixed(2)}%
+                        {stock.change! >= 0 ? '+' : ''}<RollingNumber value={stock.change!.toFixed(2)} />%
                       </p>
                     </div>
                   ) : (

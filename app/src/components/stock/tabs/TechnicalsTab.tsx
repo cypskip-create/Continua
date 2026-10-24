@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { Loader2, TrendingUp, TrendingDown, Minus, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -63,7 +64,7 @@ function IndicatorReadouts({ symbol }: { symbol: string }) {
               <p className="text-[0.625rem] text-muted-foreground">Relative Strength Index</p>
             </div>
             <div className="text-right">
-              <p className="text-sm font-bold tabular">{rsiValue != null ? rsiValue.toFixed(2) : "—"}</p>
+              <p className="text-sm font-bold tabular"><RollingNumber value={rsiValue != null ? rsiValue.toFixed(2) : "—"} /></p>
               {rsiState && <Badge variant="outline" className="text-[0.5625rem]" style={{ color: rsiColor, borderColor: `${rsiColor}55` }}>{rsiState}</Badge>}
             </div>
           </div>
@@ -87,7 +88,7 @@ function IndicatorReadouts({ symbol }: { symbol: string }) {
               <p className="text-[0.625rem] text-muted-foreground">Histogram: MACD line minus signal</p>
             </div>
             <div className="text-right">
-              <p className="text-sm font-bold tabular">{macdLatest?.histogram != null ? macdLatest.histogram.toFixed(2) : "—"}</p>
+              <p className="text-sm font-bold tabular"><RollingNumber value={macdLatest?.histogram != null ? macdLatest.histogram.toFixed(2) : "—"} /></p>
               {macdLatest?.histogram != null && (
                 <Badge variant="outline" className="text-[0.5625rem]" style={{ color: macdLatest.histogram >= 0 ? fx.strong : fx.weak, borderColor: `${macdLatest.histogram >= 0 ? fx.strong : fx.weak}55` }}>
                   {macdLatest.histogram >= 0 ? "Bullish" : "Bearish"}
@@ -98,7 +99,7 @@ function IndicatorReadouts({ symbol }: { symbol: string }) {
         </div>
       )}
       <p className="text-xs text-muted-foreground mt-2">Latest indicator date: {rsi?.timestamps?.at(-1)??"unavailable"}. RSI extremes and moving-average alignment are observations, not standalone buy/sell instructions. Confirm volume, reporting news and the price-history adjustment basis.</p>
-      {sma20Value!=null&&sma50Value!=null&&sma50Value>0&&<p className="text-xs mt-1">20-day average relative to 50-day: {((sma20Value/sma50Value-1)*100).toFixed(2)}%.</p>}
+      {sma20Value!=null&&sma50Value!=null&&sma50Value>0&&<p className="text-xs mt-1">20-day average relative to 50-day: <RollingNumber value={((sma20Value/sma50Value-1)*100).toFixed(2)} />%.</p>}
     </div>
   );
 }
@@ -136,8 +137,8 @@ function VolumeProfileSection({ symbol, currency }: { symbol: string; currency: 
       <Eyebrow>Volume Profile (90 days)</Eyebrow>
       <div className="border-t border-border/60 pt-3">
         <div className="flex items-center justify-between mb-3 text-[0.625rem] text-muted-foreground">
-          <span>Point of control: <span className="font-semibold text-foreground tabular">{currency} {profile.pointOfControl.toFixed(2)}</span></span>
-          <span>Value area: <span className="font-semibold text-foreground tabular">{currency} {profile.valueAreaLow.toFixed(2)}–{profile.valueAreaHigh.toFixed(2)}</span></span>
+          <span>Point of control: <span className="font-semibold text-foreground tabular">{currency} <RollingNumber value={profile.pointOfControl.toFixed(2)} /></span></span>
+          <span>Value area: <span className="font-semibold text-foreground tabular">{currency} <RollingNumber value={profile.valueAreaLow.toFixed(2)} />–<RollingNumber value={profile.valueAreaHigh.toFixed(2)} /></span></span>
         </div>
         <div className="space-y-0.5">
           {orderedBuckets.map((b) => {
@@ -146,7 +147,7 @@ function VolumeProfileSection({ symbol, currency }: { symbol: string; currency: 
             const isPoc = Math.abs(b.priceMid - profile.pointOfControl) < 1e-6;
             return (
               <div key={`${b.priceLow}-${b.priceHigh}`} className="flex items-center gap-2 h-4">
-                <span className="text-[0.5625rem] tabular text-muted-foreground w-14 text-right shrink-0">{b.priceMid.toFixed(2)}</span>
+                <span className="text-[0.5625rem] tabular text-muted-foreground w-14 text-right shrink-0"><RollingNumber value={b.priceMid.toFixed(2)} /></span>
                 <div className="flex-1 h-full bg-muted/30 rounded-sm overflow-hidden">
                   <div
                     className="h-full rounded-sm"
@@ -204,7 +205,7 @@ function BacktesterSection({ symbol }: { symbol: string }) {
           <Select value={String(months)} onValueChange={(v) => setMonths(Number(v))}>
             <SelectTrigger className="h-9 text-xs w-24"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {[3, 6, 12, 24].map((m) => <SelectItem key={m} value={String(m)} className="text-xs">{m}mo</SelectItem>)}
+              {[3, 6, 12, 24].map((m) => <SelectItem key={m} value={String(m)} className="text-xs"><RollingNumber value={m} />mo</SelectItem>)}
             </SelectContent>
           </Select>
           <Button size="sm" onClick={handleRun} disabled={isRunning} className="h-9 shrink-0">
@@ -222,14 +223,14 @@ function BacktesterSection({ symbol }: { symbol: string }) {
               <StatBox label="Win Rate" value={result.metrics.winRate != null ? `${result.metrics.winRate.toFixed(0)}%` : "—"} />
               <StatBox label="Max Drawdown" value={`-${result.metrics.maxDrawdownPercent.toFixed(2)}%`} positive={false} />
             </div>
-            <p className="text-[0.625rem] text-muted-foreground">{result.metrics.totalTrades} trade{result.metrics.totalTrades === 1 ? "" : "s"} · {result.caveat}</p>
+            <p className="text-[0.625rem] text-muted-foreground"><RollingNumber value={result.metrics.totalTrades} /> trade{result.metrics.totalTrades === 1 ? "" : "s"} · {result.caveat}</p>
 
             {result.trades.length > 0 && (
               <div className="border-t border-border/40 divide-y divide-border/30">
                 {result.trades.slice(-5).reverse().map((t, i) => (
                   <div key={i} className="flex items-center justify-between py-2">
                     <span className="text-[0.625rem] text-muted-foreground">{new Date(t.entryDate).toLocaleDateString()} → {new Date(t.exitDate).toLocaleDateString()}</span>
-                    <span className={`text-xs font-semibold tabular ${t.returnPercent >= 0 ? "text-bull" : "text-bear"}`}>{t.returnPercent >= 0 ? "+" : ""}{t.returnPercent.toFixed(2)}%</span>
+                    <span className={`text-xs font-semibold tabular ${t.returnPercent >= 0 ? "text-bull" : "text-bear"}`}>{t.returnPercent >= 0 ? "+" : ""}<RollingNumber value={t.returnPercent.toFixed(2)} />%</span>
                   </div>
                 ))}
               </div>

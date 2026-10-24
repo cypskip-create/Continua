@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useIndices } from "@/hooks/useIndices";
 import { useState } from "react";
 import {
@@ -112,7 +113,7 @@ export default function News() {
               {showBookmarks ? <BookmarkCheck className="h-[18px] w-[18px] text-primary" /> : <Bookmark className="h-[18px] w-[18px]" />}
               {savedArticles.length > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary text-[0.625rem] flex items-center justify-center text-primary-foreground font-bold">
-                  {savedArticles.length}
+                  <RollingNumber value={savedArticles.length} />
                 </span>
               )}
             </Button>
@@ -139,7 +140,7 @@ export default function News() {
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold flex items-center gap-2">
                 <BookmarkCheck className="h-4 w-4 text-primary" />
-                Saved Articles ({savedArticles.length})
+                Saved Articles (<RollingNumber value={savedArticles.length} />)
               </h2>
               <Button variant="ghost" size="sm" className="text-xs h-7 rounded-full" onClick={() => setShowBookmarks(false)}>
                 Back to Feed
@@ -170,7 +171,7 @@ export default function News() {
                       </div>
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center gap-2 text-[0.625rem] text-muted-foreground">
-                          <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" />{((article.views || 0) / 1000).toFixed(2)}K</span>
+                          <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" /><RollingNumber value={((article.views || 0) / 1000).toFixed(2)} />K</span>
                         </div>
                         <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={(e) => { e.stopPropagation(); toggleSave(article.id); }}>
                           <BookmarkCheck className="h-3.5 w-3.5 text-primary" />
@@ -196,7 +197,7 @@ export default function News() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{liveNews.title}</p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        {liveNews.source} · <Eye className="h-3 w-3" />{liveNews.viewers.toLocaleString()}
+                        {liveNews.source} · <Eye className="h-3 w-3" /><RollingNumber value={liveNews.viewers.toLocaleString()} />
                       </p>
                     </div>
                   </div>
@@ -294,8 +295,8 @@ export default function News() {
                       <p className="text-[0.625rem] text-primary font-semibold">{article.source}</p>
                       <h4 className="text-[0.6875rem] font-bold leading-snug line-clamp-2 mt-0.5">{article.title}</h4>
                       <div className="flex items-center gap-2 mt-1.5 text-[0.625rem] text-muted-foreground">
-                        <span className="flex items-center gap-0.5"><MessageCircle className="h-2.5 w-2.5" />{article.comments}</span>
-                        <span className="flex items-center gap-0.5"><Eye className="h-2.5 w-2.5" />{((article.views || 0) / 1000).toFixed(2)}K</span>
+                        <span className="flex items-center gap-0.5"><MessageCircle className="h-2.5 w-2.5" /><RollingNumber value={article.comments} /></span>
+                        <span className="flex items-center gap-0.5"><Eye className="h-2.5 w-2.5" /><RollingNumber value={((article.views || 0) / 1000).toFixed(2)} />K</span>
                       </div>
                     </div>
                   </Card>
@@ -376,8 +377,8 @@ export default function News() {
                             </div>
                             <div className="flex items-center justify-between mt-2">
                               <div className="flex items-center gap-2 text-[0.625rem] text-muted-foreground">
-                                <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" />{((article.views || 0) / 1000).toFixed(2)}K</span>
-                                <span className="flex items-center gap-0.5"><MessageCircle className="h-3 w-3" />{article.comments}</span>
+                                <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" /><RollingNumber value={((article.views || 0) / 1000).toFixed(2)} />K</span>
+                                <span className="flex items-center gap-0.5"><MessageCircle className="h-3 w-3" /><RollingNumber value={article.comments} /></span>
                               </div>
                               <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={(e) => { e.stopPropagation(); toggleSave(article.id); }}>
                                 {savedArticles.includes(article.id) ? <BookmarkCheck className="h-3.5 w-3.5 text-primary" /> : <Bookmark className="h-3.5 w-3.5" />}

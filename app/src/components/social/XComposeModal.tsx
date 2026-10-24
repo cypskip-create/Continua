@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useRef, useEffect } from "react";
 import type { PostPoll } from "./PostAttachments";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -197,7 +198,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                 onClick={() => { onOpenChange(false); navigate("/upgrade"); }}
                 className="mt-2 w-full flex items-center justify-between gap-2 p-2.5 rounded-xl border border-primary/25 bg-primary/5 text-left"
               >
-                <span className="text-[0.6875rem] font-medium">Free posts stop at {FREE_MAX_CHARS} characters. Go Premium for {PREMIUM_MAX_CHARS.toLocaleString()}-character, article-length posts.</span>
+                <span className="text-[0.6875rem] font-medium">Free posts stop at <RollingNumber value={FREE_MAX_CHARS} /> characters. Go Premium for <RollingNumber value={PREMIUM_MAX_CHARS.toLocaleString()} />-character, article-length posts.</span>
                 <span className="text-[0.6875rem] font-bold text-primary shrink-0 whitespace-nowrap">Upgrade →</span>
               </button>
             )}
@@ -230,10 +231,10 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                   <span className="text-xs font-semibold">Today's P/L</span>
                 </div>
                 <div className={`text-xl font-bold ${portfolioSnapshot.todayGain >= 0 ? "text-bull" : "text-bear"}`}>
-                  {portfolioSnapshot.todayGain >= 0 ? "+" : ""}KES {portfolioSnapshot.todayGain.toLocaleString()}
+                  {portfolioSnapshot.todayGain >= 0 ? "+" : ""}KES <RollingNumber value={portfolioSnapshot.todayGain.toLocaleString()} />
                 </div>
                 <div className={`text-sm ${portfolioSnapshot.todayGain >= 0 ? "text-bull" : "text-bear"}`}>
-                  {portfolioSnapshot.todayGain >= 0 ? "+" : ""}{portfolioSnapshot.todayPercent.toFixed(2)}%
+                  {portfolioSnapshot.todayGain >= 0 ? "+" : ""}<RollingNumber value={portfolioSnapshot.todayPercent.toFixed(2)} />%
                 </div>
               </div>
             )}
@@ -248,11 +249,11 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                   <PieChart className="h-4 w-4 text-primary" />
                   <span className="text-xs font-semibold">Portfolio Snapshot</span>
                 </div>
-                <div className="text-lg font-bold">{displaySnapshot.hideAmounts ? "KES ••••••" : `KES ${displaySnapshot.totalValue.toLocaleString()}`}</div>
+                <div className="text-lg font-bold"><RollingNumber value={displaySnapshot.hideAmounts ? "KES ••••••" : `KES ${displaySnapshot.totalValue.toLocaleString()}`} /></div>
                 {!displaySnapshot.hideGains && (
                   <div className={`text-xs font-semibold mt-0.5 ${(displaySnapshot.useDayChange ? displaySnapshot.todayGain : displaySnapshot.totalGain) >= 0 ? "text-bull" : "text-bear"}`}>
                     {displaySnapshot.useDayChange ? "Today" : "All-time"} {(displaySnapshot.useDayChange ? displaySnapshot.todayGain : displaySnapshot.totalGain) >= 0 ? "+" : ""}
-                    {(displaySnapshot.useDayChange ? displaySnapshot.todayPercent : displaySnapshot.gainPercent).toFixed(2)}%
+                    <RollingNumber value={(displaySnapshot.useDayChange ? displaySnapshot.todayPercent : displaySnapshot.gainPercent).toFixed(2)} />%
                   </div>
                 )}
                 <div className="mt-2 space-y-1">
@@ -261,7 +262,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                       <span className="font-medium">${h.symbol}</span>
                       {!displaySnapshot.hideGains && (
                         <span className={(displaySnapshot.useDayChange ? h.dayChangePct : h.gain) >= 0 ? "text-bull" : "text-bear"}>
-                          {(displaySnapshot.useDayChange ? h.dayChangePct : h.gain) >= 0 ? "+" : ""}{(displaySnapshot.useDayChange ? h.dayChangePct : h.gain).toFixed(2)}%
+                          {(displaySnapshot.useDayChange ? h.dayChangePct : h.gain) >= 0 ? "+" : ""}<RollingNumber value={(displaySnapshot.useDayChange ? h.dayChangePct : h.gain).toFixed(2)} />%
                         </span>
                       )}
                     </div>
@@ -338,7 +339,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                 </svg>
                 {charCount > maxChars * 0.9 && (
                   <span className={`absolute inset-0 flex items-center justify-center text-[0.5625rem] font-bold ${charCount > maxChars ? "text-destructive" : "text-muted-foreground"}`}>
-                    {maxChars - charCount}
+                    <RollingNumber value={maxChars - charCount} />
                   </span>
                 )}
               </div>

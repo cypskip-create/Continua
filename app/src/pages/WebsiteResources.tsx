@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ArrowRight, ArrowUpRight, BookOpen, Code2, ShieldCheck } from "lucide-react";
@@ -62,7 +63,7 @@ export default function WebsiteResources({ section }: { section: Section }) {
         ["Manage your account", "Open Settings for security, notifications, portfolio visibility, personalization, data export and account deletion. Use the subscription controls to review your plan and billing state."],
         ["New to financial research?", "Start with the company’s reported revenue, cash flow and debt before interpreting valuation or forecasts. Use the in-app Learn section and tool explanations; a scenario is an assumption to test, not a prediction to trust blindly."],
       ].map(([heading, text]) => <details key={heading}><summary>{heading}</summary><p>{text}</p></details>)}</div><section className="wr-notice"><div><h2>Still need a hand?</h2><p>Email a clear description, ticker and screenshot. Don’t include passwords, API keys or card details.</p><a href="mailto:cypskip@gmail.com?subject=Continua%20support">Email support <ArrowUpRight size={16} /></a></div></section></>}
-    </main><footer className="lp-footer lp-wrap"><div className="wr-footer">{navigation.map(([key, label]) => <Link key={key} to={`/${key}`}>{label}</Link>)}<Link to="/landing#plans">Plans</Link></div><div className="lp-footer-bottom"><span>© {new Date().getFullYear()} Continua</span><span>Research is not investment advice. Capital is at risk.</span></div></footer>
+    </main><footer className="lp-footer lp-wrap"><div className="wr-footer">{navigation.map(([key, label]) => <Link key={key} to={`/${key}`}>{label}</Link>)}<Link to="/landing#plans">Plans</Link></div><div className="lp-footer-bottom"><span>© <RollingNumber value={new Date().getFullYear()} /> Continua</span><span>Research is not investment advice. Capital is at risk.</span></div></footer>
     <nav aria-label="Legal policies" className="lp-wrap flex flex-wrap gap-4 pb-6 text-xs"><Link to="/terms">Terms</Link><Link to="/privacy">Privacy</Link><Link to="/billing-policy">Billing policy</Link><Link to="/copyright">Copyright reports</Link></nav>
   </div>;
 }

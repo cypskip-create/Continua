@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -211,7 +212,7 @@ export function NewsDetailDialog({
                 {article.views && (
                   <span className="flex items-center gap-1">
                     <Eye className="h-4 w-4" />
-                    {(article.views / 1000).toFixed(2)}K views
+                    <RollingNumber value={(article.views / 1000).toFixed(2)} />K views
                   </span>
                 )}
                 <button
@@ -219,7 +220,7 @@ export function NewsDetailDialog({
                   onClick={() => setShowComments(!showComments)}
                 >
                   <MessageCircle className="h-4 w-4" />
-                  {allComments.length} comments
+                  <RollingNumber value={allComments.length} /> comments
                 </button>
               </div>
             </div>
@@ -253,7 +254,7 @@ export function NewsDetailDialog({
                 onClick={() => setShowComments(!showComments)}
               >
                 <MessageCircle className="h-4 w-4 mr-2" />
-                {allComments.length}
+                <RollingNumber value={allComments.length} />
               </Button>
             </div>
 
@@ -262,7 +263,7 @@ export function NewsDetailDialog({
               <div className="border-t pt-4 space-y-4">
                 <h3 className="font-semibold text-sm flex items-center gap-2">
                   <MessageCircle className="h-4 w-4" />
-                  Comments ({allComments.length})
+                  Comments (<RollingNumber value={allComments.length} />)
                 </h3>
 
                 {/* Add Comment */}

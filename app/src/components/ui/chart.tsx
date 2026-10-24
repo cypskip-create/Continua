@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
@@ -244,7 +245,7 @@ const ChartTooltipContent = React.forwardRef<
                       </div>
                       {item.value && (
                         <span className="font-mono font-medium tabular-nums text-foreground">
-                          {item.value.toLocaleString()}
+                          <RollingNumber value={item.value.toLocaleString()} />
                         </span>
                       )}
                     </div>

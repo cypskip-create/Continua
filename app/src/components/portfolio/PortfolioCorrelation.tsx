@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { Fragment } from "react";
 import { InfoTip } from "./InfoTip";
 
@@ -28,7 +29,7 @@ function PairRow({ p }: { p: Pair }) {
       <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
         <div className={`h-full rounded-full ${positive ? "bg-amber-500" : "bg-blue-500"}`} style={{ width: `${widthPct}%` }} />
       </div>
-      <span className="text-[0.75rem] font-bold tabular w-12 text-right">{p.corr >= 0 ? "" : "−"}{Math.abs(p.corr).toFixed(2)}</span>
+      <span className="text-[0.75rem] font-bold tabular w-12 text-right">{p.corr >= 0 ? "" : "−"}<RollingNumber value={Math.abs(p.corr).toFixed(2)} /></span>
     </div>
   );
 }
@@ -103,7 +104,7 @@ export function PortfolioCorrelation({ pairs, symbols, isLoading, hasEnoughData 
                         className="h-11 flex items-center justify-center text-[0.625rem] font-semibold rounded m-0.5"
                         style={{ background: c != null ? heatColor(c) : "hsl(var(--muted) / 0.3)" }}
                       >
-                        {c != null ? c.toFixed(2) : "—"}
+                        <RollingNumber value={c != null ? c.toFixed(2) : "—"} />
                       </div>
                     );
                   })}

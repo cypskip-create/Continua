@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import {downloadResearchReport} from "@/lib/researchReport";
 import { useEffect, useState } from "react";
 
@@ -177,7 +178,7 @@ function Journal({
       </label>
       <fieldset className="space-y-3">
         <legend className="mb-3 text-sm font-semibold">
-          Research checklist · {entry.checked.length}/{checks.length}
+          Research checklist · <RollingNumber value={entry.checked.length} />/<RollingNumber value={checks.length} />
         </legend>
         {checks.map((check) => (
           <label key={check} className="flex items-center gap-3 text-sm">
@@ -213,17 +214,17 @@ function Journal({
       <label className="block text-sm">Strongest counter-evidence<textarea aria-label="Journal counter-evidence" maxLength={2000} value={entry.counterEvidence} onChange={e=>update({counterEvidence:e.target.value})} placeholder="Which dated fact challenges your thesis? What alternative explanation fits?" className="block mt-2 w-full border border-border bg-background p-3 min-h-24 text-sm"/></label>
       <label className="block text-sm">Next evidence to collect<textarea aria-label="Journal next evidence" maxLength={1000} value={entry.nextAction} onChange={e=>update({nextAction:e.target.value})} placeholder="Source, reporting period and question to resolve before your next review" className="block mt-2 w-full border border-border bg-background p-3 min-h-20 text-sm"/></label>
       <p className="text-xs text-muted-foreground">Monitoring triggers here are private notes; they do not automatically create alert rules. Use Monitoring for supported alerts.</p>
-      <p className="text-xs text-muted-foreground">Research structure: {[entry.notes.trim(),entry.evidence.trim(),entry.counterEvidence.trim(),entry.invalidation.trim(),entry.nextAction.trim()].filter(Boolean).length}/5 fields recorded. Completeness is not investment conviction or data quality.</p>
+      <p className="text-xs text-muted-foreground">Research structure: <RollingNumber value={[entry.notes.trim(),entry.evidence.trim(),entry.counterEvidence.trim(),entry.invalidation.trim(),entry.nextAction.trim()].filter(Boolean).length} />/5 fields recorded. Completeness is not investment conviction or data quality.</p>
       <div className="flex justify-between gap-3 text-xs text-muted-foreground">
         <p role="status">{status}</p>
-        <span>{entry.notes.length}/5000</span>
+        <span><RollingNumber value={entry.notes.length} />/5000</span>
       </div>
       <label className="block text-sm">Evidence log<textarea aria-label="Journal evidence log" maxLength={3000} value={entry.evidence} onChange={e=>update({evidence:e.target.value})} placeholder="Date · filing or article URL · what it supports or contradicts" className="block mt-1 w-full border border-border bg-background p-2 min-h-24 text-sm"/></label>
       <div className="flex flex-wrap gap-2 text-xs">
         <button className="border border-border px-3 py-2" onClick={()=>update({revisions:[{at:new Date().toISOString(),notes:entry.notes,invalidation:entry.invalidation},...entry.revisions].slice(0,5)})}>Save thesis snapshot</button>
         <button className="border border-border px-3 py-2" onClick={()=>{downloadResearchReport(`${symbol}-research-journal`,{symbol,...entry});}}>Export journal</button>
       </div>
-      {entry.revisions.map((r,index)=><details key={r.at+index} className="border-t border-border py-2 text-xs"><summary>Thesis snapshot · {new Date(r.at).toLocaleString()}</summary><p className="whitespace-pre-wrap mt-2">{r.notes||"No notes"}</p><p className="mt-1">Invalidation: {r.invalidation||"Not recorded"}</p></details>)}
+      {entry.revisions.map((r,index)=><details key={r.at+index} className="border-t border-border py-2 text-xs"><summary>Thesis snapshot · <RollingNumber value={new Date(r.at).toLocaleString()} /></summary><p className="whitespace-pre-wrap mt-2">{r.notes||"No notes"}</p><p className="mt-1">Invalidation: {r.invalidation||"Not recorded"}</p></details>)}
       <p className="text-xs text-muted-foreground">
         Notes are separate for each account and stock, do not sync across
         devices, and can be lost if browser storage is cleared. They never alter

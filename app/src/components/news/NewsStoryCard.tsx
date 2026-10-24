@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatTimestamp } from "@/lib/formatTimestamp";
@@ -32,7 +33,7 @@ export function NewsStoryCard({ item, onOpen, quotes = {}, onSymbolOpen, compact
                 return (
                   <button type="button" key={symbol} onClick={(event) => { event.stopPropagation(); onSymbolOpen?.(symbol); }} className="flex items-center gap-1 rounded-lg border border-border/70 bg-background/70 px-2 py-1 text-[0.625rem] font-semibold">
                     <span>${symbol}</span>
-                    {quote && <><span className="tabular-nums">KES {quote.lastPrice.toFixed(2)}</span><span className={quote.changePercent >= 0 ? "text-bull" : "text-bear"}>{quote.changePercent >= 0 ? "+" : ""}{quote.changePercent.toFixed(2)}%</span></>}
+                    {quote && <><span className="tabular-nums">KES <RollingNumber value={quote.lastPrice.toFixed(2)} /></span><span className={quote.changePercent >= 0 ? "text-bull" : "text-bear"}>{quote.changePercent >= 0 ? "+" : ""}<RollingNumber value={quote.changePercent.toFixed(2)} />%</span></>}
                   </button>
                 );
               })}

@@ -447,7 +447,7 @@ export default function StockDetail() {
               </div>
               <div className={`flex flex-col leading-tight shrink-0 transition-opacity duration-200 ${priceVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 <span className={`text-xs font-semibold tabular ${dayChangeIsUp ? 'text-bull' : 'text-bear'}`}>
-                  {stock.isLive ? <>{dayChangeIsUp ? '+' : ''}{stock.change.toFixed(2)}</> : <Skeleton className="h-3 w-10" />}
+                  {stock.isLive ? <>{dayChangeIsUp ? '+' : ''}<RollingNumber value={stock.change.toFixed(2)} /></> : <Skeleton className="h-3 w-10" />}
                 </span>
                 <span className={`text-[0.6875rem] font-medium tabular flex items-center gap-0.5 ${dayChangeIsUp ? 'text-bull' : 'text-bear'}`}>
                   {stock.isLive ? (
@@ -497,7 +497,7 @@ export default function StockDetail() {
           {stock.isLive ? (
             <>
               {priceChange != null && (displayIsUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />)}
-              <span>{priceChange == null ? 'Period return unavailable' : `${priceChange >= 0 ? '+' : ''}KES ${Math.abs(priceChange).toFixed(2)} · ${priceChange >= 0 ? '+' : ''}${priceChangePercent}%`}</span>
+              <span><RollingNumber value={priceChange == null ? 'Period return unavailable' : `${priceChange >= 0 ? '+' : ''}KES ${Math.abs(priceChange).toFixed(2)} · ${priceChange >= 0 ? '+' : ''}${priceChangePercent}%`} /></span>
               <span className="text-muted-foreground font-normal text-xs ml-1">{hoverDate || TIMEFRAME_LABELS[selectedTimeframe] || selectedTimeframe}</span>
             </>
           ) : (
@@ -751,11 +751,11 @@ export default function StockDetail() {
               <Eyebrow>Your Position</Eyebrow>
               <div className="flex items-center justify-between border-t border-border/60 pt-3">
                 <div className="grid grid-cols-3 gap-6 flex-1">
-                  <div><p className="text-[0.625rem] text-muted-foreground">Shares</p><p className="text-sm font-semibold tabular">{myHolding.shares}</p></div>
-                  <div><p className="text-[0.625rem] text-muted-foreground">Avg cost</p><p className="text-sm font-semibold tabular">KES {myHolding.avg_cost.toFixed(2)}</p></div>
+                  <div><p className="text-[0.625rem] text-muted-foreground">Shares</p><p className="text-sm font-semibold tabular"><RollingNumber value={myHolding.shares} /></p></div>
+                  <div><p className="text-[0.625rem] text-muted-foreground">Avg cost</p><p className="text-sm font-semibold tabular">KES <RollingNumber value={myHolding.avg_cost.toFixed(2)} /></p></div>
                   <div><p className="text-[0.625rem] text-muted-foreground">P/L</p>
                     <p className={`text-sm font-semibold tabular ${(stock.price - myHolding.avg_cost) >= 0 ? 'text-bull' : 'text-bear'}`}>
-                      {(stock.price - myHolding.avg_cost) >= 0 ? '+' : ''}{(((stock.price - myHolding.avg_cost) / myHolding.avg_cost) * 100).toFixed(2)}%
+                      {(stock.price - myHolding.avg_cost) >= 0 ? '+' : ''}<RollingNumber value={(((stock.price - myHolding.avg_cost) / myHolding.avg_cost) * 100).toFixed(2)} />%
                     </p>
                   </div>
                 </div>

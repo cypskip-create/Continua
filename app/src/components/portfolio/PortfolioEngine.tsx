@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import type { EnginePortfolio, EnginePortfolioOverview } from "@/api/engineWorkspaceApi";
 import { EngineAssistantPanel } from "@/components/engine/EngineWorkspace";
 import { EnginePortfolioPanel, EngineMonitoringPanel } from "@/components/engine/EngineWorkspace";
@@ -31,7 +32,7 @@ export function PortfolioEngineBriefing({ data, showValues }: { data: EnginePort
   return <section className="space-y-4" aria-label="Engine portfolio research">
     <h3 className="text-lg font-semibold">Your portfolio research briefing</h3>
     {research && <>
-      <p className="text-xs text-muted-foreground">{research.covered} of {research.requested} priced holdings covered · {research.methodology}</p>
+      <p className="text-xs text-muted-foreground"><RollingNumber value={research.covered} /> of <RollingNumber value={research.requested} /> priced holdings covered · {research.methodology}</p>
       {research.companies.map(company => <details key={company.symbol} className="border-t border-border pt-3 space-y-2"><summary className="cursor-pointer text-sm font-semibold">{company.symbol} · FY{company.period ?? "Unavailable"} · {numeric(company.weight * 100)}% weight</summary>
         <Link to={`/engine?symbol=${encodeURIComponent(company.symbol)}`} className="text-sm font-semibold text-primary">{company.symbol} · FY{company.period ?? "Unavailable"}</Link>
         <p className="text-xs text-muted-foreground">{numeric(company.weight * 100)}% of covered value</p>
@@ -49,7 +50,7 @@ export function PortfolioEngineBriefing({ data, showValues }: { data: EnginePort
         {!research.news.length && <p className="text-xs text-muted-foreground">No verified company-linked news was found.</p>}
       </div>
     </>}
-    {data.risk && <p className="text-xs text-muted-foreground">{data.risk.reason} Covered portfolio weight: {numeric(data.risk.coveredWeight * 100)}% · {data.risk.observations} aligned returns.</p>}
+    {data.risk && <p className="text-xs text-muted-foreground">{data.risk.reason} Covered portfolio weight: {numeric(data.risk.coveredWeight * 100)}% · <RollingNumber value={data.risk.observations} /> aligned returns.</p>}
     {!showValues && <p className="text-xs text-muted-foreground">Amounts and the portfolio assistant are hidden while your balance is hidden.</p>}
   </section>;
 }

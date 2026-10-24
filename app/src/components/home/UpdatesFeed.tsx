@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useEffect, useMemo, useState } from "react";
 import { Newspaper, Coins, BarChart3, ChevronRight, ChevronDown } from "lucide-react";
 import { useFollowedNews } from "@/hooks/useFollowedNews";
@@ -154,7 +155,7 @@ export function UpdatesFeed({ followedSymbols, limit = 12, compact = false }: Up
           <h2 className={compact ? 'text-xs font-semibold tracking-normal' : 'section-eyebrow'}>{compact ? 'Recent developments' : 'Updates'}</h2>
           {newCount > 0 && (
             <span className="text-[0.625rem] font-bold text-primary bg-primary/10 rounded-full px-2 py-0.5">
-              {newCount} new
+              <RollingNumber value={newCount} /> new
             </span>
           )}
         </div>

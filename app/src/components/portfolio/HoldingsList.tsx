@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, Trash2 } from "lucide-react";
@@ -98,7 +99,7 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
                       <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
                     </div>
                     <p className="text-[0.625rem] text-muted-foreground truncate">
-                      {r.shares} sh · avg {kes(r.avg_cost)}
+                      <RollingNumber value={r.shares} /> sh · avg <RollingNumber value={kes(r.avg_cost)} />
                     </p>
                   </div>
                 </div>
@@ -106,9 +107,9 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
                 <div className="col-span-3 text-right">
                   {r.isLive ? (
                     <>
-                      <p className="text-[0.8125rem] font-semibold tabular">{showValues ? kes(r.value) : "••••"}</p>
+                      <p className="text-[0.8125rem] font-semibold tabular"><RollingNumber value={showValues ? kes(r.value) : "••••"} /></p>
                       <p className={cn("text-[0.625rem] tabular", r.day.pct >= 0 ? "text-bull" : "text-bear")}>
-                        {r.day.pct >= 0 ? "+" : ""}{r.day.pct.toFixed(2)}% today
+                        {r.day.pct >= 0 ? "+" : ""}<RollingNumber value={r.day.pct.toFixed(2)} />% today
                       </p>
                     </>
                   ) : (
@@ -128,10 +129,10 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
                   ) : showGains ? (
                     <>
                       <p className={cn("text-[0.8125rem] font-semibold tabular", r.gain >= 0 ? "text-bull" : "text-bear")}>
-                        {r.gain >= 0 ? "+" : ""}{r.gainPct.toFixed(2)}%
+                        {r.gain >= 0 ? "+" : ""}<RollingNumber value={r.gainPct.toFixed(2)} />%
                       </p>
                       <p className={cn("text-[0.625rem] tabular", r.gain >= 0 ? "text-bull" : "text-bear")}>
-                        {showValues ? `${r.gain >= 0 ? "+" : "−"}KES ${kes(Math.abs(r.gain))}` : "••••"}
+                        <RollingNumber value={showValues ? `${r.gain >= 0 ? "+" : "−"}KES ${kes(Math.abs(r.gain))}` : "••••"} />
                       </p>
                     </>
                   ) : (

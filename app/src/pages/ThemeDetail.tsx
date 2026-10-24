@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { navigateBack } from "@/lib/navigation";
@@ -73,7 +74,7 @@ export default function ThemeDetail() {
             <p className="text-sm font-bold">{theme.desc}</p>
             {avgChange != null ? (
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${isUp ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
-                {isUp ? '+' : ''}{avgChange.toFixed(2)}%
+                {isUp ? '+' : ''}<RollingNumber value={avgChange.toFixed(2)} />%
               </span>
             ) : (
               <Skeleton className="h-5 w-12 rounded-full shrink-0" />
@@ -92,7 +93,7 @@ export default function ThemeDetail() {
 
         {/* Member stocks */}
         <div>
-          <h2 className="text-sm font-bold mb-3">In this theme ({stocks.length})</h2>
+          <h2 className="text-sm font-bold mb-3">In this theme (<RollingNumber value={stocks.length} />)</h2>
           <Card className="soft-card overflow-hidden">
             {stocks.map(stock => (
               <div

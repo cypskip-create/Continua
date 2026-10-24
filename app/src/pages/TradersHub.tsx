@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Search, X, Bell, Feather, Users, Flame, MessageSquare, Hash, Building2, TrendingUp, ChevronDown, Newspaper, Check } from "lucide-react";
@@ -418,7 +419,7 @@ export default function TradersHub() {
               className="shrink-0 flex items-center gap-1.5 h-6 px-2.5 rounded-full bg-muted/50 text-[0.6875rem] font-semibold text-muted-foreground"
             >
               <span className="text-primary">${t.symbol}</span>
-              <span className="opacity-70 tabular-nums">{t.count}</span>
+              <span className="opacity-70 tabular-nums"><RollingNumber value={t.count} /></span>
             </button>
           ))}
         </div>

@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation,Link } from "react-router-dom";
 import { navigateBack } from "@/lib/navigation";
@@ -348,11 +349,11 @@ export default function Settings() {
             <Separator />
             <button onClick={() => setSection("blocked")} className="flat-section w-full flex items-center justify-between p-3 rounded-xl hover:bg-muted/50">
               <span className="flex items-center gap-3 text-sm font-medium">Blocked accounts</span>
-              <span className="text-xs text-muted-foreground">{blockedUsers.length} <ChevronRight className="h-4 w-4 inline" /></span>
+              <span className="text-xs text-muted-foreground"><RollingNumber value={blockedUsers.length} /> <ChevronRight className="h-4 w-4 inline" /></span>
             </button>
             <button onClick={() => setSection("muted")} className="flat-section w-full flex items-center justify-between p-3 rounded-xl hover:bg-muted/50">
               <span className="flex items-center gap-3 text-sm font-medium">Muted accounts & words</span>
-              <span className="text-xs text-muted-foreground">{mutedUsers.length + mutedKeywords.length} <ChevronRight className="h-4 w-4 inline" /></span>
+              <span className="text-xs text-muted-foreground"><RollingNumber value={mutedUsers.length + mutedKeywords.length} /> <ChevronRight className="h-4 w-4 inline" /></span>
             </button>
             <p className="text-[0.6875rem] text-muted-foreground pt-1">Blocking or muting someone hides their posts from your TradersHub feed.</p>
           </div>

@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,7 +49,7 @@ export function TopMoversLosers() {
                 <span className="font-medium text-foreground">{stock.symbol}</span>
                 <span className="text-xs text-muted-foreground">{stock.name}</span>
               </div>
-              <div className="text-sm font-medium">KES {stock.price.toFixed(2)}</div>
+              <div className="text-sm font-medium">KES <RollingNumber value={stock.price.toFixed(2)} /></div>
             </div>
 
             <div className={`flex items-center space-x-1 ${stock.isUp ? 'text-bull' : 'text-bear'}`}>
@@ -58,7 +59,7 @@ export function TopMoversLosers() {
                 <ArrowDown className="h-4 w-4" />
               )}
               <span className="font-medium text-sm">
-                {stock.isUp ? '+' : ''}{stock.change}%
+                {stock.isUp ? '+' : ''}<RollingNumber value={stock.change} />%
               </span>
             </div>
           </div>

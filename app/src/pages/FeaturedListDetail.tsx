@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { navigateBack } from "@/lib/navigation";
@@ -81,7 +82,7 @@ export default function FeaturedListDetail() {
             </div>
             {avgChange != null ? (
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${isUp ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
-                {isUp ? '+' : ''}{avgChange.toFixed(2)}%
+                {isUp ? '+' : ''}<RollingNumber value={avgChange.toFixed(2)} />%
               </span>
             ) : (
               <Skeleton className="h-5 w-12 rounded-full shrink-0" />
@@ -96,7 +97,7 @@ export default function FeaturedListDetail() {
 
         {/* Member stocks */}
         <div>
-          <h2 className="text-sm font-bold mb-3">In this list ({stocks.length})</h2>
+          <h2 className="text-sm font-bold mb-3">In this list (<RollingNumber value={stocks.length} />)</h2>
           <Card className="soft-card overflow-hidden">
             {stocks.map(stock => (
               <div
@@ -117,10 +118,10 @@ export default function FeaturedListDetail() {
                   <SparklineChart isPositive={(stock.change ?? 0) >= 0} width={44} height={18} data={getSparkline(stock.symbol)} isLoading={!stock.isLive} />
                   {stock.isLive ? (
                     <div className="text-right min-w-[72px]">
-                      <p className="text-sm font-bold">KES {stock.price!.toFixed(2)}</p>
+                      <p className="text-sm font-bold">KES <RollingNumber value={stock.price!.toFixed(2)} /></p>
                       <p className={`text-xs font-semibold flex items-center justify-end gap-0.5 ${stock.change! >= 0 ? 'text-bull' : 'text-bear'}`}>
                         {stock.change! >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                        {stock.change! >= 0 ? '+' : ''}{stock.change!.toFixed(2)}%
+                        {stock.change! >= 0 ? '+' : ''}<RollingNumber value={stock.change!.toFixed(2)} />%
                       </p>
                     </div>
                   ) : (

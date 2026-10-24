@@ -5,6 +5,17 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "app/src/components/shared/RollingNumber.tsx",
+      "category": "Consistent rolling financial readouts",
+      "language": "Existing React frontend TypeScript/JSX and CSS",
+      "runtime": "Memoized browser components and transform-only CSS animations",
+      "reason": "Reuse the existing digit renderer for all changing numeric displays and chart readouts. Render exact previous/current observations with right-aligned place values, support negative currency values, keep rapid scrubbing updates short, and honor reduced-motion preferences. No animation library, backend runtime, numerical rounding, new service or authorization change is needed. SVG axes and editable inputs retain native text/controls.",
+      "references": [
+        "https://react.dev/reference/react/useLayoutEffect",
+        "https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion"
+      ]
+    },
+    {
       "file": "app/src/components/charts/InlineChart.tsx",
       "category": "Mobile chart inspection and shared watchlist loading",
       "language": "Existing React frontend TypeScript/JSX",

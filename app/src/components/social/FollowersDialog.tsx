@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -149,10 +150,10 @@ export function FollowersDialog({
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "followers" | "following")} className="flex-1 flex flex-col min-h-0">
           <TabsList className="w-full grid grid-cols-2 rounded-none border-b border-border bg-transparent h-11 shrink-0">
             <TabsTrigger value="followers" className="rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
-              Followers ({followers.length})
+              Followers (<RollingNumber value={followers.length} />)
             </TabsTrigger>
             <TabsTrigger value="following" className="rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
-              Following ({following.length})
+              Following (<RollingNumber value={following.length} />)
             </TabsTrigger>
           </TabsList>
 

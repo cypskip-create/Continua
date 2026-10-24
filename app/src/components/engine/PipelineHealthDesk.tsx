@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { engineAdvancedApi } from "@/api/engineAdvancedApi";
@@ -37,7 +38,7 @@ export function PipelineHealthDesk() {
           ))}
           {q.data.validations.map((v) => (
             <p key={v.outcome} className="text-xs">
-              {v.outcome}: {v.count} recorded extractions · latest {v.latest}
+              {v.outcome}: <RollingNumber value={v.count} /> recorded extractions · latest {v.latest}
             </p>
           ))}
           {q.data.limits.map((l) => (

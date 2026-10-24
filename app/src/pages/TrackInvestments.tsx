@@ -431,7 +431,7 @@ export default function TrackInvestments() {
                 {showBalance ? <RollingNumber value={`KES ${stats.totalCost.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2})}`} /> : "••"}
               </p>
               <p className="text-[0.625rem] text-muted-foreground">
-                {holdings.length} stocks
+                <RollingNumber value={holdings.length} /> stocks
               </p>
             </div>
             <div>
@@ -439,16 +439,16 @@ export default function TrackInvestments() {
                 Diversification
               </p>
               <p className="mt-0.5 text-sm font-semibold tabular">
-                {diversificationScore}/10
+                <RollingNumber value={diversificationScore} />/10
               </p>
               <p className="text-[0.625rem] text-muted-foreground">
-                {sectorAlloc.length} sectors
+                <RollingNumber value={sectorAlloc.length} /> sectors
               </p>
             </div>
           </div>
           {pricingCount > 0 && (
             <p className="mt-3 text-[0.625rem] text-muted-foreground text-center">
-              Pricing {pricingCount} more position
+              Pricing <RollingNumber value={pricingCount} /> more position
               {pricingCount === 1 ? "" : "s"}…
             </p>
           )}
@@ -849,12 +849,12 @@ export default function TrackInvestments() {
                                 {sel.name}
                               </p>
                               <p className="mt-0.5 text-base font-bold tabular">
-                                {showBalance
+                                <RollingNumber value={showBalance
                                   ? `KES ${sel.value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                  : "••••"}
+                                  : "••••"} />
                               </p>
                               <p className="text-[0.6875rem] text-muted-foreground tabular">
-                                {sel.pct.toFixed(2)}%
+                                <RollingNumber value={sel.pct.toFixed(2)} />%
                               </p>
                             </>
                           );
@@ -865,9 +865,9 @@ export default function TrackInvestments() {
                               Total
                             </p>
                             <p className="mt-0.5 text-base font-bold tabular">
-                              {showBalance
+                              <RollingNumber value={showBalance
                                 ? `KES ${stats.totalValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                : "••••"}
+                                : "••••"} />
                             </p>
                           </>
                         );
@@ -904,12 +904,12 @@ export default function TrackInvestments() {
                           {s.name}
                         </span>
                         <span className="text-[0.6875rem] text-muted-foreground tabular">
-                          {showBalance
+                          <RollingNumber value={showBalance
                             ? `KES ${s.value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                            : "••••"}
+                            : "••••"} />
                         </span>
                         <span className="text-[0.75rem] font-semibold tabular w-14 text-right">
-                          {s.pct.toFixed(2)}%
+                          <RollingNumber value={s.pct.toFixed(2)} />%
                         </span>
                       </button>
                     );
@@ -921,7 +921,7 @@ export default function TrackInvestments() {
             {/* ── HOLDINGS ── */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="section-eyebrow">Holdings · {holdings.length}</p>
+                <p className="section-eyebrow">Holdings · <RollingNumber value={holdings.length} /></p>
                 <div className="flex gap-1">
                   {(
                     [
@@ -1060,7 +1060,7 @@ export default function TrackInvestments() {
                           className={`text-[0.75rem] font-semibold tabular ${m.gain >= 0 ? "text-bull" : "text-bear"}`}
                         >
                           {m.gain >= 0 ? "+" : ""}
-                          {m.gainPct.toFixed(2)}%
+                          <RollingNumber value={m.gainPct.toFixed(2)} />%
                         </span>
                       </div>
                     ))}
@@ -1071,7 +1071,7 @@ export default function TrackInvestments() {
                   <p className="section-eyebrow">Diversification</p>
                   <div className="mt-2 flex items-baseline gap-1">
                     <span className="text-[1.75rem] leading-none font-semibold tabular">
-                      {diversificationScore}
+                      <RollingNumber value={diversificationScore} />
                     </span>
                     <span className="text-[0.6875rem] text-muted-foreground">
                       /10

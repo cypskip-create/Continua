@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { forwardRef, useEffect, useState } from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
 
@@ -141,14 +142,14 @@ export const PortfolioShareCard = forwardRef<HTMLDivElement, PortfolioShareCardP
 
           <p className="text-[0.6875rem] text-muted-foreground truncate">{displayName}'s portfolio</p>
           <p className="text-[1.625rem] font-bold tabular leading-tight mt-0.5">
-            {hideAmounts ? "KES ••••••" : `KES ${kes(totalValue)}`}
+            <RollingNumber value={hideAmounts ? "KES ••••••" : `KES ${kes(totalValue)}`} />
           </p>
 
           {!hideGains && (
             <div className={`inline-flex items-center gap-1 mt-1.5 text-[0.8125rem] font-semibold ${primaryGain >= 0 ? "text-bull" : "text-bear"}`}>
               {primaryGain >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-              {hideAmounts ? "" : `${primaryGain >= 0 ? "+" : "−"}KES ${kes(Math.abs(primaryGain))} `}
-              ({primaryGain >= 0 ? "+" : ""}{primaryPct.toFixed(2)}%) {showDayChange ? "today" : "all-time"}
+              <RollingNumber value={hideAmounts ? "" : `${primaryGain >= 0 ? "+" : "−"}KES ${kes(Math.abs(primaryGain))} `} />
+              ({primaryGain >= 0 ? "+" : ""}<RollingNumber value={primaryPct.toFixed(2)} />%) {showDayChange ? "today" : "all-time"}
             </div>
           )}
         </div>
@@ -163,15 +164,15 @@ export const PortfolioShareCard = forwardRef<HTMLDivElement, PortfolioShareCardP
                   </div>
                   <div className="min-w-0">
                     <p className="text-[0.75rem] font-semibold truncate">{h.symbol}</p>
-                    {!hideAmounts && <p className="text-[0.625rem] text-muted-foreground">{h.shares} sh</p>}
+                    {!hideAmounts && <p className="text-[0.625rem] text-muted-foreground"><RollingNumber value={h.shares} /> sh</p>}
                   </div>
                 </div>
                 <div className="text-right shrink-0 ml-2">
-                {!hideAmounts && <p className="text-[0.75rem] font-semibold tabular">KES {kes(h.shares*h.currentPrice)}</p>}
+                {!hideAmounts && <p className="text-[0.75rem] font-semibold tabular">KES <RollingNumber value={kes(h.shares*h.currentPrice)} /></p>}
                 {!hideGains && (
                   <span className={`text-[0.75rem] font-semibold tabular ${(showDayChange ? h.dayChangePct : h.gainPct) >= 0 ? "text-bull" : "text-bear"}`}>
                     {(showDayChange ? h.dayChangePct : h.gainPct) >= 0 ? "+" : ""}
-                    {(showDayChange ? h.dayChangePct : h.gainPct).toFixed(2)}%
+                    <RollingNumber value={(showDayChange ? h.dayChangePct : h.gainPct).toFixed(2)} />%
                   </span>
                 )}
                 </div>

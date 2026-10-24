@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/continua/browserClient';
@@ -14,7 +15,7 @@ export function PostAttachments({ post }: { post: { id: string; image_url?: stri
     {!!images.length && <div className={`grid gap-2 my-3 overflow-hidden ${images.length === 1 ? 'grid-cols-1 rounded-xl' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
       {images.slice(0, 3).map((src,index) => <button key={src + index} aria-label={`Open image ${index + 1} of ${images.length}`} onClick={() => { setSelected(index); setViewer(true); }} className={`relative overflow-hidden rounded-xl ${images.length > 1 ? 'aspect-square' : ''}`}>
         <img src={src} alt={`Post image ${index + 1}`} loading="lazy" className={`w-full h-full object-cover ${images.length === 1 ? 'max-h-96' : ''}`} />
-        {index === 2 && images.length > 3 && <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-white text-3xl font-semibold">+{images.length - 3}</span>}
+        {index === 2 && images.length > 3 && <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-white text-3xl font-semibold">+<RollingNumber value={images.length - 3} /></span>}
       </button>)}
     </div>}
     {viewer && <ImageViewer open={viewer} onOpenChange={setViewer} images={images} initialIndex={selected} />}
@@ -53,8 +54,8 @@ function PostPollView({ postId, poll }: { postId: string; poll: PostPoll }) {
     {poll.options.map((option,index) => <button key={index} disabled={busy || voted || ended || query.isLoading || query.isError} onClick={()=>void vote(index)} className="relative flex w-full justify-between overflow-hidden rounded-md border px-3 py-3 text-left text-sm">
       {(voted || ended) && <span className="absolute inset-y-0 left-0 bg-primary/15" style={{width:`${total ? counts[index]/total*100 : 0}%`}} />}
       <span className="relative">{option}{query.data?.choice === index ? ' ✓' : ''}</span>
-      {(voted || ended) && <span className="relative">{total ? Math.round(counts[index]/total*100) : 0}%</span>}
+      {(voted || ended) && <span className="relative"><RollingNumber value={total ? Math.round(counts[index]/total*100) : 0} />%</span>}
     </button>)}
-    <p className="text-xs text-muted-foreground">{query.isError ? 'Poll unavailable. Pull to refresh.' : `${total} votes · ${ended ? 'Ended' : poll.endsAt ? `Closes ${new Date(poll.endsAt).toLocaleString()}` : 'Open'}`}</p>
+    <p className="text-xs text-muted-foreground"><RollingNumber value={query.isError ? 'Poll unavailable. Pull to refresh.' : `${total} votes · ${ended ? 'Ended' : poll.endsAt ? `Closes ${new Date(poll.endsAt).toLocaleString()}` : 'Open'}`} /></p>
   </section>;
 }

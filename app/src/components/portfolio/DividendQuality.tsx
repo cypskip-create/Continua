@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { InfoTip } from "./InfoTip";
 import { LockedPreview } from "./LockedPreview";
@@ -117,12 +118,12 @@ export function DividendQuality({ holdings, dividendData, isPremium = false, sho
                       <span className={`w-2 h-2 rounded-full shrink-0 ${t.dot}`} />
                       <div className="min-w-0">
                         <p className="text-[0.78125rem] font-semibold">{t.label}</p>
-                        <p className="text-[0.65625rem] text-muted-foreground">{t.count} holding{t.count === 1 ? "" : "s"}</p>
+                        <p className="text-[0.65625rem] text-muted-foreground"><RollingNumber value={t.count} /> holding{t.count === 1 ? "" : "s"}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-[0.8125rem] font-bold tabular">{fmtMoney(t.income, currencyLabel, showValues)}</p>
-                      <p className="text-[0.65625rem] text-muted-foreground">{t.pct.toFixed(2)}%</p>
+                      <p className="text-[0.65625rem] text-muted-foreground"><RollingNumber value={t.pct.toFixed(2)} />%</p>
                     </div>
                   </div>
                 ))}
@@ -166,11 +167,11 @@ export function DividendQuality({ holdings, dividendData, isPremium = false, sho
                     </div>
                     <div className="text-right">
                       <p className="text-[0.75rem] font-semibold tabular">{fmtMoney(r.annualIncome, currencyLabel, showValues)}<span className="text-[0.625rem] text-muted-foreground">/yr</span></p>
-                      <p className="text-[0.625rem] text-muted-foreground">{totalIncome > 0 ? ((r.annualIncome / totalIncome) * 100).toFixed(2) : "0.0"}%</p>
+                      <p className="text-[0.625rem] text-muted-foreground"><RollingNumber value={totalIncome > 0 ? ((r.annualIncome / totalIncome) * 100).toFixed(2) : "0.0"} />%</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[0.75rem] font-semibold tabular">{r.yieldOnPrice.toFixed(2)}%</p>
-                      <p className="text-[0.625rem] text-muted-foreground">{r.yieldOnCost.toFixed(2)}% on cost</p>
+                      <p className="text-[0.75rem] font-semibold tabular"><RollingNumber value={r.yieldOnPrice.toFixed(2)} />%</p>
+                      <p className="text-[0.625rem] text-muted-foreground"><RollingNumber value={r.yieldOnCost.toFixed(2)} />% on cost</p>
                     </div>
                     <div className="flex items-center justify-end gap-1">
                       {r.score >= 5 ? (
@@ -180,7 +181,7 @@ export function DividendQuality({ holdings, dividendData, isPremium = false, sho
                       ) : (
                         <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
                       )}
-                      <span className="text-[0.6875rem] font-semibold tabular">{r.score}/6</span>
+                      <span className="text-[0.6875rem] font-semibold tabular"><RollingNumber value={r.score} />/6</span>
                     </div>
                   </div>
                 ))}

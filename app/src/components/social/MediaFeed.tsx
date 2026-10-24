@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { usePageState } from "@/hooks/usePageState";
 import { useMemo, useState } from "react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -91,7 +92,7 @@ export function MediaFeed({ searchQuery }: MediaFeedProps) {
       </ScrollArea>
 
       <p className="text-[0.6875rem] text-muted-foreground" role="status">{isFetching ? "Checking headlines…" : isError ? "Showing saved headlines" : checkedAt ? `Headlines checked ${new Date(checkedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Waiting for headlines"}</p>
-      {olderFeed && !isError && <p role="status" className="text-sm text-muted-foreground">Newest available story: {new Date(newestPublishedAt).toLocaleString()}. Checking the publishers for newer financial headlines; publication dates are not changed by refreshing.</p>}
+      {olderFeed && !isError && <p role="status" className="text-sm text-muted-foreground">Newest available story: <RollingNumber value={new Date(newestPublishedAt).toLocaleString()} />. Checking the publishers for newer financial headlines; publication dates are not changed by refreshing.</p>}
 
       {isError && <div role="status" className="text-sm text-muted-foreground">News could not refresh. {news.length ? 'Showing saved stories.' : 'Check your connection.'} <button className="underline" onClick={()=>void refetch()}>Retry</button></div>}
       {isLoading ? (

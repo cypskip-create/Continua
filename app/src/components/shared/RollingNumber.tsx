@@ -1,34 +1,39 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { rollingDigits, rollingDirection } from "@/lib/rollingNumber";
 
 /** Rolls only changed digits, aligned by place value; never animates through
  * invented intermediate financial values or announces animation frames. */
-export function RollingNumber({ value, className }: { value: string | number; className?: string }) {
-  const text = String(value);
+export const RollingNumber = memo(function RollingNumber({ value, className }: { value: string | number | null | undefined; className?: string }) {
+  const text = value == null ? '' : String(value);
   const previous = useRef(text);
-  const [transition, setTransition] = useState({ from: text, to: text, revision: 0 });
-  useEffect(() => {
+  const [transition, setTransition] = useState({ from: text, to: text, revision: 0, settled: true });
+  useLayoutEffect(() => {
     if (previous.current === text) return;
     const from = previous.current;
-    setTransition(current => ({ from, to: text, revision: current.revision + 1 }));
+    setTransition(current => ({ from, to: text, revision: current.revision + 1, settled: false }));
     previous.current = text;
   }, [text]);
-  const from = transition.from.padStart(transition.to.length, " ");
-  const numeric = (s: string) => Number(s.replace(/[^\d.+-]/g, ""));
-  const down = numeric(transition.to) < numeric(transition.from);
+  useEffect(() => {
+    if (transition.settled) return;
+    const revision = transition.revision;
+    // Retarget fast scrubs immediately; never queue old values. Retire digit
+    // layers after the short animation, including when reduced motion is on.
+    const timer = window.setTimeout(() => setTransition(current => current.revision === revision ? {...current, settled: true} : current), 180);
+    return () => window.clearTimeout(timer);
+  }, [transition.revision, transition.settled]);
+  const down = rollingDirection(transition.from, transition.to) === 'down';
   return <span className={cn("rolling-number", className)} aria-label={text}>
     <span className="sr-only">{text}</span>
     <span aria-hidden="true" className="rolling-number-digits">
-      {[...transition.to].map((character, index) => {
-        const old = from[from.length - transition.to.length + index];
-        const changed = /\d/.test(character) && old !== character;
-        return <span key={index} className={/\d/.test(character) ? "rolling-digit" : "rolling-symbol"}>
+      {transition.settled ? transition.to : rollingDigits(transition.from, transition.to).map(({character, old, changed, place}) => {
+        return <span key={place} className={/\d/.test(character) ? "rolling-digit" : "rolling-symbol"}>
           {changed ? <span key={transition.revision} className={cn("rolling-digit-motion", down && "rolling-digit-down")}>
-            <span className="rolling-digit-old">{old?.trim() || character}</span>
+            <span className="rolling-digit-old">{old}</span>
             <span className="rolling-digit-new">{character}</span>
           </span> : character}
         </span>;
       })}
     </span>
   </span>;
-}
+});
