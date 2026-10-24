@@ -413,7 +413,7 @@ export default function TrackInvestments() {
                 className={`mt-0.5 text-sm font-semibold tabular ${stats.todayGain >= 0 ? "text-bull" : "text-bear"}`}
               >
                 {showBalance
-                  ? <RollingNumber value={`${stats.todayGain >= 0 ? "+" : "−"}${Math.abs(stats.todayGain).toFixed(0)}`} />
+                  ? <RollingNumber value={`${stats.todayGain >= 0 ? "+" : "−"}${Math.abs(stats.todayGain).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2})}`} />
                   : "••"}
               </p>
               <p
@@ -428,7 +428,7 @@ export default function TrackInvestments() {
                 Invested
               </p>
               <p className="mt-0.5 text-sm font-semibold tabular">
-                {showBalance ? <RollingNumber value={`KES ${stats.totalCost.toFixed(0)}`} /> : "••"}
+                {showBalance ? <RollingNumber value={`KES ${stats.totalCost.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2})}`} /> : "••"}
               </p>
               <p className="text-[0.625rem] text-muted-foreground">
                 {holdings.length} stocks
@@ -850,7 +850,7 @@ export default function TrackInvestments() {
                               </p>
                               <p className="mt-0.5 text-base font-bold tabular">
                                 {showBalance
-                                  ? `KES ${sel.value.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                                  ? `KES ${sel.value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                   : "••••"}
                               </p>
                               <p className="text-[0.6875rem] text-muted-foreground tabular">
@@ -866,7 +866,7 @@ export default function TrackInvestments() {
                             </p>
                             <p className="mt-0.5 text-base font-bold tabular">
                               {showBalance
-                                ? `KES ${stats.totalValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                                ? `KES ${stats.totalValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                 : "••••"}
                             </p>
                           </>
@@ -905,7 +905,7 @@ export default function TrackInvestments() {
                         </span>
                         <span className="text-[0.6875rem] text-muted-foreground tabular">
                           {showBalance
-                            ? `KES ${s.value.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                            ? `KES ${s.value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                             : "••••"}
                         </span>
                         <span className="text-[0.75rem] font-semibold tabular w-14 text-right">

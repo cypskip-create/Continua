@@ -15,7 +15,7 @@ export const HistoricalConfirmSchema = z.object({
         columnIndex: z.number().int().min(0).max(19),
         period: z.object({ periodType: z.enum(["annual", "quarterly"]), fiscalYear: z.number().int().min(1900).max(2100), fiscalQuarter: z.number().int().min(1).max(4).nullable().optional(), periodEnd: date, reportedAt: date, currency: z.literal("KES") }),
         income: income.optional(), balance: balance.optional(), cashflow: cashflow.optional(),
-        sourcePage: z.number().int().min(1), note: z.string().trim().min(10).max(2000), allowRestatement: z.boolean().default(false),
+        sourcePage: z.number().int().min(1), note: z.string().trim().min(10).max(2000).refine(value => value.length >= 10 && value.length <= 2000, "Review note must contain 10 to 2000 UTF-16 code units"), allowRestatement: z.boolean().default(false),
     })).min(1).max(20),
 }).superRefine((b, ctx) => {
     const columns = new Set(), periods = new Set();

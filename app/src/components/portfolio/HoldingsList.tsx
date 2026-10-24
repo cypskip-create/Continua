@@ -106,7 +106,7 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
                 <div className="col-span-3 text-right">
                   {r.isLive ? (
                     <>
-                      <p className="text-[0.8125rem] font-semibold tabular">{showValues ? kes(r.value, 0) : "••••"}</p>
+                      <p className="text-[0.8125rem] font-semibold tabular">{showValues ? kes(r.value) : "••••"}</p>
                       <p className={cn("text-[0.625rem] tabular", r.day.pct >= 0 ? "text-bull" : "text-bear")}>
                         {r.day.pct >= 0 ? "+" : ""}{r.day.pct.toFixed(2)}% today
                       </p>
@@ -131,7 +131,7 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
                         {r.gain >= 0 ? "+" : ""}{r.gainPct.toFixed(2)}%
                       </p>
                       <p className={cn("text-[0.625rem] tabular", r.gain >= 0 ? "text-bull" : "text-bear")}>
-                        {showValues ? `${r.gain >= 0 ? "+" : "−"}KES ${kes(Math.abs(r.gain), 0)}` : "••••"}
+                        {showValues ? `${r.gain >= 0 ? "+" : "−"}KES ${kes(Math.abs(r.gain))}` : "••••"}
                       </p>
                     </>
                   ) : (
@@ -146,20 +146,20 @@ export function HoldingsList({ holdings, showValues = true, showGains = true, on
                     <Metric label="Last price" value={r.price != null ? kes(r.price) : "—"} />
                     <Metric label="Avg price" value={kes(r.avg_cost)} />
                     <Metric label="Shares" value={String(r.shares)} />
-                    <Metric label="Cost basis" value={showValues ? kes(r.cost, 0) : "••••"} />
+                    <Metric label="Cost basis" value={showValues ? kes(r.cost) : "••••"} />
                     <Metric
                       label="Day P/L"
-                      value={r.dayValue != null ? (showValues ? `${r.dayValue >= 0 ? "+" : "−"}${kes(Math.abs(r.dayValue), 0)}` : "••••") : "—"}
+                      value={r.dayValue != null ? (showValues ? `${r.dayValue >= 0 ? "+" : "−"}${kes(Math.abs(r.dayValue))}` : "••••") : "—"}
                       tone={r.dayValue != null ? (r.dayValue >= 0 ? "bull" : "bear") : undefined}
                     />
                     <Metric
                       label="Unrealised P/L"
-                      value={showGains ? (r.gain != null ? (showValues ? `${r.gain >= 0 ? "+" : "−"}${kes(Math.abs(r.gain), 0)}` : "••••") : "—") : "—"}
+                      value={showGains ? (r.gain != null ? (showValues ? `${r.gain >= 0 ? "+" : "−"}${kes(Math.abs(r.gain))}` : "••••") : "—") : "—"}
                       tone={r.gain != null ? (r.gain >= 0 ? "bull" : "bear") : undefined}
                     />
                     <Metric label="Portfolio weight" value={r.value != null ? `${weight.toFixed(2)}%` : "—"} />
                     <Metric label="Div. yield" value={r.divYield > 0 ? `${r.divYield.toFixed(2)}%` : "—"} />
-                    <Metric label="Est. income / yr" value={r.income != null && r.divYield > 0 && showValues ? kes(r.income, 0) : "—"} />
+                    <Metric label="Est. income / yr" value={r.income != null && r.divYield > 0 && showValues ? kes(r.income) : "—"} />
                   </div>
 
                   <div className="mt-3 h-1 rounded-full bg-muted overflow-hidden">

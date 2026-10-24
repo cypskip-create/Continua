@@ -161,11 +161,15 @@ function compare(a,b,where='root'){
  const ak=Object.keys(a).sort(),bk=Object.keys(b).sort();if(JSON.stringify(ak)!==JSON.stringify(bk))throw new Error(`Missing-field/shape parity failed at ${where}`);
  for(const k of ak)compare(a[k],b[k],`${where}.${k}`);
 }
-for(const c of cases){
+const requestedOperation=process.argv.find(arg=>arg.startsWith('--operation='))?.slice('--operation='.length);
+if(requestedOperation&&!Object.hasOwn(operations,requestedOperation))throw Error('Unknown parity operation');
+const selectedCases=requestedOperation?cases.filter(c=>c.operation===requestedOperation):cases;
+for(const [index,c] of selectedCases.entries()){
  const expected=JSON.parse(JSON.stringify((await operations[c.operation](...c.args))??null));
  const execution=spawnSync(python,[worker],{input:JSON.stringify(c),encoding:'utf8',timeout:5000,maxBuffer:4194304,
   env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,PYTHONUTF8:'1'}});
  if(execution.status!==0)throw new Error(`Python calculation failed: ${c.operation}`);
- compare(expected,JSON.parse(execution.stdout),c.operation);
+ try { compare(expected,JSON.parse(execution.stdout),c.operation); }
+ catch(error){throw new Error(`${error.message}; fixture ${index}`);}
 }
-console.log(JSON.stringify({nativePythonParityCases:cases.length,operations:Object.keys(operations),passed:true,productionCutover:false}));
+console.log(JSON.stringify({nativePythonParityCases:selectedCases.length,scopedOperation:requestedOperation??null,operations:Object.keys(operations),passed:true,productionCutover:false}));

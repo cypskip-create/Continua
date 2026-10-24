@@ -36,3 +36,10 @@ Release validation: 559 backend tests, 161 frontend tests, 96 collector tests, 3
 - Supabase GitHub installation removal confirmed in GitHub; Neon/Render/Cloudflare remain installed. Removal revokes the former app's account-wide repository permissions without deleting source data.
 - Targeted history collection run 40012261174 succeeded; subsequent scheduled run 40062754614 succeeded. Collection schedules and hourly housekeeping remain enabled.
 - Returning visits benefit from cached data. First visits, session verification, unavailable evidence and free Render cold starts still require live work; background execution while the browser is closed is not promised.
+
+
+### Final security and regression follow-up
+
+Current root, backend and scraper npm audits contain zero vulnerabilities after updating body-parser to 2.4.0 and undici to 7.30.1. Miniflare's exact vulnerable transitive undici dependency is overridden at compatible major version 7; Wrangler is not downgraded. Advisory references: https://github.com/advisories/GHSA-27r3-jxmh-p828 and https://github.com/advisories/GHSA-xjj6-f33q-929c.
+
+The Zod security upgrade changes Unicode string-length handling. Explicit review-note UTF-16 limits preserve the existing publication boundary and native Python parity. All 12 historical-confirmation and 24 alert parity fixtures pass; the full CI parity suite remains required. Backend regression: 559 passed, 18 skipped. Frontend: 162 passed. Edge: 35 passed. Display cache owner isolation/expiry and sign-out cleanup are tested. Private cached watchlists remain visible if only a background refresh fails.

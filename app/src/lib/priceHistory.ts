@@ -55,7 +55,7 @@ export function chartCoverage(points: ChartPoint[], timeframe: string, chartType
         const enough = points.length >= Math.max(2, Math.floor(span * 5 / 7 * .6));
         const gaps = points.some((p, i) => i > 0 && p.timestamp - points[i - 1].timestamp > 10 * day);
         if (!enough || points[0].timestamp > start + tolerance * day || points.at(-1)!.timestamp < end - 7 * day || gaps)
-            return {available: false, reason: `Insufficient coverage for ${timeframe}: ${points.length} observed closes from ${points[0].date} to ${points.at(-1)!.date}. Missing dates are not filled.`};
+            return {available: false, reason: `Historical prices are not current enough for ${timeframe}. Last available close: ${points.at(-1)!.date}.`};
     }
     return {available: true, reason: `${points.length} observed prices · ${points[0].date} to ${points.at(-1)!.date}. No missing dates or OHLC values are generated.`};
 }

@@ -209,7 +209,7 @@ export default function Home() {
         {user && (
           <div>
             <Eyebrow action="Watchlist" onAction={() => navigate('/watchlist')}>Watchlist Movers</Eyebrow>
-            {watchlistError ? <p className="py-6 text-sm text-muted-foreground">Watchlist could not be loaded. Please try again.</p> : watchlistLoading || (watchlist.length > 0 && quotesLoading) ? <p role="status" className="py-6 text-sm text-muted-foreground">Loading watchlist prices…</p> : watchlist.length > 0 && watchlistMovers.length === 0 ? <p className="py-6 text-sm text-muted-foreground">{quotesError ? "Prices could not be loaded. Please try again." : "Prices are currently unavailable for your watched stocks."}</p> : watchlistMovers.length === 0 ? (
+            {watchlistError && !watchlist.length ? <p className="py-6 text-sm text-muted-foreground">Watchlist could not be loaded. Please try again.</p> : watchlistLoading || (watchlist.length > 0 && quotesLoading) ? <p role="status" className="py-6 text-sm text-muted-foreground">Loading watchlist prices…</p> : watchlist.length > 0 && watchlistMovers.length === 0 ? <p className="py-6 text-sm text-muted-foreground">{quotesError ? "Prices could not be loaded. Please try again." : "Prices are currently unavailable for your watched stocks."}</p> : watchlistMovers.length === 0 ? (
               <div className="border-t border-border/60 py-6 text-center">
                 <Binoculars className="h-7 w-7 mx-auto mb-2 text-muted-foreground/30" />
                 <p className="text-xs font-semibold">Your watchlist is empty</p>
