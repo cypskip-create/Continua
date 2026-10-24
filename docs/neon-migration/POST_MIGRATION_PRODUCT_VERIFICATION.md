@@ -63,3 +63,8 @@ Validation: 164 frontend tests passed, including negative currency direction, di
 - Number wheels use continuously retargeted springs with reduced-motion support. No fabricated market observations are added.
 - TradersHub reuses owner-scoped five-minute session snapshots with allowlisted display fields, clears them on logout/safety edits, and reads posts/safety settings concurrently before exposing refreshed rows. First visible post images get priority; new large static post images are compressed client-side before upload.
 - 166 frontend tests pass, including owner isolation, snapshot expiry/credential exclusion and plot-edge selection.
+
+### Featured-product automatic carousel
+- At the user's request, the hero now rotates every seven seconds through Engine, Portfolio, TradersHub and Stock Research, with synchronized glowing progress bars and matching section links.
+- Manual selection restarts that slide's progress. Pause/Play is available; hidden tabs, off-screen heroes and reduced-motion settings suspend automatic rotation.
+- Browser QA observed automatic advancement, the Portfolio CTA targeting its existing section and a paused progress animation. All 166 frontend tests and the production build pass.
