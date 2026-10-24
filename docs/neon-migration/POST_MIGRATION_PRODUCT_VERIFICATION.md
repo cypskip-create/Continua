@@ -50,3 +50,8 @@ The Zod security upgrade changes Unicode string-length handling. Explicit review
 The existing shared RollingNumber renderer now covers numeric readouts throughout Home, Portfolio, market lists, stock details, shared chart headers, forecast/research panels, and counters. SVG axes and editable form controls retain their native rendering. Digits align by place, respect signed currency changes, and animate only between exact observations. The 160ms transform animation retargets rapid updates without queuing older values. Memoized static values initially render as text; digit layers retire after 180ms to keep large tables light. Reduced-motion CSS disables movement, and assistive text contains only the latest formatted value.
 
 Validation: 164 frontend tests passed, including negative currency direction, digit rollover, owner-scoped cache and privacy masking checks. The isolated browser QA used synthetic values updated every 70ms; moving digits used a 0.16s animation and settled at the exact final value with zero remaining motion layers. No production financial inputs or precision were changed.
+
+### Cloudflare automatic build compatibility
+- Cloudflare npm 10.9.2 did not apply the nested Miniflare undici override, so clean installation rejected the npm 11 lockfile.
+- Applied the patched undici 7.30.1 override at the workspace root; regenerated the lockfile with npm 10.9.2.
+- Exact npm 10.9.2 ci dry-run passes; npm audit reports zero vulnerabilities. Application code and scheduled triggers are unchanged.
