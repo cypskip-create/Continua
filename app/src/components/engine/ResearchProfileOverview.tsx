@@ -9,8 +9,8 @@ import {continuaFetch} from '@/api/client';
 import type {RiskIntelligence} from '@/api/riskIntelligence';
 import {ExportResearch} from './ResearchExport';
 
-const points=(n:number|null|undefined)=>n==null?'Unavailable':`${n.toFixed(3)}%`;
-const number=(n:number|null|undefined,percent=false)=>n==null?'Unavailable':percent?`${(n*100).toFixed(2)}%`:n.toLocaleString(undefined,{maximumFractionDigits:3});
+const points=(n:number|null|undefined)=>n==null?'Unavailable':`${n.toFixed(2)}%`;
+const number=(n:number|null|undefined,percent=false)=>n==null?'Unavailable':percent?`${(n*100).toFixed(2)}%`:n.toLocaleString(undefined,{maximumFractionDigits: 2});
 /** Joins canonical read models in presentation; financial calculations stay in their services. */
 export function ResearchProfileOverview({symbol}:{symbol:string}){
  const {user}=useAuth(),{profile}=useProfile(),bundle=useEngineBundle(symbol,'NSE',true,false);

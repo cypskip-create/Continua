@@ -7,7 +7,7 @@ import {ExportResearch} from './ResearchExport';
 import {continuaFetch} from '@/api/client';
 import {useProfile} from '@/hooks/useProfile';
 
-const fmt=(n:number|null|undefined,suffix='')=>n==null?'Unavailable':`${n.toLocaleString(undefined,{maximumFractionDigits:3})}${suffix}`;
+const fmt=(n:number|null|undefined,suffix='')=>n==null?'Unavailable':`${n.toLocaleString(undefined,{maximumFractionDigits: 2})}${suffix}`;
 const tabs=['Overview','Risk Drivers','Correlations','Stress Lab','Reallocation','Evidence'] as const;
 const inputClass='w-full rounded-lg border border-border bg-background px-3 py-2';
 function Metric({label,value}:{label:string;value:string}){return <div className="rounded-xl border border-border p-3"><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 text-lg font-semibold tabular-nums">{value}</dd></div>}

@@ -150,8 +150,8 @@ export function ForecastNotebook({ symbol }: { symbol: string }) {
             <h3 className="font-semibold">Your private calibration</h3>
             <p className="text-sm">
               {q.data.calibration.resolvedCount} resolved · initial Brier{" "}
-              {q.data.calibration.initialBrier?.toFixed(3) ?? "—"} · latest
-              Brier {q.data.calibration.latestBrier?.toFixed(3) ?? "—"}
+              {q.data.calibration.initialBrier?.toFixed(2) ?? "—"} · latest
+              Brier {q.data.calibration.latestBrier?.toFixed(2) ?? "—"}
             </p>
             <p className="text-xs text-muted-foreground">
               {q.data.calibration.methodology}

@@ -257,7 +257,7 @@ export function AdvancedResearchLab({ symbol }: { symbol: string }) {
                   </dt>
                   <dd className="font-semibold">
                     {Number(v).toLocaleString(undefined, {
-                      maximumFractionDigits: 3,
+                      maximumFractionDigits: 2,
                     })}
                   </dd>
                 </div>

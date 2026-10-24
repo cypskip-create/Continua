@@ -87,7 +87,7 @@ function IndicatorReadouts({ symbol }: { symbol: string }) {
               <p className="text-[0.625rem] text-muted-foreground">Histogram: MACD line minus signal</p>
             </div>
             <div className="text-right">
-              <p className="text-sm font-bold tabular">{macdLatest?.histogram != null ? macdLatest.histogram.toFixed(3) : "—"}</p>
+              <p className="text-sm font-bold tabular">{macdLatest?.histogram != null ? macdLatest.histogram.toFixed(2) : "—"}</p>
               {macdLatest?.histogram != null && (
                 <Badge variant="outline" className="text-[0.5625rem]" style={{ color: macdLatest.histogram >= 0 ? fx.strong : fx.weak, borderColor: `${macdLatest.histogram >= 0 ? fx.strong : fx.weak}55` }}>
                   {macdLatest.histogram >= 0 ? "Bullish" : "Bearish"}

@@ -418,7 +418,7 @@ export function EngineAssistantPanel({
       {usage.data && (
         <p className="text-xs text-muted-foreground">
           {usage.data.configured
-            ? `${usage.data.requests} requests this month · $${usage.data.reserved.toFixed(3)} reserved usage · ${usage.data.dailyUserLimit} requests per user/day. Application monthly cap: $${usage.data.monthlyApplicationCap}.`
+            ? `${usage.data.requests} requests this month · $${usage.data.reserved.toFixed(2)} reserved usage · ${usage.data.dailyUserLimit} requests per user/day. Application monthly cap: $${usage.data.monthlyApplicationCap}.`
             : "Calculated evidence mode: structured, sourced answers without generative AI."}{" "}
           Requests run only when you submit a question.
         </p>
