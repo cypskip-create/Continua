@@ -11,8 +11,9 @@ it('rejects future years, malformed cell alignment and nonfinancial observations
  expect(sourceFinancialTables([{...table,tab:'Holders'}])).toEqual([]);
 });
 it('keeps source-text UTF-16 limits when characters use surrogate pairs',()=>{
+ const row=table.rows[0];if(!row)throw Error('Publisher fixture requires a source row');
  expect(sourceFinancialTables([{...table,category:'💜'.repeat(30)}])).toHaveLength(1);
  expect(sourceFinancialTables([{...table,category:'💜'.repeat(31)}])).toEqual([]);
  expect(sourceFinancialTables([{...table,rows:[{...table.rows[0],label:'💜'.repeat(251)}]}])).toEqual([]);
- expect(sourceFinancialTables([{...table,rows:[{...table.rows[0],cells:[{raw:'💜'.repeat(51)},...table.rows[0].cells.slice(1)]}]}])).toEqual([]);
+ expect(sourceFinancialTables([{...table,rows:[{...row,cells:[{raw:'💜'.repeat(51)},...row.cells.slice(1)]}]}])).toEqual([]);
 });
