@@ -5,6 +5,17 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "app/src/pages/WebsiteFeaturePage.tsx",
+      "category": "Public feature explanations and authentic product imagery",
+      "language": "Existing frontend React TypeScript/JSX, CSS and static WebP assets",
+      "runtime": "Existing browser app and Cloudflare static assets",
+      "reason": "Three public explanatory routes reuse the established React router and existing styling, keeping feature descriptions, plan access and navigation together. Static, user-authorized app screenshots show actual portfolio and community UI, while the approved research illustration is explicitly labelled. A compact responsive header and next-slide image preloading need no new runtime or backend/auth changes.",
+      "references": [
+        "https://react.dev/learn/responding-to-events",
+        "https://reactrouter.com/6.30.1/components/route"
+      ]
+    },
+    {
       "file": "app/src/pages/Landing.tsx",
       "category": "Public website redesign, chart pointer capture, continuous number motion and owner-scoped feed snapshots",
       "language": "Existing frontend React TypeScript/JSX, CSS and WebP assets",

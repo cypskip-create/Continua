@@ -68,3 +68,9 @@ Validation: 164 frontend tests passed, including negative currency direction, di
 - At the user's request, the hero now rotates every seven seconds through Engine, Portfolio, TradersHub and Stock Research, with synchronized glowing progress bars and matching section links.
 - Manual selection restarts that slide's progress. Pause/Play is available; hidden tabs, off-screen heroes and reduced-motion settings suspend automatic rotation.
 - Browser QA observed automatic advancement, the Portfolio CTA targeting its existing section and a paused progress animation. All 166 frontend tests and the production build pass.
+
+### Matching imagery, feature detail pages and compact header
+- Hero images now follow the selected slide. Portfolio and TradersHub use the actual app screenshots requested for the public website; Stock Research retains the approved generated illustration and Engine retains its original artwork. Original values and chart history are unchanged.
+- Discover more and feature titles open public explanations at /features/company-research, /features/markets-charts and /features/monitoring. Each page covers supported tools, getting started and plan access. Developers & API is linked in desktop and mobile navigation.
+- Header reduced to 62 px desktop and 54 px mobile, with smaller brand artwork and matching menu/anchor offsets.
+- Browser QA traversed all three detail pages and confirmed matching portfolio imagery. All 166 frontend tests pass; TypeScript and production build are checked before release.

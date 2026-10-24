@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /auth
 
-Sitemap: https://continua-cypskip-creates-projects.vercel.app/sitemap.xml
+Sitemap: https://continua.cypriankiprop41.workers.dev/sitemap.xml

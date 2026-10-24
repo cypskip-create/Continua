@@ -32,6 +32,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Learn = lazy(() => import("./pages/Learn"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const Landing = lazy(() => import("./pages/Landing"));
+const WebsiteFeaturePage = lazy(() => import("./pages/WebsiteFeaturePage"));
 const WebsiteResources = lazy(() => import("./pages/WebsiteResources"));
 const SectorHeatmap = lazy(() => import("./pages/SectorHeatmap"));
 const TrackInvestments = lazy(() => import("./pages/TrackInvestments"));
@@ -84,6 +85,7 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<EntryPage />} />
                   <Route path="/landing" element={<Landing />} />
+                  <Route path="/features/:feature" element={<WebsiteFeaturePage />} />
                   <Route path="/docs" element={<WebsiteResources section="docs" />} />
                   <Route path="/developers" element={<WebsiteResources section="developers" />} />
                   <Route path="/about" element={<WebsiteResources section="about" />} />

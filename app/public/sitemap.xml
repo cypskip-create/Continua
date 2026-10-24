@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://continua-cypskip-creates-projects.vercel.app/landing</loc><changefreq>monthly</changefreq></url>
-  <url><loc>https://continua-cypskip-creates-projects.vercel.app/docs</loc><changefreq>monthly</changefreq></url>
-  <url><loc>https://continua-cypskip-creates-projects.vercel.app/developers</loc><changefreq>monthly</changefreq></url>
-  <url><loc>https://continua-cypskip-creates-projects.vercel.app/about</loc><changefreq>monthly</changefreq></url>
-  <url><loc>https://continua-cypskip-creates-projects.vercel.app/help</loc><changefreq>monthly</changefreq></url>
-  <url><loc>https://continua-cypskip-creates-projects.vercel.app/trust</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://continua.cypriankiprop41.workers.dev/landing</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://continua.cypriankiprop41.workers.dev/docs</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://continua.cypriankiprop41.workers.dev/developers</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://continua.cypriankiprop41.workers.dev/about</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://continua.cypriankiprop41.workers.dev/help</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://continua.cypriankiprop41.workers.dev/trust</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://continua.cypriankiprop41.workers.dev/features/company-research</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://continua.cypriankiprop41.workers.dev/features/markets-charts</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://continua.cypriankiprop41.workers.dev/features/monitoring</loc><changefreq>monthly</changefreq></url>
 </urlset>
