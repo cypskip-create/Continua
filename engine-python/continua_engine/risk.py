@@ -128,4 +128,4 @@ def portfolio_overview(positions,exchange,now):
                 totalCost=total_cost if analysis["available"] else None,unrealized=analysis["totalValue"]-total_cost if analysis["available"] else None,
                 sessionPnl=analysis["sessionPnl"] if same and not stale else None,sessionDate=next(iter(dates)) if same else None,
                 holdingCount=len(positions),pricedCount=len(covered),warnings=warnings,
-                methodology="Engine calculates recorded holdings, cost basis, allocation and unrealized changes from dated market quotes. Cash, closed trades, tax and brokerage fees are excluded. No OpenAI request is made.",generatedAt=current.isoformat(timespec="milliseconds").replace("+00:00","Z"))
+                methodology="Engine calculates recorded holdings, cost basis, allocation and unrealized changes from dated market quotes. Cash, closed trades, tax and brokerage fees are excluded.",generatedAt=current.isoformat(timespec="milliseconds").replace("+00:00","Z"))

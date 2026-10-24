@@ -62,7 +62,7 @@ export function usePortfolioHistory(holdings: { symbol: string; shares: number }
         .filter(query => Date.now() - query.state.dataUpdatedAt < 86_400_000)
         .sort((a,b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt)[0]?.state.data as Awaited<ReturnType<typeof observedHistory>> | undefined,
       enabled: supported && !!from,
-      staleTime: 5 * 60_000,
+      staleTime: 5 * 60_000, refetchOnMount: 'always',
       retry: 1,
     })),
   });

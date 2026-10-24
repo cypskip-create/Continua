@@ -5,10 +5,10 @@ export const EnginePreferencesSchema = z.object({
     experience: z.enum(["beginner", "intermediate", "experienced"]).default("beginner"),
     riskComfort: z.enum(["unspecified", "lower", "moderate", "higher"]).default("unspecified"),
     incomeNeeds: z.enum(["none", "occasional", "regular"]).default("none"),
-    sectors: z.array(z.string().trim().min(1).max(60)).max(12).default([]),
+    sectors: z.array(z.string().trim().min(1).max(60).refine(value => value.length >= 1 && value.length <= 60)).max(12).default([]),
     notifications: z.boolean().default(true),
     learnInterests: z.boolean().default(false),
-    interests: z.array(z.object({ symbol: z.string().regex(/^[A-Z0-9.\-]{1,20}$/), exchange: z.string().max(10), visits: z.number().int().min(0).max(10000), lastSeen: z.string().datetime().optional() })).max(30).default([]),
+    interests: z.array(z.object({ symbol: z.string().regex(/^[A-Z0-9.\-]{1,20}$/), exchange: z.string().max(10).refine(value => value.length <= 10), visits: z.number().int().min(0).max(10000), lastSeen: z.string().datetime().optional() })).max(30).default([]),
 }).strict();
 export const defaultPreferences = () => EnginePreferencesSchema.parse({});
 export function recordInterest(settings, symbol, exchange, reset = false, now = new Date()) {
