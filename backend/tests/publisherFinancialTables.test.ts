@@ -10,3 +10,9 @@ it('rejects future years, malformed cell alignment and nonfinancial observations
  expect(sourceFinancialTables([{...table,columns:['Item','2024']}])).toEqual([]);
  expect(sourceFinancialTables([{...table,tab:'Holders'}])).toEqual([]);
 });
+it('keeps source-text UTF-16 limits when characters use surrogate pairs',()=>{
+ expect(sourceFinancialTables([{...table,category:'💜'.repeat(30)}])).toHaveLength(1);
+ expect(sourceFinancialTables([{...table,category:'💜'.repeat(31)}])).toEqual([]);
+ expect(sourceFinancialTables([{...table,rows:[{...table.rows[0],label:'💜'.repeat(251)}]}])).toEqual([]);
+ expect(sourceFinancialTables([{...table,rows:[{...table.rows[0],cells:[{raw:'💜'.repeat(51)},...table.rows[0].cells.slice(1)]}]}])).toEqual([]);
+});

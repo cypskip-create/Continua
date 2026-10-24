@@ -1,8 +1,10 @@
 import { query } from '../../storage/db.js';
 import { z } from 'zod';
-const tableSchema = z.object({ kind: z.literal('publisher_table'), tab: z.literal('Financials'), category: z.string().max(60),
-    columns: z.array(z.string().max(80)).min(2).max(25), rows: z.array(z.object({ label: z.string().max(500), rowKind: z.enum(['item', 'total', 'group']),
-        cells: z.array(z.object({ raw: z.string().max(100) })).max(24) })).max(500) });
+// Preserve the original UTF-16 size boundary across Zod versions.
+const boundedText = maximum => z.string().max(maximum).refine(value => value.length <= maximum);
+const tableSchema = z.object({ kind: z.literal('publisher_table'), tab: z.literal('Financials'), category: boundedText(60),
+    columns: z.array(boundedText(80)).min(2).max(25), rows: z.array(z.object({ label: boundedText(500), rowKind: z.enum(['item', 'total', 'group']),
+        cells: z.array(z.object({ raw: boundedText(100) })).max(24) })).max(500) });
 /** Source-observed tables are deliberately separate from canonical filings.
  * Exact labels/years/raw precision are preserved; no scope/date/EPS is invented. */
 export function sourceFinancialTables(raw) {
