@@ -611,7 +611,7 @@ body { overflow-x: clip; }
 .home-chart-note { font-size: .625rem; color: hsl(var(--muted-foreground)); margin: .25rem 0 .75rem; }
 .home-portfolio-metrics { display: grid; grid-template-columns: 1fr 1fr .7fr; gap: .75rem; padding-top: 1rem; border-top: 1px solid var(--home-rule); }
 .home-portfolio-metrics > * + * { border-left: 1px solid var(--home-rule); padding-left: .75rem; }
-.home-portfolio-metrics span { display: block; font-size: .6875rem; color: hsl(var(--muted-foreground)); margin-bottom: .35rem; }
+.home-portfolio-metrics > * > span { display: block; font-size: .6875rem; color: hsl(var(--muted-foreground)); margin-bottom: .35rem; }
 .home-portfolio-metrics strong { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem; font-size: .8125rem; font-variant-numeric: tabular-nums; }
 .home-portfolio-metrics small { display: block; flex-basis: 100%; font-size: .6875rem; }
 .home-flow [aria-label="NSE indices, scroll horizontally"] { display: flex; overflow-x: auto; touch-action: pan-x pan-y; gap: .8rem; border-top: 0; padding: .4rem 0 1rem; border-bottom: 1px solid var(--home-rule); }
