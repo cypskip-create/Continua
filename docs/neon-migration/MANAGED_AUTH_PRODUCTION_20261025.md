@@ -42,9 +42,25 @@ Free entitlements, owner isolation and preservation of legacy records.
 
 ## Deployment and rollback
 
-Deployment completion must be verified separately from configuration: commit SHA,
-Render deployed SHA, Worker version and public smoke tests belong in the final
-cutover receipt. Never infer a completed deployment from this document alone.
+The production implementation was committed and pushed directly to `main` as
+`8466f50c7a4170f88bb6d1ae00dee0ad677c62de`. GitHub API protection, security release,
+CodeQL and native candidate checks all passed for that commit.
+Render deployed that implementation on the existing service. An initial masked
+environment edit retained the legacy provider; the resulting gateway logout
+failure exposed the mismatch. The provider was corrected to `neon-managed` and
+redeployed, after which production logout returned 200 with `signedOut:true`.
+
+Cloudflare Worker version: `78ad0262-b7aa-4822-b939-357d68916951`.
+At 2026-10-25 06:01:44 UTC the public production checks passed: login HTML 200,
+health 200, anonymous session 200/null, invalid session 401, cross-site request
+403 and signed-out logout 200. Database counts remained seven legacy users,
+seven profiles, 16 portfolios, 33 watchlists and eight folders. Managed production
+users remained zero: no production account was created for testing. Successful
+account login, registration, reset and authenticated logout were exercised in
+staging; they were not repeated against a newly created production identity.
+
+Production frontend public environment pins and Worker provider defaults are
+tracked so a subsequent ordinary build does not silently select the old provider.
 
 For rollback, restore the protected previous Render environment with
 `AUTH_PROVIDER=better-auth`, redeploy the previous known-good SHA

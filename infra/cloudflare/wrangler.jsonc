@@ -12,7 +12,7 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": true
   },
-  "vars": { "BACKEND_ORIGIN": "https://continua-backend.onrender.com", "PUBLIC_EDGE_CACHE": "true", "MEDIA_STORAGE_ENABLED": "true", "APPLICATION_SCHEDULE_ENABLED": "true", "AUTH_PROVIDER": "better-auth", "MIGRATION_WRITE_FREEZE": "false" },
+  "vars": { "BACKEND_ORIGIN": "https://continua-backend.onrender.com", "PUBLIC_EDGE_CACHE": "true", "MEDIA_STORAGE_ENABLED": "true", "APPLICATION_SCHEDULE_ENABLED": "true", "AUTH_PROVIDER": "neon-managed", "NEON_AUTH_PRODUCTION_ENABLED": "true", "NEON_AUTH_STAGING_ENABLED": "false", "NEON_AUTH_BRANCH_ID": "br-noisy-block-b4z5yxup", "MIGRATION_WRITE_FREEZE": "false" },
   "r2_buckets": [{"binding":"MEDIA_BUCKET","bucket_name":"continua-public-media"}],
   "ratelimits": [
     {"name":"AUTH_RATE_LIMIT","namespace_id":"42004","simple":{"limit":20,"period":60}},
