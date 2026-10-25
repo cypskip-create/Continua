@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { X, Image, BarChart3, DollarSign, TrendingUp, PieChart, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { readPostImage } from "@/lib/postImage";
+import {ImageViewer} from './ImageViewer';
 import { useToast } from "@/hooks/use-toast";
 
 interface PortfolioSnapshot {
@@ -51,6 +52,8 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [content, setContent] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [readingImages,setReadingImages]=useState(false),[previewImage,setPreviewImage]=useState<number|null>(null);
+  useEffect(()=>{if(!open)setPreviewImage(null);},[open]);
   const [pollOpen, setPollOpen] = useState(false);
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(["", ""]);
@@ -105,19 +108,20 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if(readingImages)return;
     const files = [...(e.target.files ?? [])];
     e.target.value = "";
     if (selectedImages.length + files.length > 5) {
       toast({ title: "Choose up to five images", variant: "destructive" }); return;
     }
-    const results = await Promise.all(files.map(readPostImage));
-    const failure = results.find(r => r.error);
-    if (failure) { toast({ title: "Could not add image", description: failure.error, variant: "destructive" }); return; }
-    setSelectedImages(previous => [...previous, ...results.map(r => r.dataUrl!)].slice(0,5));
+    setReadingImages(true);
+    try{const added:string[]=[];for(const file of files){const result=await readPostImage(file);if(result.error)throw Error(result.error);added.push(result.dataUrl!);}setSelectedImages(previous=>[...previous,...added].slice(0,5));}
+    catch(error){toast({title:'Could not add image',description:error instanceof Error?error.message:'Please choose another photo.',variant:'destructive'});}
+    finally{setReadingImages(false);}
   };
 
   const handlePost = async () => {
-    if (isPosting || !pollValid || (!content.trim() && !selectedImages.length && !attachedPL && !attachedPortfolio && !pollOpen)) return;
+    if (isPosting || readingImages || !pollValid || (!content.trim() && !selectedImages.length && !attachedPL && !attachedPortfolio && !pollOpen)) return;
     if (!user) { navigate("/auth"); return; }
 
     setIsPosting(true);
@@ -165,7 +169,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
   if (!user) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <><Dialog open={open} onOpenChange={next=>{if(!readingImages&&!isPosting)onOpenChange(next);}}>
       <DialogContent centered style={{ '--composer-top': `${viewport.top}px`, '--composer-height': `${viewport.height}px` } as React.CSSProperties} className="max-w-lg p-0 gap-0 rounded-2xl border-border">
         <DialogTitle className="sr-only">Compose post</DialogTitle>
         {/* Header — Radix DialogContent renders its own close X, so we don't add one here */}
@@ -203,11 +207,13 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
               </button>
             )}
 
+            {readingImages&&<p role="status" className="mt-2 text-xs text-muted-foreground">Preparing images…</p>}
             {/* Preview image */}
             {!!selectedImages.length && <div className="grid grid-cols-2 gap-2 mt-2">
               {selectedImages.map((image,index) => <div key={index} className="relative">
-                <img src={image} alt={`Selected image ${index + 1}`} className="w-full h-28 object-cover rounded-lg" />
+                <button type="button" aria-label={`Preview selected image ${index+1}`} className="w-full" onClick={()=>setPreviewImage(index)}><img src={image} alt={`Selected image ${index + 1}`} className="w-full h-28 object-cover rounded-lg" /></button>
                 <button aria-label={`Remove image ${index + 1}`} className="absolute top-1 right-1 bg-background rounded-full p-2" onClick={() => setSelectedImages(images => images.filter((_,i) => i !== index))}><X className="h-4 w-4" /></button>
+                {selectedImages.length>1&&<div className="absolute bottom-1 left-1 flex gap-1"><button type="button" aria-label={`Move image ${index+1} left`} disabled={index===0} onClick={()=>setSelectedImages(previous=>{const next=[...previous];[next[index-1],next[index]]=[next[index],next[index-1]];return next;})} className="rounded-full bg-background/90 px-2 text-xs disabled:opacity-40">←</button><button type="button" aria-label={`Move image ${index+1} right`} disabled={index===selectedImages.length-1} onClick={()=>setSelectedImages(previous=>{const next=[...previous];[next[index+1],next[index]]=[next[index],next[index+1]];return next;})} className="rounded-full bg-background/90 px-2 text-xs disabled:opacity-40">→</button></div>}
               </div>)}
             </div>}
             {pollOpen && <div className="space-y-2 mt-3" aria-label="Create poll">
@@ -295,8 +301,8 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
         {/* Toolbar */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-border ml-[52px]">
           <div className="flex items-center gap-0.5">
-            <input type="file" multiple ref={fileInputRef} onChange={handleImageSelect} accept="image/*" className="hidden" />
-            <button className="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors" onClick={() => fileInputRef.current?.click()} aria-label="Add images" disabled={selectedImages.length >= 5} data-small-target>
+            <input type="file" multiple ref={fileInputRef} onChange={handleImageSelect} accept="image/*" disabled={readingImages||isPosting} className="hidden" />
+            <button className="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors" onClick={() => fileInputRef.current?.click()} aria-label="Add images" disabled={readingImages||isPosting||selectedImages.length >= 5} data-small-target>
               <Image className="h-5 w-5" />
             </button>
             <button className="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors" aria-label="Add poll" onClick={() => setPollOpen(v => !v)} data-small-target>
@@ -347,7 +353,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
             <Button
               size="sm"
               className="rounded-full px-5 h-9 font-bold bg-primary text-primary-foreground hover:bg-primary/90"
-              disabled={(!content.trim() && !selectedImages.length && !attachedPL && !attachedPortfolio && !pollOpen) || !pollValid || isPosting || charCount > maxChars}
+              disabled={(!content.trim() && !selectedImages.length && !attachedPL && !attachedPortfolio && !pollOpen) || !pollValid || isPosting || readingImages || charCount > maxChars}
               onClick={handlePost}
             >
               {isPosting ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : "Post"}
@@ -355,6 +361,6 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
           </div>
         </div>
       </DialogContent>
-    </Dialog>
+    </Dialog>{previewImage!==null&&selectedImages.length>0&&<ImageViewer open onOpenChange={next=>{if(!next)setPreviewImage(null);}} images={selectedImages} initialIndex={previewImage}/>}</>
   );
 }

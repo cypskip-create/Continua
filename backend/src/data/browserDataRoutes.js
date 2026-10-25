@@ -1,6 +1,6 @@
 import express from 'express';
 import {compileDataRequest,executeDataRequest,DataRequestError} from './browserData.js';
-const rpc={company_processing_status:{required:['p_symbol'],optional:[],anonymous:true},get_research_quota:{required:['p_symbol'],optional:[]},record_research_view:{required:['p_symbol'],optional:[]},post_poll_result:{required:['p_post_id'],optional:['p_choice']},community_set_safety:{required:['p_target','p_kind','p_enabled'],optional:[]},community_submit_report:{required:['p_kind','p_target','p_reason'],optional:['p_details']}};
+const rpc={continua_handle_available:{required:['p_handle'],optional:[]},company_processing_status:{required:['p_symbol'],optional:[],anonymous:true},get_research_quota:{required:['p_symbol'],optional:[]},record_research_view:{required:['p_symbol'],optional:[]},post_poll_result:{required:['p_post_id'],optional:['p_choice']},community_set_safety:{required:['p_target','p_kind','p_enabled'],optional:[]},community_submit_report:{required:['p_kind','p_target','p_reason'],optional:['p_details']}};
 export function createBrowserDataRouter({database,verifyAccess}){
  const router=express.Router();
  router.use((req,res,next)=>{res.set('Cache-Control','private, no-store');res.set('Pragma','no-cache');next();});

@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/continua/browserClient";
 import { uploadCloudImage } from "@/lib/cloudMedia.js";
 import {handleError,normalizeUserHandle} from '../../../../backend/src/data/handlePolicy.js';
+import {EXPERIENCE_OPTIONS} from '@/lib/tradersHubOnboarding';
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -29,6 +30,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
   const [fullName, setFullName] = useState("");
   const [handle, setHandle] = useState("");
   const [bio, setBio] = useState("");
+  const [experience,setExperience]=useState('');
   const [avatarUrl, setAvatarUrl] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,6 +46,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
       setFullName(profile.full_name || "");
       setHandle(profile.handle || "");
       setBio(profile.bio || "");
+      setExperience(profile.trading_experience || '');
       setAvatarUrl(profile.avatar_url || "");
       setPreviewUrl(profile.avatar_url || "");
       setHandleState("idle");
@@ -63,14 +66,10 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     setHandleState("checking");
     let cancelled=false;
     const t = setTimeout(async () => {
-      const { data, error } = await supabase
-        .from("profiles_public")
-        .select("handle")
-        .eq("handle", clean)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('continua_handle_available' as never,{p_handle:clean} as never);
       if(cancelled)return;
       if (error) { setHandleState("idle"); return; }
-      if (!data) { setHandleState("available"); setSuggestions([]); return; }
+      if (data===true) { setHandleState("available"); setSuggestions([]); return; }
       setHandleState("taken");
       // Generate suggestions
       const bases = [clean, clean.slice(0, 8)];
@@ -93,20 +92,20 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     if (!file || !user) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (file.type==='image/svg+xml') {
       toast({
         title: "Invalid file type",
-        description: "Please upload an image file",
+        description: "Choose a JPEG, PNG, WebP, GIF or supported HEIC photo.",
         variant: "destructive",
       });
       return;
     }
 
     // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 20 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please upload an image smaller than 5MB",
+        description: "Please choose a photo smaller than 20 MB. It will be resized before upload.",
         variant: "destructive",
       });
       return;
@@ -133,6 +132,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
       });
     } finally {
       setUploading(false);
+      e.target.value='';
     }
   };
 
@@ -149,6 +149,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
       const result = await updateProfile({
         full_name: fullName,
         bio: bio,
+        trading_experience: experience || null,
         avatar_url: avatarUrl,
         handle: normalized,
       } as any);
@@ -200,7 +201,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
           <div className="flex flex-col items-center gap-4">
             <div className="relative group">
               <Avatar className="h-28 w-28 ring-4 ring-primary/20">
-                <AvatarImage src={previewUrl} className="object-cover" />
+                <AvatarImage src={previewUrl} alt="Profile photo preview" className="object-cover" />
                 <AvatarFallback className="bg-gradient-primary text-primary-foreground text-3xl font-bold">
                   {fullName ? getInitials(fullName) : <User className="h-12 w-12" />}
                 </AvatarFallback>
@@ -221,6 +222,8 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
               {/* Remove button */}
               {previewUrl && (
                 <Button
+                  type="button"
+                  aria-label="Remove profile photo"
                   size="icon"
                   variant="destructive"
                   className="absolute -top-1 -right-1 h-7 w-7 rounded-full"
@@ -236,6 +239,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
               ref={fileInputRef}
               className="hidden"
               accept="image/*"
+              disabled={uploading}
               onChange={handleFileUpload}
             />
             
@@ -333,21 +337,16 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="avatarUrl" className="text-sm font-medium">
-                Avatar URL (optional)
+              <Label htmlFor="investingExperience" className="text-sm font-medium">
+                Investing experience
               </Label>
-              <Input
-                id="avatarUrl"
-                value={avatarUrl}
-                onChange={(e) => {
-                  setAvatarUrl(e.target.value);
-                  setPreviewUrl(e.target.value);
-                }}
-                placeholder="https://example.com/avatar.jpg"
-                className="h-11"
-              />
+              <select id="investingExperience" value={experience} onChange={e=>setExperience(e.target.value)} className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
+                <option value="">Not shown — remove from profile</option>
+                {EXPERIENCE_OPTIONS.map(option=><option key={option.id} value={option.id}>{option.label}</option>)}
+              </select>
+              {experience&&<Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={()=>setExperience('')}>Remove investing experience</Button>}
               <p className="text-xs text-muted-foreground">
-                Or paste a direct link to your profile picture
+                Change your experience level or remove it. Your account and other profile details stay intact.
               </p>
             </div>
           </div>

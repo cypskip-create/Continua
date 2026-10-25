@@ -10,8 +10,10 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/continua/browserClient";
 import { uploadCloudImage } from "@/lib/cloudMedia.js";
+import {handleError,normalizeUserHandle} from '../../../../backend/src/data/handlePolicy.js';
 import { normalizeHandle, fallbackHandle, atHandle, getInitials } from "@/lib/handle";
 import { EXPERIENCE_OPTIONS, GENDER_OPTIONS } from "@/lib/tradersHubOnboarding";
+import {useToast} from '@/hooks/use-toast';
 import { PortfolioVisibilityToggles, type PortfolioVisibilitySettings } from "@/components/portfolio/PortfolioVisibilityToggles";
 import type { Profile } from "@/hooks/useProfile";
 
@@ -90,6 +92,7 @@ const DEFAULT_PRIVACY: PortfolioVisibilitySettings = {
  * re-check.
  */
 export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }: Props) {
+  const {toast}=useToast();
   const [show, setShow] = useState(false);
   const [step, setStep] = useState<Step>("welcome");
   const stepHistory = useRef<Step[]>([]);
@@ -97,11 +100,13 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
   // Step: handle
   const [handle, setHandle] = useState("");
   const [handleTouched, setHandleTouched] = useState(false);
-  const [handleStatus, setHandleStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
+  const [handleStatus, setHandleStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid" | "error">("idle");
 
   // Step: photo
   const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInput=useRef<HTMLInputElement>(null);
+  const [avatarError,setAvatarError]=useState('');
 
   // Step: bio
   const [bio, setBio] = useState("");
@@ -125,6 +130,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
   const [creatingMessageIdx, setCreatingMessageIdx] = useState(0);
   const [creatingDone, setCreatingDone] = useState(false);
   const [creatingError, setCreatingError] = useState(false);
+  const [creatingErrorText,setCreatingErrorText]=useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -160,23 +166,20 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
   // Live availability check as the person types their handle.
   useEffect(() => {
     if (step !== "handle") return;
-    const clean = normalizeHandle(handle);
-    if (clean.length < 3) { setHandleStatus("invalid"); return; }
+    const clean = normalizeUserHandle(handle);
+    if (handleError(clean)) { setHandleStatus("invalid"); return; }
     setHandleStatus("checking");
+    let cancelled=false;
     const timer = setTimeout(async () => {
-      const { data } = await supabase
-        .from("profiles_public")
-        .select("user_id")
-        .ilike("handle", clean)
-        .neq("user_id", userId || "")
-        .maybeSingle();
-      setHandleStatus(data ? "taken" : "available");
+      const {data,error}=await supabase.rpc('continua_handle_available' as never,{p_handle:clean} as never);
+      if(cancelled)return;
+      setHandleStatus(error?'error':data===true?'available':'taken');
     }, 350);
-    return () => clearTimeout(timer);
+    return () => {cancelled=true;clearTimeout(timer);};
   }, [handle, step, userId]);
 
-  const cleanHandle = useMemo(() => normalizeHandle(handle), [handle]);
-  const canContinueFromHandle = handleStatus === "available" && cleanHandle.length >= 3;
+  const cleanHandle = useMemo(() => normalizeUserHandle(handle), [handle]);
+  const canContinueFromHandle = handleStatus === "available" && !handleError(cleanHandle);
 
   const goTo = (next: Step) => {
     stepHistory.current.push(step);
@@ -205,18 +208,17 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
 
   const handleAvatarPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !userId) return;
-    if (!file.type.startsWith("image/")) return;
-    if (file.size > 5 * 1024 * 1024) return;
-
+    if (!file || !userId || avatarUploading) return;
+    setAvatarError('');
     setAvatarUploading(true);
     try {
       const publicUrl = await uploadCloudImage('avatars', file);
       setAvatarUrl(publicUrl);
-    } catch {
-      // Non-fatal — the person can just try again or skip the step entirely.
+    } catch(error) {
+      setAvatarError(error instanceof Error?error.message:'Photo upload failed. Please retry.');
     } finally {
       setAvatarUploading(false);
+      e.target.value='';
     }
   };
 
@@ -239,6 +241,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
   };
 
   const finish = async () => {
+    if(avatarUploading||handleError(cleanHandle)){setStep('handle');return;}
     goTo("creating");
     setCreatingDone(false);
     setCreatingError(false);
@@ -268,9 +271,10 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
       if (error) throw error;
 
       if (userId && toFollow.size > 0) {
-        await supabase.from("user_follows").insert(
-          [...toFollow].map(following_id => ({ follower_id: userId, following_id }))
+        const result=await supabase.from("user_follows").upsert(
+          [...toFollow].map(following_id => ({ follower_id: userId, following_id })),{onConflict:'follower_id,following_id',ignoreDuplicates:true}
         );
+        if(result.error)toast({title:'Your profile is ready',description:'Some follows could not be saved. You can follow these people from TradersHub.',variant:'destructive'});
       }
     })();
 
@@ -283,8 +287,10 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
         setShow(false);
         onDone();
       }, 700);
-    } catch {
+    } catch(error) {
       clearInterval(messageTimer);
+      if((error as {code?:string})?.code==='23505'){setStep('handle');setHandleStatus('taken');return;}
+      setCreatingErrorText(error instanceof Error?error.message:'Your profile could not be saved. Please retry.');
       setCreatingError(true);
     }
   };
@@ -353,7 +359,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                   value={handle}
                   onChange={e => { setHandleTouched(true); setHandle(e.target.value); }}
                   className="h-12 pl-8 rounded-2xl text-[0.9375rem] font-semibold"
-                  maxLength={20}
+                  maxLength={15}
                   placeholder="yourhandle"
                 />
               </div>
@@ -361,7 +367,8 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 {handleStatus === "checking" && <><Loader2 className="h-3 w-3 animate-spin text-muted-foreground" /><span className="text-muted-foreground">Checking availability…</span></>}
                 {handleStatus === "available" && <><Check className="h-3 w-3 text-bull" /><span className="text-bull font-medium">@{cleanHandle} is available</span></>}
                 {handleStatus === "taken" && <span className="text-destructive font-medium">@{cleanHandle} is already taken</span>}
-                {handleStatus === "invalid" && cleanHandle.length > 0 && <span className="text-muted-foreground">At least 3 characters — letters, numbers, underscores</span>}
+                {handleStatus === "invalid" && <span className="text-destructive">{handleError(cleanHandle)}</span>}
+                {handleStatus === "error" && <span className="text-destructive">Could not check this handle. Edit it to retry.</span>}
               </div>
             </div>
             <Button className="w-full h-12 rounded-full font-bold text-base" disabled={!canContinueFromHandle} onClick={() => goTo("photo")}>
@@ -382,7 +389,7 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
             <div className="flex flex-col items-center gap-3">
               <div className="relative group">
                 <Avatar className="h-28 w-28 ring-4 ring-primary/15">
-                  <AvatarImage src={avatarUrl} className="object-cover" />
+                  <AvatarImage src={avatarUrl} alt="Profile photo" className="object-cover" />
                   <AvatarFallback className="bg-gradient-primary text-primary-foreground text-3xl font-bold">
                     {handle ? getInitials(handle) : <User className="h-12 w-12" />}
                   </AvatarFallback>
@@ -393,14 +400,14 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 >
                   {avatarUploading ? <Loader2 className="h-8 w-8 text-white animate-spin" /> : <Camera className="h-8 w-8 text-white" />}
                 </label>
-                <input id="onboarding-avatar-input" type="file" accept="image/*" className="hidden" onChange={handleAvatarPick} />
+                <input ref={avatarInput} id="onboarding-avatar-input" type="file" aria-label="Choose profile photo" accept="image/*" className="hidden" disabled={avatarUploading} onChange={handleAvatarPick} />
               </div>
-              <label htmlFor="onboarding-avatar-input">
-                <Button variant="outline" size="sm" className="gap-2" disabled={avatarUploading} asChild>
-                  <span>{avatarUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}{avatarUrl ? "Change photo" : "Upload photo"}</span>
-                </Button>
-              </label>
+              <Button type="button" variant="outline" size="sm" className="gap-2" disabled={avatarUploading} onClick={()=>avatarInput.current?.click()}>
+                {avatarUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}{avatarUrl ? "Change photo" : "Upload photo"}
+              </Button>
             </div>
+            {avatarError&&<p role="alert" className="text-sm text-destructive">{avatarError}</p>}
+            <p className="text-xs text-muted-foreground text-center">Choose a photo up to 20 MB. We resize and center it for your profile.</p>
             <Button className="w-full h-12 rounded-full font-bold text-base" disabled={avatarUploading} onClick={() => goTo("bio")}>
               {avatarUrl ? "Continue" : "Skip for now"}
             </Button>
@@ -623,11 +630,12 @@ export function TradersHubOnboarding({ userId, profile, updateProfile, onDone }:
                 </div>
                 <div className="space-y-1.5">
                   <h2 className="text-lg font-extrabold">Something went wrong</h2>
-                  <p className="text-[0.78125rem] text-muted-foreground">We couldn't finish setting up your account. Please try again.</p>
+                  <p role="alert" className="text-[0.78125rem] text-muted-foreground">{creatingErrorText||"We couldn't finish setting up your account. Please try again."}</p>
                 </div>
                 <Button className="w-full h-12 rounded-full font-bold text-base" onClick={finish}>
                   Try again
                 </Button>
+                <Button variant="ghost" className="w-full" onClick={()=>setStep('handle')}>Review profile details</Button>
               </>
             )}
           </div>
