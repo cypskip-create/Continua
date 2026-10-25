@@ -5,6 +5,7 @@ import {queryClient} from '@/lib/queryClient';
 import {clearPrivateSessionCache} from '@/lib/privateSessionCache';
 import {signupAcknowledgement} from '@/lib/legalPolicy';
 import {isPublishedQuery} from '@/lib/researchCache';
+import {sessionRestoreMessage} from '@/lib/accountAccess';
 
 function clearAccountQueries(){
  void queryClient.cancelQueries();
@@ -18,6 +19,8 @@ interface AuthContextType {
   loading: boolean;
   recoveryMode: boolean;
   mfaPending: boolean;
+  initializationError: string | null;
+  retrySession: () => void;
   signUp: (email: string, password: string, fullName: string, acknowledgement:{adult:boolean;terms:boolean},captchaToken?:string) => Promise<{ error: any; session: Session | null }>;
   signIn: (email: string, password: string,captchaToken?:string) => Promise<{ error: any; session: Session | null }>;
   signOut: () => Promise<void>;
@@ -32,14 +35,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [recoveryMode,setRecoveryMode]=useState(false);
   const [mfaPending,setMfaPending]=useState(false);
+  const [initializationError,setInitializationError]=useState<string|null>(null);
+  const [restoreAttempt,setRestoreAttempt]=useState(0);
   const owner=useRef<string|null>(null);
 
   useEffect(() => {
     let bootstrapping=true,active=true;
+    setLoading(true);setInitializationError(null);
     const stopSecurity=observeSessionSecurity(state=>{if(active){setMfaPending(state.mfaPending);setRecoveryMode(state.recoveryMode);}});
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if(session||event==='SIGNED_OUT')setInitializationError(null);
         const next=session?.user.id??null;
         if((owner.current&&owner.current!==next)||event==='SIGNED_OUT'){
           clearAccountQueries();
@@ -57,9 +64,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     void restoreBrowserSession().then(()=>supabase.auth.getSession()).then(({data})=>{
       if(!active)return;setSession(data.session);setUser(data.session?.user??null);owner.current=data.session?.user.id??null;
-    }).catch(()=>{/* Auth screen offers retry; never fabricate a session. */}).finally(()=>{bootstrapping=false;if(active)setLoading(false);});
+    }).catch(error=>{if(active)setInitializationError(sessionRestoreMessage(error));}).finally(()=>{bootstrapping=false;if(active)setLoading(false);});
     return () => {active=false;stopSecurity();subscription.unsubscribe();};
-  }, []);
+  }, [restoreAttempt]);
 
   const signUp = async (email: string, password: string, fullName: string, acknowledgement:{adult:boolean;terms:boolean},captchaToken?:string) => {
     const legal=signupAcknowledgement(acknowledgement.adult,acknowledgement.terms);
@@ -116,6 +123,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     recoveryMode,
     mfaPending,
+    initializationError,
+    retrySession:()=>{setLoading(true);setRestoreAttempt(value=>value+1);},
     signUp,
     signIn,
     signOut,

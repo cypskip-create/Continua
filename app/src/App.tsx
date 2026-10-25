@@ -54,8 +54,9 @@ function AccountAlias() {
 }
 
 function EntryPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, initializationError, retrySession } = useAuth();
   if (loading) return <div role="status" className="min-h-screen bg-background p-6">Loading…</div>;
+  if(!user&&initializationError)return <main className="min-h-screen grid place-items-center p-6"><div role="alert" className="max-w-sm space-y-4"><h1 className="text-xl font-semibold">Reconnect your account</h1><p>{initializationError}</p><button className="rounded-full bg-primary px-5 py-3 text-primary-foreground" onClick={retrySession}>Retry account connection</button></div></main>;
   return user ? <MainLayout><Home /></MainLayout> : <Landing />;
 }
 
