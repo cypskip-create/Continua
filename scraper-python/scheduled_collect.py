@@ -61,7 +61,7 @@ def source_reservation(source_id,ceiling):
 
 def source_batch(environment,adapter):
     if adapter=='worldbank':return 4
-    key,default=('COLLECTOR_PRIMARY_BATCH',12) if adapter=='kenyanstocks' else ('COLLECTOR_FALLBACK_BATCH',2)
+    key,default=('COLLECTOR_NEWS_BATCH',8) if adapter=='rss' else ('COLLECTOR_PRIMARY_BATCH',12) if adapter=='kenyanstocks' else ('COLLECTOR_FALLBACK_BATCH',2)
     value=int(environment.get(key,str(default)))
     if not 1<=value<=100:raise ValueError('Invalid source batch configuration')
     return value

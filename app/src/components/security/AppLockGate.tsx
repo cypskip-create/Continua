@@ -6,6 +6,7 @@ import { isAppLockEnabled, verifyAppLock } from "@/lib/appLock";
 
 export function AppLockGate({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  if(loading&&/^\/(?:auth|landing|about|help|docs|developers|trust|terms|privacy|copyright|billing-policy|features)(?:\/|$)/.test(window.location.pathname))return <>{children}</>;
   if (loading) return <div role="status" className="grid min-h-dvh place-items-center bg-background"><Loader2 className="h-5 w-5 animate-spin" aria-label="Loading session" /></div>;
   if (!user) return <>{children}</>;
   // Remount the lock for each account; private screens must never flash before

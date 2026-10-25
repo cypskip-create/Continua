@@ -30,6 +30,7 @@ def feed_documents(text,feed_url,max_items=50):
     return result
 
 class RssAdapter:
+    document_newest_first=True
     parser_version=None # Preserve existing reusable news extraction behavior.
     def __init__(self,io):
         self.io=io;self.id=io.source['id'];config=io.source['config']

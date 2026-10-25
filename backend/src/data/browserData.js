@@ -1,4 +1,5 @@
 import {readFileSync} from 'node:fs';
+import {handleError,normalizeUserHandle} from './handlePolicy.js';
 const contract=JSON.parse(readFileSync(new URL('./browserTables.json',import.meta.url),'utf8'));
 const quote=value=>'"'+value.replaceAll('"','""')+'"';
 const maximumRows=1000;
@@ -7,6 +8,9 @@ export function compileDataRequest({table,method,search=new URLSearchParams(),bo
  const columns=Object.hasOwn(contract,table)?contract[table]:null;if(!columns)throw new DataRequestError('Unknown data resource',404);
  if(table==='profiles_public'&&!['GET','HEAD'].includes(method))throw new DataRequestError('Public profile resource is read-only',405);
  if(!['GET','HEAD','POST','PATCH','DELETE'].includes(method))throw new DataRequestError('Method unavailable',405);
+ if(table==='profiles'&&['POST','PATCH'].includes(method))for(const row of Array.isArray(body)?body:[body]){
+  if(row&&Object.hasOwn(row,'handle')){const normalized=normalizeUserHandle(row.handle),error=handleError(normalized);if(error)throw new DataRequestError(error);row.handle=normalized;}
+ }
  const column=value=>{if(!columns.includes(value))throw new DataRequestError('Unknown column');return quote(value);};
  const params=[],bind=value=>{params.push(value);return '$'+params.length;};
  const selection=search.get('select')??'*';const selected=selection==='*'?'*':selection.split(',').map(v=>column(v.trim())).join(',');if(!selected)throw new DataRequestError('Empty selection');const returning=prefer.includes('return=representation')?selected:'1 AS affected';

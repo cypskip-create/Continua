@@ -71,7 +71,7 @@ class DocumentJobs:
           WHERE source_id=%s AND url=ANY(%s::text[])
           AND (status<>'processing' OR lease_until<now())""",(source_id,[d['url'] for d in documents]))
 
-    async def claim(self,source_id,limit,*,lane=None,issuer=None,view='Financials'):
+    async def claim(self,source_id,limit,*,lane=None,issuer=None,view='Financials',newest_first=False):
         if type(limit) is not int or not 1<=limit<=25:
             raise ValueError("invalid document batch")
         sql="""WITH pending AS (
@@ -113,6 +113,10 @@ class DocumentJobs:
               (CASE WHEN url ~* '\\.pdf($|[?])' THEN 'PDF' ELSE document->'context'->>'tab' END)=%s
               THEN 0 ELSE 1 END,attempts,""")
             values.append(lane)
+        if newest_first:
+            if issuer is not None or lane is not None:raise ValueError('News priority cannot select issuer lanes')
+            # Apply after retry filters so their parameter slots stay intact.
+            sql=sql.replace('ORDER BY attempts,',"ORDER BY document->'context'->>'publishedAt' DESC NULLS LAST,attempts,")
         return await self.database.query(sql,tuple([*values,limit]))
 
     async def finish(self,job_id,attempts,error=None):

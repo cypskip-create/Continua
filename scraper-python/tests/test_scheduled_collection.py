@@ -28,6 +28,8 @@ class ScheduledTests(unittest.TestCase):
         self.assertEqual(module.source_reservation(None,48*1024**2),48*1024**2)
         self.assertEqual(module.source_batch({},'worldbank'),4)
     def test_batches_are_configurable_and_bounded(self):
+        self.assertEqual(module.source_batch({},'rss'),8)
+        self.assertEqual(module.source_batch({'COLLECTOR_NEWS_BATCH':'4'},'rss'),4)
         self.assertEqual(module.source_batch({},'kenyanstocks'),12)
         self.assertEqual(module.source_batch({'COLLECTOR_PRIMARY_BATCH':'24'},'kenyanstocks'),24)
         self.assertEqual(module.source_batch({'COLLECTOR_FALLBACK_BATCH':'3'},'nse'),3)

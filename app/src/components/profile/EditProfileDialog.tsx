@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/continua/browserClient";
 import { uploadCloudImage } from "@/lib/cloudMedia.js";
+import {handleError,normalizeUserHandle} from '../../../../backend/src/data/handlePolicy.js';
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -53,34 +54,37 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
   // Debounced live handle check
   useEffect(() => {
     if (!open) return;
-    const clean = handle.replace(/^@/, "").toLowerCase();
+    const clean = normalizeUserHandle(handle);
     if (!clean) { setHandleState("idle"); setSuggestions([]); return; }
     if (clean === originalHandle) { setHandleState("current"); setSuggestions([]); return; }
-    if (clean.length < 3 || clean.length > 30 || !/^[a-z0-9_]+$/.test(clean)) {
+    if (handleError(clean)) {
       setHandleState("invalid"); setSuggestions([]); return;
     }
     setHandleState("checking");
+    let cancelled=false;
     const t = setTimeout(async () => {
       const { data, error } = await supabase
         .from("profiles_public")
         .select("handle")
-        .ilike("handle", clean)
+        .eq("handle", clean)
         .maybeSingle();
+      if(cancelled)return;
       if (error) { setHandleState("idle"); return; }
       if (!data) { setHandleState("available"); setSuggestions([]); return; }
       setHandleState("taken");
       // Generate suggestions
-      const bases = [clean, clean.slice(0, 20)];
+      const bases = [clean, clean.slice(0, 8)];
       const suffixes = ["_ke", "01", "_trader", "invest", "_nse", "254"];
-      const candidates = Array.from(new Set(bases.flatMap(b => suffixes.map(s => `${b}${s}`.slice(0, 30)))));
+      const candidates = Array.from(new Set(bases.flatMap(b => suffixes.map(s => `${b}${s}`.slice(0, 15))))).filter(c=>!handleError(c));
       const { data: taken } = await supabase
         .from("profiles_public")
         .select("handle")
         .in("handle", candidates);
+      if(cancelled)return;
       const takenSet = new Set((taken || []).map(t => (t.handle || "").toLowerCase()));
       setSuggestions(candidates.filter(c => !takenSet.has(c)).slice(0, 3));
     }, 450);
-    return () => clearTimeout(t);
+    return () => {cancelled=true;clearTimeout(t);};
   }, [handle, open, originalHandle]);
 
 
@@ -138,19 +142,21 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
   };
 
   const handleSave = async () => {
+    const normalized=normalizeUserHandle(handle),validation=handleError(normalized);
+    if(validation){toast({title:'Invalid handle',description:validation,variant:'destructive'});return;}
     setLoading(true);
     try {
       const result = await updateProfile({
         full_name: fullName,
         bio: bio,
         avatar_url: avatarUrl,
-        handle: handle.replace(/^@/, '').toLowerCase().replace(/[^a-z0-9_]/g, '') || null,
+        handle: normalized,
       } as any);
       
       if (result?.error) {
         toast({
           title: "Error",
-          description: "Failed to update profile",
+          description: result.error.code==='23505'?'That handle was just taken. Choose another.':result.error.message || 'Failed to update profile',
           variant: "destructive",
         });
       } else {
@@ -276,10 +282,10 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                 <Input
                   id="handle"
                   value={handle}
-                  onChange={(e) => setHandle(e.target.value.replace(/^@/, '').toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                  onChange={(e) => setHandle(e.target.value.replace(/^@/, '').toLowerCase())}
                   placeholder="cypskip"
                   className="h-11 pl-8 pr-9"
-                  maxLength={30}
+                  maxLength={15}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2">
                   {handleState === "checking" && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
@@ -289,7 +295,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
               </div>
               {handleState === "available" && <p className="text-xs text-bull">✓ Available</p>}
               {handleState === "current" && <p className="text-xs text-muted-foreground">Your current handle</p>}
-              {handleState === "invalid" && <p className="text-xs text-bear">Use 3–30 letters, numbers, or underscores</p>}
+              {handleState === "invalid" && <p className="text-xs text-bear">{handleError(normalizeUserHandle(handle))}</p>}
               {handleState === "taken" && (
                 <div className="space-y-1.5">
                   <p className="text-xs text-bear">Already taken</p>
@@ -305,7 +311,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                   )}
                 </div>
               )}
-              {handleState === "idle" && <p className="text-xs text-muted-foreground">Letters, numbers, and underscores only</p>}
+              {handleState === "idle" && <p className="text-xs text-muted-foreground">4–15 letters, numbers or underscores. Handles are unique regardless of case; official names are reserved.</p>}
             </div>
 
 

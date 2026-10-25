@@ -13,7 +13,7 @@ export interface HandleSource {
 
 /** Normalise a handle candidate: strip @, lowercase, allow a-z0-9_ only. */
 export function normalizeHandle(raw: string): string {
-  return raw.trim().replace(/^@+/, "").toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 20);
+  return raw.trim().replace(/^@+/, "").toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 15);
 }
 
 /** Deterministic fallback handle derived from the display name / id. */

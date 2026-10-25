@@ -1,5 +1,12 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {ownedIdentity} from './identity.mjs';
 const env={AUTH_PROVIDER:'better-auth',BACKEND_ORIGIN:'https://backend.onrender.com',BACKEND_API_KEY:'server-only',EDGE_ORIGIN_SECRET:'s'.repeat(32),AUTH_RATE_LIMIT:{limit:async()=>({success:true})}};
+test('anonymous managed session reads finish at the edge while opaque sessions still require the backend',async()=>{
+ const managed={...env,AUTH_PROVIDER:'neon-managed',NEON_AUTH_STAGING_ENABLED:'true',NEON_AUTH_BRANCH_ID:'br-lively-paper-b4oli11a'};let calls=0;
+ const upstream=async()=>{calls++;return Response.json({session:null,mfaRequired:false});};
+ const result=await ownedIdentity(request('/api/v1/identity/session'),managed,upstream);assert.equal(result.status,200);assert.equal(calls,0);assert.equal((await result.json()).session,null);
+ await ownedIdentity(request('/api/v1/identity/session',{Cookie:'__Secure-neon-auth.session_token=opaque'}),managed,upstream);assert.equal(calls,1);
+ assert.equal((await ownedIdentity(request('/api/v1/identity/session',{Origin:'https://evil.invalid'}),managed,upstream)).status,403);
+});
 test('managed cookies require explicit isolated staging configuration and never reach the legacy provider',async()=>{
  const stage={...env,AUTH_PROVIDER:'neon-managed',NEON_AUTH_STAGING_ENABLED:'true',NEON_AUTH_BRANCH_ID:'br-lively-paper-b4oli11a'};let observed;
  const fetcher=async(url,input)=>{observed=input.headers;return Response.json({session:null},{headers:{'Set-Cookie':'__Secure-neon-auth.session_token=opaque; Path=/; HttpOnly; Secure; SameSite=Lax'}});};

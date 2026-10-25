@@ -30,6 +30,9 @@ export async function ownedIdentity(request,env,fetcher=fetch){
  const headers=new Headers({'Content-Type':'application/json','Origin':url.origin,'X-Continua-Session':'1','X-API-Key':env.BACKEND_API_KEY,'X-Continua-Edge-Secret':env.EDGE_ORIGIN_SECRET,'X-Continua-Client-IP':ip});
  for(const name of ['X-User-Token','User-Agent']){const value=request.headers.get(name);if(value)headers.set(name,value);}
  const cookies=(request.headers.get('Cookie')??'').split(';').map(s=>s.trim()).filter(s=>identityCookieName(s.split('=')[0],env)&&/^[^=]+=[^\s;,\r\n]*$/.test(s));if(cookies.length>16||cookies.join('; ').length>16384)return reply({error:'Invalid identity cookies'},400);if(cookies.length)headers.set('Cookie',cookies.join('; '));
+ // A browser without an opaque managed session cannot be signed in. Resolve
+ // this at the edge so opening the website never waits for a sleeping backend.
+ if(env.AUTH_PROVIDER==='neon-managed'&&path==='session'&&request.method==='GET'&&!cookies.some(c=>/^__Secure-neon-auth\.session_token=.+$/.test(c)))return reply({session:null,mfaRequired:false});
  let body;try{body=request.method==='POST'?await bounded(request.body,65536):undefined;}catch{return reply({error:'Identity request too large'},413);}
  let upstream;try{upstream=await fetcher(target,{method:request.method,headers,body,redirect:'manual',signal:AbortSignal.timeout(60000)});}catch{return reply({error:'Identity temporarily unavailable'},502);}
  const out=new Headers({'Cache-Control':'private, no-store','Pragma':'no-cache','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff'});

@@ -67,6 +67,7 @@ class AdapterRunner:
                 if durable:
                     lanes=getattr(adapter,'claim_lanes',())
                     options={'issuer':issuer} if issuer else {}
+                    if getattr(adapter,'document_newest_first',False):options['newest_first']=True
                     if issuer and issuer_view!='Financials':options['view']=issuer_view
                     if lanes:options['lane']=lanes[(batch-remaining-1)%len(lanes)]
                     claims=await self.jobs.claim(adapter.id,1,**options)

@@ -5,6 +5,18 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "backend/src/data/handlePolicy.js",
+      "category": "Production sign-in, unique handles, feed freshness and website assets",
+      "language": "Existing JavaScript compatibility API and Cloudflare gateway; PostgreSQL constraints; Python collector; existing React UI",
+      "runtime": "Existing services and finite GitHub collector runs; no new paid service or runtime",
+      "reason": "A pure shared JavaScript handle policy and SQL trigger/index enforce the same ASCII, reserved-name and uniqueness rules under concurrent writes. In-flight session-read sharing reduces duplicate SDK requests without caching settled authorization results. Python's existing durable queue can prioritize current RSS dates while retaining leases, retries and transfer caps. Public Vite build validation prevents an issuer-less Google redirect validator from reaching production. These targeted fixes preserve the separately gated Go rewrite.",
+      "references": [
+        "https://help.x.com/en/managing-your-account/x-username-rules",
+        "https://vite.dev/guide/env-and-mode",
+        "https://neon.com/docs/auth"
+      ]
+    },
+    {
       "file": "backend/src/auth/managedRuntime.js",
       "category": "Neon managed Auth production adapter and canonical identity mapping",
       "language": "Existing plain JavaScript/Node Express compatibility runtime and PostgreSQL SQL; existing React UI",

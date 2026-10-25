@@ -3,6 +3,15 @@ import {tokenDigest} from './managedCrypto.js';
 import {readManagedSession} from './managedSession.js';
 
 export function createManagedBroker({database,issuer,verifyJwt,vault,providerFactory,now=()=>Date.now()}){
+ const liveReads=new Map();
+ function readLiveSession(cookie){
+  const key=tokenDigest(cookie);if(liveReads.has(key))return liveReads.get(key);
+  if(liveReads.size>=128)throw Object.assign(Error('Authentication is busy'),{status:503});
+  // Only overlap is shared. Settled results are never cached, so a later
+  // request still observes provider revocation or a changed password.
+  const pending=Promise.resolve().then(()=>readManagedSession(providerFactory({cookie}),{now})).finally(()=>{if(liveReads.get(key)===pending)liveReads.delete(key);});
+  liveReads.set(key,pending);return pending;
+ }
  async function envelope(provider,{passwordVerified=false,oauthVerified=false,previousSession,previousCookie}={}){
   let live;try{live=await readManagedSession(provider,{now});}catch(error){
    if(error.code==='PASSWORD_CHANGED'&&typeof error.managedSessionId==='string')await database.query('UPDATE app_identity.managed_sessions SET revoked_at=now() WHERE issuer=$1 AND managed_session_id=$2 AND revoked_at IS NULL',[issuer,error.managedSessionId]);
@@ -49,5 +58,5 @@ export function createManagedBroker({database,issuer,verifyJwt,vault,providerFac
   if(live?.session?.id&&live?.user?.id)await database.query('UPDATE app_identity.managed_sessions SET revoked_at=now() WHERE issuer=$1 AND managed_session_id=$2 AND subject=$3',[issuer,live.session.id,live.user.id]);
   await provider.call('signOut',{});
  }
- return {envelope,signOut,readLiveSession:cookie=>readManagedSession(providerFactory({cookie}),{now})};
+ return {envelope,signOut,readLiveSession};
 }

@@ -21,7 +21,7 @@ export async function provisionManagedIdentity({database,issuer,user}){
   await client.query(`INSERT INTO app_identity.users(id,email,email_confirmed_at,raw_user_meta_data,raw_app_meta_data,created_at,updated_at,source_provider)
    VALUES($1,$2,now(),$3::jsonb,'{"provider":"neon-managed"}'::jsonb,now(),now(),'neon-managed')`,[id,user.email,JSON.stringify(metadata)]);
   await client.query(`INSERT INTO public.profiles(user_id,full_name,email,handle,subscription_plan,subscription_expires_at)
-   VALUES($1,$2,$3,$4,'free',NULL)`,[id,metadata.full_name,user.email,'user_'+id.replaceAll('-','').slice(0,12)]);
+   VALUES($1,$2,$3,$4,'free',NULL)`,[id,metadata.full_name,user.email,'user_'+id.replaceAll('-','').slice(0,10)]);
   await client.query('INSERT INTO public.user_preferences(user_id) VALUES($1) ON CONFLICT(user_id) DO NOTHING',[id]);
   await client.query('INSERT INTO app_identity.managed_identities(issuer,subject,user_id) VALUES($1,$2,$3)',[issuer,user.id,id]);
   mapping=(await client.query('SELECT id::text user_id,email,raw_user_meta_data,created_at,updated_at,email_confirmed_at FROM app_identity.users WHERE id=$1',[id])).rows[0];
