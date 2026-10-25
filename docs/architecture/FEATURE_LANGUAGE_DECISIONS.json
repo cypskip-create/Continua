@@ -5,6 +5,14 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "backend/src/data/communityFeed.js",
+      "category": "TradersHub first-write correctness and single-transaction feed",
+      "language": "Existing JavaScript compatibility API/browser adapter and PostgreSQL",
+      "runtime": "Existing Render and Cloudflare deployment; no new runtime or paid service",
+      "reason": "Accept the existing minimal 201 write contract without replaying mutations. Assemble a bounded feed with set-based SQL under the existing authenticated role, live guard and RLS instead of 13-plus independently verified browser calls. Keep existing endpoints and a 404-only deployment fallback. The native rewrite remains separately gated.",
+      "references": ["https://docs.postgrest.org/en/v14/references/api/preferences.html", "https://www.postgresql.org/docs/18/ddl-rowsecurity.html"]
+    },
+    {
       "file": "app/src/integrations/continua/readRecovery.js",
       "category": "Startup account hints, resilient community reads and public fundamentals cache",
       "language": "Existing JavaScript transport, React frontend and Python publisher collector",

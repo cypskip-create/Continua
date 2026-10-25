@@ -134,6 +134,18 @@ export function usePosts() {
     const version=++fetchVersion.current;
     if (!__postsCache || __postsCacheKey !== cacheKey) setLoading(true);
     try {
+      const feedResponse=await supabase.from('community_feed').select();
+      if(!feedResponse.error){
+        if(!Array.isArray(feedResponse.data))throw Error('Invalid community feed');
+        if(version!==fetchVersion.current)return;
+        const rows=feedResponse.data as Post[];
+        setPosts(rows);__postsCache=rows;__postsCacheKey=cacheKey;
+        if(user)saveFeedSnapshot(cacheKey,rows);
+        setError(null);return;
+      }
+      // Deploy safely against the previous backend until its new read route is
+      // live. Auth, privacy and upstream failures never fall back to less checks.
+      if(feedResponse.error.status!==404)throw feedResponse.error;
       // Safety preferences and posts are independent reads. Start together,
       // but never publish rows until all safety filters have succeeded.
       const [postResponse, safety] = await Promise.all([
@@ -396,7 +408,17 @@ export function usePosts() {
       : supabase.from('post_reactions' as any).upsert({ post_id: postId, user_id: user.id, reaction }, { onConflict: 'post_id,user_id' });
     const { error } = await query;
     if (!error) {
-      await fetchPosts();
+      // This changes only after the server confirms the write. Do not make a
+      // saved reaction wait for another complete timeline refresh to appear.
+      setPosts(previous=>previous.map(post=>{
+        if(post.id!==postId)return post;
+        const counts={...post.reaction_counts};
+        if(post.my_reaction)counts[post.my_reaction]=Math.max(0,(counts[post.my_reaction]??0)-1);
+        const next=current===reaction?null:reaction;
+        if(next)counts[next]=(counts[next]??0)+1;
+        return {...post,reaction_counts:counts,my_reaction:next};
+      }));
+      void fetchPosts();
     } else {
       toast({ title: "Couldn't save that reaction", description: error.message, variant: "destructive" });
     }
