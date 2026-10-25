@@ -2,7 +2,7 @@ export const websiteFeatures = {
  'company-research': {
   label:'Company research', title:'Understand the business behind the share price.',
   lead:'Bring company financials, valuation, ownership and forecasts into one research workflow. Start with the reported facts, then explore your own assumptions.',
-  image:'/landing/stock-research.webp',alt:'Financial research with company statements, valuation and annual reports',imageNote:'Illustrative stock research artwork',
+  image:'/landing/stock-research-overview.jpg',alt:'Stock research illustration showing company statements, valuation, forecasts and news',imageNote:'Stock research illustration · Example figures',
   sections:[
    ['Read the company’s financial history','Explore income statements, balance sheets and cash flow across available reporting periods. Compare like-for-like periods and follow the dates attached to reported figures. Missing financials remain unavailable rather than being treated as zero.'],
    ['Put valuation in context','Review valuation measures, dividends, financial strength and Continua’s own value signals. A rating appears only when the underlying information is sufficient. These are research tools, not guarantees about future prices.'],
