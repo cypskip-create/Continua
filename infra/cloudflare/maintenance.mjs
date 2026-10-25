@@ -1,7 +1,8 @@
 // Wake the existing free Render service; its in-process timer alone cannot
 // guarantee schedules while Render is asleep. No customer token or admin key.
+import {managedProduction} from './auth-provider.mjs';
 export async function scheduledMaintenance(controller,env){
- if(env.AUTH_PROVIDER!=='better-auth'||env.APPLICATION_SCHEDULE_ENABLED!=='true')return;
+ if(!(env.AUTH_PROVIDER==='better-auth'||managedProduction(env))||env.APPLICATION_SCHEDULE_ENABLED!=='true')return;
  const origin=new URL(env.BACKEND_ORIGIN);
  if(origin.origin!=='https://continua-backend.onrender.com'||origin.href!==origin.origin+'/')throw Error('Maintenance backend is not the existing service');
  if(typeof env.AUTH_MAINTENANCE_SECRET!=='string'||env.AUTH_MAINTENANCE_SECRET.length<32||env.AUTH_MAINTENANCE_SECRET.length>512)throw Error('Maintenance key is not configured');

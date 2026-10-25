@@ -5,7 +5,7 @@ import {rateLimitClientIP} from '../api/middleware/edgeClientIdentity.js';
 import {checkOwnedPriceAlerts} from './priceAlerts.js';
 import {deleteOwnedAccount} from './deleteAccount.js';
 
-export function createOwnedFunctionRouter({database,verifyAccess}){
+export function createOwnedFunctionRouter({database,verifyAccess,deleteAccount=deleteOwnedAccount}){
  const router=express.Router();
  router.use(rateLimit({windowMs:60000,limit:120,standardHeaders:false,legacyHeaders:false,store:new BoundedMemoryRateStore(),keyGenerator:(req,res)=>ipKeyGenerator(rateLimitClientIP(req,res))}));
  router.use((req,res,next)=>{res.set('Cache-Control','private, no-store');next();});
@@ -19,8 +19,8 @@ export function createOwnedFunctionRouter({database,verifyAccess}){
   catch(error){const status=[400,413,503].includes(error.status)?error.status:503;return res.status(status).json({error:status===400?'Invalid alert check':status===413?'Alert check exceeds its resource limit':'Alert check is temporarily unavailable'});}
  });
  router.post('/delete-account',async(req,res)=>{
-  try{return res.json(await deleteOwnedAccount({database,identity:res.locals.identity,body:req.body}));}
-  catch(error){const status=[400,401,403].includes(error.status)?error.status:503;return res.status(status).json({error:status===503?'Account deletion is temporarily unavailable':error.message});}
+  try{return res.json(await deleteAccount({database,identity:res.locals.identity,body:req.body}));}
+  catch(error){const status=[400,401,403,409].includes(error.status)?error.status:503;return res.status(status).json({error:status===503?'Account deletion is temporarily unavailable':error.message});}
  });
  // Existing policy keeps paid AI disabled. Preserve an explicit, actionable
  // response and never silently substitute fabricated research or make a call.

@@ -19,7 +19,7 @@ const known = [];
 for (const path of (process.env.CONTINUA_BROWSER_AUDIT_ENV_FILES ?? '').split(';').filter(Boolean)) {
     for (const line of (await readFile(path, 'utf8')).split(/\r?\n/)) {
         const match = line.match(/^\s*([A-Z0-9_]+)=(.*)$/);
-        if (match && /(?:SERVICE_ROLE|SECRET|ADMIN_API_KEY|DATABASE_URL|R2_ACCESS_KEY_ID)/.test(match[1])) {
+        if (match && /(?:SERVICE_ROLE|SECRET|ADMIN_API_KEY|DATABASE_URL|R2_ACCESS_KEY_ID|AUTH_SMTP_KEY|NEON_AUTH_SESSION_KEY)/.test(match[1])) {
             const value = match[2].replace(/^(['"])(.*)\1$/, '$2');
             if (value.length >= 12) known.push({name: match[1], value});
         }

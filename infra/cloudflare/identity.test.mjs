@@ -1,5 +1,13 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {ownedIdentity} from './identity.mjs';
 const env={AUTH_PROVIDER:'better-auth',BACKEND_ORIGIN:'https://backend.onrender.com',BACKEND_API_KEY:'server-only',EDGE_ORIGIN_SECRET:'s'.repeat(32),AUTH_RATE_LIMIT:{limit:async()=>({success:true})}};
+test('managed cookies require explicit isolated staging configuration and never reach the legacy provider',async()=>{
+ const stage={...env,AUTH_PROVIDER:'neon-managed',NEON_AUTH_STAGING_ENABLED:'true',NEON_AUTH_BRANCH_ID:'br-lively-paper-b4oli11a'};let observed;
+ const fetcher=async(url,input)=>{observed=input.headers;return Response.json({session:null},{headers:{'Set-Cookie':'__Secure-neon-auth.session_token=opaque; Path=/; HttpOnly; Secure; SameSite=Lax'}});};
+ assert.equal((await ownedIdentity(request('/api/v1/identity/session',{Cookie:'__Secure-continua.session_token=legacy; __Secure-neon-auth.session_token=managed'}),stage,fetcher)).status,200);
+ assert.equal(observed.get('Cookie'),'__Secure-neon-auth.session_token=managed');
+ assert.equal((await ownedIdentity(request('/api/v1/identity/session'),{...stage,NEON_AUTH_BRANCH_ID:'br-noisy-block-b4z5yxup'},fetcher)).status,404);
+ assert.equal((await ownedIdentity(request('/api/v1/identity/session'),env,fetcher)).status,502);
+});
 const request=(path,extra={})=>new Request('https://continua.workers.dev'+path,{headers:{Origin:'https://continua.workers.dev','X-Continua-Session':'1','CF-Connecting-IP':'203.0.113.1',...extra}});
 const json=()=>new Response('{"session":null}',{headers:{'Content-Type':'application/json'}});
 

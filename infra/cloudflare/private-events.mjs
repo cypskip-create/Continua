@@ -1,7 +1,8 @@
+import {ownedProvider} from './auth-provider.mjs';
 function denied(status,message){return Response.json({error:message},{status,headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff'}});}
 export async function privateEvents(request,env){
  const url=new URL(request.url);if(url.pathname!=='/api/v1/events')return null;
- if(env.AUTH_PROVIDER!=='better-auth')return denied(404,'Private subscriptions unavailable');
+ if(!ownedProvider(env))return denied(404,'Private subscriptions unavailable');
  if(request.method!=='GET'||request.headers.get('Upgrade')?.toLowerCase()!=='websocket')return denied(426,'WebSocket upgrade required');
  if(url.search||request.headers.get('Origin')!==url.origin||request.headers.get('Sec-Fetch-Site')==='cross-site')return denied(403,'Subscription origin not allowed');
  const ip=request.headers.get('CF-Connecting-IP');if(!ip||ip.length>64)return denied(403,'Client identity unavailable');

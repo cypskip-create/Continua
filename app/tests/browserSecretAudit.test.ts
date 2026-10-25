@@ -20,3 +20,9 @@ test('artifact checks allow public identifiers and reject privileged JWT/provide
         assert.equal(result.stdout.includes(token),false);assert.equal(result.stdout.includes(provider),false);
     } finally {await unlink(file);await rmdir(directory);}
 });
+test('artifact checks detect managed session encryption keys and SMTP keys without printing them',async()=>{
+    const directory=await mkdtemp(join(tmpdir(),'continua-managed-audit-')),file=join(directory,'fixture.js'),envFile=join(directory,'server.env');
+    const audit=fileURLToPath(new URL('../../infra/security/browser-secret-audit.mjs',import.meta.url));
+    const sessionKey='ab'.repeat(32),smtp='smtp-fixture-only-credential';
+    try{await writeFile(envFile,'NEON_AUTH_SESSION_KEY='+sessionKey+'\nAUTH_SMTP_KEY='+smtp);await writeFile(file,JSON.stringify({sessionKey,smtp}));const result=spawnSync(process.execPath,[audit,directory],{encoding:'utf8',env:{...process.env,CONTINUA_BROWSER_AUDIT_ENV_FILES:envFile}});assert.equal(result.status,1);assert.equal(JSON.parse(result.stdout).serverValuesCompared,2);assert.equal(result.stdout.includes(sessionKey),false);assert.equal(result.stdout.includes(smtp),false);}finally{await unlink(file);await unlink(envFile);await rmdir(directory);}
+});

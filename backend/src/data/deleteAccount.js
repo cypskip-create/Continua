@@ -1,5 +1,5 @@
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const nonCascadingOwners=[
+export const nonCascadingOwners=[
  ['comment_likes','user_id'],['comment_reactions','user_id'],['comment_reposts','user_id'],
  ['post_reactions','user_id'],['blocked_users','blocker_id'],['blocked_users','blocked_id'],
  ['muted_users','muter_id'],['muted_users','muted_id'],['muted_keywords','user_id'],

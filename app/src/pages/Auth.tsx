@@ -14,7 +14,8 @@ import './auth.css';
 import { useTouchClick } from '@/hooks/useTouchClick';
 import {RecoveryPassword} from '@/components/security/RecoveryPassword';
 import {AuthBotCheck,AUTH_BOT_CHECK_CONFIGURED} from '@/components/security/AuthBotCheck';
-import {OWNED_IDENTITY_ENABLED,startOwnedGoogleSignIn} from '@/integrations/continua/browserClient';
+import {OWNED_IDENTITY_ENABLED,MANAGED_AUTH_ENABLED,startOwnedGoogleSignIn} from '@/integrations/continua/browserClient';
+import {googleAuthorizationDestination} from '@/integrations/continua/oauthDestination.js';
 import {signupAcknowledgement} from '@/lib/legalPolicy';
 
 type Mode = 'signin' | 'signup' | 'reset';
@@ -131,8 +132,7 @@ export default function Auth() {
         if(AUTH_BOT_CHECK_CONFIGURED&&!captchaToken){toast({title:'Complete bot verification first',variant:'destructive'});return;}
         const {data,error}=await startOwnedGoogleSignIn({signup:isSignUp,captchaToken:captchaToken||undefined,...(isSignUp?{acknowledgement:signupAcknowledgement(adult,acceptedTerms)}:{})});
         if(error)throw error;
-        const destination=new URL(data.url);
-        if(destination.origin!=='https://accounts.google.com'||destination.pathname!=='/o/oauth2/v2/auth')throw Error('Google sign-in address could not be verified');
+        const destination=googleAuthorizationDestination(data.url,MANAGED_AUTH_ENABLED?import.meta.env.VITE_NEON_AUTH_BASE_URL:undefined);
         window.location.assign(destination.href);return;
       }
     } catch (error) {

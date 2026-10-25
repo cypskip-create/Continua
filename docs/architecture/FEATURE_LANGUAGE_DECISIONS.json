@@ -1,9 +1,23 @@
 {
-  "reviewDate": "2026-10-23",
+  "reviewDate": "2026-10-25",
   "scope": "Every backend/Engine/scraper runtime module, operator script, Edge entrypoint and existing SQL migration",
   "method": "Workload-specific rationale, supported tooling and feature-preserving tests; not a universal fastest-language claim.",
   "runtimeImplementationsUseTypeScript": false,
   "features": [
+    {
+      "file": "backend/src/auth/managedRuntime.js",
+      "category": "Neon managed Auth production adapter and canonical identity mapping",
+      "language": "Existing plain JavaScript/Node Express compatibility runtime and PostgreSQL SQL; existing React UI",
+      "runtime": "Existing backend compatibility service and official pinned Neon SDK server toolkit; separately pinned staging and production branches",
+      "reason": "The published SDK documents an Express RequestContext adapter. Reusing the existing same-origin Cloudflare gateway preserves HttpOnly cookies and existing application APIs without adding a second runtime to the Free Render budget. SQL transactions and issuer/subject keys provide idempotent new canonical owners; Ed25519 verification plus live provider session checks preserve revocation. Production cutover was explicitly approved on 2026-10-25 after staging validation; this does not complete the separate Go rewrite. Managed MFA and email changes remain unavailable under the approved feature scope; live account deletion remains disabled.",
+      "references": [
+        "https://neon.com/docs/auth/roadmap",
+        "https://neon.com/docs/auth/plugins/jwt",
+        "https://github.com/neondatabase/neon-js/blob/main/packages/auth/BUILDING-AN-ADAPTER.md",
+        "https://nodejs.org/api/crypto.html",
+        "https://www.postgresql.org/docs/current/explicit-locking.html"
+      ]
+    },
     {
       "file": "app/src/pages/WebsiteFeaturePage.tsx",
       "category": "Public feature explanations and authentic product imagery",

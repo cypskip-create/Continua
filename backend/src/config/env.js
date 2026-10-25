@@ -46,7 +46,14 @@ const EnvSchema = z.object({
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
     // Migration is opt-in. The deployed provider remains the default until all
     // cutover gates pass and production configuration is explicitly changed.
-    AUTH_PROVIDER: z.literal('better-auth').default('better-auth'),
+    AUTH_PROVIDER: z.enum(['better-auth','neon-managed']).default('better-auth'),
+    NEON_AUTH_STAGING_ENABLED: booleanEnv(false),
+    NEON_AUTH_PRODUCTION_ENABLED: booleanEnv(false),
+    NEON_AUTH_ACCOUNT_DELETION_ENABLED: booleanEnv(false),
+    NEON_AUTH_BRANCH_ID: z.string().optional(),
+    NEON_AUTH_BASE_URL: z.string().url().optional(),
+    NEON_AUTH_COOKIE_SECRET: z.string().min(32).optional(),
+    NEON_AUTH_SESSION_KEY: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
     AUTH_PUBLIC_ORIGIN: z.string().url().optional(),
     AUTH_MAINTENANCE_SECRET: z.string().min(32).max(512).optional(),
     BETTER_AUTH_SECRET: z.string().min(32).optional(),

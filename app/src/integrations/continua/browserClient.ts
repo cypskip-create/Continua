@@ -1,6 +1,7 @@
 import {createContinuaClient} from './client.js';
 import type {User,Session} from './identityTypes';
 export const OWNED_IDENTITY_ENABLED=true;
+export const MANAGED_AUTH_ENABLED=import.meta.env.VITE_AUTH_PROVIDER==='neon-managed';
 const ownedClient=createContinuaClient({origin:window.location.origin,channel:typeof BroadcastChannel==='function'?new BroadcastChannel('continua-session'):undefined});
 // Compatibility name for the audited query contract. This is the owned Neon
 // transport and cannot construct or connect to a Supabase client.

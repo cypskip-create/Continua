@@ -1,6 +1,7 @@
 import express from "express";
 import {getIdentityRuntime} from '../auth/runtime.js';
 import {createIdentityRouter} from '../auth/identityRoutes.js';
+import {createManagedIdentityRouter} from '../auth/managedRoutes.js';
 import {createBrowserDataRouter} from '../data/browserDataRoutes.js';
 import {createOwnedFunctionRouter} from '../data/functionRoutes.js';
 import {createMaintenanceRouter} from '../data/maintenanceRoutes.js';
@@ -71,7 +72,7 @@ export function createServer() {
         app.use('/api/v1/internal',createMaintenanceRouter({secret:env.AUTH_MAINTENANCE_SECRET,run:runOwnedApplicationJobs,database:identity.database}));
         // Recovery and OAuth callback paths contain credentials. Mount before
         // requestLogger, and expose only the owned bridge, never raw auth.handler.
-        app.use('/api/v1/identity',apiKeyAuth(),createIdentityRouter({...identity,publicOrigin:env.AUTH_PUBLIC_ORIGIN}));
+        app.use('/api/v1/identity',apiKeyAuth(),(identity.provider==='neon-managed'?createManagedIdentityRouter:createIdentityRouter)({...identity,publicOrigin:env.AUTH_PUBLIC_ORIGIN}));
         app.use('/api/v1/data',apiKeyAuth(),express.json({limit:'64kb'}),createBrowserDataRouter(identity));
         app.use('/api/v1/functions',apiKeyAuth(),express.json({limit:'64kb'}),createOwnedFunctionRouter(identity));
     }

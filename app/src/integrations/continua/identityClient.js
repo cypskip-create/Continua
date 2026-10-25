@@ -2,7 +2,7 @@
 // the provider session remains in a host-only, HttpOnly cookie.
 export function createIdentityClient({origin,fetcher=fetch,now=Date.now,location=()=>globalThis.location,replaceUrl=url=>globalThis.history?.replaceState(null,'',url),channel}={}){
  const site=new URL(origin);if(site.origin!==origin||site.protocol!=='https:'&&!['localhost','127.0.0.1'].includes(site.hostname))throw Error('An owned HTTPS origin is required');
- let session=null,pendingMfa=false,recoveryToken=null,restoring=null,signingOut=null,timer,failures=0,destroyed=false,revision=0,restored=false,checkedAt=0,recoveryStarted=false;const listeners=new Set(),securityListeners=new Set();
+ let session=null,pendingMfa=false,recoveryToken=null,oauthVerifier=null,restoring=null,signingOut=null,timer,failures=0,destroyed=false,revision=0,restored=false,checkedAt=0,recoveryStarted=false;const listeners=new Set(),securityListeners=new Set();
  const security=()=>({mfaPending:pendingMfa,recoveryMode:!!recoveryToken});
  function publish(event){for(const listener of listeners){try{Promise.resolve(listener(event,session)).catch(()=>{});}catch{}}for(const listener of securityListeners){try{listener(security());}catch{}}}
  function schedule(delay){clearTimeout(timer);if(destroyed||!session)return;timer=setTimeout(()=>void refresh(),delay??Math.max(5000,session.expires_at*1000-now()-30000));timer?.unref?.();}
@@ -18,17 +18,18 @@ export function createIdentityClient({origin,fetcher=fetch,now=Date.now,location
  }
  const result=async work=>{try{return {data:await work(),error:null};}catch(error){return {data:{session:null,user:null},error:error instanceof Error?error:new Error('Identity request could not complete')};}};
  function consumeRecoveryUrl(){const current=location();if(!current?.href)return;const url=new URL(current.href),fragment=new URLSearchParams(url.hash.slice(1));if(url.origin!==origin||!url.searchParams.has('token')&&!fragment.has('recovery_token'))return;const token=fragment.get('recovery_token')??url.searchParams.get('token');url.searchParams.delete('token');fragment.delete('recovery_token');url.hash=fragment.toString();replaceUrl(url.pathname+url.search+url.hash);if(/^[A-Za-z0-9_-]{8,256}$/.test(token??'')){recoveryToken=token;recoveryStarted=false;revision++;}}
+ function consumeOAuthUrl(){const current=location();if(!current?.href)return;const url=new URL(current.href);if(url.origin!==origin||!url.searchParams.has('neon_auth_session_verifier'))return;const values=url.searchParams.getAll('neon_auth_session_verifier');url.searchParams.delete('neon_auth_session_verifier');replaceUrl(url.pathname+url.search+url.hash);if(values.length===1&&/^[A-Za-z0-9_.~-]{8,2048}$/.test(values[0]))oauthVerifier=values[0];}
  async function refresh(){
   if(signingOut)return signingOut.then(({error})=>({data:{session,user:session?.user??null},error}));
   if(restoring)return restoring;
   const startedAtRevision=revision;
   restoring=result(async()=>{try{const data=await call('session');if(startedAtRevision!==revision)return {session,user:session?.user??null,mfaRequired:pendingMfa};pendingMfa=data.mfaRequired===true;assign(data.session??null);if(recoveryToken){if(!recoveryStarted){const pending=await call('recovery-begin',{token:recoveryToken});if(startedAtRevision!==revision)return {session,user:session?.user??null,mfaRequired:pendingMfa};recoveryStarted=true;pendingMfa=pending.mfaRequired===true;}publish('PASSWORD_RECOVERY');}return {session,user:session?.user??null,mfaRequired:pendingMfa};}catch(error){if(startedAtRevision!==revision)throw error;if(error.status===401){pendingMfa=false;assign(null);}else{failures++;schedule(Math.min(60000,10000*failures));}throw error;}}).finally(()=>{restoring=null;});return restoring;
  }
- async function sessionOperation(path,body){if(signingOut)throw Error('Sign-out is in progress');const operationRevision=++revision;const data=await call(path,body);if(operationRevision!==revision)throw Error('Identity request was superseded');pendingMfa=data.mfaRequired===true;if(Object.hasOwn(data,'session'))assign(data.session);else publish('USER_UPDATED');return {...data,user:session?.user??null};}
+ async function sessionOperation(path,body){if(signingOut)throw Error('Sign-out is in progress');const operationRevision=++revision;const data=await call(path,body);if(operationRevision!==revision)throw Error('Identity request was superseded');pendingMfa=data.mfaRequired===true;if(Object.hasOwn(data,'session')){assign(data.session);if(data.session)channel?.postMessage({type:'session-changed'});}else publish('USER_UPDATED');return {...data,user:session?.user??null};}
  const auth={
   getSession:async()=>session&&session.expires_at*1000-now()>30000||!session&&restored&&now()-checkedAt<30000?{data:{session},error:null}:refresh(),
   refreshSession:()=>refresh(),
-  restoreSession:()=>{consumeRecoveryUrl();return refresh();},
+  restoreSession:()=>result(async()=>{consumeRecoveryUrl();consumeOAuthUrl();if(oauthVerifier){const data=await sessionOperation('oauth-complete',{verifier:oauthVerifier});oauthVerifier=null;return data;}const current=await refresh();if(current.error)throw current.error;return current.data;}),
   onAuthStateChange:listener=>{listeners.add(listener);queueMicrotask(()=>{if(listeners.has(listener)){try{Promise.resolve(listener('INITIAL_SESSION',session)).catch(()=>{});}catch{}}});return {data:{subscription:{unsubscribe:()=>listeners.delete(listener)}}};},
   onSecurityStateChange:listener=>{securityListeners.add(listener);listener(security());return ()=>securityListeners.delete(listener);},
   getSecurityState:security,
@@ -52,6 +53,6 @@ export function createIdentityClient({origin,fetcher=fetch,now=Date.now,location
    getAuthenticatorAssuranceLevel:()=>result(async()=>{const current=await auth.getSession();if(current.error)throw current.error;let claims={};if(session)claims=JSON.parse(atob(session.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return {currentLevel:claims.aal??'aal1',nextLevel:pendingMfa||session?.user?.factors?.some(f=>f.status==='verified')?'aal2':'aal1',currentAuthenticationMethods:claims.amr??[]};})
   }
  };
- const onMessage=event=>{if(event.data?.type==='signed-out'){revision++;pendingMfa=false;recoveryToken=null;assign(null);}};channel?.addEventListener('message',onMessage);
+ const onMessage=event=>{if(destroyed)return;if(event.data?.type==='signed-out'){revision++;pendingMfa=false;recoveryToken=null;oauthVerifier=null;assign(null);}else if(event.data?.type==='session-changed'){revision++;void(async()=>{if(restoring)await restoring;if(!destroyed&&!signingOut)await refresh();})().catch(()=>{});}};channel?.addEventListener('message',onMessage);
  return {auth,destroy:()=>{destroyed=true;revision++;clearTimeout(timer);session=null;recoveryToken=null;pendingMfa=false;listeners.clear();securityListeners.clear();channel?.removeEventListener('message',onMessage);}};
 }
