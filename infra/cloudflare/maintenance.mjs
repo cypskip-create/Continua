@@ -11,7 +11,7 @@ export async function scheduledMaintenance(controller,env){
  await response.body?.cancel();
  if(!env.MEDIA_BUCKET)return;
  const headers={'X-Continua-Maintenance-Key':env.AUTH_MAINTENANCE_SECRET};
- const pending=await fetch(new URL('/api/v1/internal/media-cleanup',origin),{headers,redirect:'error',signal:AbortSignal.timeout(10000)});
+ const pending=await fetch(new URL('/api/v1/internal/media-cleanup',origin),{headers,redirect:'manual',signal:AbortSignal.timeout(10000)});
  if(!pending.ok)throw Error('Media cleanup queue unavailable');
  const length=Number(pending.headers.get('Content-Length'));
  if(length>4096){await pending.body?.cancel();throw Error('Cleanup response exceeds its limit');}
@@ -26,6 +26,6 @@ export async function scheduledMaintenance(controller,env){
    if(page.objects.length)await env.MEDIA_BUCKET.delete(page.objects.map(object=>object.key));
    if(page.truncated)complete=false;
   }
-  if(complete){const done=await fetch(new URL('/api/v1/internal/media-cleanup/complete',origin),{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({owner}),redirect:'error',signal:AbortSignal.timeout(10000)});if(!done.ok)throw Error('Cleanup receipt failed');await done.body?.cancel();}
+  if(complete){const done=await fetch(new URL('/api/v1/internal/media-cleanup/complete',origin),{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({owner}),redirect:'manual',signal:AbortSignal.timeout(10000)});if(!done.ok)throw Error('Cleanup receipt failed');await done.body?.cancel();}
  }
 }

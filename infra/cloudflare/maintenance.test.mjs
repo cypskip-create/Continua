@@ -31,12 +31,15 @@ test('cleanup deletes only queued owner prefixes and acknowledges complete pages
   list:async({prefix,limit})=>{assert.equal(limit,100);return {objects:[{key:prefix+'fixture.png'}],truncated:false};},
   delete:async keys=>removed.push(...keys),
  }};
- globalThis.fetch=async(url,options)=>{calls.push([String(url),options]);return String(url).endsWith('/media-cleanup')?Response.json({owners:[owner]}):new Response(null,{status:204});};
+ // Match Workers, which rejects redirect:'error' before sending a request.
+ globalThis.fetch=async(url,options)=>{assert.equal(options.redirect,'manual');calls.push([String(url),options]);return String(url).endsWith('/media-cleanup')?Response.json({owners:[owner]}):new Response(null,{status:204});};
  try{
   await scheduledMaintenance({},env);assert.equal(removed.length,3);
   assert.deepEqual(removed,['avatars','banners','post-images'].map(kind=>`${kind}/${owner}/fixture.png`));
   assert.equal(calls.at(-1)[0],'https://continua-backend.onrender.com/api/v1/internal/media-cleanup/complete');
   env.MEDIA_BUCKET.list=async()=>({objects:[{key:'avatars/another-owner/file.png'}],truncated:false});
   await assert.rejects(()=>scheduledMaintenance({},env),/escaped owner/);assert.equal(removed.length,3);
+  globalThis.fetch=async url=>String(url).endsWith('/media-cleanup')?new Response(null,{status:302,headers:{Location:'https://other.invalid'}}):new Response(null,{status:204});
+  await assert.rejects(()=>scheduledMaintenance({},env),/queue unavailable/);assert.equal(removed.length,3);
  }finally{globalThis.fetch=original;}
 });
