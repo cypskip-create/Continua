@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/continua/browserClient';
 import { useAuth } from './useAuth';
 import { usePageRefresh } from './usePageRefresh';
-import { freshCacheTime } from '@/lib/researchCache';
+import {readAccountSnapshot,saveAccountSnapshot} from '@/lib/accountSnapshot';
 
 export interface Profile {
   id: string;
@@ -42,8 +42,7 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 function cachedAccount(userId:string|undefined):{profile:Profile;updatedAt:number}|undefined {
   if(!userId)return undefined;
   try {
-    const cached=JSON.parse(sessionStorage.getItem(`continua:account:${userId}`)??'null');
-    if(cached?.profile?.user_id===userId&&freshCacheTime(cached.updatedAt,Date.now(),15*60_000))return cached;
+    return readAccountSnapshot(localStorage,userId);
   }catch{ /* Storage optional. */ }
   return undefined;
 }
@@ -80,7 +79,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async () => { if(user) await result.refetch(); }, [user?.id,result.refetch]);
   useEffect(() => {
     if (!user || !rawProfile) return;
-    try { sessionStorage.setItem(`continua:account:${user.id}`,JSON.stringify({profile:rawProfile,updatedAt:result.dataUpdatedAt})); } catch { /* Storage optional. */ }
+    try { saveAccountSnapshot(localStorage,user.id,rawProfile,result.dataUpdatedAt); } catch { /* Storage optional. */ }
   },[user?.id,rawProfile,result.dataUpdatedAt]);
   useEffect(() => {
     if (!user) return;
@@ -88,7 +87,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     return () => {
       // A token refresh must not reset this cache. A different account or
       // logout must not inherit any profile or paid workspace data.
-      try { sessionStorage.removeItem(`continua:account:${userId}`); } catch { /* Storage optional. */ }
+      // Display hints survive an ordinary provider remount/reopen. Explicit
+      // sign-out/account switch removes them through clearPrivateSessionCache.
       try { Object.keys(localStorage).filter(key=>key.startsWith(`continua:company-engine:${userId}:`)).forEach(key=>localStorage.removeItem(key)); } catch { /* Storage optional. */ }
       client.removeQueries({predicate:q=>q.queryKey.includes(userId)});
     };

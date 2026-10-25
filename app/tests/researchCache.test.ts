@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { freshCacheTime, formatIndexChange, isPublishedQuery } from '../src/lib/researchCache.ts';
 test('published cache excludes account access and private workspaces', () => {
-  for (const kind of ['research','financials-history','indices','candles','quotes','observed-price-history-v2','valuation-rating-v3']) assert.equal(isPublishedQuery(['continua',kind,'ABSA']),true);
+  for (const kind of ['publisher-research','research','financials-history','indices','candles','quotes','observed-price-history-v2','valuation-rating-v3']) assert.equal(isPublishedQuery(['continua',kind,'ABSA']),true);
   for (const kind of ['profile','research-access','engine','engine-portfolio','journal','notifications','billing','portfolio','watchlist']) assert.equal(isPublishedQuery(['continua',kind]),false);
 });
 test('cache expiry and timestamps cannot pretend stale data is new',()=>{

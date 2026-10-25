@@ -27,7 +27,15 @@ export function createIdentityClient({origin,fetcher=fetch,now=Date.now,location
  }
  async function sessionOperation(path,body){if(signingOut)throw Error('Sign-out is in progress');const operationRevision=++revision;const data=await call(path,body);if(operationRevision!==revision)throw Error('Identity request was superseded');pendingMfa=data.mfaRequired===true;if(Object.hasOwn(data,'session')){assign(data.session);if(data.session)channel?.postMessage({type:'session-changed'});}else publish('USER_UPDATED');return {...data,user:session?.user??null};}
  const auth={
-  getSession:async()=>session&&session.expires_at*1000-now()>30000||!session&&restored&&now()-checkedAt<30000?{data:{session},error:null}:refresh(),
+  getSession:async()=>{
+   // A refresh must not stall every data read while the current JWT is still
+   // valid. Server signature, expiry, live-session and SQL guards still run.
+   if(session&&session.expires_at*1000>now()){
+    if(session.expires_at*1000-now()<=30000&&!restoring)void refresh();
+    return {data:{session},error:null};
+   }
+   return !session&&restored&&now()-checkedAt<30000?{data:{session},error:null}:refresh();
+  },
   refreshSession:()=>refresh(),
   restoreSession:()=>result(async()=>{consumeRecoveryUrl();consumeOAuthUrl();if(oauthVerifier){const data=await sessionOperation('oauth-complete',{verifier:oauthVerifier});oauthVerifier=null;return data;}const current=await refresh();if(current.error)throw current.error;return current.data;}),
   onAuthStateChange:listener=>{listeners.add(listener);queueMicrotask(()=>{if(listeners.has(listener)){try{Promise.resolve(listener('INITIAL_SESSION',session)).catch(()=>{});}catch{}}});return {data:{subscription:{unsubscribe:()=>listeners.delete(listener)}}};},

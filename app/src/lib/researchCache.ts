@@ -3,7 +3,7 @@
 export const RESEARCH_CACHE_KEY = 'continua:published-research:v1';
 export const RESEARCH_MAX_AGE = 24 * 60 * 60_000;
 const publicKinds = new Set(['indices', 'instruments', 'research', 'company',
-  'financials-history', 'financials-latest', 'valuation', 'ownership',
+  'financials-history', 'financials-latest', 'publisher-research', 'valuation', 'ownership',
   'corporate-actions', 'dividends', 'earnings', 'announcements', 'historical',
   'quotes', 'observed-price-history-v2', 'valuation-rating-v3', 'market-statistics', 'candles', 'indicator', 'screener', 'market-research', 'market-records', 'market-intelligence', 'market-earnings', 'market-screener']);
 export function isPublishedQuery(key: readonly unknown[]) {

@@ -289,7 +289,7 @@ export function usePosts() {
     } finally {
       if(version===fetchVersion.current)setLoading(false);
     }
-  }, [user, cacheKey]);
+  }, [user?.id, cacheKey]);
 
   usePageRefresh(fetchPosts);
   useEffect(() => { setPosts(initial); setLoading(initial.length===0); void fetchPosts(); return()=>{fetchVersion.current++;}; }, [cacheKey, fetchPosts]);

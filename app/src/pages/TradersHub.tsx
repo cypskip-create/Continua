@@ -486,7 +486,7 @@ export default function TradersHub() {
         <MediaFeed searchQuery={searchQuery} />
       ) : loading || !disclaimerDone ? (
         <PostSkeletonList count={6} />
-      ) : feed.length === 0 ? (
+      ) : feedError && feed.length === 0 ? null : feed.length === 0 ? (
         <div className="px-6 py-8 text-center">
           {activeTab === "following" ? (
             <>

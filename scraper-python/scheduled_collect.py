@@ -207,7 +207,7 @@ async def run(kind,source_id=None,issuer=None,fresh=False,history_issuers=None):
                                                 for key in result:result[key]+=part.get(key,0)
                                         else:
                                             result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=batch,issuer=issuer,fresh=fresh)
-                                    entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','errorClasses','discoveryCoverage','targetCoverage','visited','stored','notModified')})
+                                    entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','unavailable','errorClasses','discoveryCoverage','targetCoverage','visited','stored','notModified')})
                             except asyncio.CancelledError as error:
                                 copy_partial_receipt(entry,error)
                                 raise

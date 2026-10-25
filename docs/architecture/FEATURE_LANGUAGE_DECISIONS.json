@@ -5,6 +5,14 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "app/src/integrations/continua/readRecovery.js",
+      "category": "Startup account hints, resilient community reads and public fundamentals cache",
+      "language": "Existing JavaScript transport, React frontend and Python publisher collector",
+      "runtime": "Existing browser, Cloudflare, Render compatibility API and bounded GitHub collector",
+      "reason": "Serve an unexpired in-memory JWT during background refresh without weakening server authorization; retry only idempotent transient reads. Persist owner-scoped display hints separately from allowlisted public research. Python Selenium can select and verify an observed publisher tab without adding a runtime or bypassing source permissions. The Go rewrite remains independently gated.",
+      "references": ["https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults", "https://kenyanstocks.com/stock/nse/SCOM?tab=Financials"]
+    },
+    {
       "file": "backend/src/data/handlePolicy.js",
       "category": "Production sign-in, unique handles, feed freshness and website assets",
       "language": "Existing JavaScript compatibility API and Cloudflare gateway; PostgreSQL constraints; Python collector; existing React UI",

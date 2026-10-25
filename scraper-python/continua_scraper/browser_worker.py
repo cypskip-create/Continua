@@ -6,6 +6,7 @@ import tempfile
 from urllib.parse import urlsplit,urlunsplit,parse_qsl,urlencode
 from .browser_settle import PublisherSettle,settled_view
 from .browser_controls import expand_groups
+from .browser_tabs import select_stock_tab
 
 ERROR_EXIT_CODES={
     'TimeoutException':2,
@@ -70,7 +71,7 @@ def _render(config,profile):
         tab=selected.get('stock_tab')
         if tab:
             phase=16
-            WebDriverWait(driver,30).until(lambda d:any(tab in n.text for n in d.find_elements(By.CSS_SELECTOR,'.normal-tab.selected-tab')))
+            select_stock_tab(driver,By,tab,WebDriverWait(driver,15),settle)
         category=selected.get('category')
         if category:
             phase=17

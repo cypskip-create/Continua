@@ -1,6 +1,6 @@
 """Generic source-scoped native crawl; storage completes before lease commit."""
 import asyncio
-from .download import SourceNotModified
+from .download import SourceNotModified,SourceHTTPError
 from .html import extract_from_html,canonicalize_url,matches_discovery_paths
 
 class GenericCrawler:
@@ -56,6 +56,19 @@ class GenericCrawler:
             except SourceNotModified:
                 await self.state.crawled(item['id'],item['lastSeen'],304,item.get('mimeType'),item.get('contentHash'),False)
                 summary['notModified']=summary.get('notModified',0)+1
+            except SourceHTTPError as error:
+                # A removed publisher link is a completed availability check,
+                # never a new financial artifact or an endlessly retried crash.
+                # Authentication, throttles and server faults still fail visibly.
+                reason=f'{stage}: SourceHTTPError:{error.status}'
+                await self.state.failed(item['id'],item['lastSeen'],reason)
+                try:await self.dead_letters.record(self.id,item['url'],stage,reason)
+                except Exception:pass
+                if error.status in (404,410):
+                    summary['unavailable']=summary.get('unavailable',0)+1
+                else:summary['failed']+=1
+                errors=summary.setdefault('errorClasses',{})
+                errors[reason]=errors.get(reason,0)+1
             except asyncio.CancelledError as error:
                 error.collector_summary=summary
                 raise

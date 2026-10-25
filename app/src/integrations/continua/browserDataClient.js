@@ -1,12 +1,13 @@
 // Provider-independent transport for the app's audited flat query/RPC contract.
 // Authorization always comes from a live server-verified session and SQL RLS.
+import {recoverRead} from './readRecovery.js';
 export function createBrowserDataClient({identity,origin,fetcher=fetch}){
  const site=new URL(origin);if(site.origin!==origin||site.protocol!=='https:'&&!['localhost','127.0.0.1'].includes(site.hostname))throw Error('An owned HTTPS origin is required');
  async function performRequest(path,{method='GET',body,headers={},signal}={},verifiedSession){
   try{
    const session=verifiedSession??await identity.getSession();if(session.error)throw session.error;
    const token=session.data?.session?.access_token;
-   const response=await fetcher(origin+'/api/v1/'+path,{method,headers:{Accept:'application/json',...(body!==undefined?{'Content-Type':'application/json'}:{}),...(token?{'X-User-Token':token}:{}),...headers},body:body!==undefined?JSON.stringify(body):undefined,credentials:'same-origin',cache:'no-store',signal:signal?AbortSignal.any([signal,AbortSignal.timeout(60000)]):AbortSignal.timeout(60000)});
+   const response=await recoverRead(origin+'/api/v1/'+path,{method,headers:{Accept:'application/json',...(body!==undefined?{'Content-Type':'application/json'}:{}),...(token?{'X-User-Token':token}:{}),...headers},body:body!==undefined?JSON.stringify(body):undefined,credentials:'same-origin',cache:'no-store',signal:signal?AbortSignal.any([signal,AbortSignal.timeout(60000)]):AbortSignal.timeout(60000)},fetcher);
    let data=null;if(!['HEAD'].includes(method)&&response.status!==204){if(!/^application\/json(?:;|$)/i.test(response.headers.get('Content-Type')??''))throw Error('Data service returned an unexpected response');const reader=response.body?.getReader();if(!reader)throw Error('Data service returned an empty response');let size=0;const parts=[];try{for(;;){const item=await reader.read();if(item.done)break;size+=item.value.length;if(size>4194304)throw Error('Data response is too large');parts.push(item.value);}}catch(error){await reader.cancel().catch(()=>{});throw error;}finally{reader.releaseLock();}const bytes=new Uint8Array(size);let offset=0;for(const part of parts){bytes.set(part,offset);offset+=part.length;}data=JSON.parse(new TextDecoder().decode(bytes));}
    const range=response.headers.get('Content-Range'),total=range?.split('/')[1],count=total&&/^\d+$/.test(total)?Number(total):null;
    if(!response.ok)return {data:null,error:Object.assign(new Error(data?.message??data?.error??'Data request could not complete'),{code:data?.code,status:response.status,details:data?.details}),count,status:response.status};

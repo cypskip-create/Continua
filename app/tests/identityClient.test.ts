@@ -1,6 +1,14 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createIdentityClient} from '../src/integrations/continua/identityClient.js';
 const origin='https://continua.invalid',id='11111111-1111-4111-8111-111111111111';
+test('a still-valid JWT serves reads during a slow refresh; expired or revoked tokens do not',async t=>{
+ let clock=Date.now(),deliver:any,calls=0;const expected=session();
+ const f=fixture(t,()=>++calls===1?Response.json({session:expected}):new Promise(resolve=>{deliver=resolve;}),{now:()=>clock});
+ await f.auth.restoreSession();clock=expected.expires_at*1000-20000;
+ const current=await f.auth.getSession();assert.equal(current.data.session.access_token,expected.access_token);assert.equal(calls,2);
+ clock=expected.expires_at*1000+1;let resolved=false;const expired=f.auth.getSession().then(value=>{resolved=true;return value;});await Promise.resolve();assert.equal(resolved,false);
+ deliver(Response.json({error:'revoked'},{status:401}));assert.ok((await expired).error);assert.equal((await f.auth.getSession()).data.session,null);
+});
 function session(){const exp=Math.floor(Date.now()/1000)+300;return {access_token:'header.'+Buffer.from(JSON.stringify({exp,aal:'aal1',amr:[]})).toString('base64url')+'.signature',refresh_token:'cookie-session',expires_at:exp,user:{id,email:'fixture@example.invalid',factors:[]}};}
 function fixture(t:any,handler:(path:string,body:any)=>any,extra:any={}){const calls:any[]=[];const client=createIdentityClient({origin,location:()=>undefined,fetcher:async(url:any,options:any)=>{const path=new URL(url).pathname.split('/').at(-1);const body=options.body?JSON.parse(options.body):undefined;calls.push({url,options,body});return handler(path,body);},...extra});t.after(()=>client.destroy());return {...client,calls};}
 test('managed OAuth verifier leaves browser history before the same-origin SDK exchange',async t=>{

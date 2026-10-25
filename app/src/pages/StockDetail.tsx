@@ -73,6 +73,8 @@ const TIMEFRAME_LABELS: Record<string, string> = {
   "YTD": "Year to date", "1Y": "Past year", "ALL": "All time",
 };
 
+import {usePublisherResearch} from '@/hooks/usePublisherResearch';
+
 export default function StockDetail() {
   const stickyRoot = useStickyHeights();
   const { exchangeMeta } = useExchange();
@@ -130,6 +132,9 @@ export default function StockDetail() {
   const { research: liveResearch } = useResearch(upperSymbol || undefined);
   const {data: statistics, isLoading: statisticsLoading} = useMarketStatistics(upperSymbol);
   const { latest: reportedFinancials } = useStockFinancials(upperSymbol || undefined);
+  // Warm public Fundamentals before scrolling. Display/quota gates stay intact.
+  usePublisherResearch(upperSymbol || undefined);
+  useStockFinancials(upperSymbol || undefined,{periodType:'annual',limit:10});
   const { actions: corporateActions, isLoading: actionsLoading } = useCorporateActions(upperSymbol || undefined);
   const [infoSheet, setInfoSheet] = useState<{ title: string; body: React.ReactNode } | null>(null);
   // Indicator choices are a chart preference, not a per-stock one — they're loaded

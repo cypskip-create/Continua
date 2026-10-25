@@ -4,6 +4,13 @@ import { supabase,restoreBrowserSession,clearBrowserSessionCookie,observeSession
 import {queryClient} from '@/lib/queryClient';
 import {clearPrivateSessionCache} from '@/lib/privateSessionCache';
 import {signupAcknowledgement} from '@/lib/legalPolicy';
+import {isPublishedQuery} from '@/lib/researchCache';
+
+function clearAccountQueries(){
+ void queryClient.cancelQueries();
+ queryClient.removeQueries({predicate:query=>!isPublishedQuery(query.queryKey)});
+ queryClient.getMutationCache().clear();
+}
 
 interface AuthContextType {
   user: User | null;
@@ -35,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (event, session) => {
         const next=session?.user.id??null;
         if((owner.current&&owner.current!==next)||event==='SIGNED_OUT'){
-          void queryClient.cancelQueries();queryClient.clear();
+          clearAccountQueries();
           try{clearPrivateSessionCache(localStorage);clearPrivateSessionCache(sessionStorage);}catch{/* Storage may be unavailable. */}
           window.dispatchEvent(new Event('continua:session-cleared'));
         }
@@ -91,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await clearBrowserSessionCookie();
     const {error}=await supabase.auth.signOut({scope:'local'});
     if(error)throw error;
-    void queryClient.cancelQueries();queryClient.clear();
+    clearAccountQueries();
     try{clearPrivateSessionCache(localStorage);clearPrivateSessionCache(sessionStorage);}catch{/* Optional storage. */}
   };
 
