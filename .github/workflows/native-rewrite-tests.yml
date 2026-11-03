@@ -70,7 +70,7 @@ jobs:
         with:
           go-version-file: api-candidate/go.mod
           cache-dependency-path: api-candidate/go.sum
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
       - uses: actions/setup-node@v4
